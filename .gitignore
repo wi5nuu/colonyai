@@ -7,17 +7,18 @@ node_modules/
 coverage/
 *.lcov
 
-# Production
+# Production builds
 build/
 dist/
 .out
 
-# Environment
+# Environment variables (NEVER commit these)
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+*.env
 
 # Logs
 npm-debug.log*
@@ -25,6 +26,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+*.log
 
 # Editor directories and files
 .vscode/*
@@ -64,13 +66,15 @@ MANIFEST
 *.pyc
 *.pyo
 
-# ML Models
+# ML Models (trained weights - too large for git)
 *.pt
 *.pth
 *.onnx
 *.weights
+*.engine
 models/*.pt
 models/*.onnx
+runs/
 
 # Datasets
 datasets/raw/
@@ -99,18 +103,15 @@ Thumbs.db
 # Docker
 docker-compose.override.yml
 
-# ML Training
-ml-training/runs/
-ml-training/yolo*.pt
-ml-training/yolov*.pt
-ml-training/datasets/
-ml-training/*.pt
+# Virtual environments
+.venv/
+venv/
+env/
 
 # Backend
 backend/uploads/
 backend/logs/
-backend/.env
-backend/.venv/
+backend/reports/
 
 # Frontend
 frontend/.next/
@@ -118,13 +119,27 @@ frontend/out/
 frontend/tsconfig.tsbuildinfo
 frontend/node_modules/
 
-# Virtual environments
-.venv/
-venv/
-env/
+# ML Training
+ml-training/datasets/
+ml-training/runs/
+ml-training/*.pt
+ml-training/*.onnx
+ml-training/*.engine
 
 # Misc
-*.log
 .cache/
 temp/
 tmp/
+
+# IDE
+*.swp
+*.swo
+*~
+
+# Test results
+test_result*.jpg
+test_result*.png
+
+# MLflow
+mlruns/
+mlartifacts/

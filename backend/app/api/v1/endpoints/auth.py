@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -15,6 +15,7 @@ from app.core.security import (
 )
 from app.core.config import settings
 from app.models import User, UserRole
+from app.utils.audit import write_audit_log
 import uuid
 
 router = APIRouter()
@@ -39,18 +40,18 @@ class TokenResponse(BaseModel):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login(request: LoginRequest, http_request: Request = None, db: AsyncSession = Depends(get_db)):
     """Authenticate user and return JWT tokens"""
     # Find user in database
     result = await db.execute(select(User).where(User.email == request.email))
     user = result.scalar_one_or_none()
-    
+
     if not user or not verify_password(request.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
         )
-    
+
     # Create tokens
     access_token_expires = timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -60,7 +61,16 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
     refresh_token = create_refresh_token(
         data={"sub": str(user.id), "email": user.email, "role": user.role.value}
     )
-    
+
+    # Audit log: login
+    ip = http_request.client.host if http_request else None
+    ua = http_request.headers.get("user-agent") if http_request else None
+    await write_audit_log(
+        db, str(user.id), "login", "auth", None,
+        details={"email": user.email},
+        ip_address=ip, user_agent=ua,
+    )
+
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -69,18 +79,18 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/register", response_model=TokenResponse)
-async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db)):
+async def register(request: RegisterRequest, http_request: Request = None, db: AsyncSession = Depends(get_db)):
     """Register a new user"""
     # Check if user already exists
     result = await db.execute(select(User).where(User.email == request.email))
     existing_user = result.scalar_one_or_none()
-    
+
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    
+
     # Create new user
     new_user = User(
         id=uuid.uuid4(),
@@ -89,11 +99,20 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
         full_name=request.full_name,
         role=request.role
     )
-    
+
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
-    
+
+    # Audit log: registration
+    ip = http_request.client.host if http_request else None
+    ua = http_request.headers.get("user-agent") if http_request else None
+    await write_audit_log(
+        db, str(new_user.id), "register", "auth", str(new_user.id),
+        details={"email": new_user.email, "full_name": new_user.full_name},
+        ip_address=ip, user_agent=ua,
+    )
+
     # Create tokens
     access_token_expires = timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -103,7 +122,7 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
     refresh_token = create_refresh_token(
         data={"sub": str(new_user.id), "email": new_user.email, "role": new_user.role.value}
     )
-    
+
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -163,8 +182,16 @@ async def refresh_token(refresh_token: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/logout")
-async def logout(current_user: dict = Depends(get_current_user)):
+async def logout(http_request: Request = None, current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Logout user (client should delete tokens)"""
+    # Audit log: logout
+    ip = http_request.client.host if http_request else None
+    ua = http_request.headers.get("user-agent") if http_request else None
+    await write_audit_log(
+        db, user_id=current_user["user_id"], action="logout",
+        resource_type="auth", resource_id=None,
+        ip_address=ip, user_agent=ua,
+    )
     # In a production system, you might add the token to a blacklist
     # For now, the client is responsible for deleting the tokens
     return {"message": "Successfully logged out"}

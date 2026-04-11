@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
@@ -13,13 +13,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, desc
 from sqlalchemy.orm import joinedload
 
-from app.core.security import get_current_user
+from app.core.security import get_current_user, require_role
 from app.core.database import get_db
 from app.core.config import settings
+from app.utils.s3 import s3_is_configured, upload_to_s3, get_presigned_url
 from app.services.colony_detector import ColonyDetector, VALID_COLONY_CLASSES
 from app.services.image_processor import ImageProcessor
 from app.services.cfu_calculator import CFUCalculator
 from app.models import Analysis, ColonyDetection, AnalysisStatus, User
+from app.utils.audit import write_audit_log
 from app.schemas.analyses import (
     AnalysisResponse,
     AnalysisBriefResponse,
@@ -173,6 +175,7 @@ async def create_analysis(
     media_type: str = Form(...),
     dilution_factor: float = Form(1.0),
     plated_volume_ml: float = Form(1.0),
+    request: Request = None,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -207,10 +210,19 @@ async def create_analysis(
         )
 
     try:
-        # Step 1: Save original image
+        # Step 1: Save original image locally for processing
         original_dir = os.path.join(settings.UPLOAD_DIR, "original")
         original_path = _save_upload(file, original_dir)
         original_url = _get_file_url(original_path)
+
+        # If S3 is configured, also upload to S3 and use presigned URL
+        if s3_is_configured():
+            ext = Path(file.filename).suffix if file.filename else ".jpg"
+            original_basename = os.path.splitext(os.path.basename(original_path))[0]
+            s3_key = f"{settings.AWS_S3_ORIGINAL_PREFIX}{original_basename}{ext}"
+            with open(original_path, "rb") as f:
+                upload_to_s3(f.read(), s3_key, content_type=file.content_type)
+            original_url = get_presigned_url(s3_key) or s3_key
 
         # Step 2: Create analysis record (PROCESSING status)
         analysis_id = uuid.uuid4()
@@ -264,11 +276,23 @@ async def create_analysis(
             analysis_status = AnalysisStatus.FAILED
 
         # Step 7: Save annotated image
-        annotated_dir = os.path.join(settings.UPLOAD_DIR, "annotated")
-        annotated_filename = f"{analysis_id}.jpg"
-        annotated_path = os.path.join(annotated_dir, annotated_filename)
-        image_processor.save_annotated_image(processed_image, detections, annotated_path)
-        annotated_url = _get_file_url(annotated_path)
+        if s3_is_configured():
+            # Save to temp local file, then upload to S3
+            annotated_dir = os.path.join(settings.UPLOAD_DIR, "annotated")
+            annotated_filename = f"{analysis_id}.jpg"
+            annotated_path = os.path.join(annotated_dir, annotated_filename)
+            image_processor.save_annotated_image(processed_image, detections, annotated_path)
+            s3_key = f"{settings.AWS_S3_ANNOTATED_PREFIX}{analysis_id}.jpg"
+            with open(annotated_path, "rb") as f:
+                upload_to_s3(f.read(), s3_key, content_type="image/jpeg")
+            annotated_url = get_presigned_url(s3_key) or s3_key
+        else:
+            # Fallback: local storage
+            annotated_dir = os.path.join(settings.UPLOAD_DIR, "annotated")
+            annotated_filename = f"{analysis_id}.jpg"
+            annotated_path = os.path.join(annotated_dir, annotated_filename)
+            image_processor.save_annotated_image(processed_image, detections, annotated_path)
+            annotated_url = _get_file_url(annotated_path)
 
         # Step 8: Update analysis record
         analysis.status = analysis_status
@@ -311,6 +335,16 @@ async def create_analysis(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to retrieve analysis after creation",
             )
+
+        # Audit log: analysis created
+        ip = request.client.host if request else None
+        ua = request.headers.get("user-agent") if request else None
+        await write_audit_log(
+            db, current_user["user_id"], "create_analysis",
+            "analysis", str(analysis_id),
+            details={"sample_id": sample_id, "status": analysis_status.value if hasattr(analysis_status, 'value') else analysis_status},
+            ip_address=ip, user_agent=ua,
+        )
 
         return _build_analysis_response(analysis)
 
@@ -528,7 +562,8 @@ async def get_dashboard_stats(
 @router.post("/{analysis_id}/approve")
 async def approve_analysis(
     analysis_id: str,
-    current_user: dict = Depends(get_current_user),
+    request: Request = None,
+    current_user: dict = Depends(require_role("analyst", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """Approve an analysis and mark it as validated"""
@@ -564,14 +599,25 @@ async def approve_analysis(
         analysis.status = AnalysisStatus.COMPLETED
         await db.commit()
 
+    # Audit log: analysis approved
+    ip = request.client.host if request else None
+    ua = request.headers.get("user-agent") if request else None
+    await write_audit_log(
+        db, current_user["user_id"], "approve_analysis",
+        "analysis", analysis_id,
+        details={"sample_id": analysis.sample_id},
+        ip_address=ip, user_agent=ua,
+    )
+
     return _build_analysis_response(analysis)
 
 
 @router.post("/{analysis_id}/review")
 async def flag_for_review(
     analysis_id: str,
-    request: FlagReviewRequest,
-    current_user: dict = Depends(get_current_user),
+    body: FlagReviewRequest,
+    http_request: Request = None,
+    current_user: dict = Depends(require_role("analyst", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """Flag an analysis for manual review"""
@@ -603,9 +649,19 @@ async def flag_for_review(
 
     # Add review warning
     warnings = analysis.warnings or []
-    warnings.append(f"Manual review: {request.reason}")
+    warnings.append(f"Manual review: {body.reason}")
     analysis.warnings = warnings
     await db.commit()
     await db.refresh(analysis)
+
+    # Audit log: analysis flagged for review
+    ip = http_request.client.host if http_request else None
+    ua = http_request.headers.get("user-agent") if http_request else None
+    await write_audit_log(
+        db, current_user["user_id"], "flag_for_review",
+        "analysis", analysis_id,
+        details={"sample_id": analysis.sample_id, "reason": body.reason},
+        ip_address=ip, user_agent=ua,
+    )
 
     return _build_analysis_response(analysis)

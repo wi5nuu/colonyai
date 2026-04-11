@@ -2,18 +2,22 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
-import { 
-  LayoutDashboard, Upload, History, FileText, Settings, LogOut, Menu, X, 
-  FlaskConical, User, Bell, Moon, Sun, Globe 
+import {
+  LayoutDashboard, Upload, History, FileText, Settings, LogOut, Menu, X,
+  FlaskConical, User, Bell, Moon, Sun, Globe, Scale, BarChart3
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { AuthGuard } from '@/lib/auth-guard'
+import { useAuthStore } from '@/lib/auth-store'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'New Analysis', href: '/dashboard/upload', icon: Upload },
   { name: 'History', href: '/dashboard/history', icon: History },
+  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+  { name: 'Simulator', href: '/dashboard/simulator', icon: Scale },
   { name: 'Reports', href: '/dashboard/reports', icon: FileText },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
@@ -21,9 +25,20 @@ const navigation = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
   const { theme, setTheme } = useTheme()
+  const auth = useAuthStore()
+
+  const handleLogout = async () => {
+    await auth.logout()
+    router.push('/login')
+    toast.success('Logged out successfully')
+  }
+
+  const user = auth.user
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-background">
       {/* Mobile backdrop */}
       {sidebarOpen && (
@@ -62,7 +77,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </nav>
 
           <div className="p-4 border-t border-border">
-            <button onClick={() => toast.success('Logged out successfully')} 
+            <button onClick={handleLogout}
               className="flex items-center w-full px-3 py-2.5 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors">
               <LogOut className="h-4 w-4 mr-3" /> Logout
             </button>
@@ -97,11 +112,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* User Profile */}
             <div className="flex items-center ml-2 pl-2 border-l border-border">
               <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium text-sm">
-                WA
+                {user ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
               </div>
               <div className="hidden md:block ml-3 text-sm">
-                <p className="font-medium leading-none">Wisnu A.</p>
-                <p className="text-xs text-muted-foreground mt-1">Lab Analyst</p>
+                <p className="font-medium leading-none">{user?.full_name || 'User'}</p>
+                <p className="text-xs text-muted-foreground mt-1 capitalize">{user?.role || 'viewer'}</p>
               </div>
             </div>
           </div>
@@ -110,5 +125,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <main className="p-6">{children}</main>
       </div>
     </div>
+    </AuthGuard>
   )
 }

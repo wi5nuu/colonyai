@@ -15,23 +15,24 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { analysesApi } from '@/lib/analyses-api'
-import { Analysis, DetectionClass } from '@/lib/types'
+import { reportsApi } from '@/lib/reports-api'
+import { Analysis, DetectionClass, ReportType } from '@/lib/types'
 import { toast } from 'sonner'
 
 // Class color mapping for detection boxes
 const DETECTION_COLORS: Record<DetectionClass, string> = {
   colony_single: 'border-green-500 bg-green-500/20',
-  colony_merged: 'border-orange-500 bg-orange-500/20',
-  bubble: 'border-blue-500 bg-blue-500/20',
-  dust_debris: 'border-red-500 bg-red-500/20',
+  colony_merged: 'border-yellow-500 bg-yellow-500/20',
+  bubble: 'border-red-500 bg-red-500/20',
+  dust_debris: 'border-orange-500 bg-orange-500/20',
   media_crack: 'border-purple-500 bg-purple-500/20',
 }
 
 const DOT_COLORS: Record<DetectionClass, string> = {
   colony_single: 'bg-green-500',
-  colony_merged: 'bg-orange-500',
-  bubble: 'bg-blue-500',
-  dust_debris: 'bg-red-500',
+  colony_merged: 'bg-yellow-500',
+  bubble: 'bg-red-500',
+  dust_debris: 'bg-orange-500',
   media_crack: 'bg-purple-500',
 }
 
@@ -81,6 +82,21 @@ export default function ResultsPage() {
       toast.success('Analysis flagged for review')
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to flag for review')
+    }
+  }
+
+  const handleExportPdf = async () => {
+    if (!analysis) return
+
+    try {
+      const report = await reportsApi.generatePdf({
+        report_type: 'custom' as ReportType,
+        format: 'pdf',
+      })
+      await reportsApi.downloadReport(report.url.split('/').pop() || 'latest')
+      toast.success('PDF exported successfully')
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to export PDF')
     }
   }
 
@@ -159,7 +175,10 @@ export default function ResultsPage() {
           </div>
         </div>
         <div className="flex space-x-2">
-          <button className="btn-secondary flex items-center">
+          <button
+            onClick={handleExportPdf}
+            className="btn-secondary flex items-center"
+          >
             <Download className="h-4 w-4 mr-2" />
             Export PDF
           </button>
@@ -301,15 +320,15 @@ export default function ResultsPage() {
             <span className="text-sm text-gray-700">Single Colony</span>
           </div>
           <div className="flex items-center">
-            <div className="w-4 h-4 bg-orange-500/20 border-2 border-orange-500 mr-2"></div>
+            <div className="w-4 h-4 bg-yellow-500/20 border-2 border-yellow-500 mr-2"></div>
             <span className="text-sm text-gray-700">Merged Colony</span>
           </div>
           <div className="flex items-center">
-            <div className="w-4 h-4 bg-blue-500/20 border-2 border-blue-500 mr-2"></div>
+            <div className="w-4 h-4 bg-red-500/20 border-2 border-red-500 mr-2"></div>
             <span className="text-sm text-gray-700">Bubble</span>
           </div>
           <div className="flex items-center">
-            <div className="w-4 h-4 bg-red-500/20 border-2 border-red-500 mr-2"></div>
+            <div className="w-4 h-4 bg-orange-500/20 border-2 border-orange-500 mr-2"></div>
             <span className="text-sm text-gray-700">Dust/Debris</span>
           </div>
           <div className="flex items-center">

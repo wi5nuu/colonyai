@@ -4,12 +4,12 @@ from pydantic import BaseModel
 from typing import Optional
 import uuid
 import os
-import shutil
 from pathlib import Path
 
 from app.core.security import get_current_user
 from app.core.config import settings
 from app.core.database import get_db
+from app.utils.s3 import s3_is_configured, upload_to_s3, get_presigned_url, delete_from_s3
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
@@ -53,23 +53,30 @@ async def upload_image(
             detail=f"File size exceeds {settings.IMAGE_MAX_SIZE // (1024*1024)}MB limit"
         )
 
-    # Generate unique filename
+    # Generate unique ID and filename from the same UUID
+    image_id = uuid.uuid4()
     ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
-    unique_filename = f"{uuid.uuid4()}.{ext}"
+    unique_filename = f"{image_id}.{ext}"
 
-    # Save to local storage
-    upload_dir = os.path.join(settings.UPLOAD_DIR, "original")
-    Path(upload_dir).mkdir(parents=True, exist_ok=True)
-    file_path = os.path.join(upload_dir, unique_filename)
+    # Read file bytes
+    file_bytes = file.file.read()
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    # Generate URL
-    original_url = f"{settings.BACKEND_URL}/uploads/original/{unique_filename}"
+    if s3_is_configured():
+        # Upload to S3
+        s3_key = f"{settings.AWS_S3_ORIGINAL_PREFIX}{image_id}.{ext}"
+        upload_to_s3(file_bytes, s3_key, content_type=file.content_type)
+        original_url = get_presigned_url(s3_key) or s3_key
+    else:
+        # Fallback: save to local storage
+        upload_dir = os.path.join(settings.UPLOAD_DIR, "original")
+        Path(upload_dir).mkdir(parents=True, exist_ok=True)
+        file_path = os.path.join(upload_dir, unique_filename)
+        with open(file_path, "wb") as buffer:
+            buffer.write(file_bytes)
+        original_url = f"{settings.BACKEND_URL}/uploads/original/{unique_filename}"
 
     return {
-        "image_id": str(uuid.uuid4()),
+        "image_id": str(image_id),
         "original_url": original_url,
         "filename": unique_filename,
     }
@@ -81,6 +88,24 @@ async def get_image(
     current_user: dict = Depends(get_current_user)
 ):
     """Retrieve uploaded image by filename"""
+    if s3_is_configured():
+        # Try to resolve the S3 key from the filename
+        # Filename may be just the UUID or UUID.ext
+        image_id = filename.rsplit(".", 1)[0] if "." in filename else filename
+        for prefix in [settings.AWS_S3_ORIGINAL_PREFIX, settings.AWS_S3_ANNOTATED_PREFIX]:
+            # Try common extensions
+            for ext in ["jpg", "jpeg", "png", "webp"]:
+                s3_key = f"{prefix}{image_id}.{ext}"
+                url = get_presigned_url(s3_key)
+                if url:
+                    from fastapi.responses import RedirectResponse
+                    return RedirectResponse(url=url)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Image not found in S3",
+        )
+
+    # Fallback: local filesystem
     file_path = os.path.join(settings.UPLOAD_DIR, "original", filename)
 
     if not os.path.exists(file_path):
@@ -103,6 +128,22 @@ async def delete_image(
     db: AsyncSession = Depends(get_db)
 ):
     """Delete an image by ID"""
+    if s3_is_configured():
+        # Delete from S3 (try both original and annotated prefixes)
+        deleted = False
+        for prefix in [settings.AWS_S3_ORIGINAL_PREFIX, settings.AWS_S3_ANNOTATED_PREFIX]:
+            for ext in ["jpg", "jpeg", "png", "webp"]:
+                s3_key = f"{prefix}{image_id}.{ext}"
+                if delete_from_s3(s3_key):
+                    deleted = True
+        if deleted:
+            return {"message": "Image deleted from S3"}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Image not found in S3",
+        )
+
+    # Fallback: local filesystem
     # Try to find and delete from both directories
     for subdir in ["original", "annotated"]:
         upload_dir = os.path.join(settings.UPLOAD_DIR, subdir)

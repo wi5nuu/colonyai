@@ -74,10 +74,18 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     }
 
 
-async def require_role(required_role: str):
-    """Dependency to check if user has required role"""
+def require_role(*required_roles: str):
+    """
+    Dependency factory to check if user has one of the required roles.
+    Usage: `current_user: dict = Depends(require_role("admin", "analyst"))`
+
+    Always chains through get_current_user first.
+    Users with 'admin' role are always authorized regardless of required_roles.
+    """
     async def role_checker(current_user: dict = Depends(get_current_user)):
-        if current_user["role"] not in ["admin", required_role]:
+        if current_user.get("role") == "admin":
+            return current_user
+        if current_user.get("role") not in required_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions"

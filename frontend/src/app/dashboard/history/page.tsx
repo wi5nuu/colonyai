@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Filter, Download, Eye, Trash2, Loader2 } from 'lucide-react'
 import { analysesApi } from '@/lib/analyses-api'
-import { AnalysisListResponse, MediaType } from '@/lib/types'
+import { reportsApi } from '@/lib/reports-api'
+import { AnalysisListResponse, MediaType, ReportType } from '@/lib/types'
 import { toast } from 'sonner'
 
 export default function HistoryPage() {
@@ -42,6 +43,42 @@ export default function HistoryPage() {
 
   const handleViewAnalysis = (id: string) => {
     router.push(`/dashboard/results/${id}`)
+  }
+
+  const handleExportCsv = async () => {
+    if (!data?.analyses || data.analyses.length === 0) {
+      toast.error('No analyses to export')
+      return
+    }
+    try {
+      const report = await reportsApi.generateCsv({
+        report_type: 'custom' as ReportType,
+        format: 'csv',
+      })
+      await reportsApi.downloadReport(report.url.split('/').pop() || 'latest')
+      toast.success('CSV exported successfully')
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to export CSV')
+    }
+  }
+
+  const handleDelete = async (id: string, sampleId: string) => {
+    if (!window.confirm(`Delete analysis "${sampleId}"? This action cannot be undone.`)) return
+    try {
+      await analysesApi.delete(id)
+      toast.success('Analysis deleted')
+      // Refresh current page
+      const result = await analysesApi.list({
+        page,
+        page_size: pageSize,
+        search: searchTerm || undefined,
+        media_type: mediaFilter !== 'all' ? mediaFilter as MediaType : undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+      })
+      setData(result)
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to delete analysis')
+    }
   }
 
   const formatCFU = (cfu: number, status: string) => {
@@ -136,7 +173,10 @@ export default function HistoryPage() {
           <h2 className="text-lg font-semibold text-gray-900">
             Analysis History ({total} results)
           </h2>
-          <button className="btn-secondary flex items-center">
+          <button
+            onClick={handleExportCsv}
+            className="btn-secondary flex items-center"
+          >
             <Download className="h-4 w-4 mr-2" />
             Export CSV
           </button>
@@ -246,7 +286,10 @@ export default function HistoryPage() {
                         <button className="text-gray-600 hover:text-gray-900">
                           <Download className="h-4 w-4" />
                         </button>
-                        <button className="text-error-600 hover:text-error-900">
+                        <button
+                          onClick={() => handleDelete(analysis.id, analysis.sample_id)}
+                          className="text-error-600 hover:text-error-900"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>

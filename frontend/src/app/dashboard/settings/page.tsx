@@ -1,7 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { User, Bell, Shield, Database, Palette } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { User, Bell, Shield, Database, Palette, Loader2 } from 'lucide-react'
+import { useAuthStore } from '@/lib/auth-store'
+import { authApi } from '@/lib/auth-api'
+import { toast } from 'sonner'
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile')
@@ -53,24 +56,69 @@ export default function SettingsPage() {
 }
 
 function ProfileSettings() {
+  const { user } = useAuthStore()
+  const [fullName, setFullName] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      setFullName(user.full_name)
+    }
+  }, [user])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!fullName.trim()) {
+      toast.error('Name cannot be empty')
+      return
+    }
+    setIsSaving(true)
+    try {
+      await authApi.updateProfile({ full_name: fullName.trim() })
+      toast.success('Profile updated successfully')
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to update profile')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
     <div>
       <h2 className="text-xl font-semibold text-gray-900 mb-4">Profile Settings</h2>
-      <form className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="label">Full Name</label>
-          <input type="text" className="input" defaultValue="Wisnu Alfian Nur Ashar" />
+          <input
+            type="text"
+            className="input"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+          />
         </div>
         <div>
           <label className="label">Email</label>
-          <input type="email" className="input" defaultValue="wisnu.ashar@student.president.ac.id" />
+          <input type="email" className="input" value={user?.email || ''} disabled />
         </div>
         <div>
           <label className="label">Role</label>
-          <input type="text" className="input" defaultValue="Analyst" disabled />
+          <input type="text" className="input" value={user?.role || ''} disabled />
         </div>
         <div className="pt-4">
-          <button type="submit" className="btn-primary">Save Changes</button>
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="btn-primary flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </button>
         </div>
       </form>
     </div>

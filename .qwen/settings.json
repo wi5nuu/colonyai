@@ -47,7 +47,10 @@
       "Bash(git ls-files *)",
       "Bash(git show *)",
       "Bash(git grep *)",
-      "Bash(wc *)"
+      "Bash(wc *)",
+      "Bash(find *)",
+      "Bash(do *)",
+      "Bash(goto *)"
     ]
   },
   "$version": 3

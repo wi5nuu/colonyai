@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.core.security import get_current_user
+from app.core.security import get_current_user, require_role
 from app.core.database import get_db
 from app.models import User
+from app.utils.audit import write_audit_log
 
 router = APIRouter()
 
@@ -100,17 +101,19 @@ async def update_current_user_profile(
 async def list_users(
     skip: int = 0,
     limit: int = 20,
-    current_user: dict = Depends(get_current_user),
+    http_request: Request = None,
+    current_user: dict = Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db)
 ):
     """List all users (admin only)"""
-    # Check admin role
-    user_role = current_user.get("role", "")
-    if user_role not in ("admin", "ADMIN"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin privileges required",
-        )
+    # Audit log: user list accessed
+    ip = http_request.client.host if http_request else None
+    ua = http_request.headers.get("user-agent") if http_request else None
+    await write_audit_log(
+        db, current_user["user_id"], "list_users", "user",
+        None, details={"skip": skip, "limit": limit},
+        ip_address=ip, user_agent=ua,
+    )
 
     result = await db.execute(
         select(User)
