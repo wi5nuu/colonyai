@@ -21,17 +21,16 @@
 | No. | Name | Role |
 |-----|------|------|
 | 1 | Wisnu Alfian Nur Ashar | Product Owner & Frontend Lead |
-| 2 | Faras | Scrum Master & AI/CV Integration |
+| 2 | Muhammad Faras | Scrum Master & AI/CV Integration + Business Analyst & Documentation |
 | 3 | Suci | Developer (UI/UX Designer) |
 | 4 | Steven | Developer (Data Analyst & QA Engineer) |
-| 5 | Faras | Developer (Business Analyst & Documentation) |
 
 ---
 
 ## EXECUTIVE SUMMARY
 *(Max. 150 Words)*
 
-ColonyAI is an AI-powered Automated Plate Count Reader that modernizes Total Plate Count (TPC) testing in microbiology laboratories. Analysts currently count bacterial colonies manually — a process that is time-consuming, inconsistent, and operator-dependent, with inter-analyst variability reaching up to 23.4% (AOAC International). Our solution integrates a fine-tuned YOLOv8 computer vision model with a React/Next.js web dashboard to automate colony detection, classification across 5 object classes, and CFU/ml calculation in real time. The system addresses lighting variation, overlapping colonies, and artifact interference, while maintaining analyst verification as the final validation layer. By reducing analysis time by up to 80% and delivering consistent, reproducible results, ColonyAI directly supports laboratory efficiency, food safety compliance, and public health assurance for Indonesia's 500+ accredited microbiology testing facilities and the broader ASEAN market.
+ColonyAI is an AI-powered Automated Plate Count Reader designed to modernize Total Plate Count (TPC) testing in microbiology laboratories. Analysts currently count bacterial colonies manually — a process that is time-consuming, inconsistent, and operator-dependent, with inter-analyst variability reaching 22.7%–80% coefficient of variation (ASTM F2944). Our solution integrates a fine-tuned YOLOv8 computer vision model with a React/Next.js web dashboard to automate agar plate localization, colony detection, 5-class artifact classification, and CFU/ml calculation in real time. The system addresses lighting variation, overlapping colonies, and artifact interference, while maintaining analyst verification as the final validation layer. By reducing analysis time by up to 80% and delivering consistent, reproducible results, ColonyAI directly supports laboratory efficiency, food safety compliance, and public health assurance for Indonesia's 500+ accredited microbiology testing facilities.
 
 ---
 
@@ -39,6 +38,28 @@ ColonyAI is an AI-powered Automated Plate Count Reader that modernizes Total Pla
 
 ### Selected Case Statement
 **Case 1 — Microbiology Laboratory: Automated Plate Count Reader**
+
+### Challenge Brief Alignment
+
+The Kimia challenge requires an AI model capable of five core capabilities. ColonyAI addresses each requirement and extends beyond them:
+
+| Challenge Requirement | ColonyAI Implementation |
+|----------------------|------------------------|
+| Identify agar plate area from image | OpenCV Hough Circle Transform for robust plate boundary detection under any framing or lighting condition |
+| Automatic detection and counting of bacterial colonies | YOLOv8 single-pass object detection with ≥ 92% target accuracy across all colony morphologies |
+| Differentiate valid colonies vs. artifacts | 5-class taxonomy (colony_single, colony_merged, bubble, dust_debris, media_crack) with > 90% artifact rejection precision |
+| Produce consistent CFU/ml values | Automated CFU/ml = Σ(valid colonies) ÷ (volume × dilution factor) with TNTC/TFTC flagging |
+| Save results to laboratory reporting system | BPOM/SNI-compliant PDF/CSV export + LIMS API integration (SampleManager, LabVantage) |
+
+### Scope & Limitations — How ColonyAI Addresses Each
+
+| Scope / Limitation | ColonyAI Solution |
+|-------------------|-------------------|
+| **Variations in lighting and camera quality** | CLAHE-based adaptive histogram equalization + perspective correction normalizes any input before inference |
+| **Overlapping and low contrast colonies** | YOLOv8 trained specifically on colony_merged class; NMS with IoU 0.45 resolves overlapping detections |
+| **Different media types and colors** | Model trained across 8+ agar media types (PCA, VRBA, BGBB, etc.) with varying plate colors |
+| **Limited labeled dataset** | AGAR public dataset (18,000+ images) + Roboflow augmentation (3× expansion) + synthetic data pipeline |
+| **Results still require analyst verification** | Digital sign-off workflow with confidence transparency — every detection shows per-class confidence scores; analyst approves before submission |
 
 ### Selected Sub-Case Statement
 Automated detection, counting, and CFU/ml reporting of bacterial colonies from agar plate images, with classification across 5 object classes (colony_single, colony_merged, bubble, dust_debris, media_crack) and differentiation between valid colonies and artifacts, integrated into a web-based laboratory dashboard.
@@ -55,16 +76,31 @@ The primary objective of ColonyAI is to eliminate human error and inconsistency 
 - Provide a digital audit trail integrated with LIMS, supporting regulatory compliance with ISO 17025 and SNI standards.
 - Deploy a scalable, multi-laboratory SaaS platform accessible via web browser, requiring no special hardware beyond a standard camera or smartphone.
 
+### Expected Output — Deliverable Mapping
+
+The challenge defines four expected outputs. ColonyAI delivers each as a production-ready module:
+
+| Expected Output | ColonyAI Deliverable | Status |
+|----------------|---------------------|--------|
+| **Computer Vision model** for colony detection & counting | YOLOv8n fine-tuned on 18,000+ AGAR dataset images; 5-class detection (colony_single, colony_merged, bubble, dust_debris, media_crack); ONNX export for CPU inference | Defined |
+| **Dashboard** — Colony count results and test history | Next.js 14 web application with annotated plate images (color-coded bounding boxes), CFU/ml calculation, searchable test history, and per-class confidence scores | Defined |
+| **Simulator** — Comparison of manual vs AI accuracy | Built-in benchmarking module: analysts enter manual counts per class; system displays side-by-side comparison table with accuracy percentage, error margin, and per-class agreement score | Defined |
+| **Executive Summary** — Efficiency of analysis time and consistency of results | Auto-generated PDF report: pre/post AI analysis time comparison, inter-analyst variability reduction metrics, monthly throughput trends, and cost savings analysis — exportable for management review | Defined |
+
 ---
 
 ## PROBLEM DEFINITION
+
+### Problem Context (from Challenge Brief)
+
+Microbiology laboratories perform Total Plate Count (TPC) tests to determine the number of microorganisms in food and environmental samples. Currently, analysts still count colonies manually, making results dependent on experience, time-consuming, and potentially inconsistent — especially when colonies are stacked or of varying sizes. ColonyAI directly addresses this challenge.
 
 ### What is the main problem?
 *(Max. 200 Words)*
 
 In Indonesian microbiology laboratories, Total Plate Count (TPC) remains the gold standard for measuring microbial contamination in food, water, and environmental samples. However, the current process is entirely manual — an analyst physically counts colonies on an agar plate using a colony counter device or pen-tally under magnification. This creates three critical operational failures: (1) **Inconsistency** — two analysts counting the same plate routinely differ by 10–25%; (2) **Throughput Bottleneck** — a single analyst processes only 20–40 plates/hour, causing backlogs during peak periods (post-Eid food inspections, outbreak investigations); (3) **Skill Dependency** — accurate counting requires significant experience, leaving junior analysts and under-resourced laboratories unable to reliably distinguish the 5 object classes present on a plate: valid colonies and 3 types of non-colony artifacts. This bottleneck directly impacts public health decision-making, food safety enforcement, and laboratory accreditation.
 
-### Who is impacted and to what scale?
+### Who is impacted and at what scale?
 *(Max. 150 Words)*
 
 - **Food industry manufacturers** (FMCG, dairy, beverage) — depend on rapid and reliable TPC results for production release decisions and shelf-life validation. Delayed or inaccurate results risk product recalls worth billions of rupiah.
@@ -72,14 +108,14 @@ In Indonesian microbiology laboratories, Total Plate Count (TPC) remains the gol
 - **Third-party testing laboratories** (KAN-accredited) — face increasing sample volumes with limited analyst resources.
 - **Hospitals and clinical labs** — environmental monitoring and food safety testing directly impacts patient safety protocols.
 
-Indonesia alone has over 500 accredited microbiology testing facilities. The Asia-Pacific food testing market is projected to exceed USD 7 billion by 2027, representing an enormous addressable scale for this solution.
+Indonesia alone has over 500 accredited microbiology testing facilities. The Asia-Pacific food testing market is projected to exceed USD 7 billion by 2027.
 
 ### Prove the problem
 *(Max. 180 Words)*
 
 | No. | Source | Key Finding |
 |-----|--------|-------------|
-| 1 | Journal of AOAC International | Inter-analyst variability in manual colony counting reached up to 23.4% for high-density plates (>150 CFU), directly violating ISO 17025 reproducibility requirements. |
+| 1 | ASTM F2944 / Scintica (2024) | Inter-observer coefficient of variation in manual colony counting ranges from 22.7% to 80%; errors of 100%+ observed when two individuals count the same plate. |
 | 2 | FDA Bacteriological Analytical Manual (2023) | Countable-range plates (25–250 CFU) yield significant analyst variation, particularly for non-circular or overlapping colonies — identical to the colony_merged class in ColonyAI. |
 | 3 | BPOM Indonesia (2023) | 18% of food product violations involved microbiological non-conformance; many cases likely go undetected due to inconsistent testing methodology. |
 | 4 | Indonesian Lab Industry Survey (2024, n=12) | Colony counting constitutes 40–60% of analyst working hours in TPC workflows — the single largest labor cost in microbiological analysis. |
@@ -189,13 +225,13 @@ ColonyAI is a web-based intelligent laboratory platform that transforms agar pla
 *(Max. 200 Words)*
 
 - **Efficiency Gains:** Reduces TPC analysis time from 15–30 minutes to under 2 minutes per sample (85–90% reduction), enabling 5–8× more samples per analyst per day without adding headcount.
-- **Consistency & Reproducibility:** Eliminates inter-analyst variability — every plate is processed through the same 5-class YOLOv8 model, producing identical results regardless of operator skill, supporting ISO 17025 reproducibility requirements.
+- **Consistency & Reproducibility:** Eliminates inter-analyst variability (22.7%–80% CV in manual counting) — every plate is processed through the same 5-class YOLOv8 model, producing identical results regardless of operator skill, supporting ISO 17025 reproducibility requirements.
 - **Cost Reduction:** Estimated 40% reduction in labor cost per TPC test. A mid-sized lab processing 200 samples/day could save IDR 500 million – 1 billion/year in analyst labor hours.
 - **Regulatory Compliance:** Digital audit trail with timestamped records and analyst sign-off supports BPOM, KAN, and ISO 17025 accreditation audit requirements.
 - **Democratization of Quality:** Junior analysts and smaller regional laboratories gain access to expert-level classification accuracy across all 5 object classes, reducing the quality gap across Indonesia.
 - **Error Prevention:** Automated TNTC (Too Numerous To Count) and TFTC (Too Few To Count) flags prevent release of invalid results that might otherwise go unchecked under manual workflows.
 
-### Short and Mid-Term Outcomes
+### Short-Term and Mid-Term Outcomes
 *(Max. 200 Words)*
 
 **Short-Term (0–6 Months Post-Deployment):**
@@ -258,7 +294,7 @@ ColonyAI is a web-based intelligent laboratory platform that transforms agar pla
 ### Technology Selection and Implementation
 *(Max. 150 Words)*
 
-YOLOv8 was selected because it provides the optimal balance of speed (< 50ms per image on CPU) and accuracy for a real-time web application, while natively supporting multi-class detection — essential for our 5-class taxonomy. Unlike two-stage detectors (e.g., Faster R-CNN), YOLOv8 processes the entire image in a single forward pass, enabling deployment without GPU hardware. Next.js provides hybrid SSR/CSR for fast dashboard loading. FastAPI delivers a clean, auto-documented REST API with Pydantic validation ensuring data integrity. PostgreSQL ensures ACID compliance for audit trail records — a non-negotiable requirement for ISO 17025 accreditation. This modular stack allows each component to be developed and tested independently, enabling parallel workstreams across the 5 team members. All 5 detection class outputs are stored with their bounding box coordinates, confidence scores, and class labels in a structured relational schema.
+YOLOv8 was selected because it provides the optimal balance of speed (< 50ms per image on CPU) and accuracy for a real-time web application, while natively supporting multi-class detection — essential for our 5-class taxonomy. Unlike two-stage detectors (e.g., Faster R-CNN), YOLOv8 processes the entire image in a single forward pass, enabling deployment without GPU hardware. Next.js provides hybrid SSR/CSR for fast dashboard loading. FastAPI delivers a clean, auto-documented REST API with Pydantic validation ensuring data integrity. PostgreSQL ensures ACID compliance for audit trail records — a non-negotiable requirement for ISO 17025 accreditation. This modular stack allows each component to be developed and tested independently, enabling parallel workstreams across the team. All 5 detection class outputs are stored with their bounding box coordinates, confidence scores, and class labels in a structured relational schema.
 
 ### Solution Algorithm
 *(Max. 150 Words)*
@@ -266,10 +302,6 @@ YOLOv8 was selected because it provides the optimal balance of speed (< 50ms per
 - **Phase 1 — Plate Localization:** Hough Circle Transform (OpenCV) detects the circular agar plate boundary and creates a region-of-interest (ROI) mask, eliminating edge interference regardless of image framing or camera angle.
 - **Phase 2 — 5-Class Detection & Classification:** Fine-tuned YOLOv8 performs simultaneous object detection across all 5 classes: colony_single, colony_merged, bubble, dust_debris, and media_crack. Non-Maximum Suppression (NMS) with IoU threshold 0.45 resolves overlapping bounding boxes. colony_merged detections are flagged with a dilution recommendation.
 - **Phase 3 — Count Validation & CFU Calculation:** Post-processing applies confidence threshold 0.60 (configurable per lab). Only colony_single and colony_merged classes contribute to the final count. CFU/ml = Σ(valid colonies) ÷ (plated_volume_ml × dilution_factor). Results outside 25–250 CFU trigger TNTC/TFTC flags automatically.
-
----
-
-## TECHNICAL APPROACH
 
 ### Primary Data or Input Used
 *(Max. 200 Words)*
@@ -279,7 +311,7 @@ YOLOv8 was selected because it provides the optimal balance of speed (< 50ms per
 - **Synthetic Augmentation:** Roboflow pipeline generates 3× dataset expansion through random brightness/contrast shifts, rotation, horizontal/vertical flip, Gaussian blur, and mosaic augmentation — ensuring all 5 classes are well-represented under varied lighting and camera conditions.
 - **Partner Laboratory Data (Pilot Phase):** 500–1,000 locally captured images from Indonesian laboratories, with annotations covering all 5 classes, filling domain-adaptation gaps from international datasets.
 
-**Data quality controls:** minimum resolution 800×800px; annotation review by two independent annotators; class balance verification ensuring all 5 classes are represented; exclusion of plates with ≥ 300 CFU (TNTC) from training; full anonymization of partner laboratory sample IDs before storage.
+**Data quality controls:** Minimum resolution 800×800px; annotation review by two independent annotators; class balance verification ensuring all 5 classes are represented; exclusion of plates with ≥ 300 CFU (TNTC) from training; full anonymization of partner laboratory sample IDs before storage.
 
 ### Security and Scalability Considerations
 *(Max. 150 Words)*
@@ -304,22 +336,18 @@ YOLOv8 was selected because it provides the optimal balance of speed (< 50ms per
 - **Team Web Expertise:** Strong React/Next.js background enables rapid development of the dashboard frontend, which represents approximately 40% of total development effort.
 - **Available Training Data:** The AGAR public dataset and Roboflow Universe provide an immediate starting point covering all 5 detection classes, eliminating the data acquisition bottleneck that stops most AI projects.
 - **Low Infrastructure Cost:** Google Colab (free GPU) for training and Railway/Vercel free tiers keep costs near zero during the prototype phase — critical for a student team.
-- **Modular Architecture:** Each component (AI model, FastAPI, Next.js frontend, PostgreSQL) can be developed and tested independently, enabling parallel workstreams across all 5 team members.
+- **Modular Architecture:** Each component (AI model, FastAPI, Next.js frontend, PostgreSQL) can be developed and tested independently, enabling parallel workstreams across all team members.
 
 ### Development Stages
 *(Max. 180 Words)*
 
 | Phase | Timeline | Deliverables | Owner |
 |-------|----------|-------------|-------|
-| 1 | Week 1–2 | Dataset collection & annotation for all 5 classes (AGAR + Roboflow + augmentation), environment setup, system architecture finalization | Product Owner + All |
-| 2 | Week 3–5 | YOLOv8 model training v1 (5-class), FastAPI backend scaffold, Next.js project setup, PostgreSQL schema with class-level storage | Scrum Master + Devs |
-| 3 | Week 6–8 | Model optimization targeting > 90% mAP across all 5 classes, Dashboard UI: upload, result view with class color-codes, test history | All Members |
+| 1 | Week 1–2 | Dataset collection & annotation for all 5 classes (AGAR + Roboflow + augmentation), environment setup, system architecture finalization | Wisnu + All |
+| 2 | Week 3–5 | YOLOv8 model training v1 (5-class), FastAPI backend scaffold, Next.js project setup, PostgreSQL schema with class-level storage | Faras + Steven |
+| 3 | Week 6–8 | Model optimization targeting > 90% mAP across all 5 classes, Dashboard UI: upload, result view with class color-codes, test history | Suci + All |
 | 4 | Week 9–11 | Full system integration, CFU/ml calculation module (colony_single + colony_merged), PDF/CSV report export, user authentication | Full Team |
 | 5 | Week 12–14 | Internal testing, UI polish, documentation, pilot lab testing, sprint review & hackathon demo preparation | Full Team |
-
----
-
-## IMPLEMENTATION FEASIBILITY
 
 ### Business Model and Sustainability
 *(Max. 200 Words)*
@@ -339,15 +367,14 @@ YOLOv8 was selected because it provides the optimal balance of speed (< 50ms per
 | # | Name | Scrum Role | Responsibilities |
 |---|------|------------|-----------------|
 | 1 | Wisnu Alfian Nur Ashar | Product Owner | Defines product vision and roadmap; owns and prioritizes the Product Backlog; writes and validates User Stories; accepts or rejects completed features; liaises with stakeholders (labs, BPOM, LIMS vendors). |
-| 2 | Faras | Scrum Master | Facilitates all Scrum ceremonies (Daily Standup, Sprint Planning, Sprint Review, Retrospective); removes team impediments; enforces Definition of Done; tracks sprint velocity and burndown. |
+| 2 | Muhammad Faras | Scrum Master | Facilitates all Scrum ceremonies (Daily Standup, Sprint Planning, Sprint Review, Retrospective); removes team impediments; enforces Definition of Done; tracks sprint velocity and burndown. Also handles Business Analysis & Documentation. |
 | 3 | Suci | Developer (UI/UX) | Designs and implements the Next.js dashboard interface; creates wireframes and Figma mockups; implements color-coded bounding box display for all 5 detection classes; ensures mobile-responsive layout. |
-| 4 | Steven | Developer (QA/Docs) | Writes and executes test cases for all 5 detection classes; performs cross-browser and cross-device testing; maintains technical documentation; prepares sprint reports and final proposal documentation. |
-| 5 | Faras | Developer (BA/Docs) | Conducts business analysis; maintains stakeholder documentation; prepares competitive analysis; supports sprint reporting and final proposal documentation. |
+| 4 | Steven | Developer (QA/Data) | Writes and executes test cases for all 5 detection classes; performs cross-browser and cross-device testing; maintains technical documentation; prepares sprint reports and final proposal documentation. Also handles AI/Backend development. |
 
 ### 2. Product Backlog
 
 | ID | Priority | User Story | Acceptance Criteria | Category | Points |
-|----|----------|-----------|--------------------|----------|--------|
+|----|----------|-----------|---------------------|----------|--------|
 | PB-01 | 🔴 MUST | As an analyst, I want to upload a plate image and have the AI automatically identify the plate boundary so that only the agar area is analyzed. | Given a plate photo, when uploaded, then Hough Circle Transform detects boundary within ±5px; non-plate area is masked and excluded from inference. | Feature | 8 |
 | PB-02 | 🔴 MUST | As an analyst, I want the AI model to classify every detected object into exactly one of 5 classes (colony_single, colony_merged, bubble, dust_debris, media_crack) so that valid colonies are distinguished from artifacts. | Given a standardized plate image, when inference runs, then all detections have exactly one class label from the 5-class taxonomy; no undefined or null class labels exist; per-class confidence scores are returned. | Feature | 13 |
 | PB-03 | 🔴 MUST | As an analyst, I want the system to automatically calculate CFU/ml from the colony count and dilution factor I entered so that I receive a standardized result without manual arithmetic. | Given colony_single and colony_merged counts and analyst-entered dilution factor + plated volume, when calculation runs, then CFU/ml = Σ(valid colonies) ÷ (volume × dilution factor) with ±0.1% arithmetic precision; TNTC/TFTC flags display when count is outside 25–250 CFU range. | Feature | 5 |
@@ -363,4 +390,142 @@ YOLOv8 was selected because it provides the optimal balance of speed (< 50ms per
 
 | Priority Level | Label | Count | Backlog Items |
 |---------------|-------|-------|---------------|
-| 🔴 MUST HAVE | Critical | 5 items | PB-01, PB-02, PB-03, PB-04, PB
+| 🔴 MUST HAVE | Critical | 5 items | PB-01, PB-02, PB-03, PB-04, PB-05 |
+| 🟡 SHOULD HAVE | Important | 3 items | PB-06, PB-07, PB-08 |
+| 🟢 COULD HAVE | Nice to have | 2 items | PB-09, PB-10 |
+
+### 4. Weekly Sprint Plan (5 Sprints × 2 Weeks)
+
+| Sprint | Duration | Backlog Items | Sprint Goal | Definition of Done |
+|--------|----------|--------------|-------------|-------------------|
+| Sprint 1 | Week 1–2 | PB-01, PB-02 | YOLOv8 model successfully classifies all 5 classes on the AGAR dataset with initial mAP > 70%. | Model trained; inference script runs; 5-class output verified on 50 test images. |
+| Sprint 2 | Week 3–5 | PB-03, PB-05 | FastAPI backend serves inference results; CFU/ml calculator processes colony_single + colony_merged counts; audit log writes to PostgreSQL. | API returns correct CFU/ml for 10 test cases; audit log entries verified; TNTC/TFTC flags working. |
+| Sprint 3 | Week 6–8 | PB-04, PB-07 | Next.js dashboard displays color-coded bounding boxes for all 5 classes; mobile camera upload pipeline functional end-to-end. | Dashboard renders all 5 classes with distinct colors; mobile upload tested on 3 devices; UI reviewed by Product Owner. |
+| Sprint 4 | Week 9–11 | PB-06, PB-08 | Analysts can export BPOM-compliant PDF and CSV reports; Simulator displays AI vs. manual count comparison for all 5 classes. | PDF export validated against BPOM format; Simulator comparison table verified for accuracy. |
+| Sprint 5 | Week 12–14 | PB-09, PB-10 + Integration | Full system integrated and tested; CFU/ml analytics chart functional; MLflow model versioning pipeline operational; demo-ready build deployed. | All 10 backlog items accepted by Product Owner; end-to-end test passes for all 5 classes; demo video recorded; documentation complete. |
+
+### 5. Daily Sprint (GitHub Repository)
+
+| Item | Details |
+|------|---------|
+| **Repository** | https://github.com/wi5nuu/colonyai |
+| **Daily Standup** | ✅ Done: [completed yesterday] | 🔄 Today: [working on] | 🚧 Blocker: [impediments] |
+| **Issue Labels** | 5-class-model | frontend | backend | bug | documentation | testing | compliance |
+| **Branch Strategy** | main → develop → feature/PB-XX-short-description |
+| **Sprint Board** | GitHub Projects Kanban: To Do → In Progress → In Review → Done |
+| **Velocity Tracking** | Story points completed per sprint logged in Sprint Retrospective document |
+
+---
+
+## ATTACHMENT & REFERENCE
+
+### Attachments
+
+**UI Mockup / Wireframes — ColonyAI Dashboard**
+
+**Page 1: Upload & Sample Entry**
+```
+┌─────────────────────────────────────────────────────┐
+│  ColonyAI 🧫                    [User] [Settings]   │
+├─────────────────────────────────────────────────────┤
+│  ┌─────────────────┐  ┌──────────────────────────┐ │
+│  │   Drop zone or  │  │  Sample Information      │ │
+│  │   camera icon   │  │  Sample ID: [________]   │ │
+│  │   📷            │  │  Media Type: [PCA ▼]     │ │
+│  │                 │  │  Dilution Factor: [10⁻²] │ │
+│  │ "Upload plate   │  │  Plated Volume: [1.0 ml] │ │
+│  │  image"         │  │  [🔍 Analyze Plate]      │ │
+│  └─────────────────┘  └──────────────────────────┘ │
+│  Recent Tests: [table with Date, Sample, CFU/ml]   │
+└─────────────────────────────────────────────────────┘
+```
+
+**Page 2: Results Dashboard (5-Class Annotated View)**
+```
+┌────────────────────────────────────────────────────────────┐
+│  ColonyAI 🧫  →  Result: SMP-2026-0042    [Export] [Back] │
+├────────────────────────────────────────────────────────────┤
+│  ┌──────────────────────────┐  ┌────────────────────────┐ │
+│  │  [Annotated Plate Image] │  │  Detection Summary     │ │
+│  │  Color-coded boxes:      │  │  🟢 colony_single:  87 │ │
+│  │  🟢 Green = single      │  │  🟡 colony_merged:  12 │ │
+│  │  🟡 Yellow = merged     │  │  🔴 Bubble:          3 │ │
+│  │  🔴 Red = bubble        │  │  🟠 Dust/Debris:     1 │ │
+│  │  🟠 Orange = dust       │  │  🟣 Media Crack:      0 │ │
+│  │  🟣 Purple = crack      │  │  Total Valid:       99 │ │
+│  │                          │  │  CFU/ml:     9,900    │ │
+│  └──────────────────────────┘  │  Reliability:   94.2% │ │
+│   Hover: "colony_single 96.3%" │  Status: ✅ Normal    │ │
+│                                │  [✏️ Edit] [✓ Approve]│ │
+│                                └────────────────────────┘ │
+└────────────────────────────────────────────────────────────┘
+```
+
+**Page 3: Simulator (AI vs Manual Comparison)**
+```
+┌──────────────────────────────────────────────────────────┐
+│  ColonyAI 🧫  →  Simulator              [Dashboard]      │
+├──────────────────────────────────────────────────────────┤
+│  Sample: SMP-2026-0042  |  Media: PCA  |  Dilution: 10⁻²│
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  Class           │ AI Count │ Manual │ Agreement  │ │
+│  │  🟢 colony_single│    87    │ [__]  │   --%      │ │
+│  │  🟡 colony_merged│    12    │ [__]  │   --%      │ │
+│  │  🔴 Bubble       │     3    │ [__]  │   --%      │ │
+│  │  🟠 Dust/Debris  │     1    │ [__]  │   --%      │ │
+│  │  🟣 Media Crack  │     0    │ [__]  │   --%      │ │
+│  │  Total Valid     │  AI: 99  │ Manual: [__]        │ │
+│  │  Accuracy Match  │  94.2%                         │ │
+│  └────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Page 4: Analytics Dashboard (Trends)**
+```
+┌──────────────────────────────────────────────────────────┐
+│  ColonyAI 🧫  →  Analytics               [Dashboard]     │
+├──────────────────────────────────────────────────────────┤
+│  Date Range: [Last 30 days ▼]  Media: [All ▼]           │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  CFU/ml Trend Over Time (line chart)               │ │
+│  │  ┌─\                                              │ │
+│  │  │  \  /\     /\                                  │ │
+│  │  │   \/  \/\ /  \                                 │ │
+│  │  └──────────────────────▶ Date                    │ │
+│  └────────────────────────────────────────────────────┘ │
+│  Summary Table: [Month, Tests, Avg CFU, Pass%, Analyst] │
+│                                         [📥 Export CSV] │
+└──────────────────────────────────────────────────────────┘
+```
+
+### References (APA 7th Edition)
+
+[1]  Coutinho, C., Durão, L., Figueiredo, J., & Carvalho, Â. (2021). AGAR a microbial colony dataset for deep learning detection. *Scientific Reports, 11*, 16365. https://doi.org/10.1038/s41598-021-99300-z
+
+[2]  Trevisan, N. M., et al. (2022). Automated bacterial colony counting using deep learning object detection. *Computers and Electronics in Agriculture, 200*, 107226. https://doi.org/10.1016/j.compag.2022.107226
+
+[3]  Jocher, G., Chaurasia, A., & Qiu, J. (2023). *Ultralytics YOLOv8* [Software]. GitHub. https://github.com/ultralytics/ultralytics
+
+[4]  U.S. Food and Drug Administration. (2023). *Bacteriological Analytical Manual (BAM) — Chapter 3: Aerobic Plate Count*. FDA. https://www.fda.gov/food/laboratory-methods-food/bacteriological-analytical-manual-bam
+
+[5]  International Organization for Standardization. (2017). *ISO/IEC 17025:2017 — General requirements for the competence of testing and calibration laboratories*. ISO. https://www.iso.org/standard/66912.html
+
+[6]  Badan Pengawas Obat dan Makanan Republik Indonesia. (2023). *Laporan Tahunan Pengawasan Keamanan Pangan 2023*. BPOM RI. https://www.pom.go.id/laporan-tahunan
+
+[7]  MarketsandMarkets. (2024). *Food Testing Market — Global Forecast to 2029* (Report Code: FB 1228). https://www.marketsandmarkets.com/Market-Reports/food-testing-market-494.html
+
+[8]  Roboflow, Inc. (2024). *Roboflow Universe: Open Datasets for Computer Vision*. https://universe.roboflow.com
+
+[9]  Komite Akreditasi Nasional. (2023). *Panduan Akreditasi Laboratorium Pengujian dan Kalibrasi*. KAN Indonesia. https://www.kan.or.id
+
+[10] Ronneberger, O., Fischer, P., & Brox, T. (2015). U-Net: Convolutional Networks for Biomedical Image Segmentation. In *MICCAI 2015* (pp. 234–241). https://doi.org/10.1007/978-3-319-24574-4_28
+
+[11] ASTM International. (2023). *Standard Test Method for Automated Colony Forming Unit (CFU) Assays — Image Acquisition and Analysis Method for Enumerating and Characterizing Cells and Colonies in Culture* (ASTM F2944).
+
+[12] Scintica Instrumentation. (2024). *Re-evaluating manual colony counting: How automated counting is saving researchers time and effort*. https://scintica.com/re-evaluating-manual-colony-counting-how-automated-counting-is-saving-researchers-time-and-effort/
+
+---
+
+**ColonyAI — AI Open Innovation Challenge 2026**  
+Team Leader: Wisnu Alfian Nur Ashar | President University | wisnu.ashar@student.president.ac.id  
+GitHub: https://github.com/wi5nuu/colonyai

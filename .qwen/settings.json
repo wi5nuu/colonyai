@@ -40,7 +40,14 @@
       "Bash(rd *)",
       "Bash(git init)",
       "Bash(git remote *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git log *)",
+      "Bash(git ls-files *)",
+      "Bash(git show *)",
+      "Bash(git grep *)",
+      "Bash(wc *)"
     ]
   },
   "$version": 3
