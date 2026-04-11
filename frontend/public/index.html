@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColonyAI - Colony Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .upload-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .upload-box {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+        
+        .upload-box:hover {
+            background: #eef1ff;
+            border-color: #764ba2;
+        }
+        
+        .upload-box.dragover {
+            background: #e0e7ff;
+            border-color: #764ba2;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results {
+            display: none;
+            margin-top: 40px;
+        }
+        
+        .results.show {
+            display: block;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .images {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .image-box {
+            text-align: center;
+        }
+        
+        .image-box img {
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .image-box h4 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .cfu-calc {
+            background: #f8f9ff;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+        
+        .cfu-calc h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+        
+        .cfu-result {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        
+        .cfu-result.show {
+            display: block;
+        }
+        
+        .cfu-result h2 {
+            color: #667eea;
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧫 ColonyAI</h1>
+            <p>AI-Powered Bacterial Colony Detection</p>
+        </header>
+        
+        <div class="content">
+            <div id="status" class="status disconnected">
+                ⏳ Connecting to backend...
+            </div>
+            
+            <div class="upload-section">
+                <h2>📤 Upload Petri Dish Image</h2>
+                <p style="margin: 15px 0; color: #666;">
+                    Upload an image and AI will detect bacterial colonies automatically
+                </p>
+                
+                <div class="upload-box" id="uploadBox">
+                    <p style="font-size: 3em;">📷</p>
+                    <p style="font-size: 1.2em; margin: 10px 0;">
+                        Drag & drop image here or click to browse
+                    </p>
+                    <p style="color: #999;">
+                        Supported: JPG, JPEG, PNG
+                    </p>
+                </div>
+                
+                <input type="file" id="fileInput" accept="image/*">
+                
+                <button class="btn" id="analyzeBtn" disabled>
+                    🔍 Analyze Colonies
+                </button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="font-size: 1.2em; color: #667eea;">
+                    Analyzing with AI...
+                </p>
+            </div>
+            
+            <div class="results" id="results">
+                <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">
+                    📊 Analysis Results
+                </h2>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3 id="colonyCount">0</h3>
+                        <p>Colonies Detected</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="confidence">0%</h3>
+                        <p>Avg Confidence</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="inferenceTime">0ms</h3>
+                        <p>Inference Time</p>
+                    </div>
+                </div>
+                
+                <div class="images">
+                    <div class="image-box">
+                        <h4>📷 Original Image</h4>
+                        <img id="originalImage" src="" alt="Original">
+                    </div>
+                    <div class="image-box">
+                        <h4>🎯 Annotated Result</h4>
+                        <img id="annotatedImage" src="" alt="Annotated">
+                    </div>
+                </div>
+                
+                <div class="cfu-calc">
+                    <h3>🧪 CFU/ml Calculator</h3>
+                    <div class="form-group">
+                        <label>Dilution Factor:</label>
+                        <input type="number" id="dilutionFactor" value="0.1" step="0.001" min="0.001">
+                    </div>
+                    <div class="form-group">
+                        <label>Plated Volume (ml):</label>
+                        <input type="number" id="platedVolume" value="0.1" step="0.001" min="0.001">
+                    </div>
+                    <button class="btn" onclick="calculateCFU()">
+                        Calculate CFU/ml
+                    </button>
+                    
+                    <div class="cfu-result" id="cfuResult">
+                        <h2 id="cfuValue">0</h2>
+                        <p style="font-size: 1.5em; color: #333;">CFU/ml</p>
+                        <p id="cfuStatus" style="margin-top: 10px; font-weight: bold;"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let uploadedFile = null;
+        let analysisResult = null;
+        
+        // Check backend connection
+        async function checkBackend() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                if (response.ok) {
+                    document.getElementById('status').className = 'status connected';
+                    document.getElementById('status').innerHTML = '✅ Backend connected - Ready to analyze';
+                    return true;
+                }
+            } catch (e) {
+                document.getElementById('status').className = 'status disconnected';
+                document.getElementById('status').innerHTML = '❌ Backend not connected - Please start the server';
+            }
+            return false;
+        }
+        
+        // Upload handlers
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        
+        uploadBox.addEventListener('click', () => fileInput.click());
+        
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.classList.add('dragover');
+        });
+        
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.classList.remove('dragover');
+        });
+        
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        function handleFile(file) {
+            uploadedFile = file;
+            uploadBox.innerHTML = `
+                <p style="font-size: 3em;">✅</p>
+                <p style="font-size: 1.2em; margin: 10px 0;">
+                    ${file.name}
+                </p>
+                <p style="color: #667eea; font-weight: bold;">
+                    Click or drop to change file
+                </p>
+            `;
+            analyzeBtn.disabled = false;
+        }
+        
+        // Analyze
+        analyzeBtn.addEventListener('click', async () => {
+            if (!uploadedFile) return;
+            
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            
+            loading.classList.add('show');
+            results.classList.remove('show');
+            analyzeBtn.disabled = true;
+            
+            const formData = new FormData();
+            formData.append('file', uploadedFile);
+            
+            try {
+                const response = await fetch(`${API_URL}/api/v1/analyze/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Analysis failed');
+                }
+                
+                const data = await response.json();
+                analysisResult = data;
+                
+                // Display results
+                document.getElementById('colonyCount').textContent = data.colonies_detected;
+                document.getElementById('confidence').textContent = `${(data.confidence_avg * 100).toFixed(1)}%`;
+                document.getElementById('inferenceTime').textContent = `${data.inference_time_ms.toFixed(1)}ms`;
+                
+                // Show images
+                const imageUrl = URL.createObjectURL(uploadedFile);
+                document.getElementById('originalImage').src = imageUrl;
+                document.getElementById('annotatedImage').src = data.annotated_image_url + '?t=' + Date.now();
+                
+                loading.classList.remove('show');
+                results.classList.add('show');
+                
+            } catch (error) {
+                alert('Analysis failed: ' + error.message);
+                loading.classList.remove('show');
+            }
+            
+            analyzeBtn.disabled = false;
+        });
+        
+        // CFU Calculator
+        function calculateCFU() {
+            const colonies = analysisResult ? analysisResult.colonies_detected : 0;
+            const dilution = parseFloat(document.getElementById('dilutionFactor').value);
+            const volume = parseFloat(document.getElementById('platedVolume').value);
+            
+            const cfu = colonies / (volume * dilution);
+            
+            document.getElementById('cfuValue').textContent = cfu.toExponential(2);
+            
+            let status = '✅ Valid Count';
+            if (colonies > 250) status = '⚠️ TNTC (Too Numerous To Count)';
+            else if (colonies < 25) status = '⚠️ TFTC (Too Few To Count)';
+            
+            document.getElementById('cfuStatus').textContent = status;
+            document.getElementById('cfuResult').classList.add('show');
+        }
+        
+        // Init
+        checkBackend();
+        setInterval(checkBackend, 5000);
+    </script>
+</body>
+</html>
