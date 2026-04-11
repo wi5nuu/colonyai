@@ -73,6 +73,110 @@ ColonyAI is an intelligent laboratory platform that transforms agar plate images
 └───────────────┘               └───────────────┘
 ```
 
+## Getting Started
+
+### Prerequisites
+
+| Requirement | Version | Download |
+|-------------|---------|----------|
+| Python | 3.10+ | https://www.python.org/downloads/ |
+| Node.js | 18+ | https://nodejs.org/ |
+| PostgreSQL | 15+ | https://www.postgresql.org/download/ |
+| Git | Latest | https://git-scm.com/ |
+
+### Quick Start (Windows)
+
+**1. Clone the Repository**
+```bash
+git clone https://github.com/wi5nuu/colonyai.git
+cd colonyai
+```
+
+**2. Setup Backend**
+```bash
+# Create virtual environment
+python -m venv .venv
+.venv\Scripts\activate
+
+# Install Python dependencies
+pip install -r backend\requirements.txt
+
+# Create .env file from template
+copy backend\.env.example backend\.env
+# Edit backend\.env and set your DATABASE_URL and SECRET_KEY
+
+# Start backend server
+backend\start_backend.bat
+```
+Backend will be available at: **http://localhost:8000**  
+API Documentation: **http://localhost:8000/docs**
+
+**3. Setup Frontend (Open a NEW terminal)**
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Create .env file
+copy .env.example .env.local
+
+# Start frontend server
+npm run dev
+```
+Frontend will be available at: **http://localhost:3000**
+
+### Manual Start (Alternative)
+
+If the batch scripts don't work, run manually:
+
+```bash
+# Backend (Terminal 1)
+cd d:\lombapuai
+.venv\Scripts\activate
+cd backend
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+# Frontend (Terminal 2)
+cd d:\lombapuai\frontend
+npm run dev
+```
+
+### Environment Variables
+
+**Backend** (`backend/.env`):
+```env
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/colonyai
+SECRET_KEY=your-secret-key-change-in-production
+JWT_SECRET_KEY=your-jwt-secret-key
+```
+
+**Frontend** (`frontend/.env.local`):
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_APP_NAME=ColonyAI
+```
+
+### Running ML Training (Optional)
+
+```bash
+cd ml-training
+
+# Install ML training dependencies
+pip install -r requirements.txt
+
+# Verify dataset
+python train.py --mode verify
+
+# Train model (requires GPU for best results)
+python train.py --mode full
+
+# Train on CPU (slower, smaller model)
+python train.py --mode train --batch 4
+```
+
+---
+
 ## Project Structure
 
 ```
