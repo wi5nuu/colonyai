@@ -1,5 +1,6 @@
 from ultralytics import YOLO
 import numpy as np
+import cv2
 from typing import List, Dict, Any, Tuple
 import os
 from app.core.config import settings
@@ -37,25 +38,47 @@ class ColonyDetector:
         self.iou_threshold = settings.MODEL_IOU_THRESHOLD
         self.img_size = settings.MODEL_IMG_SIZE
 
-        # Load model
+        # FIX QA-002: DO NOT fallback to COCO model - raise error instead
+        # COCO model detects 'person/dog/cup' which would ruin CFU calculations
         if os.path.exists(self.model_path):
             self.model = YOLO(self.model_path)
             print(f"Loaded model from {self.model_path}")
         else:
-            # Fallback to pretrained YOLOv8n for development
-            print(f"Warning: Model not found at {self.model_path}, using YOLOv8n")
-            self.model = YOLO('yolov8n.pt')
+            raise RuntimeError(
+                f"Critical: ColonyAI model not found at {self.model_path}. "
+                "Please train the model using 'python train.py --mode train' before running inference. "
+                "Falling back to COCO pretrained model is disabled for safety."
+            )
 
-    def detect(self, image: np.ndarray) -> List[Dict[str, Any]]:
+    def detect(self, image: np.ndarray, confidence_override: float | None = None) -> list[dict]:
         """
-        Detect colonies and artifacts in an image
-        
-        Returns list of detections with class, confidence, bbox, and color
+        Detect colonies and artifacts in an image.
+
+        Args:
+            image: Numpy array gambar yang sudah dipreprocess
+            confidence_override: Override confidence threshold (untuk per-media-type
+                                 threshold dari BUG-007). Jika None, gunakan
+                                 settings.MODEL_CONFIDENCE_THRESHOLD global.
+
+        Returns:
+            List deteksi dengan class, confidence, bbox, dan color
         """
-        # Run inference
+        # FIX QA-010: Image Size Validation to prevent OOM crashes
+        # YOLOv8 default imgsz is 640, so we cap input at 2x that size
+        MAX_DIM = self.img_size * 2  # 1024px
+        h, w = image.shape[:2]
+        if h > MAX_DIM or w > MAX_DIM:
+            scale = MAX_DIM / max(h, w)
+            new_w, new_h = int(w * scale), int(h * scale)
+            image = cv2.resize(image, (new_w, new_h))
+            print(f"Resized image from {w}x{h} to {new_w}x{new_h} to prevent OOM")
+
+        conf = confidence_override if confidence_override is not None else self.confidence_threshold
+
+        # Run inference dengan threshold yang sesuai
         results = self.model(
             image,
-            conf=self.confidence_threshold,
+            conf=conf,           # Threshold awal — endpoint melakukan filter per-kelas setelahnya
             iou=self.iou_threshold,
             imgsz=self.img_size,
             verbose=False
@@ -70,13 +93,13 @@ class ColonyDetector:
             confidences = result.boxes.conf.cpu().numpy()
             class_ids = result.boxes.cls.cpu().numpy().astype(int)
 
-            for box, conf, cls_id in zip(boxes, confidences, class_ids):
+            for box, conf_score, cls_id in zip(boxes, confidences, class_ids):
                 x1, y1, x2, y2 = box
                 class_name = self.model.names.get(cls_id, f'class_{cls_id}')
 
                 detection = {
                     'class_name': class_name,
-                    'confidence': float(conf),
+                    'confidence': float(conf_score),
                     'bbox': {
                         'x': int(x1),
                         'y': int(y1),

@@ -81,9 +81,10 @@ export default function HistoryPage() {
     }
   }
 
-  const formatCFU = (cfu: number, status: string) => {
+  const formatCFU = (cfu: number | null, status: string) => {
     if (status === 'TNTC') return 'TNTC'
     if (status === 'TFTC') return 'TFTC'
+    if (cfu === null) return '-'
     if (cfu >= 10000) return cfu.toExponential(2)
     return cfu.toLocaleString()
   }
@@ -110,17 +111,18 @@ export default function HistoryPage() {
   const total = data?.total || 0
 
   return (
-    <div className="space-y-6">
-      {/* Filters */}
-      <div className="card">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Filters Overlay */}
+      <div className="card border-primary/20 bg-primary/[0.02] p-8">
+        <div className="flex flex-col lg:flex-row gap-6 items-end">
+          <div className="flex-1 w-full space-y-2">
+            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">Registry Search</label>
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <input
                 type="text"
-                placeholder="Search by Sample ID or Media Type..."
-                className="input pl-10"
+                placeholder="Query Sample ID, Batch, or Media Protocol..."
+                className="input pl-12 bg-background/50 border-border/50 font-bold text-sm focus:ring-primary/20"
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value)
@@ -129,56 +131,67 @@ export default function HistoryPage() {
               />
             </div>
           </div>
-          <div className="flex gap-2">
-            <select
-              className="input"
-              value={mediaFilter}
-              onChange={(e) => {
-                setMediaFilter(e.target.value)
-                setPage(1)
-              }}
-            >
-              <option value="all">All Media</option>
-              <option value="Plate Count Agar">PCA</option>
-              <option value="VRBA">VRBA</option>
-              <option value="BGBB">BGBB</option>
-              <option value="R2A">R2A</option>
-              <option value="TSA">TSA</option>
-              <option value="MacConkey">MacConkey</option>
-            </select>
-            <select
-              className="input"
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value)
-                setPage(1)
-              }}
-            >
-              <option value="all">All Status</option>
-              <option value="valid">Valid</option>
-              <option value="TNTC">TNTC</option>
-              <option value="TFTC">TFTC</option>
-            </select>
-            <button className="btn-secondary flex items-center">
-              <Filter className="h-4 w-4 mr-2" />
-              More Filters
-            </button>
+          <div className="flex flex-wrap gap-4 w-full lg:w-auto">
+            <div className="space-y-2 min-w-[180px]">
+              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">Media Filter</label>
+              <select
+                className="input bg-background/50 border-border/50 font-bold text-sm"
+                value={mediaFilter}
+                onChange={(e) => {
+                  setMediaFilter(e.target.value)
+                  setPage(1)
+                }}
+              >
+                <option value="all">Universal (All Media)</option>
+                <option value="Plate Count Agar">PCA Protocol</option>
+                <option value="VRBA">VRBA Protocol</option>
+                <option value="BGBB">BGBB Protocol</option>
+                <option value="R2A">R2A Protocol</option>
+                <option value="TSA">TSA Protocol</option>
+                <option value="MacConkey">MacConkey Protocol</option>
+              </select>
+            </div>
+            <div className="space-y-2 min-w-[150px]">
+              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">Classification</label>
+              <select
+                className="input bg-background/50 border-border/50 font-bold text-sm"
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value)
+                  setPage(1)
+                }}
+              >
+                <option value="all">All Classifications</option>
+                <option value="valid">Standard (Valid)</option>
+                <option value="TNTC">Critical (TNTC)</option>
+                <option value="TFTC">Trace (TFTC)</option>
+              </select>
+            </div>
+            <div className="flex items-end pb-0.5">
+               <button className="btn-secondary h-[42px] px-6 flex items-center shadow-sm border-border/50">
+                <Filter className="h-4 w-4 mr-2" />
+                Advanced
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Results Table */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Analysis History ({total} results)
-          </h2>
+      <div className="card p-0 overflow-hidden border-border/40">
+        <div className="px-8 py-6 border-b border-border/30 flex items-center justify-between bg-muted/10">
+          <div>
+            <h2 className="text-xl font-bold text-foreground tracking-tight uppercase">
+              Biological Archives
+            </h2>
+            <p className="text-[10px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{total} Entities synchronized</p>
+          </div>
           <button
             onClick={handleExportCsv}
-            className="btn-secondary flex items-center"
+            className="btn-primary py-2 px-6 text-xs flex items-center shadow-primary/20"
           >
             <Download className="h-4 w-4 mr-2" />
-            Export CSV
+            Download Master CSV
           </button>
         </div>
 
@@ -196,99 +209,97 @@ export default function HistoryPage() {
 
         {!isLoading && analyses.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Sample ID
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Media Type
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Dilution
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Colonies
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    CFU/ml
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Confidence
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+            <table className="min-w-full divide-y divide-border/20">
+              <thead>
+                <tr className="bg-muted/5">
+                  {[
+                    'IDENTIFIER', 'MEDIA PROTOCOL', 'DILUTION', 'RAW COUNT', 'DENSITY (CFU/ML)', 'AI CONFIDENCE', 'TIMESTAMP', 'STATUS', 'OPERATIONS'
+                  ].map((header) => (
+                    <th key={header} className="px-8 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                      {header}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-border/20">
                 {analyses.map((analysis) => (
-                  <tr key={analysis.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{analysis.sample_id}</div>
-                      <div className="text-xs text-gray-500">{analysis.id.slice(0, 8)}</div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{analysis.media_type}</div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm font-mono text-gray-900">
-                        {analysis.dilution_factor.toExponential(0)}
+                  <tr key={analysis.id} className="group hover:bg-primary/[0.02] transition-colors cursor-pointer">
+                    <td className="px-8 py-5 whitespace-nowrap">
+                      <div className="flex flex-col">
+                         <span className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{analysis.sample_id}</span>
+                         <span className="text-[10px] font-mono text-muted-foreground tracking-tighter uppercase">{analysis.id.slice(0, 8)}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{analysis.colony_count}</div>
+                    <td className="px-8 py-5 whitespace-nowrap">
+                       <span className="px-2 py-1 rounded text-[10px] font-black bg-muted/40 text-muted-foreground border border-border/30 uppercase">
+                          {analysis.media_type}
+                       </span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className={`text-sm font-mono font-semibold ${getCFUColor(analysis.status)}`}>
+                    <td className="px-8 py-5 whitespace-nowrap">
+                      <div className="text-xs font-black font-mono text-muted-foreground">
+                        10<sup className="text-[8px]">-{Math.abs(Math.log10(analysis.dilution_factor))}</sup>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 whitespace-nowrap">
+                      <div className="text-sm font-black text-foreground">{analysis.colony_count}</div>
+                    </td>
+                    <td className="px-8 py-5 whitespace-nowrap">
+                      <div className={`text-xs font-black font-mono px-2 py-1 rounded-md border inline-block ${
+                        analysis.status === 'TNTC' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 
+                        analysis.status === 'TFTC' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
+                        'bg-primary/5 text-primary border-primary/20'
+                      }`}>
                         {formatCFU(analysis.cfu_per_ml, analysis.status)}
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {(analysis.confidence_score * 100).toFixed(0)}%
+                    <td className="px-8 py-5 whitespace-nowrap">
+                       <div className="w-16">
+                          <div className="flex justify-between items-center text-[8px] font-black mb-1">
+                             <span className="text-muted-foreground uppercase">Score</span>
+                             <span className="text-primary">{(analysis.confidence_score * 100).toFixed(0)}%</span>
+                          </div>
+                          <div className="h-1 w-full bg-muted/40 rounded-full overflow-hidden">
+                             <div className="h-full bg-primary" style={{ width: `${analysis.confidence_score * 100}%` }} />
+                          </div>
+                       </div>
+                    </td>
+                    <td className="px-8 py-5 whitespace-nowrap">
+                       <div className="flex flex-col text-left">
+                        <span className="text-xs font-bold text-foreground">
+                          {new Date(analysis.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                        <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                          {new Date(analysis.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {new Date(analysis.created_at).toLocaleDateString()}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {new Date(analysis.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    <td className="px-8 py-5 whitespace-nowrap">
+                       <span className={`px-4 py-1.5 inline-flex text-[10px] font-black rounded-xl shadow-inner border transition-all duration-300 ${
                         analysis.status === 'valid'
-                          ? 'bg-success-50 text-success-700'
+                          ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                           : analysis.status === 'TNTC'
-                          ? 'bg-error-50 text-error-700'
-                          : 'bg-warning-50 text-warning-700'
+                          ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                          : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
                       }`}>
-                        {analysis.status === 'valid' ? 'Valid' : analysis.status}
+                        {analysis.status === 'valid' ? 'ISOLATED' : analysis.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                    <td className="px-8 py-5 whitespace-nowrap">
+                      <div className="flex space-x-1">
                         <button
                           onClick={() => handleViewAnalysis(analysis.id)}
-                          className="text-primary-600 hover:text-primary-900"
+                          className="p-2 rounded-lg bg-muted/40 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-all duration-300 transform active:scale-90"
+                          title="View Spectral Analysis"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button className="text-gray-600 hover:text-gray-900">
+                        <button className="p-2 rounded-lg bg-muted/40 hover:bg-amber-500/20 text-muted-foreground hover:text-amber-500 transition-all duration-300 transform active:scale-90" title="Secure Download">
                           <Download className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(analysis.id, analysis.sample_id)}
-                          className="text-error-600 hover:text-error-900"
+                          className="p-2 rounded-lg bg-muted/40 hover:bg-rose-500/20 text-muted-foreground hover:text-rose-500 transition-all duration-300 transform active:scale-90"
+                          title="Purge Record"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -301,17 +312,15 @@ export default function HistoryPage() {
           </div>
         )}
 
-        {/* Pagination */}
+        {/* Pagination Overlay */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4">
-            <div className="text-sm text-gray-700">
-              Showing <span className="font-medium">{(page - 1) * pageSize + 1}</span> to{' '}
-              <span className="font-medium">{Math.min(page * pageSize, total)}</span> of{' '}
-              <span className="font-medium">{total}</span> results
+          <div className="flex items-center justify-between px-8 py-6 bg-muted/5 border-t border-border/20">
+            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+              Displaying <span className="text-foreground">{(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)}</span> of <span className="text-foreground">{total}</span> Historical Entities
             </div>
-            <div className="flex space-x-2">
+            <div className="flex space-x-1">
               <button
-                className="btn-secondary"
+                className="btn-secondary px-3 py-1.5 text-[10px] font-black uppercase"
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
               >
@@ -319,11 +328,15 @@ export default function HistoryPage() {
               </button>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const pageNum = Math.max(1, Math.min(page - 2, totalPages - 4)) + i
-                if (pageNum > totalPages) return null
+                if (pageNum > totalPages || pageNum < 1) return null
                 return (
                   <button
                     key={pageNum}
-                    className={pageNum === page ? 'btn-primary' : 'btn-secondary'}
+                    className={`px-3 py-1.5 h-[32px] min-w-[32px] flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${
+                        pageNum === page 
+                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
+                        : 'bg-secondary/50 text-muted-foreground hover:bg-secondary border border-border/50'
+                    }`}
                     onClick={() => setPage(pageNum)}
                   >
                     {pageNum}
@@ -331,11 +344,11 @@ export default function HistoryPage() {
                 )
               })}
               <button
-                className="btn-secondary"
+                className="btn-secondary px-3 py-1.5 text-[10px] font-black uppercase"
                 disabled={page >= totalPages}
                 onClick={() => setPage(page + 1)}
               >
-                Next
+                Next Cycle
               </button>
             </div>
           </div>

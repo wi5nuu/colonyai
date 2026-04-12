@@ -1,7 +1,8 @@
 # ColonyAI - YOLOv8 Training Pipeline
 # 5-Class Detection: colony_single, colony_merged, bubble, dust_debris, media_crack
+# Dataset: 1,477 images (56,124+ annotations)
 # Includes: Plate Localization (Phase 1), 5-Class Detection (Phase 2), CFU Calculation (Phase 3)
-# Integrations: Roboflow augmentation, MLflow tracking, ONNX export
+# Integrations: MLflow tracking, ONNX export
 
 import os
 import sys
@@ -29,33 +30,35 @@ import torch
 # ============================================================
 
 # Paths
-DATASET_PATH = "./datasets/colony_dataset"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DATASET_PATH = os.path.join(SCRIPT_DIR, "datasets", "colony_dataset")
 DATA_YAML = os.path.join(DATASET_PATH, "data.yaml")
-ROBOFLOW_API_KEY = os.environ.get("ROBOFLOW_API_KEY", "")  # Set via env var
 MLFLOW_URI = os.environ.get("MLFLOW_URI", "./mlruns")       # Local MLflow storage
 
+# Load Classes from data.yaml for 100% Consistency
+if os.path.exists(DATA_YAML):
+    with open(DATA_YAML, 'r') as f:
+        yaml_data = yaml.safe_load(f)
+    CLASSES = yaml_data.get('names', [])
+    NUM_CLASSES = yaml_data.get('nc', 5)
+else:
+    # Fallback if yaml is missing (should not happen in 100% accurate setup)
+    CLASSES = ["colony_single", "colony_merged", "bubble", "dust_debris", "media_crack"]
+    NUM_CLASSES = 5
+
 # Model
-MODEL_SIZE = "n"  # nano (n) or small (s)
+MODEL_SIZE = "n"  # nano (n) or small (s) - 'n' is faster, 's' is more accurate
 PRETRAINED = f"yolov8{MODEL_SIZE}.pt"
 
-# Training Hyperparameters
+# Training Hyperparameters (Optimized for ~1.5k images)
 EPOCHS = 100
-BATCH_SIZE = 16  # Increased from 4 for better convergence
-IMG_SIZE = 512
+BATCH_SIZE = 16  
+IMG_SIZE = 640  # Increased to 640 for better small object detection
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 # Inference Thresholds (per proposal)
 CONF_THRESHOLD = 0.60
 IOU_THRESHOLD = 0.45
-
-# 5-Class Taxonomy
-CLASSES = [
-    "colony_single",   # 0: Individual, well-separated colonies
-    "colony_merged",   # 1: Overlapping/touching colonies
-    "bubble",          # 2: Air bubbles in agar
-    "dust_debris",     # 3: Contaminant particles
-    "media_crack",     # 4: Cracks in agar media
-]
 
 # Class colors for visualization (proposal spec)
 CLASS_COLORS = {

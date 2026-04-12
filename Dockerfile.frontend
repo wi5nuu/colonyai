@@ -5,20 +5,19 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy from root level (monorepo structure)
-COPY package.json package-lock.json* ./
-COPY frontend/package.json ./frontend/package.json
+# Copy frontend package files
+COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY frontend/ ./frontend/
+COPY frontend/ ./
 
 ENV NEXT_PUBLIC_API_URL=http://localhost:8000
 
-RUN cd frontend && npm run build
+RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
@@ -31,9 +30,9 @@ RUN adduser --system --uid 1001 nextjs
 
 # Copy node_modules for standalone build
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/frontend/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 

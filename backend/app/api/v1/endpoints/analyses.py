@@ -1,23 +1,27 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import uuid
 import math
 import os
 import shutil
+import tempfile
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, desc
+from sqlalchemy import select, func, and_, or_, desc
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.exc import StaleDataError
 
 from app.core.security import get_current_user, require_role
 from app.core.database import get_db
 from app.core.config import settings
+from app.core.thresholds import get_all_thresholds
 from app.utils.s3 import s3_is_configured, upload_to_s3, get_presigned_url
 from app.services.colony_detector import ColonyDetector, VALID_COLONY_CLASSES
+from app.services.file_validator import validate_and_sanitize_image
 from app.services.image_processor import ImageProcessor
 from app.services.cfu_calculator import CFUCalculator
 from app.models import Analysis, ColonyDetection, AnalysisStatus, User
@@ -180,55 +184,68 @@ async def create_analysis(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Create a new plate analysis.
+    Buat analisis plate baru.
 
-    1. Save uploaded image
-    2. Preprocess with OpenCV
-    3. Run YOLOv8 5-class detection
-    4. Calculate CFU/ml
-    5. Save results to database
-    6. Save annotated image
-    7. Return full analysis result
+    Pipeline:
+    1. Validasi & sanitasi file (magic bytes, EXIF strip, UUID rename, malware scan)
+    2. Simpan gambar asli (lokal / S3)
+    3. Buat record analisis (status PROCESSING)
+    4. Preprocessing gambar (Hough Circle crop)
+    5. YOLOv8 inference dengan per-media threshold
+    6. Kalkulasi CFU/mL (SA-001 area-based merged estimation)
+    7. Simpan gambar teranotasi
+    8. Update record analisis
+    9. Simpan detection records
+    10. Audit log
     """
-    # Validate file type
-    allowed_types = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
-    if file.content_type not in allowed_types:
+    # ── BUG-006: Validasi keamanan file (magic bytes, EXIF strip, malware scan) ──
+    # Ini menggantikan validasi lama yang hanya mengecek Content-Type header
+    file_content, safe_filename, detected_mime = await validate_and_sanitize_image(file)
+
+    # ── FIX QA-007: Input media_type Validation ──
+    ALLOWED_MEDIA_TYPES = {"Plate Count Agar", "VRBA", "BGBB", "R2A", "TSA", "MacConkey", "Other"}
+    if media_type not in ALLOWED_MEDIA_TYPES:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid file type. Allowed: {', '.join(allowed_types)}",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid media_type: '{media_type}'. Allowed values: {', '.join(ALLOWED_MEDIA_TYPES)}"
         )
 
-    # Validate file size
-    file.file.seek(0, 2)  # Seek to end
-    file_size = file.file.tell()
-    file.file.seek(0)  # Reset to beginning
-
-    if file_size > settings.IMAGE_MAX_SIZE:
+    # ── BUG-002: Validasi parameter kalkulasi ──
+    if math.isnan(dilution_factor) or math.isinf(dilution_factor) or dilution_factor <= 0:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File too large. Maximum: {settings.IMAGE_MAX_SIZE // (1024*1024)}MB",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Dilution factor tidak valid. Harus berupa angka positif (contoh: 0.001 untuk 10⁻³).",
         )
+    if math.isnan(plated_volume_ml) or math.isinf(plated_volume_ml) or plated_volume_ml <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Volume tidak valid. Harus berupa angka positif dalam mL (contoh: 1.0).",
+        )
+
+    analysis_id = uuid.uuid4()
 
     try:
-        # Step 1: Save original image locally for processing
+        # ── Step 1: Simpan gambar (sudah disanitasi) ke lokal ──
         original_dir = os.path.join(settings.UPLOAD_DIR, "original")
-        original_path = _save_upload(file, original_dir)
+        Path(original_dir).mkdir(parents=True, exist_ok=True)
+        original_path = os.path.join(original_dir, safe_filename)
+
+        with open(original_path, "wb") as f:
+            f.write(file_content)
+
         original_url = _get_file_url(original_path)
 
-        # If S3 is configured, also upload to S3 and use presigned URL
+        # ── Upload ke S3 jika dikonfigurasi ──
         if s3_is_configured():
-            ext = Path(file.filename).suffix if file.filename else ".jpg"
-            original_basename = os.path.splitext(os.path.basename(original_path))[0]
-            s3_key = f"{settings.AWS_S3_ORIGINAL_PREFIX}{original_basename}{ext}"
-            with open(original_path, "rb") as f:
-                upload_to_s3(f.read(), s3_key, content_type=file.content_type)
-            original_url = get_presigned_url(s3_key) or s3_key
+            s3_key = f"{settings.AWS_S3_ORIGINAL_PREFIX}{safe_filename}"
+            upload_to_s3(file_content, s3_key, content_type=detected_mime)
+            # BUG-039: presigned URL 15 menit (900 detik), bukan 1 jam
+            original_url = get_presigned_url(s3_key, expires_in=900) or s3_key
 
-        # Step 2: Create analysis record (PROCESSING status)
-        analysis_id = uuid.uuid4()
+        # ── Step 2: Buat record analisis ──
         analysis = Analysis(
             id=analysis_id,
-            user_id=current_user["user_id"],
+            user_id=uuid.UUID(current_user["user_id"]),
             sample_id=sample_id,
             media_type=media_type,
             dilution_factor=dilution_factor,
@@ -240,73 +257,94 @@ async def create_analysis(
         await db.commit()
         await db.refresh(analysis)
 
-        # Step 3: Preprocess image
+        # ── Step 3: Preprocessing gambar ──
         image_processor = ImageProcessor()
         processed_image = image_processor.preprocess(original_path)
 
-        # Step 4: Run YOLOv8 detection
+        # ── Step 4: YOLOv8 inference ──
+        # BUG-007: Gunakan per-media threshold (bukan global 0.60)
+        media_thresholds = get_all_thresholds(media_type)
         colony_detector = ColonyDetector()
-        detections = colony_detector.detect(processed_image)
+        # Inference dengan threshold colony_single dari config media type
+        detections = colony_detector.detect(
+            processed_image,
+            confidence_override=media_thresholds.get("colony_single"),
+        )
 
-        # Step 5: Filter valid colonies and get summary
-        valid_colonies = colony_detector.filter_valid_colonies(detections)
+        # Filter lebih lanjut dengan threshold per-kelas
+        detections = [
+            d for d in detections
+            if d["confidence"] >= media_thresholds.get(d["class_name"], 0.60)
+        ]
+
+        # ── Step 5: Hitung statistik deteksi ──
         class_breakdown = colony_detector.get_detection_summary(detections)
-        valid_count = len(valid_colonies)
         avg_confidence = colony_detector.get_average_confidence(detections, valid_only=True)
         reliability = colony_detector.get_reliability_indicator(detections)
 
-        # Step 6: Calculate CFU/ml
+        colony_single_count = class_breakdown.get("colony_single", 0)
+        colony_merged_count = class_breakdown.get("colony_merged", 0)
+
+        # ── Step 6: Kalkulasi CFU/mL (SA-001 + BUG-002/003/011/015) ──
         cfu_calculator = CFUCalculator()
         cfu_result = cfu_calculator.calculate(
-            colony_count=valid_count,
+            colony_single=colony_single_count,
+            colony_merged_raw=colony_merged_count,
             dilution_factor=dilution_factor,
             plated_volume_ml=plated_volume_ml,
-            confidence=avg_confidence,
+            media_type=media_type,
+            confidence_score=avg_confidence,
             reliability=reliability,
             class_breakdown=class_breakdown,
             detections=detections,
         )
 
-        # Map CFU status to AnalysisStatus
-        if cfu_result.status == "valid":
-            analysis_status = AnalysisStatus.COMPLETED
-        elif cfu_result.status in ("TNTC", "TFTC"):
-            analysis_status = AnalysisStatus.COMPLETED
-        else:
-            analysis_status = AnalysisStatus.FAILED
+        # Map CFU status ke AnalysisStatus DB
+        analysis_status = AnalysisStatus.COMPLETED  # TNTC dan TFTC tetap COMPLETED
 
-        # Step 7: Save annotated image
+        # ── Step 7: Simpan gambar teranotasi ──
+        annotated_dir = os.path.join(settings.UPLOAD_DIR, "annotated")
+        Path(annotated_dir).mkdir(parents=True, exist_ok=True)
+        annotated_filename = f"{analysis_id}.jpg"
+        annotated_path = os.path.join(annotated_dir, annotated_filename)
+        image_processor.save_annotated_image(processed_image, detections, annotated_path)
+
         if s3_is_configured():
-            # Save to temp local file, then upload to S3
-            annotated_dir = os.path.join(settings.UPLOAD_DIR, "annotated")
-            annotated_filename = f"{analysis_id}.jpg"
-            annotated_path = os.path.join(annotated_dir, annotated_filename)
-            image_processor.save_annotated_image(processed_image, detections, annotated_path)
-            s3_key = f"{settings.AWS_S3_ANNOTATED_PREFIX}{analysis_id}.jpg"
+            s3_key = f"{settings.AWS_S3_ANNOTATED_PREFIX}{annotated_filename}"
             with open(annotated_path, "rb") as f:
                 upload_to_s3(f.read(), s3_key, content_type="image/jpeg")
-            annotated_url = get_presigned_url(s3_key) or s3_key
+            annotated_url = get_presigned_url(s3_key, expires_in=900) or s3_key
         else:
-            # Fallback: local storage
-            annotated_dir = os.path.join(settings.UPLOAD_DIR, "annotated")
-            annotated_filename = f"{analysis_id}.jpg"
-            annotated_path = os.path.join(annotated_dir, annotated_filename)
-            image_processor.save_annotated_image(processed_image, detections, annotated_path)
             annotated_url = _get_file_url(annotated_path)
 
-        # Step 8: Update analysis record
+        # ── Step 8: Update record analisis ──
+        report_data = cfu_calculator.format_for_report(cfu_result)
         analysis.status = analysis_status
-        analysis.colony_count = cfu_result.colony_count
-        analysis.cfu_per_ml = cfu_result.cfu_per_ml
-        analysis.confidence_score = cfu_result.confidence
-        analysis.reliability = cfu_result.reliability
+        analysis.colony_count = cfu_result.total_colonies
+        analysis.cfu_per_ml = cfu_result.cfu_per_ml   # None jika TNTC/TFTC
+        analysis.confidence_score = avg_confidence
+        analysis.reliability = reliability
         analysis.annotated_image_url = annotated_url
-        analysis.warnings = cfu_result.warning_messages
+        analysis.warnings = cfu_result.warnings
         analysis.class_breakdown = class_breakdown
+        # Simpan metadata tambahan sebagai JSON jika kolom tersedia
+        if hasattr(analysis, 'cfu_status'):
+            analysis.cfu_status = cfu_result.status
+        if hasattr(analysis, 'cfu_message'):
+            analysis.cfu_message = cfu_result.message
+        if hasattr(analysis, 'uncertainty_u'):
+            analysis.uncertainty_u = (
+                cfu_result.uncertainty.U_expanded
+                if cfu_result.uncertainty else None
+            )
+        if hasattr(analysis, 'merged_estimation_method'):
+            analysis.merged_estimation_method = (
+                cfu_result.merged_estimate.estimation_method
+            )
 
         await db.commit()
 
-        # Step 9: Save individual detection records
+        # ── Step 9: Simpan detection records ──
         for detection in detections:
             det_record = ColonyDetection(
                 id=uuid.uuid4(),
@@ -322,7 +360,7 @@ async def create_analysis(
 
         await db.commit()
 
-        # Step 10: Reload analysis with detections
+        # ── Step 10: Reload analisis dengan relasi ──
         result = await db.execute(
             select(Analysis)
             .where(Analysis.id == analysis_id)
@@ -333,16 +371,22 @@ async def create_analysis(
         if not analysis:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to retrieve analysis after creation",
+                detail="Gagal mengambil data analisis setelah proses selesai.",
             )
 
-        # Audit log: analysis created
+        # ── Audit log ──
         ip = request.client.host if request else None
         ua = request.headers.get("user-agent") if request else None
         await write_audit_log(
             db, current_user["user_id"], "create_analysis",
             "analysis", str(analysis_id),
-            details={"sample_id": sample_id, "status": analysis_status.value if hasattr(analysis_status, 'value') else analysis_status},
+            details={
+                "sample_id": sample_id,
+                "media_type": media_type,
+                "cfu_status": cfu_result.status,
+                "total_colonies": cfu_result.total_colonies,
+                "merged_method": cfu_result.merged_estimate.estimation_method,
+            },
             ip_address=ip, user_agent=ua,
         )
 
@@ -351,17 +395,19 @@ async def create_analysis(
     except HTTPException:
         raise
     except Exception as e:
-        # Update analysis to FAILED status
+        # Update analisis ke FAILED
         try:
-            analysis.status = AnalysisStatus.FAILED
-            analysis.error_message = str(e)
-            await db.commit()
+            if 'analysis' in dir():
+                analysis.status = AnalysisStatus.FAILED
+                if hasattr(analysis, 'error_message'):
+                    analysis.error_message = str(e)[:500]  # Truncate
+                await db.commit()
         except Exception:
             pass
 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Analysis failed: {str(e)}",
+            detail="Proses analisis gagal. Coba lagi atau hubungi dukungan teknis.",
         )
 
 
@@ -381,7 +427,8 @@ async def list_analyses(
     List all analyses for the current user with pagination and filters.
     """
     # Build base query
-    base_conditions = [Analysis.user_id == current_user["user_id"]]
+    user_id = uuid.UUID(current_user["user_id"])
+    base_conditions = [Analysis.user_id == user_id]
 
     # Apply filters
     if search:
@@ -398,10 +445,13 @@ async def list_analyses(
         base_conditions.append(Analysis.status == status_filter)
 
     if date_from:
-        base_conditions.append(Analysis.created_at >= datetime.fromisoformat(date_from))
+        # Handle 'Z' suffix for UTC and ensure naive datetime for DB comparison
+        _df = date_from.replace('Z', '+00:00')
+        base_conditions.append(Analysis.created_at >= datetime.fromisoformat(_df).replace(tzinfo=None))
 
     if date_to:
-        base_conditions.append(Analysis.created_at <= datetime.fromisoformat(date_to))
+        _dt = date_to.replace('Z', '+00:00')
+        base_conditions.append(Analysis.created_at <= datetime.fromisoformat(_dt).replace(tzinfo=None))
 
     # Get total count
     count_query = select(func.count()).select_from(Analysis).where(and_(*base_conditions))
@@ -484,7 +534,7 @@ async def get_dashboard_stats(
     db: AsyncSession = Depends(get_db),
 ):
     """Get dashboard statistics for the current user"""
-    user_id = current_user["user_id"]
+    user_id = uuid.UUID(current_user["user_id"])
 
     # Total analyses
     total_result = await db.execute(
@@ -492,8 +542,10 @@ async def get_dashboard_stats(
     )
     total_analyses = total_result.scalar() or 0
 
-    # Success rate (valid / total)
-    valid_result = await db.execute(
+    # Success rate: ALL completed analyses count as valid
+    # TNTC and TFTC are still COMPLETED status per ISO 4833-1:2013
+    # Only FAILED analyses should reduce success rate
+    completed_result = await db.execute(
         select(func.count()).select_from(Analysis).where(
             and_(
                 Analysis.user_id == user_id,
@@ -501,16 +553,21 @@ async def get_dashboard_stats(
             )
         )
     )
-    valid_count = valid_result.scalar() or 0
-    success_rate = (valid_count / total_analyses * 100) if total_analyses > 0 else 0.0
+    completed_count = completed_result.scalar() or 0
+    success_rate = (completed_count / total_analyses * 100) if total_analyses > 0 else 0.0
 
-    # Pending review (TNTC or TFTC)
+    # Pending review: TNTC/TFTC OR low reliability that need analyst attention
     review_result = await db.execute(
         select(func.count()).select_from(Analysis).where(
             and_(
                 Analysis.user_id == user_id,
                 Analysis.status == AnalysisStatus.COMPLETED,
-                Analysis.reliability.in_(["low", "medium"]),
+                # TNTC/TFTC or low reliability need review
+                or_(
+                    Analysis.reliability == "low",
+                    Analysis.warnings.contains("TNTC"),
+                    Analysis.warnings.contains("TFTC"),
+                ),
             )
         )
     )
@@ -521,7 +578,7 @@ async def get_dashboard_stats(
     weekly_trend = []
 
     for i in range(7):
-        day_date = datetime.utcnow() - timedelta(days=6 - i)
+        day_date = datetime.now(timezone.utc) - timedelta(days=6 - i)
         day_name = days[day_date.weekday()]
 
         day_start = day_date.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -540,10 +597,12 @@ async def get_dashboard_stats(
         weekly_trend.append(WeeklyTrendItem(day=day_name, analyses=count))
 
     # Recent analyses (last 5)
+    # FIX QA-008: Use selectinload instead of joinedload to prevent N+1 query issues
+    from sqlalchemy.orm import selectinload
     recent_result = await db.execute(
         select(Analysis)
         .where(Analysis.user_id == user_id)
-        .options(joinedload(Analysis.detections))
+        .options(selectinload(Analysis.detections))
         .order_by(desc(Analysis.created_at))
         .limit(5)
     )
@@ -563,7 +622,8 @@ async def get_dashboard_stats(
 async def approve_analysis(
     analysis_id: str,
     request: Request = None,
-    current_user: dict = Depends(require_role("analyst", "admin")),
+    # BUG-014: Hanya senior_analyst yang boleh approve (ISO 17025 Cl. 5.2 — pemisahan tanggungjawab)
+    current_user: dict = Depends(require_role("senior_analyst", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """Approve an analysis and mark it as validated"""
@@ -594,10 +654,20 @@ async def approve_analysis(
         )
 
     # Mark as approved (status remains COMPLETED)
-    # Could add an 'approved' column later; for now ensure status is COMPLETED
+    # BUG-023: Optimistic Locking
     if analysis.status != AnalysisStatus.COMPLETED:
         analysis.status = AnalysisStatus.COMPLETED
+        
+    analysis.updated_at = datetime.now(timezone.utc) # Force version increment
+    
+    try:
         await db.commit()
+    except StaleDataError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Data telah diubah oleh analis lain (Optimistic Lock). Silakan muat ulang halaman."
+        )
 
     # Audit log: analysis approved
     ip = request.client.host if request else None

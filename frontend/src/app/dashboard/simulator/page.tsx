@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Scale, ClipboardCheck, BarChart3, Save, Loader2, ChevronDown } from 'lucide-react'
 import { analysesApi } from '@/lib/analyses-api'
+import { simulatorApi } from '@/lib/simulator-api'
 import { Analysis, AnalysisListResponse, DetectionClass } from '@/lib/types'
 import { toast } from 'sonner'
 
@@ -167,30 +168,38 @@ export default function SimulatorPage() {
   const hasAnyManualInput = enteredClasses.length > 0
 
   const handleSaveComparison = async () => {
-    if (!selectedAnalysis) return
+    if (!selectedAnalysis || manualCountsNumeric.colony_single === null || manualCountsNumeric.colony_merged === null) {
+      toast.error('Please enter at least colony_single and colony_merged counts')
+      return
+    }
 
     setIsSaving(true)
     try {
-      // Placeholder: In production, this would POST to a comparison endpoint
-      const comparison = {
+      await simulatorApi.saveComparison({
         analysis_id: selectedAnalysis.id,
-        sample_id: selectedAnalysis.sample_id,
-        manual_counts: manualCountsNumeric,
-        ai_counts: breakdown,
-        overall_accuracy: overallAccuracy,
-        saved_at: new Date().toISOString(),
-      }
-
-      // Store in localStorage for now
-      const existing = JSON.parse(localStorage.getItem('simulator_comparisons') || '[]')
-      existing.push(comparison)
-      localStorage.setItem('simulator_comparisons', JSON.stringify(existing))
+        manual_colony_single: manualCountsNumeric.colony_single,
+        manual_colony_merged: manualCountsNumeric.colony_merged,
+        manual_bubble: manualCountsNumeric.bubble,
+        manual_dust_debris: manualCountsNumeric.dust_debris,
+        manual_media_crack: manualCountsNumeric.media_crack,
+      })
 
       toast.success('Comparison saved successfully', {
         description: `${selectedAnalysis.sample_id} -- ${overallAccuracy !== null ? overallAccuracy.toFixed(1) : '--'}% accuracy`,
       })
+
+      // Reset manual counts after save
+      setManualCounts({
+        colony_single: '',
+        colony_merged: '',
+        bubble: '',
+        dust_debris: '',
+        media_crack: '',
+      })
     } catch (error: any) {
-      toast.error('Failed to save comparison')
+      toast.error('Failed to save comparison', {
+        description: error.response?.data?.detail || 'Please try again',
+      })
     } finally {
       setIsSaving(false)
     }
@@ -216,35 +225,35 @@ export default function SimulatorPage() {
             <Scale className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Colony Counter Simulator</h1>
-            <p className="text-sm text-gray-500">Compare AI detection counts against your manual counts</p>
+            <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">Colony Counter Simulator</h1>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Cross-validation between AI inference and manual clinical counts</p>
           </div>
         </div>
       </div>
 
       {/* Analysis Selector */}
-      <div className="card">
-        <label className="label flex items-center space-x-2">
-          <BarChart3 className="h-4 w-4 text-gray-500" />
-          <span>Select Recent Analysis</span>
+      <div className="card p-8 border-primary/20 bg-primary/[0.02]">
+        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center space-x-2 ml-1 mb-4">
+          <BarChart3 className="h-3 w-3" />
+          <span>Select Target Specimen Analysis</span>
         </label>
         <div className="relative mt-2">
-          <button
+            <button
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="input flex items-center justify-between text-left w-full"
+            className="input flex items-center justify-between text-left w-full h-14 bg-background px-6 border-border/50 font-black uppercase tracking-widest text-xs"
           >
             {selectedAnalysis ? (
-              <div>
-                <span className="font-medium text-gray-900">{selectedAnalysis.sample_id}</span>
-                <span className="ml-2 text-sm text-gray-500">
-                  -- {selectedAnalysis.media_type} ({new Date(selectedAnalysis.created_at).toLocaleDateString()})
+              <div className="flex items-center gap-4">
+                <span className="text-foreground">{selectedAnalysis.sample_id}</span>
+                <span className="text-muted-foreground/60 text-[10px]">
+                  {selectedAnalysis.media_type} // {new Date(selectedAnalysis.created_at).toLocaleDateString()}
                 </span>
               </div>
             ) : (
-              <span className="text-gray-500">Choose an analysis to compare...</span>
+              <span className="text-muted-foreground/40">Select Diagnostic Session...</span>
             )}
-            <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
+            <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           </button>
 
           {isDropdownOpen && (
@@ -284,35 +293,34 @@ export default function SimulatorPage() {
       {selectedAnalysis && breakdown && (
         <>
           {/* AI Detection Counts */}
-          <div className="card">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <ClipboardCheck className="h-5 w-5 mr-2 text-primary" />
-              AI Detection Counts
+          <div className="card p-8 bg-muted/20 border-border/40">
+            <h3 className="text-sm font-black text-foreground uppercase tracking-widest mb-8 flex items-center">
+              <ClipboardCheck className="h-5 w-5 mr-3 text-primary" />
+              AI Inference Results
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-6">
               {CLASSES.map((cls) => (
-                <div key={cls} className="text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <div className={`w-3 h-3 rounded-full mr-2 ${CLASS_DOT_COLORS[cls]}`} />
-                    <span className="text-sm font-medium text-gray-700">{CLASS_EMOJI[cls]} {CLASS_LABELS[cls]}</span>
+                <div key={cls} className="text-center group">
+                  <div className="flex items-center justify-center mb-3">
+                    <div className={`w-2 h-2 rounded-full mr-2 ${CLASS_DOT_COLORS[cls]} shadow-[0_0_8px_currentcolor]`} />
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">{CLASS_LABELS[cls]}</span>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">{breakdown[cls] || 0}</p>
+                  <p className="text-3xl font-black text-foreground tracking-tighter">{breakdown[cls] || 0}</p>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Manual Count Input */}
-          <div className="card">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <Scale className="h-5 w-5 mr-2 text-primary" />
-              Enter Manual Counts
+          <div className="card p-8 bg-muted/20 border-border/40">
+            <h3 className="text-sm font-black text-foreground uppercase tracking-widest mb-8 flex items-center">
+              <Scale className="h-5 w-5 mr-3 text-primary" />
+              Manual Analyst Input
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-6">
               {CLASSES.map((cls) => (
-                <div key={cls}>
-                  <label className="label text-sm flex items-center mb-1">
-                    <span className={`w-2 h-2 rounded-full mr-2 ${CLASS_DOT_COLORS[cls]}`} />
+                <div key={cls} className="space-y-3">
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1 block">
                     {CLASS_LABELS[cls]}
                   </label>
                   <input
@@ -321,7 +329,7 @@ export default function SimulatorPage() {
                     placeholder="0"
                     value={manualCounts[cls]}
                     onChange={(e) => handleManualCountChange(cls, e.target.value)}
-                    className="input text-center text-lg font-semibold"
+                    className="input text-center h-14 bg-background border-border/50 font-black text-xl hover:border-primary/30 transition-all"
                   />
                 </div>
               ))}

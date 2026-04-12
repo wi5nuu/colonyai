@@ -1,22 +1,28 @@
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use Argon2 for modern, secure password hashing
+pwd_context = PasswordHasher()
 security = HTTPBearer()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against a hashed password"""
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        pwd_context.verify(hashed_password, plain_password)
+        return True
+    except VerifyMismatchError:
+        return False
 
 
 def get_password_hash(password: str) -> str:
-    """Hash a password"""
+    """Hash a password using Argon2"""
     return pwd_context.hash(password)
 
 
@@ -77,13 +83,13 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 def require_role(*required_roles: str):
     """
     Dependency factory to check if user has one of the required roles.
-    Usage: `current_user: dict = Depends(require_role("admin", "analyst"))`
+    Usage: `current_user: dict = Depends(require_role("senior_analyst", "analyst"))`
 
     Always chains through get_current_user first.
-    Users with 'admin' role are always authorized regardless of required_roles.
+    Users with 'system_admin' role are always authorized regardless of required_roles.
     """
     async def role_checker(current_user: dict = Depends(get_current_user)):
-        if current_user.get("role") == "admin":
+        if current_user.get("role") in ("system_admin", "admin"):
             return current_user
         if current_user.get("role") not in required_roles:
             raise HTTPException(

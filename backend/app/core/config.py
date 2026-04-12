@@ -2,20 +2,23 @@ from pydantic_settings import BaseSettings
 from typing import List
 from pathlib import Path
 import os
+import secrets
 
 
 class Settings(BaseSettings):
     # Application
     APP_NAME: str = "ColonyAI Backend"
     APP_VERSION: str = "1.0.0"
-    DEBUG: bool = True
-    SECRET_KEY: str = "your-secret-key-change-in-production"
+    # FIX QA-004: DEBUG default False for production safety
+    DEBUG: bool = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
+    SECRET_KEY: str = os.getenv("SECRET_KEY") or secrets.token_urlsafe(32)
     API_V1_PREFIX: str = "/api/v1"
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/colonyai"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./colonyai.db"
     DATABASE_POOL_SIZE: int = 10
     DATABASE_MAX_OVERFLOW: int = 20
+    DATA_RETENTION_DAYS: int = 1825  # Retention policy per UU PDP compliance (5 years)
 
     # Supabase
     SUPABASE_URL: str = ""
@@ -34,8 +37,12 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "./uploads"
     BACKEND_URL: str = "http://localhost:8000"
 
-    # JWT
-    JWT_SECRET_KEY: str = "your-jwt-secret-key"
+    # Initial Admin Seed
+    INITIAL_ADMIN_EMAIL: str = "admin@colonyai.local"
+    INITIAL_ADMIN_PASSWORD: str = "admin_secure_placeholder"
+
+    # FIX QA-001: JWT secrets generated dynamically if not set
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY") or secrets.token_urlsafe(32)
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7

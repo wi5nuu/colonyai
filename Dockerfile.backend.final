@@ -1,0 +1,20 @@
+FROM lombapuai-backend:latest
+
+# Ensure argon2-cffi is installed
+RUN pip install --no-cache-dir argon2-cffi
+
+# Copy backend code (includes updated security.py with argon2)
+COPY backend/ .
+
+# Create necessary directories
+RUN mkdir -p models logs uploads/original uploads/annotated uploads/reports
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD python -c "import requests; requests.get('http://localhost:8000/health')"
+
+# Run application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

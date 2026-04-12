@@ -196,6 +196,105 @@ async def generate_pdf_report(
     elements.append(summary_table)
     elements.append(Spacer(1, 18))
 
+    # --- Executive Summary (per Expected Output 4) ---
+    elements.append(Paragraph("Executive Summary", heading_style))
+    elements.append(Spacer(1, 6))
+
+    # Efficiency metrics
+    manual_time_per_sample = 20  # minutes (baseline from proposal)
+    ai_time_per_sample = 2  # minutes (ColonyAI)
+    time_saved_per_sample = manual_time_per_sample - ai_time_per_sample
+    total_time_saved_minutes = total_analyses * time_saved_per_sample
+    total_time_saved_hours = total_time_saved_minutes / 60
+    efficiency_gain_pct = (time_saved_per_sample / manual_time_per_sample) * 100
+
+    # Cost savings estimate (proposal: 40% labor cost reduction)
+    avg_analyst_hourly_rate = 50000  # IDR (example)
+    labor_cost_saved = total_time_saved_hours * avg_analyst_hourly_rate * 0.40
+
+    executive_data = [
+        ["Metric", "Pre-AI (Manual)", "Post-AI (ColonyAI)", "Improvement"],
+        ["Time per Sample", f"{manual_time_per_sample} min", f"{ai_time_per_sample} min", f"{time_saved_per_sample} min saved ({efficiency_gain_pct:.0f}% reduction)"],
+        ["Total Time Invested", f"{total_analyses * manual_time_per_sample} min ({total_analyses * manual_time_per_sample / 60:.1f} hrs)",
+         f"{total_analyses * ai_time_per_sample} min ({total_analyses * ai_time_per_sample / 60:.1f} hrs)",
+         f"{total_time_saved_minutes} min ({total_time_saved_hours:.1f} hrs) saved"],
+        ["Inter-Analyst CV", "22.7%-80%", "<5%", "Consistent results"],
+        ["Throughput", f"{total_analyses} plates", f"{total_analyses} plates (automated)", f"5-8x potential increase"],
+    ]
+
+    executive_table = Table(executive_data, colWidths=[4.5 * cm, 3.5 * cm, 3.5 * cm, 3.5 * cm])
+    executive_table.setStyle(TableStyle([
+        ("FONTNAME", (0, 0), (-1, -1), base_font_name),
+        ("FONTSIZE", (0, 0), (-1, -1), 9),
+        ("BACKGROUND", (0, 0), (-1, 0), HexColor("#2D3748")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), HexColor("#FFFFFF")),
+        ("FONTNAME", (0, 0), (-1, 0), base_font_name),
+        ("FONTSIZE", (0, 0), (-1, 0), 10),
+        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("GRID", (0, 0), (-1, -1), 0.5, black),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [HexColor("#F0FFF4"), HexColor("#FFFFFF")]),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(executive_table)
+    elements.append(Spacer(1, 12))
+
+    # Cost savings note
+    elements.append(Paragraph(
+        f"<b>Estimated Labor Cost Savings:</b> Approximately IDR {labor_cost_saved:,.0f} "
+        f"({total_time_saved_hours:.1f} hours × {avg_analyst_hourly_rate:,} IDR/hr × 40% efficiency gain). "
+        f"Based on proposal benchmarks for Indonesian microbiology laboratories.",
+        small_style,
+    ))
+    elements.append(Spacer(1, 18))
+
+    # --- Monthly Throughput Trends ---
+    elements.append(Paragraph("Monthly Throughput Trends", heading_style))
+    elements.append(Spacer(1, 6))
+
+    # Group analyses by month
+    from collections import defaultdict
+    monthly_data = defaultdict(lambda: {"count": 0, "colonies": 0, "cfu_values": []})
+
+    for analysis in analyses:
+        month_key = analysis.created_at.strftime("%Y-%m")
+        monthly_data[month_key]["count"] += 1
+        monthly_data[month_key]["colonies"] += analysis.colony_count or 0
+        if analysis.cfu_per_ml:
+            monthly_data[month_key]["cfu_values"].append(analysis.cfu_per_ml)
+
+    # Build monthly trend table
+    trend_data = [["Month", "Analyses", "Total Colonies", "Avg CFU/ml"]]
+    for month in sorted(monthly_data.keys()):
+        data = monthly_data[month]
+        avg_cfu = sum(data["cfu_values"]) / len(data["cfu_values"]) if data["cfu_values"] else 0
+        trend_data.append([
+            month,
+            str(data["count"]),
+            str(data["colonies"]),
+            f"{avg_cfu:.2e}" if avg_cfu > 0 else "N/A",
+        ])
+
+    trend_table = Table(trend_data, colWidths=[3 * cm, 3 * cm, 4 * cm, 5 * cm])
+    trend_table.setStyle(TableStyle([
+        ("FONTNAME", (0, 0), (-1, -1), base_font_name),
+        ("FONTSIZE", (0, 0), (-1, -1), 10),
+        ("BACKGROUND", (0, 0), (-1, 0), HexColor("#4A5568")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), HexColor("#FFFFFF")),
+        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+        ("GRID", (0, 0), (-1, -1), 0.5, black),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [HexColor("#F0FFF4"), HexColor("#FFFFFF")]),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(trend_table)
+    elements.append(Spacer(1, 18))
+
     # --- Per-sample details ---
     elements.append(Paragraph("Sample Details", heading_style))
 

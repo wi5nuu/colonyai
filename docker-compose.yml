@@ -5,7 +5,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile.backend.final
     ports:
       - "8000:8000"
     env_file:

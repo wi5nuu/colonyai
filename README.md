@@ -84,7 +84,14 @@ ColonyAI is an intelligent laboratory platform that transforms agar plate images
 | PostgreSQL | 15+ | https://www.postgresql.org/download/ |
 | Git | Latest | https://git-scm.com/ |
 
-### Quick Start (Windows)
+### Quick Run (Standard)
+
+1. **Backend**: Open terminal in `backend/`, run `start_backend.bat`.
+2. **Frontend**: Open terminal in `frontend/`, run `npm run dev`.
+
+Access at `http://localhost:3000`.
+
+### Full Installation (Windows)
 
 **1. Clone the Repository**
 ```bash
@@ -218,10 +225,10 @@ colonyai/
 
 | Member | Role |
 |--------|------|
-| **Wisnu Alfian Nur Ashar** | Product Owner & Frontend Lead |
-| **Muhammad Faras** | Scrum Master, AI/CV Integration & Business Analyst |
-| **Suci** | Developer (UI/UX Designer) |
-| **Steven** | Developer (Data Analyst & QA Engineer) |
+| **Wisnu Alfian Nur Ashar** | Product Owner |
+| **Muhammad Faras** | Scrum Master |
+| **Suci** | Developer |
+| **Steven** | Developer |
 
 **Institution:** President University — Bachelor of Information Technology  
 **GitHub:** https://github.com/wi5nuu/colonyai

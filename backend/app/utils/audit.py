@@ -1,7 +1,10 @@
 """Audit logging utility functions"""
 import uuid
+import hashlib
+import json
+from datetime import datetime
 from typing import Optional
-from sqlalchemy import select
+from sqlalchemy import select, desc
 
 
 async def write_audit_log(
@@ -31,6 +34,20 @@ async def write_audit_log(
 
     resource_uuid = uuid.UUID(resource_id) if resource_id else None
     user_uuid = uuid.UUID(user_id)
+    timestamp = datetime.utcnow()
+
+    previous_hash = None
+    if db is not None:
+        # Get the last log's hash strictly ordered
+        stmt = select(AuditLog).order_by(desc(AuditLog.timestamp)).limit(1)
+        result = await db.execute(stmt)
+        last_log = result.scalars().first()
+        if last_log and last_log.current_hash:
+            previous_hash = last_log.current_hash
+
+    details_str = json.dumps(details, sort_keys=True) if details else "{}"
+    raw_str = f"{previous_hash or ''}{action}{resource_type}{str(resource_uuid) if resource_uuid else ''}{details_str}{timestamp.isoformat()}"
+    current_hash = hashlib.sha256(raw_str.encode('utf-8')).hexdigest()
 
     audit_entry = AuditLog(
         id=uuid.uuid4(),
@@ -41,6 +58,9 @@ async def write_audit_log(
         details=details,
         ip_address=ip_address,
         user_agent=user_agent,
+        timestamp=timestamp,
+        previous_hash=previous_hash,
+        current_hash=current_hash,
     )
 
     if db is not None:

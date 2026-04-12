@@ -5,15 +5,18 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from app.core.config import settings
-from app.api.v1 import auth_router, image_router, analysis_router, report_router, user_router, lims_router
+from app.api.v1 import auth_router, image_router, analysis_router, report_router, user_router, lims_router, maintenance_router, simulator_router
 from app.core.database import engine, Base
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    print("🚀 [STARTUP] Initializing Laboratory OS Backend...")
     from app.core.database import init_db
+    print("📡 [STARTUP] Connecting to PostgreSQL Database...")
     await init_db()
+    print("✅ [STARTUP] Database initialization complete.")
 
     # Ensure upload directories exist
     for subdir in ["original", "annotated", "reports"]:
@@ -51,6 +54,8 @@ app.include_router(analysis_router, prefix=f"{settings.API_V1_PREFIX}/analyses",
 app.include_router(report_router, prefix=f"{settings.API_V1_PREFIX}/reports", tags=["Reports"])
 app.include_router(user_router, prefix=f"{settings.API_V1_PREFIX}/users", tags=["Users"])
 app.include_router(lims_router, prefix=f"{settings.API_V1_PREFIX}/lims", tags=["LIMS Integration"])
+app.include_router(maintenance_router, prefix=f"{settings.API_V1_PREFIX}/maintenance", tags=["Maintenance"])
+app.include_router(simulator_router, prefix=f"{settings.API_V1_PREFIX}/simulator", tags=["Simulator"])
 
 
 @app.get("/")

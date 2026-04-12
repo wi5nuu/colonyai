@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FileText, Download, Calendar, TrendingUp, Loader2 } from 'lucide-react'
+import { FileText, Download, Calendar, TrendingUp, Loader2, CheckCircle } from 'lucide-react'
 import { analysesApi } from '@/lib/analyses-api'
 import { reportsApi } from '@/lib/reports-api'
 import { Analysis, ReportType } from '@/lib/types'
@@ -129,221 +129,245 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Quick Stats */}
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Strategic Export Summary Ledger */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card">
+        <div className="stat-card group">
           <div className="flex items-center">
-            <div className="flex-shrink-0 rounded-md p-3 bg-primary-50">
-              <FileText className="h-6 w-6 text-primary-600" />
+            <div className="flex-shrink-0 rounded-2xl p-4 bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 shadow-lg shadow-primary/5">
+              <FileText className="h-6 w-6" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Analyses</p>
-              <p className="text-2xl font-semibold text-gray-900">{analyses.length}</p>
+            <div className="ml-5">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Archived Entries</p>
+              <p className="text-3xl font-black text-foreground tracking-tighter">{analyses.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="card">
+        <div className="stat-card group">
           <div className="flex items-center">
-            <div className="flex-shrink-0 rounded-md p-3 bg-success-50">
-              <Calendar className="h-6 w-6 text-success-600" />
+            <div className={`flex-shrink-0 rounded-2xl p-4 transition-all duration-500 shadow-lg ${selectedIds.size > 0 ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-muted/40 text-muted-foreground'}`}>
+              <CheckCircle className="h-6 w-6" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Selected</p>
-              <p className="text-2xl font-semibold text-gray-900">{selectedIds.size}</p>
+            <div className="ml-5">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Staging for Export</p>
+              <p className="text-3xl font-black text-foreground tracking-tighter">{selectedIds.size}</p>
             </div>
           </div>
         </div>
 
-        <div className="card">
+        <div className="stat-card group">
           <div className="flex items-center">
-            <div className="flex-shrink-0 rounded-md p-3 bg-warning-50">
-              <TrendingUp className="h-6 w-6 text-warning-600" />
+            <div className="flex-shrink-0 rounded-2xl p-4 bg-amber-500/10 text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-all duration-500 shadow-lg shadow-amber-500/5">
+              <TrendingUp className="h-6 w-6" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Reports Generated</p>
-              <p className="text-2xl font-semibold text-gray-900">{recentReports.length}</p>
+            <div className="ml-5">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Session Output Count</p>
+              <p className="text-3xl font-black text-foreground tracking-tighter">{recentReports.length}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Report Configuration */}
-      <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Configure Report
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div>
-            <label className="label">Date From</label>
-            <input
-              type="date"
-              className="input"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="label">Date To</label>
-            <input
-              type="date"
-              className="input"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="label">Media Type</label>
-            <select
-              className="input"
-              value={mediaType}
-              onChange={(e) => setMediaType(e.target.value)}
-            >
-              <option value="all">All Media</option>
-              <option value="Plate Count Agar">PCA</option>
-              <option value="VRBA">VRBA</option>
-              <option value="BGBB">BGBB</option>
-              <option value="R2A">R2A</option>
-              <option value="TSA">TSA</option>
-              <option value="MacConkey">MacConkey</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <button
-            onClick={handleGeneratePdf}
-            disabled={isGenerating || selectedIds.size === 0}
-            className="btn-primary flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <FileText className="h-4 w-4 mr-2" />
-                Generate PDF Report
-              </>
-            )}
-          </button>
-          <button
-            onClick={handleGenerateCsv}
-            disabled={isGenerating || selectedIds.size === 0}
-            className="btn-secondary flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Download className="h-4 w-4 mr-2" />
-                Generate CSV Report
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Analysis Selection */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Select Analyses ({selectedIds.size} of {filteredAnalyses.length})
-          </h2>
-          <button onClick={selectAll} className="text-sm text-primary-600 hover:text-primary-700">
-            {selectedIds.size === filteredAnalyses.length ? 'Deselect All' : 'Select All'}
-          </button>
-        </div>
-
-        {isLoadingAnalyses ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-primary-600" />
-          </div>
-        ) : filteredAnalyses.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No analyses match your filters</div>
-        ) : (
-          <div className="space-y-2 max-h-80 overflow-y-auto">
-            {filteredAnalyses.map((analysis) => (
-              <label
-                key={analysis.id}
-                className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                  selectedIds.has(analysis.id)
-                    ? 'bg-primary-50 border-primary-300'
-                    : 'border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(analysis.id)}
-                    onChange={() => toggleSelection(analysis.id)}
-                    className="h-4 w-4 text-primary-600 rounded"
-                  />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{analysis.sample_id}</p>
-                    <p className="text-xs text-gray-500">
-                      {analysis.media_type} &bull; {analysis.status} &bull; {analysis.cfu_per_ml} CFU/ml
-                    </p>
-                  </div>
-                </div>
-                <span className="text-xs text-gray-400">
-                  {new Date(analysis.created_at).toLocaleDateString()}
-                </span>
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Recent Reports */}
-      <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Recent Reports (Session)
-        </h2>
-        {recentReports.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-4">
-            No reports generated this session
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {recentReports.map((report) => (
-              <div
-                key={report.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
-              >
-                <div className="flex items-center flex-1">
-                  <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-lg bg-primary-50 flex items-center justify-center">
-                      <FileText className="h-5 w-5 text-primary-600" />
-                    </div>
-                  </div>
-                  <div className="ml-3 flex-1">
-                    <h3 className="text-sm font-semibold text-gray-900">{report.filename}</h3>
-                    <div className="mt-1 flex items-center text-xs text-gray-500 space-x-3">
-                      <span>{new Date(report.generatedAt).toLocaleString()}</span>
-                      <span>&bull;</span>
-                      <span className="uppercase">{report.format}</span>
-                    </div>
-                  </div>
-                </div>
-                <a
-                  href={report.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-4 btn-primary flex items-center text-sm"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </a>
+      {/* Spectral Configuration Terminal */}
+      <div className="card p-0 overflow-hidden border-border/40">
+        <div className="px-8 py-5 border-b border-border/20 bg-muted/10 flex items-center justify-between">
+           <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/20 rounded-lg text-primary">
+                 <Calendar className="h-4 w-4" />
               </div>
-            ))}
+              <h2 className="text-sm font-black text-foreground uppercase tracking-widest">Protocol Export Parameters</h2>
+           </div>
+        </div>
+        <div className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Temporal Origin (From)</label>
+              <input
+                type="date"
+                className="input h-12 bg-muted/20 border-border/40 hover:border-primary/30 transition-all font-mono text-sm"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Temporal Horizon (To)</label>
+              <input
+                type="date"
+                className="input h-12 bg-muted/20 border-border/40 hover:border-primary/30 transition-all font-mono text-sm"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Media-Specific Filter</label>
+              <select
+                className="input h-12 bg-muted/20 border-border/40 hover:border-primary/30 transition-all text-xs font-black uppercase tracking-widest"
+                value={mediaType}
+                onChange={(e) => setMediaType(e.target.value)}
+              >
+                <option value="all">Global Archive</option>
+                <option value="Plate Count Agar">PCA - Standard</option>
+                <option value="VRBA">VRBA - Coliform</option>
+                <option value="BGBB">BGBB - Selective</option>
+                <option value="R2A">R2A - Low Nutrient</option>
+                <option value="TSA">TSA - General</option>
+                <option value="MacConkey">MacConkey - Enteric</option>
+              </select>
+            </div>
           </div>
-        )}
+
+          <div className="flex gap-4">
+            <button
+              onClick={handleGeneratePdf}
+              disabled={isGenerating || selectedIds.size === 0}
+              className="btn-primary h-12 px-8 flex items-center shadow-lg shadow-primary/20 active:scale-95 disabled:scale-100"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing Spectral Data...
+                </>
+              ) : (
+                <>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Generate ISO-17025 PDF
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleGenerateCsv}
+              disabled={isGenerating || selectedIds.size === 0}
+              className="btn-secondary h-12 px-8 flex items-center shadow-sm border-border/40 hover:border-primary/30 active:scale-95 disabled:scale-100"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Parsing Data...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Compile Raw CSV
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Analysis Selection Matrix */}
+      <div className="card p-0 overflow-hidden border-border/40">
+        <div className="px-8 py-5 border-b border-border/20 bg-muted/10 flex items-center justify-between">
+           <div className="flex items-center gap-3">
+              <h2 className="text-sm font-black text-foreground uppercase tracking-widest">Spectral Selection Matrix</h2>
+              <span className="text-[10px] font-black text-primary px-2 py-1 bg-primary/10 rounded-lg border border-primary/20">{selectedIds.size} STAGED</span>
+           </div>
+           <button onClick={selectAll} className="text-[10px] font-black text-primary uppercase tracking-[0.2em] hover:text-primary-foreground hover:bg-primary px-4 py-2 rounded-xl transition-all border border-primary/30">
+            {selectedIds.size === filteredAnalyses.length ? 'Clear Selection' : 'Select All Active'}
+           </button>
+        </div>
+
+        <div className="p-0">
+          {isLoadingAnalyses ? (
+            <div className="flex justify-center py-20 bg-muted/5">
+              <div className="text-center">
+                 <Loader2 className="h-10 w-10 animate-spin text-primary/40 mx-auto" />
+                 <p className="mt-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Querying Global Archive...</p>
+              </div>
+            </div>
+          ) : filteredAnalyses.length === 0 ? (
+            <div className="text-center py-20 bg-muted/5">
+               <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 border border-border/20">
+                  <FileText className="h-8 w-8 text-muted-foreground/40" />
+               </div>
+               <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">No Archival Matches Found</p>
+               <p className="text-[10px] font-medium text-muted-foreground/60 mt-2">Try adjusting the spectral filters above</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border/10 max-h-[500px] overflow-y-auto custom-scrollbar">
+              {filteredAnalyses.map((analysis) => (
+                <div
+                  key={analysis.id}
+                  onClick={() => toggleSelection(analysis.id)}
+                  className={`flex items-center justify-between px-8 py-5 cursor-pointer transition-all group ${
+                    selectedIds.has(analysis.id)
+                      ? 'bg-primary/10 border-l-4 border-l-primary'
+                      : 'hover:bg-primary/[0.02] border-l-4 border-l-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-6 flex-1">
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 transition-all ${selectedIds.has(analysis.id) ? 'bg-primary border-primary text-primary-foreground' : 'border-border group-hover:border-primary/40 text-transparent'}`}>
+                       <CheckCircle className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-foreground uppercase tracking-widest leading-none mb-1.5">{analysis.sample_id}</p>
+                      <div className="flex gap-4 items-center">
+                         <span className="text-[10px] font-black text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border/30">{analysis.media_type}</span>
+                         <span className={`text-[10px] font-black uppercase tracking-tighter ${analysis.status === 'valid' ? 'text-emerald-500' : 'text-rose-500'}`}>{analysis.status}</span>
+                         <span className="text-[10px] font-bold text-muted-foreground font-mono">{analysis.cfu_per_ml} CFU/mL</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 leading-none">{new Date(analysis.created_at).toLocaleDateString()}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground/40 font-mono tracking-tighter uppercase leading-none">{analysis.id.substring(0, 13)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Session Archive Gallery */}
+      <div className="card p-0 overflow-hidden border-border/40">
+        <div className="px-8 py-5 border-b border-border/20 bg-muted/10">
+           <h2 className="text-sm font-black text-foreground uppercase tracking-widest">Active Session Export Queue</h2>
+        </div>
+        <div className="p-8">
+          {recentReports.length === 0 ? (
+            <div className="text-center py-12 bg-muted/10 rounded-2xl border border-dashed border-border/40">
+              <Download className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest leading-none">Export Queue Empty</p>
+              <p className="text-[10px] font-medium text-muted-foreground/60 mt-2">Initialize export via configuration panel above</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {recentReports.map((report) => (
+                <div
+                  key={report.id}
+                  className="flex items-center justify-between p-5 bg-muted/20 border border-border/40 rounded-2xl hover:border-primary/30 hover:bg-primary/[0.02] transition-all group"
+                >
+                  <div className="flex items-center flex-1 pr-6 min-w-0">
+                    <div className="flex-shrink-0">
+                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                        <FileText className="h-6 w-6" />
+                      </div>
+                    </div>
+                    <div className="ml-4 truncate">
+                      <h3 className="text-xs font-black text-foreground uppercase tracking-widest truncate">{report.filename}</h3>
+                      <div className="mt-1.5 flex items-center text-[10px] font-bold text-muted-foreground uppercase tracking-tighter space-x-3">
+                        <span className="font-mono">{new Date(report.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="text-border">|</span>
+                        <span className={`px-2 py-0.5 rounded border ${report.format === 'pdf' ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'}`}>{report.format}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <a
+                    href={report.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary flex items-center text-[10px] font-black h-10 px-4 whitespace-nowrap"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    FETCH FILE
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

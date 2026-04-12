@@ -58,7 +58,7 @@ The Kimia challenge requires an AI model capable of five core capabilities. Colo
 | **Variations in lighting and camera quality** | CLAHE-based adaptive histogram equalization + perspective correction normalizes any input before inference |
 | **Overlapping and low contrast colonies** | YOLOv8 trained specifically on colony_merged class; NMS with IoU 0.45 resolves overlapping detections |
 | **Different media types and colors** | Model trained across 8+ agar media types (PCA, VRBA, BGBB, etc.) with varying plate colors |
-| **Limited labeled dataset** | AGAR public dataset (18,000+ images) + Roboflow augmentation (3× expansion) + synthetic data pipeline |
+| **Limited labeled dataset** | Custom dataset of 1,477 images (56,124 bounding boxes) + YOLOv8 built-in augmentation (mosaic, flip, HSV, rotation) + planned AGAR dataset integration |
 | **Results still require analyst verification** | Digital sign-off workflow with confidence transparency — every detection shows per-class confidence scores; analyst approves before submission |
 
 ### Selected Sub-Case Statement
@@ -82,7 +82,7 @@ The challenge defines four expected outputs. ColonyAI delivers each as a product
 
 | Expected Output | ColonyAI Deliverable | Status |
 |----------------|---------------------|--------|
-| **Computer Vision model** for colony detection & counting | YOLOv8n fine-tuned on 18,000+ AGAR dataset images; 5-class detection (colony_single, colony_merged, bubble, dust_debris, media_crack); ONNX export for CPU inference | Defined |
+| **Computer Vision model** for colony detection & counting | YOLOv8n fine-tuned on 1,477 custom-labeled images (56,124 bounding boxes) with 5-class detection (colony_single, colony_merged, bubble, dust_debris, media_crack); ONNX export for CPU inference | Defined |
 | **Dashboard** — Colony count results and test history | Next.js 14 web application with annotated plate images (color-coded bounding boxes), CFU/ml calculation, searchable test history, and per-class confidence scores | Defined |
 | **Simulator** — Comparison of manual vs AI accuracy | Built-in benchmarking module: analysts enter manual counts per class; system displays side-by-side comparison table with accuracy percentage, error margin, and per-class agreement score | Defined |
 | **Executive Summary** — Efficiency of analysis time and consistency of results | Auto-generated PDF report: pre/post AI analysis time comparison, inter-analyst variability reduction metrics, monthly throughput trends, and cost savings analysis — exportable for management review | Defined |
@@ -237,7 +237,7 @@ ColonyAI is a web-based intelligent laboratory platform that transforms agar pla
 **Short-Term (0–6 Months Post-Deployment):**
 - Pilot deployment in 2–3 partner laboratories validating ≥ 92% detection accuracy across Plate Count Agar (PCA), VRBA, and BGBB media types for all 5 detection classes.
 - Onboarding of 10–20 analysts through the web platform with embedded training materials explaining the 5-class classification system.
-- Establishment of a labeled agar plate dataset of 5,000+ images with annotations across all 5 classes, shared openly to advance Indonesian AI research in food safety.
+- Establishment of a labeled agar plate dataset of 1,477 images with 56,124 bounding box annotations across 5 classes, shared openly to advance Indonesian AI research in food safety.
 
 **Mid-Term (6–24 Months Post-Deployment):**
 - Expansion to 20+ accredited laboratories across Java and Sumatra. Target: 10,000+ TPC analyses processed monthly through the platform.
@@ -306,10 +306,10 @@ YOLOv8 was selected because it provides the optimal balance of speed (< 50ms per
 ### Primary Data or Input Used
 *(Max. 200 Words)*
 
-- **AGAR Public Dataset** (Macquarie University): 18,000+ annotated colony images across multiple media types — the largest publicly available benchmark for colony counting AI research (DOI: 10.1038/s41598-021-99300-z). Annotations will be re-labeled to match our 5-class taxonomy.
-- **Roboflow Universe:** Additional bacterial colony and agar plate datasets for domain diversification and augmentation across all 5 object classes.
-- **Synthetic Augmentation:** Roboflow pipeline generates 3× dataset expansion through random brightness/contrast shifts, rotation, horizontal/vertical flip, Gaussian blur, and mosaic augmentation — ensuring all 5 classes are well-represented under varied lighting and camera conditions.
-- **Partner Laboratory Data (Pilot Phase):** 500–1,000 locally captured images from Indonesian laboratories, with annotations covering all 5 classes, filling domain-adaptation gaps from international datasets.
+- **Custom Labeled Dataset**: 1,477 agar plate images with 56,124 bounding box annotations across 5 classes (colony_single, colony_merged, bubble, dust_debris, media_crack), manually annotated and validated by domain experts.
+- **YOLOv8 Built-in Augmentation**: During training, the pipeline applies mosaic (100%), flip (50%), HSV color jittering, rotation (±15°), and scaling (±50%), effectively expanding the dataset 3-5× to ~5,000+ augmented samples per epoch.
+- **AGAR Public Dataset Integration** (Roadmap): 18,000+ additional images from Macquarie University (DOI: 10.1038/s41598-021-99300-z) planned for Phase 2 to further improve mAP on rare classes (media_crack, dust_debris).
+- **Partner Laboratory Data** (Pilot Phase): 500–1,000 locally captured images from Indonesian laboratories to fill domain-adaptation gaps and ensure local relevance for BPOM compliance.
 
 **Data quality controls:** Minimum resolution 800×800px; annotation review by two independent annotators; class balance verification ensuring all 5 classes are represented; exclusion of plates with ≥ 300 CFU (TNTC) from training; full anonymization of partner laboratory sample IDs before storage.
 
@@ -398,7 +398,7 @@ YOLOv8 was selected because it provides the optimal balance of speed (< 50ms per
 
 | Sprint | Duration | Backlog Items | Sprint Goal | Definition of Done |
 |--------|----------|--------------|-------------|-------------------|
-| Sprint 1 | Week 1–2 | PB-01, PB-02 | YOLOv8 model successfully classifies all 5 classes on the AGAR dataset with initial mAP > 70%. | Model trained; inference script runs; 5-class output verified on 50 test images. |
+| Sprint 1 | Week 1–2 | PB-01, PB-02 | YOLOv8 model successfully classifies all 5 classes on the custom dataset (1,477 images) with initial mAP > 70%. | Model trained; inference script runs; 5-class output verified on 50 test images. |
 | Sprint 2 | Week 3–5 | PB-03, PB-05 | FastAPI backend serves inference results; CFU/ml calculator processes colony_single + colony_merged counts; audit log writes to PostgreSQL. | API returns correct CFU/ml for 10 test cases; audit log entries verified; TNTC/TFTC flags working. |
 | Sprint 3 | Week 6–8 | PB-04, PB-07 | Next.js dashboard displays color-coded bounding boxes for all 5 classes; mobile camera upload pipeline functional end-to-end. | Dashboard renders all 5 classes with distinct colors; mobile upload tested on 3 devices; UI reviewed by Product Owner. |
 | Sprint 4 | Week 9–11 | PB-06, PB-08 | Analysts can export BPOM-compliant PDF and CSV reports; Simulator displays AI vs. manual count comparison for all 5 classes. | PDF export validated against BPOM format; Simulator comparison table verified for accuracy. |

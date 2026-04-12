@@ -15,50 +15,59 @@ class ImageProcessor:
         """
         Complete preprocessing pipeline:
         1. Load and convert to RGB
-        2. Normalize brightness/contrast
-        3. Detect plate boundary
-        4. Extract ROI
-        5. Resize to target
+        2. Normalize brightness/contrast (CLAHE)
+        3. Detect plate boundary (Hough Circle)
+        4. Perspective correction (homography transform)
+        5. Extract ROI
+        6. Resize to target
         """
         # Load image
         image = cv2.imread(image_path)
         if image is None:
             raise ValueError(f"Could not load image from {image_path}")
-        
+
         # Convert BGR to RGB
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        
+
         # Normalize brightness and contrast
         normalized = self._normalize_brightness(image_rgb)
-        
+
         # Detect plate boundary and extract ROI
-        plate_mask = self._detect_plate_boundary(normalized)
-        roi = self._extract_roi(normalized, plate_mask)
-        
+        plate_mask, plate_circle = self._detect_plate_boundary(normalized)
+        corrected = self._correct_perspective(normalized, plate_circle)
+
+        # Re-detect boundary on corrected image and extract ROI
+        corrected_mask = self._detect_plate_boundary(corrected)[0]
+        roi = self._extract_roi(corrected, corrected_mask)
+
         # Resize to target size
         resized = cv2.resize(roi, self.target_size, interpolation=cv2.INTER_AREA)
-        
+
         return resized
-    
+
     def preprocess_from_bytes(self, image_bytes: bytes) -> np.ndarray:
         """Preprocess image from bytes (for uploaded files)"""
         image = Image.open(io.BytesIO(image_bytes))
         image_rgb = np.array(image)
-        
+
         # Convert RGBA to RGB if needed
         if image_rgb.shape[2] == 4:
             image_rgb = cv2.cvtColor(image_rgb, cv2.COLOR_RGBA2RGB)
-        
+
         # Normalize brightness and contrast
         normalized = self._normalize_brightness(image_rgb)
-        
+
         # Detect plate boundary and extract ROI
-        plate_mask = self._detect_plate_boundary(normalized)
-        roi = self._extract_roi(normalized, plate_mask)
-        
+        plate_mask, plate_circle = self._detect_plate_boundary(normalized)
+        corrected = self._correct_perspective(normalized, plate_circle)
+
+        # Re-detect boundary on corrected image
+        corrected_mask = self._detect_plate_boundary(corrected)[0]
+        roi = self._extract_roi(corrected, corrected_mask)
+
         # Resize to target size
         resized = cv2.resize(roi, self.target_size, interpolation=cv2.INTER_AREA)
-        
+
         return resized
     
     def _normalize_brightness(self, image: np.ndarray) -> np.ndarray:
@@ -77,16 +86,16 @@ class ImageProcessor:
         
         return final
     
-    def _detect_plate_boundary(self, image: np.ndarray) -> np.ndarray:
+    def _detect_plate_boundary(self, image: np.ndarray) -> Tuple[np.ndarray, dict | None]:
         """
         Detect circular agar plate boundary using Hough Circle Transform
-        Returns a binary mask of the plate region
+        Returns a binary mask of the plate region and circle info dict
         """
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-        
+
         # Apply Gaussian blur to reduce noise
         blurred = cv2.GaussianBlur(gray, (9, 9), 2)
-        
+
         # Detect circles using Hough Circle Transform
         circles = cv2.HoughCircles(
             blurred,
@@ -98,22 +107,84 @@ class ImageProcessor:
             minRadius=int(min(image.shape[:2]) * 0.3),  # Minimum circle radius
             maxRadius=int(min(image.shape[:2]) * 0.5)   # Maximum circle radius
         )
-        
+
         # Create mask
         mask = np.zeros(image.shape[:2], dtype=np.uint8)
-        
+        circle_info = None
+
         if circles is not None:
             # Get the largest circle
             circles = np.round(circles[0, :]).astype("int")
             largest_circle = max(circles, key=lambda c: c[2])
-            
+
             x, y, radius = largest_circle
+            circle_info = {'x': x, 'y': y, 'radius': radius}
             cv2.circle(mask, (x, y), radius, 255, -1)
         else:
             # If no circle detected, use full image
             mask[:] = 255
-        
-        return mask
+
+        return mask, circle_info
+
+    def _correct_perspective(self, image: np.ndarray, circle_info: dict | None) -> np.ndarray:
+        """
+        Correct perspective distortion of the agar plate using homography transform.
+
+        If a circular plate is detected, this method:
+        1. Finds 4 edge points around the circle perimeter
+        2. Computes homography to transform the ellipse/oval back to a perfect circle
+        3. Applies perspective warp to normalize the plate view
+
+        Args:
+            image: RGB numpy array
+            circle_info: Dict with x, y, radius from Hough Circle detection
+
+        Returns:
+            Perspective-corrected image (same size as input)
+        """
+        if circle_info is None:
+            return image  # No plate detected, skip correction
+
+        h, w = image.shape[:2]
+        cx, cy, r = circle_info['x'], circle_info['y'], circle_info['radius']
+
+        # Define 4 points around the circle perimeter (top, right, bottom, left)
+        # These points are slightly inside the circle to avoid edge artifacts
+        margin = int(r * 0.1)
+        r_inner = r - margin
+
+        src_points = np.float32([
+            [cx, cy - r_inner],           # Top
+            [cx + r_inner, cy],           # Right
+            [cx, cy + r_inner],           # Bottom
+            [cx - r_inner, cy],           # Left
+        ])
+
+        # Define destination points as a square centered in the image
+        # This creates a "top-down" normalized view
+        square_size = int(r_inner * 2)
+        offset_x = max(0, (w - square_size) // 2)
+        offset_y = max(0, (h - square_size) // 2)
+
+        dst_points = np.float32([
+            [offset_x + square_size // 2, offset_y],                    # Top
+            [offset_x + square_size, offset_y + square_size // 2],      # Right
+            [offset_x + square_size // 2, offset_y + square_size],      # Bottom
+            [offset_x, offset_y + square_size // 2],                    # Left
+        ])
+
+        # Compute homography matrix
+        try:
+            H, _ = cv2.findHomography(src_points, dst_points)
+            if H is None:
+                return image
+
+            # Apply perspective warp
+            corrected = cv2.warpPerspective(image, H, (w, h), flags=cv2.INTER_LINEAR)
+            return corrected
+        except cv2.error:
+            # If homography fails, return original image
+            return image
     
     def _extract_roi(self, image: np.ndarray, mask: np.ndarray) -> np.ndarray:
         """Extract region of interest using the plate mask"""

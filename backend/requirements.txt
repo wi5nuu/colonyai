@@ -1,28 +1,60 @@
-# Dependencies
+# ── Core Framework ──
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
-pydantic==2.5.3
-pydantic-settings==2.1.0
 pydantic[email]==2.5.3
+pydantic-settings==2.1.0
 python-multipart==0.0.6
+
+# ── Auth ──
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-SQLAlchemy==2.0.25
+
+# ── Database ──
+SQLAlchemy==2.0.36
 alembic==1.13.1
 psycopg2-binary==2.9.9
 asyncpg==0.29.0
-boto3==1.34.14
+aiosqlite==0.19.0
+
+# ── Storage ──
+boto3==1.35.0
 python-dotenv==1.0.0
+
+# ── Image Processing & AI ──
 Pillow>=10.4.0
 opencv-python-headless>=4.9.0.80
 ultralytics>=8.1.3
 numpy>=1.26.3
+
+# ── Export ──
 reportlab==4.0.9
 pandas==2.2.0
 openpyxl==3.1.2
+
+# ── HTTP ──
 httpx==0.26.0
+
+# ── Testing ──
 pytest==7.4.4
 pytest-asyncio==0.23.3
+
+# ── Task Queue ──
 celery==5.3.6
 redis==5.0.1
+
+# ── Validation ──
 email-validator>=2.1.0
+
+# ── Security: File Upload (BUG-006, BUG-012) ──
+# WAJIB di-install di semua environment (dev, staging, production)
+python-magic>=0.4.27         # MIME type detection via magic bytes (bukan Content-Type header)
+piexif>=1.1.3                # EXIF stripping dari JPEG sebelum disimpan ke S3
+argon2-cffi==23.1.0          # Modern password hashing used in security.py
+
+# NOTE: clamd (ClamAV Python client) tidak diinstall secara otomatis
+# karena memerlukan ClamAV daemon yang terinstall di OS.
+# Di lingkungan produksi Railway/Docker, tambahkan ke Dockerfile:
+#   RUN apt-get install -y clamav clamav-daemon && freshclam
+# Lalu uncomment baris berikut:
+# clamd>=1.0.2
+

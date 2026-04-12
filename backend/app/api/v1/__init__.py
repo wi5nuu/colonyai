@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, images, analyses, reports, users, lims
+from app.api.v1.endpoints import auth, images, analyses, reports, users, lims, maintenance, simulator
 
 auth_router = APIRouter()
 auth_router.add_api_route("/login", auth.login, methods=["POST"])
@@ -39,3 +39,12 @@ lims_router.add_api_route("/lims-config", lims.get_lims_configuration, methods=[
 lims_router.add_api_route("/configure", lims.configure_lims_integration, methods=["POST"])
 lims_router.add_api_route("/batch-sync", lims.batch_sync_to_lims, methods=["POST"])
 lims_router.add_api_route("/sync-history", lims.get_sync_history, methods=["GET"])
+
+maintenance_router = APIRouter()
+maintenance_router.add_api_route("/retention", maintenance.apply_data_retention_policy, methods=["DELETE"])
+
+simulator_router = APIRouter()
+simulator_router.add_api_route("", simulator.save_comparison, methods=["POST"])
+simulator_router.add_api_route("", simulator.list_comparisons, methods=["GET"])
+simulator_router.add_api_route("/stats", simulator.get_comparator_stats, methods=["GET"])
+simulator_router.add_api_route("/analysis/{analysis_id}", simulator.get_comparison, methods=["GET"])
