@@ -10,37 +10,37 @@
 
 ## 🔴 P0 - Critical (MVP Core)
 
-| ID | Feature / Story | Assignee | Status | Notes |
-|----|-----------------|----------|--------|-------|
-| **PB-01** | **YOLOv8 Model Training**<br>Train model on 5-class dataset (colony_single, merged, bubble, dust, crack) with >90% accuracy. | Faras | 🔄 In Progress | Using AGAR dataset + augmentation |
-| **PB-02** | **Backend API Core**<br>Setup FastAPI, PostgreSQL, Auth (JWT), and User Models. | Steven | ✅ Done | Auth and DB ready |
-| **PB-03** | **Frontend Dashboard**<br>Develop main dashboard with stats, charts, and recent analyses table. | Wisnu | ✅ Done | Real-time stats implemented |
-| **PB-04** | **Image Upload & Inference**<br>Endpoint to upload image, run AI model, and return annotated results. | Faras/Steven | 🔄 In Progress | Pipeline: Upload -> Pre-process -> AI -> Save |
-| **PB-05** | **Results Display**<br>Show annotated image with bounding boxes and detection details to user. | Wisnu/Suci | ⏳ Pending | Needs annotated image URL handling |
+| ID | Type | Feature / Story / Bug | Goal | Assignee | Status |
+|----|------|-----------------------|------|----------|--------|
+| **PB-01** | Feature | **YOLOv8 Model Training**<br>Train model on 5-class dataset. | Achieve >90% accuracy for colony detection baseline. | Faras | 🔄 In Progress |
+| **PB-02** | Task | **Backend API Core Setup**<br>FastAPI, PostgreSQL, Auth. | Establish stable backend logic and database schema. | Steven | ✅ Done |
+| **PB-03** | Feature | **Frontend Dashboard**<br>Main dashboard with stats & charts. | Allow users to view real-time laboratory analytics intuitively. | Wisnu | ✅ Done |
+| **PB-04** | Feature | **Image Upload Pipeline**<br>Endpoint to upload & process image. | Enable users to upload petri-dish images for AI analysis. | Faras/Steven | 🔄 In Progress |
+| **PB-05** | Feature | **Results Visualization**<br>Show annotated image with bounding boxes. | Provide clear visual feedback of AI detection results. | Wisnu/Suci | ⏳ Pending |
 
 ## 🟡 P1 - High Priority
 
-| ID | Feature / Story | Assignee | Status | Notes |
-|----|-----------------|----------|--------|-------|
-| **PB-06** | **CFU/ml Calculator**<br>Implement SA-001 logic: `Count / (Volume * Dilution)`. Handle TNTC/TFTC flags. | Faras/Steven | ✅ Done | GUM uncertainty included |
-| **PB-07** | **Simulator Module**<br>Allow users to input manual counts and compare with AI results (Accuracy %). | Wisnu | ✅ Done | Backend API ready |
-| **PB-08** | **PDF/CSV Export**<br>Generate executive summary report (PDF) and raw data (CSV). | Steven | ⏳ Pending | ReportLab implementation |
-| **PB-09** | **RBAC System**<br>Implement 6 roles: Analyst, Senior, Lab Manager, Quality, Admin, Auditor. | Steven | ✅ Done | 6 Roles defined in DB |
+| ID | Type | Feature / Story / Bug | Goal | Assignee | Status |
+|----|------|-----------------------|------|----------|--------|
+| **PB-06** | Feature | **CFU/ml Calculator**<br>Implement SA-001 calculation logic. | Automatically calculate standard colony forming units per ml. | Faras/Steven | ✅ Done |
+| **PB-07** | Feature | **Simulator Module**<br>Manual input vs AI results. | Allow user validation of AI results for accuracy training. | Wisnu | ✅ Done |
+| **PB-08** | Task | **PDF/CSV Export**<br>Generate summary reports. | Enable lab analysts to export standard compliant result reports. | Steven | ⏳ Pending |
+| **PB-09** | Feature | **RBAC System**<br>6 roles (Analyst, Admin, Quality, etc). | Ensure ISO-compliant data security and access control. | Steven | ✅ Done |
 
 ## 🟢 P2 - Medium Priority
 
-| ID | Feature / Story | Assignee | Status | Notes |
-|----|-----------------|----------|--------|-------|
-| **PB-10** | **LIMS Integration**<br>Mock endpoint to sync results to external LIMS (SampleManager). | Steven | ✅ Done | Functional stubs |
-| **PB-11** | **Audit Trail**<br>Log all critical actions with hash chaining for integrity. | Steven | ✅ Done | AuditLog model active |
-| **PB-12** | **Mobile Responsiveness**<br>Ensure UI works perfectly on mobile devices for field analysts. | Suci | ⏳ Pending | Testing phase |
+| ID | Type | Feature / Story / Bug | Goal | Assignee | Status |
+|----|------|-----------------------|------|----------|--------|
+| **PB-10** | Feature | **LIMS Integration**<br>Mock endpoint for external LIMS. | Allow seamless data flow into existing lab infrastructure. | Steven | ✅ Done |
+| **PB-11** | Feature | **Audit Trail**<br>Log all critical actions. | Maintain compliance by tracking who updated or deleted data. | Steven | ✅ Done |
+| **PB-12** | Bug | **Mobile Responsiveness Fixes**<br>Dashboard misaligned on mobile. | Ensure field analysts can read results properly on tablets. | Suci | ⏳ Pending |
 
 ## 🔵 P3 - Low Priority
 
-| ID | Feature / Story | Assignee | Status | Notes |
-|----|-----------------|----------|--------|-------|
-| **PB-13** | **Dark Mode**<br>Toggle switch for dark/light theme. | Suci | ❌ To Do | Low impact on core function |
-| **PB-14** | **Multi-language**<br>Support English and Indonesian. | Wisnu | ❌ To Do | Nice to have for demo |
+| ID | Type | Feature / Story / Bug | Goal | Assignee | Status |
+|----|------|-----------------------|------|----------|--------|
+| **PB-13** | Feature | **Dark Mode**<br>Theme switch mechanism. | Reduce eye strain for analysts using dashboard during night shifts. | Suci | ❌ To Do |
+| **PB-14** | Feature | **Multi-Language Support**<br>English/Indonesian toggle. | Expand usability to non-English speaking regional labs. | Wisnu | ❌ To Do |
 
 ---
 

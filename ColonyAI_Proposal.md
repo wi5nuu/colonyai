@@ -343,11 +343,10 @@ YOLOv8 was selected because it provides the optimal balance of speed (< 50ms per
 
 | Phase | Timeline | Deliverables | Owner |
 |-------|----------|-------------|-------|
-| 1 | Week 1–2 | Dataset collection & annotation for all 5 classes (AGAR + Roboflow + augmentation), environment setup, system architecture finalization | Wisnu + All |
-| 2 | Week 3–5 | YOLOv8 model training v1 (5-class), FastAPI backend scaffold, Next.js project setup, PostgreSQL schema with class-level storage | Faras + Steven |
-| 3 | Week 6–8 | Model optimization targeting > 90% mAP across all 5 classes, Dashboard UI: upload, result view with class color-codes, test history | Suci + All |
-| 4 | Week 9–11 | Full system integration, CFU/ml calculation module (colony_single + colony_merged), PDF/CSV report export, user authentication | Full Team |
-| 5 | Week 12–14 | Internal testing, UI polish, documentation, pilot lab testing, sprint review & hackathon demo preparation | Full Team |
+| 1 | Week 1 (Apr 1-7) | Dataset collection & annotation (5 classes), YOLOv8 baseline, DB setup | Wisnu / Faras |
+| 2 | Week 2 (Apr 8-14) | FastAPI backend & Next.js dashboard UI, Simulator module development | Full Team |
+| 3 | Week 3 (Apr 15-21) | CFU/ml calculation module, PDF/CSV report export, system integration | Full Team |
+| 4 | Week 4 (Apr 22-30) | System QA, UI polish, documentation, hackathon demo preparation | Full Team |
 
 ### Business Model and Sustainability
 *(Max. 200 Words)*
@@ -394,15 +393,14 @@ YOLOv8 was selected because it provides the optimal balance of speed (< 50ms per
 | 🟡 SHOULD HAVE | Important | 3 items | PB-06, PB-07, PB-08 |
 | 🟢 COULD HAVE | Nice to have | 2 items | PB-09, PB-10 |
 
-### 4. Weekly Sprint Plan (5 Sprints × 2 Weeks)
+### 4. Sprint Plan (1-Month Intensive — April 2026)
 
-| Sprint | Duration | Backlog Items | Sprint Goal | Definition of Done |
+| Sprint | Timeline | Backlog Items | Sprint Goal | Definition of Done |
 |--------|----------|--------------|-------------|-------------------|
-| Sprint 1 | Week 1–2 | PB-01, PB-02 | YOLOv8 model successfully classifies all 5 classes on the custom dataset (1,477 images) with initial mAP > 70%. | Model trained; inference script runs; 5-class output verified on 50 test images. |
-| Sprint 2 | Week 3–5 | PB-03, PB-05 | FastAPI backend serves inference results; CFU/ml calculator processes colony_single + colony_merged counts; audit log writes to PostgreSQL. | API returns correct CFU/ml for 10 test cases; audit log entries verified; TNTC/TFTC flags working. |
-| Sprint 3 | Week 6–8 | PB-04, PB-07 | Next.js dashboard displays color-coded bounding boxes for all 5 classes; mobile camera upload pipeline functional end-to-end. | Dashboard renders all 5 classes with distinct colors; mobile upload tested on 3 devices; UI reviewed by Product Owner. |
-| Sprint 4 | Week 9–11 | PB-06, PB-08 | Analysts can export BPOM-compliant PDF and CSV reports; Simulator displays AI vs. manual count comparison for all 5 classes. | PDF export validated against BPOM format; Simulator comparison table verified for accuracy. |
-| Sprint 5 | Week 12–14 | PB-09, PB-10 + Integration | Full system integrated and tested; CFU/ml analytics chart functional; MLflow model versioning pipeline operational; demo-ready build deployed. | All 10 backlog items accepted by Product Owner; end-to-end test passes for all 5 classes; demo video recorded; documentation complete. |
+| Week 1 | Apr 1-7 | PB-01, PB-02 | YOLOv8 model classifies 5 classes; core architecture scaffolded. | Baseline model trained; basic DB/Auth running. |
+| Week 2 | Apr 8-14 | PB-04, PB-07, PB-08 | Next.js dashboard displays annotated images; Simulator module active. | Dashboard renders all 5 classes visually; Manual vs AI comparison working. |
+| Week 3 | Apr 15-21 | PB-03, PB-05, PB-06 | Integrations, CFU/ml calculator, and reporting (PDF/CSV) finalized. | PDF export passes BPOM format; automated math checks verified. |
+| Week 4 | Apr 22-30 | PB-09, PB-10 + QA | Full system integration, deployment, and final demo prep. | All critical backlog items accepted by PO; end-to-end test passes; demo video recorded. |
 
 ### 5. Daily Sprint (GitHub Repository)
 

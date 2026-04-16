@@ -1,81 +1,55 @@
-# ️ ColonyAI Sprint Plan
+# 🗓️ ColonyAI One-Month Sprint Plan (April 2026)
 
-## 🏁 Goal
-Deliver a fully functional AI-powered Automated Plate Count Reader for the AI Open Innovation Challenge 2026.
+## 🏁 Sprint Goal
+Deliver a fully functional MVP of ColonyAI (Automated Plate Count Reader) within a **1-month timeframe (April 2026)** for the AI Open Innovation Challenge.
 
-## 📅 Timeline (12 Weeks)
+## 📅 Timeline (April 2026)
 
-### 🟢 Phase 1: Foundation (Weeks 1-4)
-**Focus:** Setup, Architecture, and Core Backend.
+### 🟢 Week 1: Foundation & Core Backend (April 1 - April 7)
+**Focus:** Repository Setup, Database, and Baseline Model.
 
-- **Week 1: Kickoff & Setup**
-  - [ ] Initialize Repo (Frontend, Backend, ML).
-  - [ ] Setup Database & Auth.
-  - [ ] Finalize UI Design & Wireframes.
-- **Week 2: Data & Model**
-  - [ ] Collect & Label Dataset (AGAR).
-  - [ ] Train YOLOv8 Baseline Model.
-  - [ ] Setup AWS S3 for image storage.
-- **Week 3: Backend API**
-  - [ ] Implement Upload Endpoint.
-  - [ ] Integrate Model Inference.
-  - [ ] Develop CFU Calculation Logic.
-- **Week 4: Frontend Skeleton**
-  - [ ] Build Login/Register pages.
-  - [ ] Create Dashboard Layout.
-  - [ ] Connect Frontend to Backend API.
+- [x] **April 1:** Initialize Repo (Frontend, Backend, ML) & Setup Database.
+- [x] **April 3:** Collect & Label Dataset (AGAR) & train baseline YOLOv8 model.
+- [x] **April 5:** Implement Backend API Auth (JWT) & User Models.
+- [x] **April 7:** Develop CFU Calculation Logic (SA-001).
 
-### 🟡 Phase 2: Core Features (Weeks 5-8)
-**Focus:** Functionality, AI Accuracy, and User Experience.
+### 🟡 Week 2: Core Features & Dashboard (April 8 - April 14)
+**Focus:** Frontend UI, Integrations, and Result Visualization.
 
-- **Week 5: Results & Visualization**
-  - [ ] Display Annotated Images.
-  - [ ] Show Detection Confidence & Breakdown.
-  - [ ] Fix edge cases (TNTC/TFTC).
-- **Week 6: Simulator & Analytics**
-  - [ ] Build Simulator Page (Manual vs AI).
-  - [ ] Add Chart.js/Recharts for trends.
-  - [ ] Implement Search & Filter.
-- **Week 7: Reporting**
-  - [ ] Develop PDF Report Generator.
-  - [ ] Implement CSV Export.
-  - [ ] Add Executive Summary section to PDF.
-- **Week 8: Polish & UX**
-  - [ ] Mobile Responsiveness check.
-  - [ ] Error Handling & Loading States.
-  - [ ] User Testing & Feedback loop.
+- [x] **April 8:** Build Login/Register pages & Dashboard Layout.
+- [x] **April 10:** Connect Frontend to Backend API & Upload Endpoint.
+- [x] **April 12:** Display Annotated Images & Detection Confidence.
+- [x] **April 14:** Develop Simulator Module (Manual vs AI).
 
-### 🔴 Phase 3: Competition Ready (Weeks 9-12)
-**Focus:** Stability, Documentation, and Pitch.
+### 🟠 Week 3: Enhancements & Integrations (April 15 - April 21)
+**Focus:** Reporting, PDF Export, and External Integrations.
 
-- **Week 9: Integration**
-  - [ ] Connect LIMS Integration.
-  - [ ] Finalize Audit Trail.
-  - [ ] Performance Optimization.
-- **Week 10: Testing**
-  - [ ] Full System Testing.
-  - [ ] Fix Bugs.
-  - [ ] Load Testing.
-- **Week 11: Documentation**
-  - [ ] Update README.
-  - [ ] Prepare Demo Video.
-  - [ ] Finalize Presentation Deck.
-- **Week 12: Submission**
-  - [ ] Final Code Review.
-  - [ ] Deploy to Production (Vercel/Railway).
-  - [ ] Submit Project.
+- [x] **April 15:** RBAC System implementation (6 roles).
+- [/] **April 17:** Mock endpoint for LIMS Integration & Audit Trail.
+- [/] **April 19:** Develop PDF/CSV Export for executive summary.
+- [ ] **April 21:** Mobile Responsiveness fixes & UI polish.
+
+### 🔴 Week 4: Final QA, Docs & Launch (April 22 - April 30)
+**Focus:** Stability, Documentation, and Competition Prep.
+
+- [ ] **April 23:** Full System Testing (Unit Tests & Integration).
+- [ ] **April 25:** Fix edge case bugs (TNTC/TFTC flags).
+- [ ] **April 27:** Update README and Documentation.
+- [ ] **April 29:** Final Presentation Deck & Pitch Prep.
+- [ ] **April 30:** Final Code Review & Production Deployment.
 
 ---
 
-## ✅ Weekly Deliverables Checklist
+## ✅ Deliverables Checklist (April Progress)
 
-| Week | Deliverable | Owner | Status |
-|------|-------------|-------|--------|
-| 1 | Repo Setup & Auth | Wisnu/Steven | ✅ Done |
-| 2 | Dataset & Model v1 | Faras | ✅ Done |
-| 3 | API Core | Steven | ✅ Done |
-| 4 | Dashboard UI | Wisnu | ✅ Done |
-| 5 | Results Page | Wisnu/Suci | ✅ Done |
-| 6 | Simulator | Wisnu | ✅ Done |
-| 7 | PDF Export | Steven | 🔄 In Progress |
-| ... | ... | ... | ... |
+| Week / Date Range | Focus Area | Status |
+|-------------------|------------|--------|
+| **W1 (Apr 1 - Apr 7)** | Repo Setup, Model V1, API Core | ✅ Done |
+| **W2 (Apr 8 - Apr 14)** | Dashboard UI, Image Inference, Simulator | ✅ Done |
+| **W3 (Apr 15 - Apr 21)** | LIMS, Audit Trail, Reporting (PDF/CSV) | 🔄 In Progress |
+| **W4 (Apr 22 - Apr 30)** | QA, Bug Fixes, Final Deployment | ⏳ Pending |
+
+**Legend:**
+- `[x]` = Completed
+- `[/]` = In Progress
+- `[ ]` = Pending / To Do
