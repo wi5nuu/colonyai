@@ -1,51 +1,120 @@
-# 📋 ColonyAI Product Backlog
+# 📋 ColonyAI: Detailed Product Backlog (Agile / Scrum)
 
-## Priority Legend
-- 🔴 **P0 (Critical)**: Must-have for MVP / Competition Submission
-- 🟡 **P1 (High)**: Should-have, adds significant value
-- 🟢 **P2 (Medium)**: Nice-to-have, polish features
-- 🔵 **P3 (Low)**: Future enhancement / Post-competition
+This document contains the prioritized and detailed Product Backlog for the ColonyAI MVP development. Each item is constructed with comprehensive User Stories, feature types, goals, and acceptance criteria to maintain complete transparency and alignment with rigorous software engineering and laboratory standards.
 
 ---
 
-## 🔴 P0 - Critical (MVP Core)
+## 🔴 Priority 0 (Critical - Core MVP)
 
-| ID | Type | Feature / Story / Bug | Goal | Assignee | Status |
-|----|------|-----------------------|------|----------|--------|
-| **PB-01** | Feature | **YOLOv8 Model Training**<br>Train model on 5-class dataset. | Achieve >90% accuracy for colony detection baseline. | Faras | 🔄 In Progress |
-| **PB-02** | Task | **Backend API Core Setup**<br>FastAPI, PostgreSQL, Auth. | Establish stable backend logic and database schema. | Steven | ✅ Done |
-| **PB-03** | Feature | **Frontend Dashboard**<br>Main dashboard with stats & charts. | Allow users to view real-time laboratory analytics intuitively. | Wisnu | ✅ Done |
-| **PB-04** | Feature | **Image Upload Pipeline**<br>Endpoint to upload & process image. | Enable users to upload petri-dish images for AI analysis. | Faras/Steven | 🔄 In Progress |
-| **PB-05** | Feature | **Results Visualization**<br>Show annotated image with bounding boxes. | Provide clear visual feedback of AI detection results. | Wisnu/Suci | ⏳ Pending |
+### 1. [PB-01] AI Engine: YOLOv8 Training & Taxonomy Logic
+- **Type**: 🚀 Feature / Engine
+- **Story**: As a System Architect, I want the YOLOv8 model to accurately detect bacterial colonies (AGAR) while actively ignoring artifacts (bubbles, dust, cracks) so that false positives are eliminated.
+- **Goal**: Achieve >90% precision and recall for Colony Forming Units (CFU) baseline without misclassifying petri dish imperfections.
+- **Acceptance Criteria**:
+  - Model trained on 5-class annotated dataset.
+  - Exclusions mapped in code (e.g., `bubble`, `dust_debris` class explicitly ignored from final calculation).
+  - Inference processing speed under 2 seconds per image.
+- **Assignee**: Faras
+- **Status**: 🔄 In Progress
 
-## 🟡 P1 - High Priority
+### 2. [PB-02] Backend: Secure Authentication & API Setup
+- **Type**: 🛠️ Infrastructure
+- **Story**: As a Backend Developer, I want to establish a robust FastAPI and PostgreSQL foundation with JWT authentication so that sensitive laboratory data endpoints are heavily protected.
+- **Goal**: Establish stable, secure backend routing and strict database schemas.
+- **Acceptance Criteria**:
+  - PostgreSQL database deployed locally.
+  - JWT Auth middleware implemented and tested.
+  - API documentation (Swagger/Redoc) fully accessible.
+- **Assignee**: Steven
+- **Status**: ✅ Done
 
-| ID | Type | Feature / Story / Bug | Goal | Assignee | Status |
-|----|------|-----------------------|------|----------|--------|
-| **PB-06** | Feature | **CFU/ml Calculator**<br>Implement SA-001 calculation logic. | Automatically calculate standard colony forming units per ml. | Faras/Steven | ✅ Done |
-| **PB-07** | Feature | **Simulator Module**<br>Manual input vs AI results. | Allow user validation of AI results for accuracy training. | Wisnu | ✅ Done |
-| **PB-08** | Task | **PDF/CSV Export**<br>Generate summary reports. | Enable lab analysts to export standard compliant result reports. | Steven | ⏳ Pending |
-| **PB-09** | Feature | **RBAC System**<br>6 roles (Analyst, Admin, Quality, etc). | Ensure ISO-compliant data security and access control. | Steven | ✅ Done |
+### 3. [PB-03] Frontend: Laboratory OS Dashboard UI
+- **Type**: 🚀 Feature / UI Re-engineering
+- **Story**: As a Lab Technician, I want a professional dashboard utilizing standard bio-diagnostic nomenclature so that the interface feels native to daily laboratory operations.
+- **Goal**: Completely replace generic templates with high-fidelity, laboratory-standard UI (e.g., "Specimens" instead of "Items").
+- **Acceptance Criteria**:
+  - Sidebar and top navigation complete and dynamically routed.
+  - UI strictly enforces clinical terms: "Specimens", "Analysts", "Bio-metrics".
+  - Dashboard responsive and bug-free on Chromium browsers.
+- **Assignee**: Wisnu
+- **Status**: ✅ Done
 
-## 🟢 P2 - Medium Priority
+### 4. [PB-04] Security: Strict Image Upload Pipeline
+- **Type**: 🛡️ Security Feature
+- **Story**: As a Quality Assurance Lead, I want strict file validations on uploaded petri dish images so that malware payloads and tampered EXIF data cannot penetrate the server system.
+- **Goal**: Secure the main data entry point and payload avenue of ColonyAI.
+- **Acceptance Criteria**:
+  - Implement Magic Bytes detection (strictly allowing only valid JPG/PNG).
+  - Strip all EXIF metadata for data sanitization compliance.
+  - Store sanitized images asynchronously in the designated storage bucket.
+- **Assignee**: Faras / Steven
+- **Status**: 🔄 In Progress
 
-| ID | Type | Feature / Story / Bug | Goal | Assignee | Status |
-|----|------|-----------------------|------|----------|--------|
-| **PB-10** | Feature | **LIMS Integration**<br>Mock endpoint for external LIMS. | Allow seamless data flow into existing lab infrastructure. | Steven | ✅ Done |
-| **PB-11** | Feature | **Audit Trail**<br>Log all critical actions. | Maintain compliance by tracking who updated or deleted data. | Steven | ✅ Done |
-| **PB-12** | Bug | **Mobile Responsiveness Fixes**<br>Dashboard misaligned on mobile. | Ensure field analysts can read results properly on tablets. | Suci | ⏳ Pending |
-
-## 🔵 P3 - Low Priority
-
-| ID | Type | Feature / Story / Bug | Goal | Assignee | Status |
-|----|------|-----------------------|------|----------|--------|
-| **PB-13** | Feature | **Dark Mode**<br>Theme switch mechanism. | Reduce eye strain for analysts using dashboard during night shifts. | Suci | ❌ To Do |
-| **PB-14** | Feature | **Multi-Language Support**<br>English/Indonesian toggle. | Expand usability to non-English speaking regional labs. | Wisnu | ❌ To Do |
+### 5. [PB-05] Frontend: AI Result Visualization & Annotations
+- **Type**: 🚀 Feature
+- **Story**: As a Lab Analyst, I want to visibly see the bounding boxes and confidence scores drawn dynamically on uploaded dish images so that I can manually verify the AI's deductions.
+- **Goal**: Provide transparent, visual proof for AI detection results.
+- **Acceptance Criteria**:
+  - Render bounded boxes seamlessly upon receiving backend JSON payload.
+  - Assign distinct colors based on class predictions.
+  - Display a dynamic AI Confidence Score percentage gauge next to the image.
+- **Assignee**: Wisnu / Suci
+- **Status**: ⏳ Pending
 
 ---
 
-## 📊 Progress Summary
-- **Total Items:** 14
-- **Done:** 8
-- **In Progress:** 2
-- **Pending:** 4
+## 🟡 Priority 1 (High - Functionality Enhancement)
+
+### 6. [PB-06] Core Logic: CFU/ml Area Calculation Engine
+- **Type**: 🚀 Feature / Algorithm
+- **Story**: As the Principal Investigator, I want the system to calculate the standard CFU/ml automatically utilizing the SA-001 parameter so that manual mathematical errors are eliminated.
+- **Goal**: Standardize and automate the final lab count measurements precisely.
+- **Acceptance Criteria**:
+  - Area surface parameter algorithm mathematically implemented.
+  - Ability to multiply by the user's input of dilution factor.
+- **Assignee**: Faras / Steven
+- **Status**: ✅ Done
+
+### 7. [PB-07] Dashboard: Simulator Module (Manual vs AI)
+- **Type**: 🚀 Feature
+- **Story**: As an Assessor, I want a simulator feature to pit my manual visual counting capabilities against the AI’s capability so that I can benchmark algorithm accuracy against human performance.
+- **Goal**: Create an interactive validation tool within the ColonyAI dashboard.
+- **Acceptance Criteria**:
+  - Split-screen comparison layout designed and routed.
+  - Real-time delta (difference) percentage calculation displayed between inputs.
+- **Assignee**: Wisnu
+- **Status**: ✅ Done
+
+### 8. [PB-08] Security: Role-Based Access Control (RBAC)
+- **Type**: 🐞 Security / Access Feature
+- **Story**: As a Lab Administrator, I require 6 distinct permission levels to be strictly recognized by the API so that unauthorized staff cannot approve final bio-results.
+- **Goal**: Attain ISO-17025 style digital data security and role segregation.
+- **Acceptance Criteria**:
+  - Middleware enforces permission requirement tags per endpoint access.
+  - Frontend dashboard conditionally hides/shows administrative buttons based on the JWT token's role claim.
+- **Assignee**: Steven
+- **Status**: ✅ Done
+
+---
+
+## 🟢 Priority 2 (Medium - Compliance & Polish)
+
+### 9. [PB-09] Backend: Audit Trail System
+- **Type**: 🚀 Feature / Compliance
+- **Story**: As a Compliance Auditor, I want an immutable log of every data modification (CRUD) attached to a timestamp and user ID so we can easily pass ISO laboratory certification audits.
+- **Goal**: Maintain 100% indisputable data traceability.
+- **Acceptance Criteria**:
+  - Backend utility captures all post/put/delete database requests.
+  - Read-only table view available in the dashboard history page for managers.
+- **Assignee**: Steven
+- **Status**: ✅ Done
+
+### 10. [PB-10] Display: Mobile & Tablet Responsiveness Fixes
+- **Type**: 🐞 Bug Fix
+- **Story**: As a Field Technician, I want the dashboard to perfectly scale on my iPad without clipping the data tables so I can analyze results away from the main laboratory desk.
+- **Goal**: Universal responsive CSS execution.
+- **Acceptance Criteria**:
+  - Tailwind CSS breakpoints actively tested on standard iPad and Mobile dimensions.
+  - Navigation bar collapses into side-drawers or hamburger menus seamlessly.
+- **Assignee**: Suci
+- **Status**: ⏳ Pending

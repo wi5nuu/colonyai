@@ -3,8 +3,13 @@ from typing import List
 from pathlib import Path
 import os
 import secrets
+from dotenv import load_dotenv
 
+# Load .env file BEFORE Settings class is defined
+env_path = Path(__file__).parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path, override=True)
 
+# Now import os values will have the .env values
 class Settings(BaseSettings):
     # Application
     APP_NAME: str = "ColonyAI Backend"
@@ -14,8 +19,9 @@ class Settings(BaseSettings):
     SECRET_KEY: str = os.getenv("SECRET_KEY") or secrets.token_urlsafe(32)
     API_V1_PREFIX: str = "/api/v1"
 
-    # Database
-    DATABASE_URL: str = "sqlite+aiosqlite:///./colonyai.db"
+    # Database  
+    # Direct absolute path for Windows
+    DATABASE_URL: str = "sqlite+aiosqlite:///d:/lombapuai/backend/colonyai.db"
     DATABASE_POOL_SIZE: int = 10
     DATABASE_MAX_OVERFLOW: int = 20
     DATA_RETENTION_DAYS: int = 1825  # Retention policy per UU PDP compliance (5 years)
@@ -48,7 +54,7 @@ class Settings(BaseSettings):
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # YOLO Model
-    MODEL_PATH: str = "./models/colony_best.pt"
+    MODEL_PATH: str = str(Path(__file__).parent.parent.parent / "models" / "colony_best.pt")
     MODEL_CONFIDENCE_THRESHOLD: float = 0.60
     MODEL_IOU_THRESHOLD: float = 0.45
     MODEL_IMG_SIZE: int = 512
@@ -71,7 +77,9 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        env_file_encoding = "utf-8"
         case_sensitive = True
+        extra = "ignore"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

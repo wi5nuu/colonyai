@@ -77,6 +77,11 @@ const Icons = {
       <path d="M20 6L9 17l-5-5" />
     </svg>
   ),
+  X: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full">
+      <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
+  ),
 }
 
 const renderIcon = (name: string, className = 'w-5 h-5') => {
@@ -92,6 +97,7 @@ const renderIcon = (name: string, className = 'w-5 h-5') => {
 export default function LoginPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -105,10 +111,16 @@ export default function LoginPage() {
     try {
       await login(formData.email, formData.password)
       toast.success('Access authorization granted')
+      // Go directly to dashboard
       router.push('/dashboard')
     } catch {
       // Error handled in store
     }
+  }
+
+  const handleContinueToDashboard = () => {
+    setShowWelcomeModal(false)
+    router.push('/dashboard')
   }
 
   return (

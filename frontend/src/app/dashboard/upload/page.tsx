@@ -2,7 +2,28 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload as UploadIcon, Camera, Image as ImageIcon, AlertCircle, Loader2, TrendingUp, Trash2 } from 'lucide-react'
+import Link from 'next/link'
+import { 
+  Upload as UploadIcon, 
+  Camera, 
+  Image as ImageIcon, 
+  AlertCircle, 
+  Loader2, 
+  TrendingUp, 
+  Trash2,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  Lightbulb,
+  CheckCircle2,
+  Info,
+  HelpCircle,
+  XCircle,
+  Eye,
+  Zap,
+  Target,
+  FileText
+} from 'lucide-react'
 import { analysesApi } from '@/lib/analyses-api'
 import { MediaType } from '@/lib/types'
 import { toast } from 'sonner'
@@ -98,7 +119,8 @@ export default function UploadPage() {
       router.push(`/dashboard/results/${analysis.id}`)
     } catch (error: any) {
       toast.dismiss()
-      const message = error.response?.data?.detail || 'Analysis failed. Please try again.'
+      console.error('Upload error:', error)
+      const message = error.response?.data?.detail || error.message || 'Analysis failed. Please try again.'
       toast.error(message)
     } finally {
       setIsSubmitting(false)
@@ -109,12 +131,12 @@ export default function UploadPage() {
     <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Spectral Input Section (Upload) */}
-        <div className="card p-8 border-primary/20 bg-primary/[0.02]">
+        <div className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-3xl p-8 border border-border shadow-sm">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-primary/20 rounded-xl text-primary shadow-lg shadow-primary/10">
+            <div className="p-2 bg-primary/20 rounded-xl text-primary shadow-sm">
                <UploadIcon className="h-5 w-5" />
             </div>
-            <h2 className="text-xl font-bold text-foreground tracking-tight uppercase">Spectral Input Stream</h2>
+            <h2 className="text-xl font-bold tracking-tight uppercase">Spectral Input Stream</h2>
           </div>
 
           <div
@@ -183,37 +205,26 @@ export default function UploadPage() {
                <div className="absolute top-0 left-0 w-full h-1 bg-primary shadow-[0_0_15px_#0ea5e9] animate-bounce z-10" />
             )}
           </div>
-
-          <div className="mt-8 flex items-start p-6 bg-primary/5 rounded-2xl border border-primary/10">
-            <Camera className="h-5 w-5 text-primary mr-4 mt-1" />
-            <div className="text-xs">
-              <p className="font-black text-foreground uppercase tracking-wider mb-1">Optical Precision Requirement</p>
-              <p className="text-muted-foreground font-semibold leading-relaxed">
-                Ensure top-down orthogonal alignment. Uniform diffuse lighting reduces artifact interference during neural classification.
-              </p>
-            </div>
-          </div>
         </div>
 
-        {/* Metadata Form Section */}
-        <div className="card p-8">
+        <div className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-3xl p-8 border border-border shadow-sm">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-amber-500/20 rounded-xl text-amber-500 shadow-lg shadow-amber-500/10">
+            <div className="p-2 bg-amber-500/20 rounded-xl text-amber-600 shadow-sm">
                <AlertCircle className="h-5 w-5" />
             </div>
-            <h2 className="text-xl font-bold text-foreground tracking-tight uppercase">Biological Protocol Definition</h2>
+            <h2 className="text-xl font-bold tracking-tight uppercase">Biological Protocol Definition</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label htmlFor="sampleId" className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">
+              <label htmlFor="sampleId" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1">
                 Specimen ID Entity <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 id="sampleId"
                 required
-                className="input bg-background/50 border-border/50 font-bold text-sm focus:ring-primary/20"
+                className="input bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 font-bold text-sm focus:ring-primary/20"
                 value={formData.sampleId}
                 onChange={(e) => setFormData({ ...formData, sampleId: e.target.value })}
                 placeholder="e.g., ISO-PROTO-B2026"
@@ -221,13 +232,13 @@ export default function UploadPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="mediaType" className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">
+              <label htmlFor="mediaType" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1">
                 Agar Media Protocol <span className="text-rose-500">*</span>
               </label>
               <select
                 id="mediaType"
                 required
-                className="input bg-background/50 border-border/50 font-bold text-sm"
+                className="input bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 font-bold text-sm"
                 value={formData.mediaType}
                 onChange={(e) => setFormData({ ...formData, mediaType: e.target.value as MediaType })}
               >
@@ -243,7 +254,7 @@ export default function UploadPage() {
 
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
-                <label htmlFor="dilutionFactor" className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">
+                <label htmlFor="dilutionFactor" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1">
                   Dilution (1:X) <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -252,17 +263,17 @@ export default function UploadPage() {
                   required
                   step="0.000001"
                   min="0.000001"
-                  className="input bg-background/50 border-border/50 font-bold text-sm"
+                  className="input bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 font-bold text-sm"
                   value={formData.dilutionFactor}
                   onChange={(e) => setFormData({ ...formData, dilutionFactor: parseFloat(e.target.value) })}
                 />
-                <p className="text-[8px] font-bold text-muted-foreground/60 uppercase mt-1 tracking-widest pl-1">
-                   Ex: 10<sup className="text-[6px]">-3</sup> = 0.001
+                <p className="text-[10px] font-bold opacity-60 uppercase mt-2 tracking-widest pl-1">
+                   Ex: 10<sup className="text-[8px]">-3</sup> = 0.001
                 </p>
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="platedVolume" className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">
+                <label htmlFor="platedVolume" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1">
                   Volume (ml) <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -271,15 +282,16 @@ export default function UploadPage() {
                   required
                   step="0.1"
                   min="0.1"
-                  className="input bg-background/50 border-border/50 font-bold text-sm"
+                  className="input bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 font-bold text-sm"
                   value={formData.platedVolume}
                   onChange={(e) => setFormData({ ...formData, platedVolume: parseFloat(e.target.value) })}
                 />
-                <p className="text-[8px] font-bold text-muted-foreground/60 uppercase mt-1 tracking-widest pl-1">
+                <p className="text-[10px] font-bold opacity-60 uppercase mt-2 tracking-widest pl-1">
                    Std. P-Volume 1.0ml
                 </p>
               </div>
             </div>
+
 
             <div className="pt-6">
               <button
@@ -303,17 +315,7 @@ export default function UploadPage() {
             </div>
           </form>
 
-          <div className="mt-8 p-6 bg-amber-500/5 rounded-2xl border border-amber-500/10">
-            <div className="flex items-start">
-              <AlertCircle className="h-5 w-5 text-amber-500 mr-4 mt-0.5" />
-              <div className="text-xs">
-                <p className="font-black text-amber-500 uppercase tracking-wider mb-1">Queue Notification</p>
-                <p className="text-muted-foreground font-semibold leading-relaxed">
-                  Neural inference typically fulfills in <span className="text-foreground">~45 seconds</span>. You will be automatically vectored to the detailed spectral results ledger upon task completion.
-                </p>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>

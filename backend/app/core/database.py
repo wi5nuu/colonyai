@@ -13,8 +13,12 @@ def get_engine():
     try:
         # SQLite specific logic: pool_size and max_overflow are NOT supported
         if settings.DATABASE_URL.startswith("sqlite"):
+            # For SQLite, ensure the path is absolute for reliability
+            db_url = settings.DATABASE_URL
+            # If it's a relative path like sqlite+aiosqlite:///colonyai.db,
+            # aiosqlite will handle it relative to cwd
             engine = create_async_engine(
-                settings.DATABASE_URL,
+                db_url,
                 echo=settings.DEBUG
             )
         else:
@@ -26,7 +30,7 @@ def get_engine():
             )
         return engine
     except Exception as e:
-        logger.warning(f"⚠️  Database engine init failed: {e}")
+        logger.warning(f"[DATABASE] Database engine init failed: {e}")
         return None
 
 
@@ -50,40 +54,40 @@ async def init_db():
     global DB_AVAILABLE, engine
 
     if engine is None:
-        logger.warning("⚠️  Database not configured. Running in DEMO MODE (no persistence).")
+        logger.warning("[DATABASE] Database not configured. Running in DEMO MODE (no persistence).")
         logger.warning("   To enable full features: install PostgreSQL and set DATABASE_URL in .env")
         DB_AVAILABLE = False
         return
 
     # Import all models to ensure they are registered with Base.metadata
-    from app.models import User, Analysis, ColonyDetection, AuditLog, SimulatorComparison
+    from app.models import User, Analysis, ColonyDetection, AuditLog, SimulatorComparison, UserRole
     from sqlalchemy.future import select
     from app.core.security import get_password_hash
 
     try:
         async with engine.begin() as conn:
-            print("🛠️  [DATABASE] Creating/Verifying tables...")
+            print("[DATABASE] Creating/Verifying tables...")
             await conn.run_sync(Base.metadata.create_all)
         DB_AVAILABLE = True
-        print("✅ [DATABASE] Connection successful and tables synchronized.")
+        print("[DATABASE] Connection successful and tables synchronized.")
         
         # Seed initial admin user
         async with AsyncSessionLocal() as session:
-            print(f"🔍 [DATABASE] Checking initial admin: {settings.INITIAL_ADMIN_EMAIL}")
+            print(f"[DATABASE] Checking initial admin: {settings.INITIAL_ADMIN_EMAIL}")
             result = await session.execute(select(User).where(User.email == settings.INITIAL_ADMIN_EMAIL))
             admin_user = result.scalars().first()
             if not admin_user:
-                logger.info(f"🌱 Seeding initial admin user: {settings.INITIAL_ADMIN_EMAIL}")
+                logger.info(f"Seeding initial admin user: {settings.INITIAL_ADMIN_EMAIL}")
                 new_admin = User(
                     email=settings.INITIAL_ADMIN_EMAIL,
                     password_hash=get_password_hash(settings.INITIAL_ADMIN_PASSWORD),
                     full_name="System Administrator",
-                    role="system_admin"  # Updated to ISO 17025 role
+                    role=UserRole.SYSTEM_ADMIN
                 )
                 session.add(new_admin)
                 await session.commit()
     except Exception as e:
-        logger.warning(f"⚠️  Database connection failed: {e}")
+        logger.warning(f"[DATABASE] Database connection failed: {e}")
         logger.warning("   Running in DEMO MODE. Endpoints respond but data not persisted.")
         logger.warning("   To fix: Install PostgreSQL and set DATABASE_URL in backend/.env")
         DB_AVAILABLE = False

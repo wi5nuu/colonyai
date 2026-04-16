@@ -1,0 +1,332 @@
+name: ColonyAI CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # ─── Backend Tests ────────────────────────────────────────────────────────
+  backend-tests:
+    name: Backend Tests (Python)
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: colonyai_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov httpx
+      
+      - name: Set up environment variables
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          echo "DATABASE_URL=postgresql+asyncpg://test_user:test_password@localhost:5432/colonyai_test" >> .env
+          echo "SECRET_KEY=test-secret-key-for-ci" >> .env
+          echo "JWT_SECRET_KEY=test-jwt-secret-key-for-ci" >> .env
+      
+      - name: Run backend tests with coverage
+        working-directory: backend
+        run: |
+          pytest tests/ -v --asyncio-mode=auto \
+            --cov=app \
+            --cov-report=xml:coverage.xml \
+            --cov-report=term-missing \
+            --junitxml=test-results.xml
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: backend/test-results.xml
+      
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
+
+  # ─── Frontend Tests ───────────────────────────────────────────────────────
+  frontend-tests:
+    name: Frontend Tests (Next.js)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      
+      - name: Install testing libraries
+        working-directory: frontend
+        run: npm install --save-dev jest @testing-library/react @testing-library/jest-dom jest-environment-jsdom ts-jest @types/jest
+      
+      - name: Create Jest config
+        working-directory: frontend
+        run: |
+          cat > jest.config.js << 'EOF'
+          const nextJest = require('next/jest')
+          
+          const createJestConfig = nextJest({
+            dir: './',
+          })
+          
+          const customJestConfig = {
+            testEnvironment: 'jest-environment-jsdom',
+            setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+            moduleNameMapping: {
+              '^@/(.*)$': '<rootDir>/src/$1',
+            },
+            testMatch: ['**/__tests__/**/*.test.tsx', '**/__tests__/**/*.test.ts'],
+            collectCoverageFrom: [
+              'src/**/*.{js,jsx,ts,tsx}',
+              '!src/**/*.d.ts',
+              '!src/**/*.stories.{js,jsx,ts,tsx}',
+            ],
+            coverageReporters: ['text', 'lcov', 'clover'],
+          }
+          
+          module.exports = createJestConfig(customJestConfig)
+          EOF
+      
+      - name: Create Jest setup file
+        working-directory: frontend
+        run: |
+          cat > jest.setup.js << 'EOF'
+          import '@testing-library/jest-dom'
+          
+          // Mock window.matchMedia
+          Object.defineProperty(window, 'matchMedia', {
+            writable: true,
+            value: jest.fn().mockImplementation(query => ({
+              matches: false,
+              media: query,
+              onchange: null,
+              addListener: jest.fn(),
+              removeListener: jest.fn(),
+              addEventListener: jest.fn(),
+              removeEventListener: jest.fn(),
+              dispatchEvent: jest.fn(),
+            })),
+          })
+          EOF
+      
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test -- --coverage --ci
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-test-results
+          path: frontend/coverage/
+
+  # ─── Code Quality Checks ──────────────────────────────────────────────────
+  code-quality:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install Python linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black mypy
+      
+      - name: Install Node linting tools
+        working-directory: frontend
+        run: npm install
+      
+      - name: Run Python linting
+        working-directory: backend
+        run: |
+          flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          black --check app/
+      
+      - name: Run TypeScript type checking
+        working-directory: frontend
+        run: npm run build
+      
+      - name: Run ESLint
+        working-directory: frontend
+        run: npm run lint || true
+
+  # ─── Security Audit ───────────────────────────────────────────────────────
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: |
+          cd backend && pip install -r requirements.txt
+          cd ../frontend && npm ci
+      
+      - name: Run Python security audit
+        working-directory: backend
+        run: |
+          pip install bandit
+          bandit -r app/ -f json -o security-report.json || true
+      
+      - name: Run npm audit
+        working-directory: frontend
+        run: npm audit --production || true
+      
+      - name: Upload security report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-audit-report
+          path: backend/security-report.json
+
+  # ─── Build Docker Images ──────────────────────────────────────────────────
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests, code-quality]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.backend
+          push: false
+          load: true
+          tags: colonyai-backend:latest
+      
+      - name: Build frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ../Dockerfile.frontend
+          push: false
+          load: true
+          tags: colonyai-frontend:latest
+      
+      - name: Test Docker images
+        run: |
+          docker images
+          docker run --rm colonyai-backend:latest python --version
+          docker run --rm colonyai-frontend:latest node --version
+
+  # ─── Deploy to Production (Conditional) ───────────────────────────────────
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to Railway (Backend)
+        uses: bervProject/railway-deploy@main
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          service: ${{ secrets.RAILWAY_BACKEND_SERVICE_ID }}
+          # Add deployment configuration
+      
+      - name: Deploy to Vercel (Frontend)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel_token: ${{ secrets.VERCEL_TOKEN }}
+          vercel_org_id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel_project_id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working_directory: ./frontend
+          vercel_args: '--prod'
+
+  # ─── Coverage Report ──────────────────────────────────────────────────────
+  coverage-report:
+    name: Coverage Summary
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    if: always()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download backend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage
+          path: coverage/backend
+      
+      - name: Download frontend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-test-results
+          path: coverage/frontend
+      
+      - name: Generate coverage summary
+        run: |
+          echo "## Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Backend and frontend tests completed." >> $GITHUB_STEP_SUMMARY
+          echo "Check artifacts for detailed reports." >> $GITHUB_STEP_SUMMARY

@@ -5,18 +5,19 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from app.core.config import settings
-from app.api.v1 import auth_router, image_router, analysis_router, report_router, user_router, lims_router, maintenance_router, simulator_router
+from app.core.rate_limiter import RateLimitMiddleware
+from app.api.v1 import auth_router, image_router, analysis_router, report_router, user_router, lims_router, maintenance_router, simulator_router, settings_router
 from app.core.database import engine, Base
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    print("🚀 [STARTUP] Initializing Laboratory OS Backend...")
+    print("[STARTUP] Initializing Laboratory OS Backend...")
     from app.core.database import init_db
-    print("📡 [STARTUP] Connecting to PostgreSQL Database...")
+    print("[STARTUP] Connecting to PostgreSQL Database...")
     await init_db()
-    print("✅ [STARTUP] Database initialization complete.")
+    print("[STARTUP] Database initialization complete.")
 
     # Ensure upload directories exist
     for subdir in ["original", "annotated", "reports"]:
@@ -42,6 +43,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Rate Limiting Middleware (100 requests/minute per IP)
+app.add_middleware(
+    RateLimitMiddleware,
+    max_requests=100,
+    window_seconds=60,
+    exempt_paths=['/health', '/', '/docs', '/openapi.json'],
+)
+
 # Serve static files from uploads directory
 uploads_path = Path(settings.UPLOAD_DIR)
 if uploads_path.exists():
@@ -56,6 +65,7 @@ app.include_router(user_router, prefix=f"{settings.API_V1_PREFIX}/users", tags=[
 app.include_router(lims_router, prefix=f"{settings.API_V1_PREFIX}/lims", tags=["LIMS Integration"])
 app.include_router(maintenance_router, prefix=f"{settings.API_V1_PREFIX}/maintenance", tags=["Maintenance"])
 app.include_router(simulator_router, prefix=f"{settings.API_V1_PREFIX}/simulator", tags=["Simulator"])
+app.include_router(settings_router, prefix=f"{settings.API_V1_PREFIX}/settings", tags=["User Settings"])
 
 
 @app.get("/")

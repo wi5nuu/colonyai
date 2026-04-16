@@ -1,12 +1,15 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, images, analyses, reports, users, lims, maintenance, simulator
+from app.api.v1.endpoints import auth, images, analyses, reports, users, lims, maintenance, simulator, settings
 
 auth_router = APIRouter()
 auth_router.add_api_route("/login", auth.login, methods=["POST"])
 auth_router.add_api_route("/register", auth.register, methods=["POST"])
 auth_router.add_api_route("/refresh", auth.refresh_token, methods=["POST"])
 auth_router.add_api_route("/logout", auth.logout, methods=["POST"])
+auth_router.add_api_route("/password", auth.change_password, methods=["PUT"])
+auth_router.add_api_route("/sessions", auth.get_active_sessions, methods=["GET"])
+auth_router.add_api_route("/sessions/all", auth.revoke_all_sessions, methods=["DELETE"])
 
 image_router = APIRouter()
 image_router.add_api_route("/upload", images.upload_image, methods=["POST"])
@@ -48,3 +51,9 @@ simulator_router.add_api_route("", simulator.save_comparison, methods=["POST"])
 simulator_router.add_api_route("", simulator.list_comparisons, methods=["GET"])
 simulator_router.add_api_route("/stats", simulator.get_comparator_stats, methods=["GET"])
 simulator_router.add_api_route("/analysis/{analysis_id}", simulator.get_comparison, methods=["GET"])
+
+settings_router = APIRouter()
+settings_router.add_api_route("/preferences", settings.get_preferences, methods=["GET"])
+settings_router.add_api_route("/notifications", settings.update_notification_preferences, methods=["PUT"])
+settings_router.add_api_route("/laboratory", settings.update_laboratory_defaults, methods=["PUT"])
+settings_router.add_api_route("/appearance", settings.update_appearance_preferences, methods=["PUT"])

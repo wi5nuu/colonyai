@@ -81,6 +81,8 @@ class User(Base):
 
     analyses = relationship("Analysis", back_populates="user")
     audit_logs = relationship("AuditLog", back_populates="user")
+    preferences = relationship("UserPreference", back_populates="user", uselist=False)
+    sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
 
 
 class Analysis(Base):
@@ -192,3 +194,6 @@ class SimulatorComparison(Base):
 
     user = relationship("User")
     analysis = relationship("Analysis")
+
+# Import new models to register them with SQLAlchemy
+from app.models.preferences import UserPreference, UserSession
