@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User, Bell, Shield, Database, Palette, Loader2, LogOut, Save } from "lucide-react";
+import { User, Bell, Shield, Database, Palette, Loader2, LogOut, Save, Zap, AlertTriangle, FileText, Settings2, ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/lib/auth-store";
 import { authApi } from "@/lib/auth-api";
 import { settingsApi } from "@/lib/settings-api";
@@ -15,9 +15,9 @@ const TABS = [
   { id: "appearance", name: "Appearance", icon: Palette },
 ];
 
-const INPUT_CLS = "w-full px-4 py-2.5 text-sm font-medium text-slate-800 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all";
-const LABEL_CLS = "text-xs font-bold text-slate-700 uppercase tracking-wider";
-const BTN_PRIMARY = "flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-colors duration-150 shadow-sm";
+const INPUT_CLS = "w-full px-4 py-2.5 text-[11px] font-bold text-slate-900 bg-slate-50/50 border border-slate-100 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-300";
+const LABEL_CLS = "text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1 mb-1.5 block";
+const BTN_PRIMARY = "btn-primary py-2.5 px-5 flex items-center gap-2 rounded-lg text-[9px] font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -38,63 +38,73 @@ export default function SettingsPage() {
   const ActiveIcon = TABS.find(t => t.id === activeTab)?.icon || User;
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Settings</h1>
-        <p className="text-slate-500 mt-1.5">Manage your account preferences and laboratory configuration</p>
+    <div className="max-w-6xl mx-auto animate-in fade-in duration-500">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-9 h-9 bg-slate-900 rounded-lg shadow-xl flex items-center justify-center">
+              <Settings2 className="w-4 h-4 text-primary" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">System Configuration</h1>
+          </div>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Laboratory Environment // Authorization Protocol</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Sidebar Nav */}
-        <div className="lg:col-span-1">
-          <nav className="bg-white rounded-2xl border border-slate-200 shadow-sm p-2 space-y-1 sticky top-24">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        {/* Sidebar Nav - 3 cols */}
+        <div className="lg:col-span-3">
+          <nav className="dashboard-card p-2 space-y-1 sticky top-24 rounded-xl">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl transition-colors duration-150 ${
+                className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all duration-300 ${
                   activeTab === tab.id
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    ? "bg-slate-900 text-white shadow-xl shadow-slate-900/20 z-10"
+                    : "text-slate-400 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
-                <tab.icon className="h-4 w-4 flex-shrink-0" />
+                <tab.icon className={`h-3.5 w-3.5 flex-shrink-0 ${activeTab === tab.id ? 'text-primary' : ''}`} />
                 {tab.name}
               </button>
             ))}
           </nav>
         </div>
 
-        {/* Content Panel */}
-        <div className="lg:col-span-3">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {/* Content Panel - 9 cols */}
+        <div className="lg:col-span-9">
+          <div className="dashboard-card overflow-hidden !p-0 rounded-xl">
             {/* Panel Header */}
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center">
-                <ActiveIcon className="h-4 w-4 text-orange-600" />
+            <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/30 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                <ActiveIcon className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-slate-900">
-                  {TABS.find(t => t.id === activeTab)?.name} Settings
+                <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
+                  {TABS.find(t => t.id === activeTab)?.name} Protocol
                 </h2>
-                <p className="text-xs text-slate-500">Manage your {TABS.find(t => t.id === activeTab)?.name.toLowerCase()} preferences</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Configure your {TABS.find(t => t.id === activeTab)?.name.toLowerCase()} matrix</p>
               </div>
             </div>
 
             {/* Panel Body */}
             <div className="p-6">
               {isLoading ? (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="h-7 w-7 animate-spin text-orange-500" />
+                <div className="flex flex-col items-center justify-center py-24 gap-6">
+                  <div className="w-20 h-20 rounded-[2rem] bg-slate-50 flex items-center justify-center">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                  </div>
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Syncing Preferences...</p>
                 </div>
               ) : (
-                <>
+                <div className="animate-in slide-in-from-bottom-4 duration-500">
                   {activeTab === "profile" && <ProfileSettings />}
                   {activeTab === "notifications" && <NotificationSettings preferences={preferences} onRefresh={loadPreferences} />}
                   {activeTab === "security" && <SecuritySettings />}
                   {activeTab === "laboratory" && <LaboratorySettings preferences={preferences} onRefresh={loadPreferences} />}
                   {activeTab === "appearance" && <AppearanceSettings preferences={preferences} onRefresh={loadPreferences} />}
-                </>
+                </div>
               )}
             </div>
           </div>
@@ -124,27 +134,27 @@ function ProfileSettings() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <form onSubmit={handleSubmit} className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-1.5">
-          <label className={LABEL_CLS}>Full Name <span className="text-rose-500">*</span></label>
-          <input type="text" className={INPUT_CLS} value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Enter your full name" />
+          <label className={LABEL_CLS}>Full Name <span className="text-primary">*</span></label>
+          <input type="text" className={INPUT_CLS} value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Analyst Name" />
         </div>
         <div className="space-y-1.5">
           <label className={LABEL_CLS}>Email Address</label>
-          <input type="email" className={`${INPUT_CLS} opacity-60 cursor-not-allowed`} value={user?.email || ""} disabled />
-          <p className="text-[11px] text-slate-400 pl-1">Email cannot be changed</p>
+          <input type="email" className={`${INPUT_CLS} !bg-slate-50 !border-slate-100 !text-slate-400 cursor-not-allowed`} value={user?.email || ""} disabled />
+          <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-2 ml-1">Immutable Identifier</p>
         </div>
         <div className="space-y-1.5">
-          <label className={LABEL_CLS}>Role</label>
-          <input type="text" className={`${INPUT_CLS} opacity-60 cursor-not-allowed capitalize`} value={user?.role || ""} disabled />
-          <p className="text-[11px] text-slate-400 pl-1">Role is assigned by administrator</p>
+          <label className={LABEL_CLS}>Node Role</label>
+          <input type="text" className={`${INPUT_CLS} !bg-slate-50 !border-slate-100 !text-slate-400 capitalize cursor-not-allowed`} value={user?.role || ""} disabled />
+          <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-2 ml-1">Provisioned by Root Admin</p>
         </div>
       </div>
-      <div className="pt-4 border-t border-slate-100">
+      <div className="pt-8 border-t border-slate-50">
         <button type="submit" disabled={isSaving} className={BTN_PRIMARY}>
-          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {isSaving ? "Saving..." : "Save Profile"}
+          {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+          {isSaving ? "Syncing..." : "Apply Profile Updates"}
         </button>
       </div>
     </form>
@@ -169,34 +179,39 @@ function NotificationSettings({ preferences, onRefresh }: { preferences: any; on
   };
 
   const ITEMS = [
-    { key: "analysis_complete", title: "Analysis Complete", desc: "Get notified when a bio-analysis finishes processing" },
-    { key: "boundary_alerts", title: "ISO Boundary Alerts", desc: "Critical alerts when specimens exceed range (TNTC/TFTC)" },
-    { key: "weekly_summary", title: "Weekly Summary", desc: "Receive a weekly diagnostic summary report via email" },
+    { key: "analysis_complete", title: "Neural Sync Completion", desc: "Alert when a specimen analysis sequence finishes processing", icon: Zap },
+    { key: "boundary_alerts", title: "ISO Threshold Boundary", desc: "Critical alerts when specimens exceed countable ranges (TNTC)", icon: AlertTriangle },
+    { key: "weekly_summary", title: "Intelligence Summary", desc: "Receive automated diagnostic analytics via secure channel", icon: FileText },
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {ITEMS.map((item) => (
-        <div key={item.key} className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl hover:border-slate-300 transition-colors duration-150">
-          <div className="pr-6">
-            <p className="text-sm font-bold text-slate-900">{item.title}</p>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">{item.desc}</p>
+        <div key={item.key} className="flex items-center justify-between p-4 bg-slate-50/50 border border-slate-100 rounded-xl hover:bg-slate-50 hover:border-primary/20 transition-all group">
+          <div className="flex items-center gap-4">
+             <div className="w-10 h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-primary group-hover:scale-110 transition-all shadow-sm">
+                <item.icon className="w-4 h-4" />
+             </div>
+             <div>
+               <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{item.title}</p>
+               <p className="text-[9px] text-slate-500 font-medium mt-0.5">{item.desc}</p>
+             </div>
           </div>
-          <div className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out bg-slate-200">
+          <div className="relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-all duration-300 ease-in-out bg-slate-200 peer-focus:ring-4 peer-focus:ring-primary/20 overflow-hidden">
             <input
               type="checkbox"
               checked={settings[item.key as keyof typeof settings]}
               onChange={e => setSettings({ ...settings, [item.key]: e.target.checked })}
               className="peer absolute h-full w-full opacity-0 z-10 cursor-pointer"
             />
-            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-all duration-200 ease-in-out ${settings[item.key as keyof typeof settings] ? 'translate-x-5 bg-slate-900' : 'translate-x-0'}`} />
+            <span className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-xl ring-0 transition-all duration-300 ease-in-out mt-0.5 ml-0.5 ${settings[item.key as keyof typeof settings] ? 'translate-x-6 !bg-primary' : 'translate-x-0'}`} />
           </div>
         </div>
       ))}
-      <div className="pt-4 border-t border-slate-100">
+      <div className="pt-8 border-t border-slate-50">
         <button onClick={handleSave} disabled={isSaving} className={BTN_PRIMARY}>
-          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {isSaving ? "Saving..." : "Save Notifications"}
+          {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+          {isSaving ? "Calibrating..." : "Save Signal Preferences"}
         </button>
       </div>
     </div>
@@ -234,37 +249,42 @@ function SecuritySettings() {
   };
 
   return (
-    <div className="space-y-8">
-      <form onSubmit={handleSubmit} className="space-y-5 max-w-md">
+    <div className="space-y-10">
+      <form onSubmit={handleSubmit} className="space-y-6 max-w-md">
         <div className="space-y-1.5">
-          <label className={LABEL_CLS}>Current Password</label>
-          <input type="password" placeholder="••••••••" className={INPUT_CLS} value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} />
+          <label className={LABEL_CLS}>Current Encryption Secret</label>
+          <input type="password" placeholder="••••••••••••" className={INPUT_CLS} value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <label className={LABEL_CLS}>New Password</label>
-          <input type="password" placeholder="••••••••" className={INPUT_CLS} value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+          <label className={LABEL_CLS}>New Encryption Secret</label>
+          <input type="password" placeholder="••••••••••••" className={INPUT_CLS} value={newPassword} onChange={e => setNewPassword(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <label className={LABEL_CLS}>Confirm New Password</label>
-          <input type="password" placeholder="••••••••" className={INPUT_CLS} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+          <label className={LABEL_CLS}>Confirm Secret</label>
+          <input type="password" placeholder="••••••••••••" className={INPUT_CLS} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
         </div>
         <div className="pt-2">
           <button type="submit" disabled={isUpdating} className={BTN_PRIMARY}>
-            {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
-            {isUpdating ? "Updating..." : "Update Password"}
+            {isUpdating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Shield className="h-5 w-5" />}
+            {isUpdating ? "Rotating Keys..." : "Update Security Layer"}
           </button>
         </div>
       </form>
 
-      <div className="pt-6 border-t border-slate-100">
-        <h3 className="text-sm font-bold text-slate-900 mb-3">Session Management</h3>
-        <div className="flex items-start justify-between p-4 bg-rose-50 border border-rose-200 rounded-xl">
-          <div>
-            <p className="text-sm font-bold text-rose-800">Revoke All Sessions</p>
-            <p className="text-xs text-rose-600 font-medium mt-0.5">This will log out all devices. You will need to re-authenticate.</p>
+      <div className="pt-8 border-t border-slate-50">
+        <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4">Session Authorization</h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-rose-50/50 border border-rose-100 rounded-xl gap-6">
+          <div className="flex items-center gap-4">
+             <div className="w-12 h-12 rounded-lg bg-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-200">
+                <LogOut className="w-5 h-5" />
+             </div>
+             <div>
+               <p className="text-[11px] font-black text-rose-700 uppercase tracking-widest">Terminate All Sessions</p>
+               <p className="text-[9px] text-rose-600/70 font-bold mt-0.5">Force revoke every active node token. Critical if hardware is compromised.</p>
+             </div>
           </div>
-          <button onClick={handleRevokeAllSessions} className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-colors duration-150 ml-4 flex-shrink-0">
-            <LogOut className="h-3.5 w-3.5" /> Revoke All
+          <button onClick={handleRevokeAllSessions} className="px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-rose-200 flex-shrink-0">
+             Revoke Every Node
           </button>
         </div>
       </div>
@@ -289,33 +309,38 @@ function LaboratorySettings({ preferences, onRefresh }: { preferences: any; onRe
   };
 
   return (
-    <form onSubmit={handleSave} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <form onSubmit={handleSave} className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-1.5">
-          <label className={LABEL_CLS}>Laboratory Name</label>
+          <label className={LABEL_CLS}>Hub Designation</label>
           <input type="text" className={INPUT_CLS} value={config.lab_name} onChange={e => setConfig({ ...config, lab_name: e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <label className={LABEL_CLS}>Default Agar Media</label>
-          <select className={`${INPUT_CLS} appearance-none`} value={config.default_media} onChange={e => setConfig({ ...config, default_media: e.target.value })}>
-            <option value="Plate Count Agar">PCA — Plate Count Agar</option>
-            <option value="VRBA">VRBA — Violet Red Bile Agar</option>
-            <option value="TSA">TSA — Tryptic Soy Agar</option>
-            <option value="R2A">R2A — Reasoner's 2A Agar</option>
-            <option value="BGBB">BGBB — Brilliant Green Bile Broth</option>
-            <option value="MacConkey">MAC — MacConkey Agar</option>
-          </select>
+          <label className={LABEL_CLS}>Default Specimen Matrix</label>
+          <div className="relative">
+            <select className={`${INPUT_CLS} appearance-none cursor-pointer`} value={config.default_media} onChange={e => setConfig({ ...config, default_media: e.target.value })}>
+              <option value="Plate Count Agar">PCA — Plate Count Agar</option>
+              <option value="VRBA">VRBA — Violet Red Bile Agar</option>
+              <option value="TSA">TSA — Tryptic Soy Agar</option>
+              <option value="R2A">R2A — Reasoner's 2A Agar</option>
+              <option value="BGBB">BGBB — Brilliant Green Bile Broth</option>
+              <option value="MacConkey">MAC — MacConkey Agar</option>
+            </select>
+            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
+              <ChevronDown className="w-5 h-5 text-slate-400" />
+            </div>
+          </div>
         </div>
         <div className="space-y-1.5">
-          <label className={LABEL_CLS}>Default Plated Volume (mL)</label>
+          <label className={LABEL_CLS}>Standard Matrix Volume (mL)</label>
           <input type="number" step="0.1" min="0.1" className={INPUT_CLS} value={config.default_volume} onChange={e => setConfig({ ...config, default_volume: parseFloat(e.target.value) })} />
-          <p className="text-[11px] text-slate-400 pl-1">Standard: 1.0 mL per ISO 4833-1</p>
+          <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-2 ml-1">Calibrated to ISO 4833-1:2013 Standards</p>
         </div>
       </div>
-      <div className="pt-4 border-t border-slate-100">
+      <div className="pt-8 border-t border-slate-50">
         <button type="submit" disabled={isSaving} className={BTN_PRIMARY}>
-          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {isSaving ? "Saving..." : "Save Laboratory Config"}
+          {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+          {isSaving ? "Commiting Changes..." : "Sync Lab Configuration"}
         </button>
       </div>
     </form>
@@ -339,30 +364,41 @@ function AppearanceSettings({ preferences, onRefresh }: { preferences: any; onRe
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-1.5">
-          <label className={LABEL_CLS}>Interface Theme</label>
-          <select className={`${INPUT_CLS} appearance-none`} value={appearance.theme} onChange={e => setAppearance({ ...appearance, theme: e.target.value })}>
-            <option value="light">Light Mode (Clinical)</option>
-            <option value="dark">Dark Mode</option>
-            <option value="system">System Default</option>
-          </select>
+          <label className={LABEL_CLS}>Interface Aesthetic</label>
+          <div className="relative">
+            <select className={`${INPUT_CLS} appearance-none cursor-pointer`} value={appearance.theme} onChange={e => setAppearance({ ...appearance, theme: e.target.value })}>
+              <option value="light">Clinical White (Recommended)</option>
+              <option value="dark">Low-Light Neural</option>
+              <option value="system">Auto-Sync with Node OS</option>
+            </select>
+            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
+              <ChevronDown className="w-5 h-5 text-slate-400" />
+            </div>
+          </div>
         </div>
         <div className="space-y-1.5">
-          <label className={LABEL_CLS}>Language</label>
-          <select className={`${INPUT_CLS} appearance-none`} value={appearance.language} onChange={e => setAppearance({ ...appearance, language: e.target.value })}>
-            <option value="en">English</option>
-            <option value="id">Bahasa Indonesia</option>
-          </select>
+          <label className={LABEL_CLS}>Linguistic Matrix</label>
+          <div className="relative">
+            <select className={`${INPUT_CLS} appearance-none cursor-pointer`} value={appearance.language} onChange={e => setAppearance({ ...appearance, language: e.target.value })}>
+              <option value="en">Global (English)</option>
+              <option value="id">Regional (Bahasa Indonesia)</option>
+            </select>
+            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
+               <ChevronDown className="w-5 h-5 text-slate-400" />
+            </div>
+          </div>
         </div>
       </div>
-      <div className="pt-4 border-t border-slate-100">
+      <div className="pt-8 border-t border-slate-50">
         <button onClick={handleSave} disabled={isSaving} className={BTN_PRIMARY}>
-          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Palette className="h-4 w-4" />}
-          {isSaving ? "Saving..." : "Save Appearance"}
+          {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Palette className="h-5 w-5" />}
+          {isSaving ? "Rendering..." : "Apply Aesthetic Preferences"}
         </button>
       </div>
     </div>
   );
 }
+

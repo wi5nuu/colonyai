@@ -1,6 +1,6 @@
-﻿'use client'
+'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuthStore } from '@/lib/auth-store'
@@ -103,7 +103,14 @@ export default function LoginPage() {
     rememberMe: false,
   })
 
-  const { login, isLoading, error } = useAuthStore()
+  const { login, isLoading, error, isAuthenticated } = useAuthStore()
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard')
+    }
+  }, [isAuthenticated, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -180,7 +187,7 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     required
                     className="w-full h-11 bg-slate-50 border border-slate-100 rounded-xl pl-12 pr-12 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-mono text-[13px] text-slate-900 placeholder:text-slate-300"
-                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                    placeholder="••••••••••••"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   />
@@ -292,7 +299,7 @@ export default function LoginPage() {
 
           <div className="grid grid-cols-3 gap-8">
             {[
-              { value: 'â‰¥92%', label: 'ACCURACY' },
+              { value: '≥92%', label: 'ACCURACY' },
               { value: '500+', label: 'NODES' },
               { value: '5-CLASS', label: 'SPECTRUM' },
             ].map((stat, index) => (
@@ -307,3 +314,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

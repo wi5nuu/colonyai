@@ -13,7 +13,8 @@ import {
   EyeOff,
   AlertTriangle,
   Beaker,
-  CheckCircle2
+  CheckCircle2,
+  ArrowRight
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -39,7 +40,6 @@ export default function SimulatorPage() {
   const [showOriginal, setShowOriginal] = useState(false)
   const [detections, setDetections] = useState<Detection[]>([])
   const [selectedClass, setSelectedClass] = useState<string | null>(null)
-  const [zoomLevel, setZoomLevel] = useState(1)
   
   // Mock generation for simulation
   const startSimulation = () => {
@@ -90,51 +90,56 @@ export default function SimulatorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 space-y-8">
+    <div className="space-y-10 animate-in fade-in duration-500">
       {/* Simulation Control Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-orange-600 rounded-lg shadow-lg shadow-orange-900/20">
-              <Zap className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-3 mb-1.5">
+            <div className="w-9 h-9 bg-slate-900 rounded-lg shadow-xl flex items-center justify-center">
+              <Zap className="w-4 h-4 text-primary" />
             </div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Neural Simulator</h1>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Neural Simulator</h1>
           </div>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Diagnostic Precision Validator // 5-Class Spectrum Analysis</p>
+          <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Precision Validation Matrix // 5-Class Spectrum Engine</p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button 
             onClick={() => setShowOriginal(!showOriginal)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+            className="w-10 h-10 bg-white border border-slate-100 rounded-lg flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/20 transition-all shadow-sm"
           >
             {showOriginal ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            {showOriginal ? 'Hide Original' : 'Show Original'}
           </button>
           <button 
             onClick={startSimulation}
             disabled={isSimulating}
-            className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl disabled:opacity-50"
+            className="btn-primary py-3 px-5 flex items-center gap-2.5 shadow-lg shadow-primary/20 disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${isSimulating ? 'animate-spin' : ''}`} />
-            {isSimulating ? 'Processing...' : 'Run Diagnostics'}
+            <RefreshCw className={`w-3.5 h-3.5 ${isSimulating ? 'animate-spin' : ''}`} />
+            <span className="uppercase tracking-widest text-[8px] font-black">{isSimulating ? 'Processing Sequence...' : 'Run Diagnostics'}</span>
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Visualizer Arena */}
-        <div className="lg:col-span-8 space-y-6">
-          <div className="relative aspect-square bg-slate-900 rounded-[40px] border-8 border-slate-800 shadow-2xl overflow-hidden group">
+        <div className="lg:col-span-6 space-y-6">
+          <div className="relative aspect-[4/3] bg-slate-900 rounded-xl border-[6px] border-slate-800 shadow-2xl shadow-slate-900/50 overflow-hidden group">
             {/* The Plate Container */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative w-[85%] h-[85%] rounded-full bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 shadow-inner overflow-hidden">
+              <div className="relative w-[85%] h-[85%] rounded-full bg-slate-800/30 border border-white/5 shadow-[inset_0_0_60px_rgba(0,0,0,0.5)] overflow-hidden">
+                {/* Specimen Image Background (Always present but opacity varies) */}
+                <div className={`absolute inset-0 transition-opacity duration-1000 ${detections.length > 0 && !isSimulating ? 'opacity-70' : 'opacity-15'}`}>
+                  <img src="/test.jpg" alt="Specimen" className="w-full h-full object-cover rounded-full mix-blend-luminosity" />
+                  <div className="absolute inset-0 bg-primary/5" />
+                </div>
+
                 {/* Background Grid */}
-                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #475569 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '25px 25px' }} />
                 
                 {/* Simulation Render */}
                 {!isSimulating && detections.length > 0 && (
-                  <div className="absolute inset-0 animate-in fade-in duration-1000">
+                  <div className="absolute inset-0 animate-in fade-in duration-700">
                     {filteredDetections.map((d) => (
                       <div 
                         key={d.id}
@@ -142,14 +147,14 @@ export default function SimulatorPage() {
                         style={{ 
                           left: `${d.x}%`, 
                           top: `${d.y}%`, 
-                          width: `${d.size}px`, 
-                          height: `${d.size}px`,
-                          backgroundColor: showOriginal ? 'transparent' : `${CLASS_CONFIG[d.class].color}40`,
-                          boxShadow: !showOriginal ? `0 0 10px ${CLASS_CONFIG[d.class].color}` : 'none'
+                          width: `${d.size * 0.8}px`, 
+                          height: `${d.size * 0.8}px`,
+                          backgroundColor: showOriginal ? 'transparent' : `${CLASS_CONFIG[d.class].color.replace('bg-', '')}40`,
+                          boxShadow: !showOriginal ? `0 0 12px ${CLASS_CONFIG[d.class].color.replace('bg-', '')}50` : 'none'
                         }}
                       >
                         {!showOriginal && d.confidence > 0.9 && (
-                          <div className="absolute -top-4 -left-4 text-[8px] font-black text-white bg-slate-900/80 px-1 rounded backdrop-blur-sm opacity-0 group-hover:opacity-100">
+                          <div className="absolute -top-5 -left-2 text-[7px] font-black text-white bg-slate-900/90 px-1.5 py-0.5 rounded-[3px] backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
                             {Math.round(d.confidence * 100)}%
                           </div>
                         )}
@@ -160,19 +165,32 @@ export default function SimulatorPage() {
 
                 {/* Processing Overlay */}
                 {isSimulating && (
-                  <div className="absolute inset-0 flex items-center justify-center z-50 bg-slate-950/40 backdrop-blur-[2px]">
-                    <div className="flex flex-col items-center gap-4">
-                       <div className="w-16 h-16 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
-                       <p className="text-[10px] font-black text-white uppercase tracking-[0.4em] animate-pulse">Spectral Scanning...</p>
+                  <div className="absolute inset-0 flex items-center justify-center z-50 bg-slate-950/70 backdrop-blur-sm">
+                    <div className="flex flex-col items-center gap-6">
+                       <div className="relative">
+                          <div className="w-16 h-16 border-3 border-primary/10 border-t-primary rounded-full animate-spin" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                             <Zap className="w-6 h-6 text-primary animate-pulse" />
+                          </div>
+                       </div>
+                       <div className="text-center">
+                          <p className="text-[9px] font-black text-white uppercase tracking-[0.4em] animate-pulse mb-1">Neural Mapping...</p>
+                          <p className="text-[7px] font-black text-slate-500 uppercase tracking-widest">Spectral Deconstruction</p>
+                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* Empty State */}
                 {!isSimulating && detections.length === 0 && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-600 gap-4">
-                    <Beaker className="w-12 h-12 opacity-20" />
-                    <p className="text-xs font-bold uppercase tracking-widest opacity-40">Awaiting Specimen Input</p>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-700 gap-2">
+                    <div className="w-10 h-10 rounded-lg bg-slate-800/40 flex items-center justify-center border border-white/5 shadow-xl group-hover:scale-105 transition-transform">
+                      <Beaker className="w-4 h-4 opacity-20 text-white" />
+                    </div>
+                    <div className="text-center">
+                       <p className="text-[6px] font-black uppercase tracking-[0.2em] text-white opacity-40 mb-0.5">Awaiting Specimen Input</p>
+                       <p className="text-[5px] font-bold uppercase tracking-widest text-white opacity-20">Initialize diagnostic sequence</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -180,29 +198,29 @@ export default function SimulatorPage() {
 
             {/* Scanline Effect */}
             {isSimulating && (
-              <div className="absolute top-0 left-0 w-full h-1 bg-orange-500/50 shadow-[0_0_20px_#ea580c] animate-scanline z-50" />
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-primary/60 shadow-[0_0_30px_var(--primary)] animate-scanline z-50" />
             )}
           </div>
 
           {/* Legend & Filters */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {(Object.entries(CLASS_CONFIG) as [keyof typeof CLASS_CONFIG, any][]).map(([key, cfg]) => (
               <button 
                 key={key}
                 onClick={() => setSelectedClass(selectedClass === key ? null : key)}
-                className={`p-4 rounded-2xl border transition-all duration-300 text-left group ${
+                className={`dashboard-card p-3 transition-all duration-300 text-left group border ${
                   selectedClass === key 
-                    ? 'bg-slate-900 border-slate-800 shadow-xl' 
-                    : 'bg-white border-slate-100 hover:border-slate-200'
+                    ? 'bg-slate-900 border-primary shadow-xl shadow-primary/10' 
+                    : 'bg-white border-transparent hover:border-slate-100'
                 }`}
               >
                 <div className="flex items-center justify-between mb-3">
-                  <div className={`w-3 h-3 rounded-full ${cfg.color}`} />
-                  <Info className={`w-3 h-3 transition-colors ${selectedClass === key ? 'text-slate-600' : 'text-slate-300'}`} />
+                  <div className={`w-3 h-3 rounded-full ${cfg.color} shadow-md`} />
+                  <Info className={`w-3 h-3 transition-colors ${selectedClass === key ? 'text-primary' : 'text-slate-300'}`} />
                 </div>
-                <p className={`text-[10px] font-black uppercase tracking-tight ${selectedClass === key ? 'text-white' : 'text-slate-900'}`}>{cfg.label}</p>
-                <p className={`text-[9px] font-bold uppercase mt-1 ${selectedClass === key ? 'text-slate-500' : 'text-slate-400'}`}>
-                  {key === 'colony' ? 'Valid Target' : 'Artifact (Ignored)'}
+                <p className={`text-[8px] font-black uppercase tracking-tight ${selectedClass === key ? 'text-white' : 'text-slate-900'}`}>{cfg.label}</p>
+                <p className={`text-[7px] font-bold uppercase mt-1 ${selectedClass === key ? 'text-slate-500' : 'text-slate-400'}`}>
+                  {key === 'colony' ? 'Target' : 'Artifact'}
                 </p>
               </button>
             ))}
@@ -210,75 +228,95 @@ export default function SimulatorPage() {
         </div>
 
         {/* Analytics Panel */}
-        <div className="lg:col-span-4 space-y-6">
+        <div className="lg:col-span-6 space-y-6">
           {/* Diagnostic Result Card */}
-          <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
-              <ShieldCheck className="w-32 h-32 text-slate-900" />
+          <div className="dashboard-card p-6 relative overflow-hidden shadow-xl border-primary/10 rounded-2xl">
+            <div className="absolute top-0 right-0 p-6 opacity-[0.04] pointer-events-none">
+              <ShieldCheck className="w-24 h-24 text-primary" />
             </div>
             
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Analysis Certificate</h3>
+            <div className="flex items-center justify-between mb-6">
+               <div className="space-y-0.5">
+                  <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-[0.3em]">Analysis Certificate</h3>
+                  <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">Protocol: ISO-17025</p>
+               </div>
+               <div className="flex items-center gap-2 px-2.5 py-1.5 bg-emerald-50 rounded-lg border border-emerald-100">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Link Active</span>
+               </div>
+            </div>
             
-            <div className="space-y-8 relative z-10">
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Total Spectrums</p>
-                  <p className="text-4xl font-black text-slate-900 tracking-tighter">{stats.total}</p>
+            <div className="space-y-6 relative z-10">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-0.5">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Total</p>
+                  <p className="text-3xl font-black text-slate-900 tracking-tighter">{stats.total}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">Valid CFU</p>
-                  <p className="text-4xl font-black text-emerald-600 tracking-tighter">{stats.valid}</p>
+                <div className="text-right space-y-0.5">
+                  <p className="text-[8px] font-black text-primary uppercase tracking-widest">Valid CFU</p>
+                  <p className="text-3xl font-black text-primary tracking-tighter">{stats.valid}</p>
                 </div>
               </div>
 
-              <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
-                 <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-slate-400 uppercase">Detection Accuracy</span>
-                    <span className="text-xs font-black text-slate-900">94.2%</span>
+              <div className="p-5 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
+                 <div className="flex justify-between items-end">
+                    <div className="space-y-0.5">
+                       <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Accuracy</span>
+                       <p className="text-base font-black text-slate-900">94.2% <span className="text-[8px] text-emerald-500 ml-1">↑ 2.4%</span></p>
+                    </div>
+                    <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Confidence</span>
                  </div>
-                 <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-orange-600 rounded-full" style={{ width: '94.2%' }} />
+                 <div className="w-full h-1.5 bg-white rounded-full overflow-hidden shadow-inner border border-slate-100">
+                    <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: '94.2%' }} />
                  </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-100">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                  <p className="text-[10px] font-bold text-amber-900 leading-tight">
-                    <span className="font-black uppercase">{stats.rejected} Artifacts Rejected.</span> Data filtered against bubbles and condensation to prevent false positives.
-                  </p>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-50/50 border border-amber-100/30 backdrop-blur-sm">
+                  <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 shadow-sm flex-shrink-0">
+                    <AlertTriangle className="w-4 h-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                     <p className="text-[8px] font-black text-amber-900 uppercase tracking-widest">{stats.rejected} Rejected</p>
+                     <p className="text-[7px] font-bold text-amber-700 uppercase leading-relaxed tracking-wider opacity-60">Filtered against spectral noise</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <p className="text-[10px] font-bold text-emerald-900 leading-tight">
-                    <span className="font-black uppercase">Standard Compliance.</span> Results meet ISO 17025 digital reporting requirements.
-                  </p>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50/50 border border-emerald-100/30 backdrop-blur-sm">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm flex-shrink-0">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                     <p className="text-[8px] font-black text-emerald-900 uppercase tracking-widest">Compliant</p>
+                     <p className="text-[7px] font-bold text-emerald-700 uppercase leading-relaxed tracking-wider opacity-60">Meets ISO-standard requirements</p>
+                  </div>
                 </div>
               </div>
             </div>
             
-            <div className="mt-10 pt-8 border-t border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Neural Sync Active</span>
-              </div>
-              <button className="text-[10px] font-black text-slate-900 uppercase tracking-widest hover:text-orange-600 transition-colors">Export Ledger</button>
-            </div>
+            <button className="w-full mt-6 py-3.5 bg-slate-900 text-white rounded-xl text-[8px] font-black uppercase tracking-[0.2em] hover:bg-primary transition-all shadow-xl shadow-slate-900/20 group">
+               <span className="flex items-center justify-center gap-2">
+                  Export Global Ledger
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+               </span>
+            </button>
           </div>
 
           {/* Quick Info */}
-          <div className="bg-slate-900 rounded-[32px] p-8 text-white shadow-2xl">
-             <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-6">Simulation Engine v4.2</h4>
-             <p className="text-sm font-medium text-slate-300 leading-relaxed italic mb-6">
-               "This simulator demonstrates the YOLOv8-based artifact rejection pipeline. By isolating non-microbial objects, we eliminate up to 80% of human counting variability."
+          <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
+             <div className="absolute -bottom-6 -right-6 opacity-[0.03] group-hover:scale-125 transition-transform duration-1000">
+               <Zap className="w-32 h-32" />
+             </div>
+             <h4 className="text-[8px] font-black text-primary uppercase tracking-[0.2em] mb-3">Kernel v4.2</h4>
+             <p className="text-xs font-medium text-slate-300 leading-relaxed italic mb-6 border-l-2 border-primary/30 pl-4">
+               "Utilizing YOLOv8 Neural Architecture for real-time biological object detection."
              </p>
-             <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center">
-                   <Target className="w-5 h-5 text-orange-500" />
+             <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/5 backdrop-blur-md">
+                <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                   <Target className="w-4 h-4 text-slate-900" />
                 </div>
                 <div>
-                   <p className="text-[10px] font-black uppercase leading-none">Inference Speed</p>
-                   <p className="text-xs font-bold text-slate-400 mt-1">~240ms / specimem</p>
+                   <p className="text-[7px] font-black uppercase tracking-widest text-slate-400">Mean Velocity</p>
+                   <p className="text-sm font-bold text-white tracking-tight mt-0.5">240ms <span className="text-[9px] font-normal text-slate-500">/ seq</span></p>
                 </div>
              </div>
           </div>
@@ -287,3 +325,4 @@ export default function SimulatorPage() {
     </div>
   )
 }
+

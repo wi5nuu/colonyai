@@ -11,11 +11,26 @@ import {
   ZoomOut,
   Loader2,
   Camera,
-  Info,
   Target,
+  Info,
   Eye,
-  EyeOff
+  EyeOff,
+  Zap,
+  Shield,
+  PieChart as PieIcon,
+  BarChart3
 } from 'lucide-react'
+import { 
+  PieChart, 
+  Pie, 
+  Cell, 
+  ResponsiveContainer, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  Tooltip as RechartsTooltip 
+} from 'recharts'
 import Link from 'next/link'
 import { analysesApi } from '@/lib/analyses-api'
 import { reportsApi } from '@/lib/reports-api'
@@ -32,19 +47,19 @@ const CLASS_LABELS: Record<DetectionClass, string> = {
 }
 
 const CLASS_COLORS: Record<DetectionClass, string> = {
-  colony_single: 'bg-green-500',
-  colony_merged: 'bg-yellow-500',
-  bubble: 'bg-red-500',
-  dust_debris: 'bg-orange-500',
-  media_crack: 'bg-purple-500',
+  colony_single: 'bg-emerald-500',
+  colony_merged: 'bg-amber-500',
+  bubble: 'bg-rose-500',
+  dust_debris: 'bg-slate-400',
+  media_crack: 'bg-primary',
 }
 
 const CLASS_BORDER_COLORS: Record<DetectionClass, string> = {
-  colony_single: 'border-green-500',
-  colony_merged: 'border-yellow-500',
-  bubble: 'border-red-500',
-  dust_debris: 'border-orange-500',
-  media_crack: 'border-purple-500',
+  colony_single: 'border-emerald-500',
+  colony_merged: 'border-amber-500',
+  bubble: 'border-rose-500',
+  dust_debris: 'border-slate-400',
+  media_crack: 'border-primary',
 }
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }> = {
@@ -70,6 +85,7 @@ export default function ResultsPage() {
   const [zoom, setZoom] = useState(1)
   const [selectedDetection, setSelectedDetection] = useState<string | null>(null)
   const [showAnnotations, setShowAnnotations] = useState(true)
+  const [filterClass, setFilterClass] = useState<DetectionClass | null>(null)
 
   useEffect(() => {
     const loadAnalysis = async () => {
@@ -117,8 +133,8 @@ export default function ResultsPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="mt-4 text-sm text-muted-foreground">Loading analysis results...</p>
+          <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
+          <p className="mt-4 text-sm font-bold text-slate-500 uppercase tracking-widest">Reconstructing AI Neural Map...</p>
         </div>
       </div>
     )
@@ -126,47 +142,66 @@ export default function ResultsPage() {
 
   if (!analysis) return null
 
-  // 2. DATA CALCULATIONS: Separate Valid vs Artifacts
   const validCount = (analysis.class_breakdown.colony_single || 0) + (analysis.class_breakdown.colony_merged || 0)
   const artifactCount = (analysis.class_breakdown.bubble || 0) + (analysis.class_breakdown.dust_debris || 0) + (analysis.class_breakdown.media_crack || 0)
   const totalCount = Object.values(analysis.class_breakdown).reduce((a, b) => a + b, 0)
   const statusInfo = STATUS_COLORS[analysis.status] || STATUS_COLORS.pending
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard/history" className="p-2 rounded-lg bg-white border border-border hover:bg-muted transition-colors">
-            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+          <Link href="/dashboard/history" className="w-10 h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center hover:bg-slate-50 transition-all shadow-sm">
+            <ArrowLeft className="h-4 w-4 text-slate-400" />
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-foreground">Analysis Results</h1>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusInfo.bg}`}>
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Intelligence Audit</h1>
+              <span className={`px-2.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border shadow-sm ${
+                analysis.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'
+              }`}>
                 {statusInfo.label}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Sample: <span className="font-mono font-semibold text-foreground">{analysis.sample_id}</span> • Media: {analysis.media_type}
+            <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest flex items-center gap-2">
+              Sample: <span className="text-slate-900">{analysis.sample_id}</span>
+              <span className="text-slate-200">|</span>
+              Protocol: <span className="text-slate-900">{analysis.media_type}</span>
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => toast('AI Assistant is generating insights...', { icon: '🤖' })}
+            className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+          >
+             Ask AI
+          </button>
+          <button 
+            onClick={() => toast.info('Support line connected')}
+            className="hidden md:flex items-center gap-2 px-4 py-2 bg-white text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-slate-200 hover:bg-slate-50 transition-all"
+          >
+             Support
+          </button>
+          <div className="w-9 h-9 rounded-full bg-slate-900 flex items-center justify-center text-primary text-xs font-black border-2 border-primary/20 shadow-xl cursor-pointer hover:scale-110 transition-transform">
+             L
+          </div>
+          <div className="h-8 w-[1px] bg-slate-200 mx-2" />
           <button
             onClick={handleExportPdf}
-            className="btn-secondary flex items-center gap-2 text-sm"
+            className="px-4 py-2.5 bg-white border border-slate-100 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2.5 shadow-sm"
           >
             <Download className="h-4 w-4" />
-            Export PDF
+            Export Protocol
           </button>
           {analysis.status === 'completed' && (
             <button
               onClick={handleApprove}
-              className="btn-primary flex items-center gap-2 text-sm"
+              className="btn-primary py-2.5 px-5 flex items-center gap-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-lg shadow-primary/20"
             >
               <CheckCircle className="h-4 w-4" />
-              {analysis.is_valid_for_reporting ? 'Verified' : 'Approve'}
+              {analysis.is_valid_for_reporting ? 'Verified Node' : 'Grant Approval'}
             </button>
           )}
         </div>
@@ -174,337 +209,293 @@ export default function ResultsPage() {
 
       {/* Warnings */}
       {analysis.warnings && analysis.warnings.length > 0 && (
-        <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-1">Attention Required</p>
-              <ul className="text-xs text-amber-600 dark:text-amber-400 space-y-1 list-disc pl-4">
-                {analysis.warnings.map((warning, idx) => (
-                  <li key={idx}>{warning}</li>
-                ))}
-              </ul>
-            </div>
+        <div className="bg-rose-50/50 border-2 border-rose-100 p-4 rounded-xl flex items-start gap-4 mb-8">
+          <div className="p-2.5 bg-rose-500 rounded-lg shadow-lg shadow-rose-200 flex-shrink-0">
+            <AlertTriangle className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1.5">Neural Sensitivity Advisory</p>
+            <ul className="text-xs text-rose-700/80 font-bold space-y-1">
+              {analysis.warnings.map((warning, idx) => (
+                <li key={idx} className="flex items-center gap-2 before:w-1 before:h-1 before:bg-rose-400 before:rounded-full">
+                  {warning}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       )}
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* CFU Result */}
-        <div className="bg-white dark:bg-card rounded-xl border border-border p-5">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted-foreground">CFU / mL</span>
-            <div className="p-1.5 bg-primary/10 rounded-lg">
-              <Target className="h-4 w-4 text-primary" />
+      {/* Summary Matrix */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[
+          { label: 'Final Result', value: formatCFU(analysis.cfu_per_ml), sub: 'CFU / mL Matrix', icon: Target, color: 'primary' },
+          { label: 'Neural Accuracy', value: `${(analysis.confidence_score * 100).toFixed(1)}%`, sub: 'AI Reliability Score', icon: Info, color: 'purple' },
+          { label: 'Biological Match', value: validCount, sub: 'Confirmed Colonies', icon: CheckCircle, color: 'emerald' },
+          { label: 'Neural Rejections', value: artifactCount, sub: 'Artifacts Filtered', icon: EyeOff, color: 'rose' },
+        ].map((item, i) => (
+          <div key={i} className="dashboard-card p-4 flex flex-col justify-between rounded-xl">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{item.label}</p>
+              <div className={`p-2 rounded-lg bg-${item.color === 'primary' ? 'primary' : item.color}-500/10`}>
+                 <item.icon className={`h-4 w-4 text-${item.color === 'primary' ? 'primary' : item.color === 'purple' ? 'purple-500' : item.color === 'emerald' ? 'emerald-500' : 'rose-500'}`} />
+              </div>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-900 mb-0.5">{item.value}</p>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{item.sub}</p>
             </div>
           </div>
-          <p className="text-3xl font-bold text-foreground mb-1">
-            {formatCFU(analysis.cfu_per_ml)}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {analysis.cfu_per_ml === null ? 'TNTC / TFTC' : 'Valid Count'}
-          </p>
-        </div>
-
-        {/* Valid Count */}
-        <div className="bg-white dark:bg-card rounded-xl border border-border p-5">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted-foreground">Valid Colonies</span>
-            <div className="p-1.5 bg-green-500/10 rounded-lg">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-foreground mb-1">{validCount}</p>
-          <p className="text-xs text-muted-foreground">
-            Single + Merged
-          </p>
-        </div>
-
-        {/* Artifact Count - NEW FEATURE for Jury */}
-        <div className="bg-white dark:bg-card rounded-xl border border-border p-5">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted-foreground">Rejected Artifacts</span>
-            <div className="p-1.5 bg-rose-500/10 rounded-lg">
-              <EyeOff className="h-4 w-4 text-rose-500" />
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-foreground mb-1">{artifactCount}</p>
-          <p className="text-xs text-muted-foreground">
-            Bubbles, Dust & Cracks
-          </p>
-        </div>
-
-        {/* Confidence */}
-        <div className="bg-white dark:bg-card rounded-xl border border-border p-5">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted-foreground">AI Confidence</span>
-            <div className="p-1.5 bg-purple-500/10 rounded-lg">
-              <Info className="h-4 w-4 text-purple-500" />
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-foreground mb-1">
-            {(analysis.confidence_score * 100).toFixed(1)}%
-          </p>
-          <div className="w-full bg-muted h-1.5 rounded-full mt-2">
-            <div
-              className="bg-primary h-1.5 rounded-full transition-all"
-              style={{ width: `${analysis.confidence_score * 100}%` }}
-            />
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Visualizer */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Image View */}
-        <div className="lg:col-span-2 bg-white dark:bg-card rounded-xl border border-border overflow-hidden">
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-foreground">Annotated Plate</h3>
-            <div className="flex items-center gap-2">
-              <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="p-1.5 hover:bg-muted rounded-lg">
-                <ZoomOut className="h-4 w-4" />
-              </button>
-              <span className="text-xs text-muted-foreground w-10 text-center">{Math.round(zoom * 100)}%</span>
-              <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="p-1.5 hover:bg-muted rounded-lg">
-                <ZoomIn className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setShowAnnotations(!showAnnotations)}
-                className={`ml-2 px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 ${
-                  showAnnotations ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
-                }`}
-              >
-                {showAnnotations ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                {showAnnotations ? 'Annotations On' : 'Annotations Off'}
-              </button>
-            </div>
-          </div>
-          <div className="relative bg-muted/30 min-h-[500px] flex items-center justify-center overflow-hidden">
-            {/* 3. FIX: Bounding Box Logic */}
-            {/* Note: We assume backend sends normalized 0-1 coordinates. If it sends pixels, we need image dimensions. 
-                Since we can't get image dimensions easily here without a load event, we assume % coordinates from backend 
-                or 0-1 normalized. The safest bet for YOLO is usually 0-1 relative to image size. */}
-            <div className="relative transition-transform duration-300 ease-out" style={{ transform: `scale(${zoom})` }}>
-              {analysis.annotated_image_url ? (
-                <img
-                  src={analysis.annotated_image_url}
-                  alt="Annotated Analysis"
-                  className="max-w-full h-auto rounded-lg shadow-lg"
-                  // We use a ref to get dimensions if needed, but for now we try to position absolutely based on container
-                />
-              ) : (
-                <div className="w-[500px] h-[500px] flex flex-col items-center justify-center text-muted-foreground">
-                  <Camera className="h-16 w-16 mb-4 opacity-20" />
-                  <p className="text-sm font-medium">Image unavailable</p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Visualizer - Left 8 */}
+        <div className="lg:col-span-8 flex flex-col gap-6">
+          <div className="dashboard-card overflow-hidden !p-0 rounded-xl">
+            <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+              <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">Neural Mapping Layer</h3>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-white rounded-lg border border-slate-100 p-1.5 shadow-sm">
+                  <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="p-1 hover:bg-slate-50 rounded transition-colors">
+                    <ZoomOut className="h-3.5 w-3.5 text-slate-400" />
+                  </button>
+                  <span className="text-[9px] font-black text-slate-900 w-8 text-center">{Math.round(zoom * 100)}%</span>
+                  <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="p-1 hover:bg-slate-50 rounded transition-colors">
+                    <ZoomIn className="h-3.5 w-3.5 text-slate-400" />
+                  </button>
                 </div>
-              )}
-
-              {/* Detection Overlays */}
-              {showAnnotations && analysis.detections.map((detection) => {
-                // FIX QA-003: Handle both pixel coordinates (0-1024) and normalized (0-1)
-                // Backend sends pixel coordinates, so we convert to percentage relative to image container
-                // Standard assumption: image width is ~1024px (MODEL_IMG_SIZE * 2)
-                const imgWidth = 1024
-                const isPixel = detection.bbox.width > 10 // If width > 10, it's likely pixels not normalized
-                
-                const left = isPixel ? (detection.bbox.x / imgWidth) * 100 : (detection.bbox.x * 100)
-                const top = isPixel ? (detection.bbox.y / imgWidth) * 100 : (detection.bbox.y * 100)
-                const width = isPixel ? (detection.bbox.width / imgWidth) * 100 : (detection.bbox.width * 100)
-                const height = isPixel ? (detection.bbox.height / imgWidth) * 100 : (detection.bbox.height * 100)
-
-                return (
-                  <div
-                    key={detection.id}
-                    onClick={() => setSelectedDetection(selectedDetection === detection.id ? null : detection.id)}
-                    className={`absolute border-2 rounded cursor-pointer transition-all duration-200 hover:border-white hover:z-50 ${
-                      CLASS_BORDER_COLORS[detection.class_name as DetectionClass]
-                    } ${selectedDetection === detection.id ? 'ring-2 ring-white z-40' : ''}`}
-                    style={{
-                      left: `${left}%`,
-                      top: `${top}%`,
-                      width: `${width}%`,
-                      height: `${height}%`,
-                    }}
-                  >
-                    {zoom > 1.5 && (
-                      <div className="absolute -top-6 left-0 bg-black/80 text-white text-[8px] px-1.5 py-0.5 rounded whitespace-nowrap">
-                        {detection.confidence.toFixed(2)}
-                      </div>
-                    )}
+                <button
+                  onClick={() => setShowAnnotations(!showAnnotations)}
+                  className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border shadow-sm ${
+                    showAnnotations ? 'bg-primary text-white border-primary shadow-primary/20' : 'bg-white text-slate-400 border-slate-100'
+                  }`}
+                >
+                  {showAnnotations ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                  {showAnnotations ? 'Mapping On' : 'Sensors Only'}
+                </button>
+              </div>
+            </div>
+            <div className="relative bg-slate-100/50 min-h-[600px] flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing group">
+               <div className="relative transition-all duration-500 ease-out shadow-2xl shadow-slate-900/10 rounded-[2rem] overflow-hidden bg-white" style={{ transform: `scale(${zoom})` }}>
+                {analysis.annotated_image_url ? (
+                  <img
+                    src={analysis.annotated_image_url}
+                    alt="Neural Analysis"
+                    className="max-w-[700px] h-auto block"
+                  />
+                ) : (
+                  <div className="w-[600px] h-[600px] flex flex-col items-center justify-center bg-slate-50">
+                    <Camera className="h-16 w-16 mb-6 text-slate-200" />
+                    <p className="text-sm font-black text-slate-300 uppercase tracking-widest">Signal Unavailable</p>
                   </div>
-                )
-              })}
+                )}
+
+                {/* Overlays */}
+                {showAnnotations && analysis.detections.map((detection) => {
+                  const imgWidth = 1024
+                  const isPixel = detection.bbox.width > 10
+                  const left = isPixel ? (detection.bbox.x / imgWidth) * 100 : (detection.bbox.x * 100)
+                  const top = isPixel ? (detection.bbox.y / imgWidth) * 100 : (detection.bbox.y * 100)
+                  const width = isPixel ? (detection.bbox.width / imgWidth) * 100 : (detection.bbox.width * 100)
+                  const height = isPixel ? (detection.bbox.height / imgWidth) * 100 : (detection.bbox.height * 100)
+
+                  return (
+                    <div
+                      key={detection.id}
+                      onClick={() => setSelectedDetection(selectedDetection === detection.id ? null : detection.id)}
+                      className={`absolute border-2 rounded-lg cursor-pointer transition-all duration-300 hover:scale-110 hover:z-50 ${
+                        CLASS_BORDER_COLORS[detection.class_name as DetectionClass]
+                      } ${selectedDetection === detection.id ? 'ring-4 ring-white shadow-2xl z-40 scale-125' : 'opacity-80'}`}
+                      style={{
+                        left: `${left}%`,
+                        top: `${top}%`,
+                        width: `${width}%`,
+                        height: `${height}%`,
+                        display: filterClass && detection.class_name !== filterClass ? 'none' : 'block'
+                      }}
+                    >
+                      {selectedDetection === detection.id && (
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[8px] px-2 py-1 rounded-full whitespace-nowrap font-bold shadow-xl">
+                          {CLASS_LABELS[detection.class_name as DetectionClass]} ({(detection.confidence * 100).toFixed(0)}%)
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Registry Table */}
+          <div className="dashboard-card overflow-hidden !p-0">
+            <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/30">
+               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Neural Object Registry</h3>
+            </div>
+            <div className="overflow-x-auto max-h-[400px]">
+              <table className="w-full text-left">
+                <thead className="bg-white/80 backdrop-blur-md sticky top-0 z-10 border-b border-slate-50">
+                  <tr>
+                    {["Protocol Class", "Confidence", "Matrix (X, Y)", "Dimensions"].map(h => (
+                      <th key={h} className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {analysis.detections
+                    .filter(d => !filterClass || d.class_name === filterClass)
+                    .map((detection) => (
+                    <tr key={detection.id} className={`hover:bg-slate-50/50 transition-all ${selectedDetection === detection.id ? 'bg-primary/5' : ''}`} onClick={() => setSelectedDetection(detection.id)}>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-3 h-3 rounded-full ${CLASS_COLORS[detection.class_name as DetectionClass]} shadow-lg`} />
+                          <span className="text-sm font-bold text-slate-700">
+                            {CLASS_LABELS[detection.class_name as DetectionClass]}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-20 bg-slate-100 h-2 rounded-full overflow-hidden">
+                            <div className="bg-primary h-full rounded-full transition-all duration-1000" style={{ width: `${detection.confidence * 100}%` }} />
+                          </div>
+                          <span className="text-xs font-bold text-slate-900">{(detection.confidence * 100).toFixed(1)}%</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 text-xs font-bold text-slate-400 font-mono">
+                        {detection.bbox.x.toFixed(1)}, {detection.bbox.y.toFixed(1)}
+                      </td>
+                      <td className="px-8 py-5 text-xs font-bold text-slate-400 font-mono">
+                        {detection.bbox.width.toFixed(1)} × {detection.bbox.height.toFixed(1)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
-        {/* Stats Panel */}
-        <div className="space-y-6">
-          {/* Class Breakdown */}
-          <div className="bg-white dark:bg-card rounded-xl border border-border p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-4">5-Class Detection Breakdown</h3>
-            <div className="space-y-4">
-              {/* Valid Colonies Group */}
-              <div>
-                <p className="text-[10px] font-bold text-green-600 mb-2 uppercase">Valid Colonies (Counted)</p>
-                {(['colony_single', 'colony_merged'] as DetectionClass[]).map((clsName) => {
-                   const count = analysis.class_breakdown[clsName] || 0
-                   // FIX: Always show all 5 classes, even if count is 0
-                   return (
-                    <div key={clsName} className="flex items-center gap-3 mb-2">
-                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${CLASS_COLORS[clsName]}`} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="font-medium text-muted-foreground">{CLASS_LABELS[clsName]}</span>
-                          <span className="font-bold text-foreground">{count}</span>
-                        </div>
-                        <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${CLASS_COLORS[clsName]}`}
-                            style={{ width: `${totalCount > 0 ? (count / totalCount) * 100 : 0}%` }}
+        {/* Right 4 - Sidebar Analysis */}
+        <div className="lg:col-span-4 flex flex-col gap-8">
+           {/* 5-Class Visual Breakdown */}
+           <div className="dashboard-card p-8 flex flex-col min-h-[450px]">
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6">Spectral Distribution</h3>
+              <div className="flex-1 flex flex-col items-center justify-center">
+                 <div className="w-full h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                       <PieChart>
+                          <Pie
+                             data={[
+                                { name: 'Verified', value: validCount, color: '#10b981' },
+                                { name: 'Filtered', value: artifactCount, color: '#f43f5e' }
+                             ]}
+                             innerRadius={60}
+                             outerRadius={80}
+                             paddingAngle={5}
+                             dataKey="value"
+                          >
+                             {[
+                                { name: 'Verified', color: '#10b981' },
+                                { name: 'Filtered', color: '#f43f5e' }
+                             ].map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                             ))}
+                          </Pie>
+                          <RechartsTooltip 
+                             contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '10px', fontWeight: 'bold' }}
                           />
-                        </div>
-                      </div>
+                       </PieChart>
+                    </ResponsiveContainer>
+                 </div>
+                 
+                 <div className="grid grid-cols-2 gap-4 w-full mt-6">
+                    <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-100 text-center">
+                       <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Verified</p>
+                       <p className="text-xl font-black text-emerald-900">{validCount}</p>
                     </div>
-                   )
-                })}
-              </div>
-              
-              {/* Artifacts Group */}
-              <div>
-                <p className="text-[10px] font-bold text-rose-600 mb-2 uppercase">Artifacts (Excluded from Count)</p>
-                {(['bubble', 'dust_debris', 'media_crack'] as DetectionClass[]).map((clsName) => {
-                   const count = analysis.class_breakdown[clsName] || 0
-                   // FIX: Always show all 5 classes, even if count is 0
-                   return (
-                    <div key={clsName} className="flex items-center gap-3 mb-2">
-                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${CLASS_COLORS[clsName]}`} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="font-medium text-muted-foreground">{CLASS_LABELS[clsName]}</span>
-                          <span className="font-bold text-foreground">{count}</span>
-                        </div>
-                        <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${CLASS_COLORS[clsName]}`}
-                            style={{ width: `${totalCount > 0 ? (count / totalCount) * 100 : 0}%` }}
-                          />
-                        </div>
-                      </div>
+                    <div className="p-3 rounded-2xl bg-rose-50 border border-rose-100 text-center">
+                       <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">Filtered</p>
+                       <p className="text-xl font-black text-rose-900">{artifactCount}</p>
                     </div>
-                   )
-                })}
+                 </div>
               </div>
-            </div>
-            
-            {/* Summary Footer */}
-            <div className="mt-6 pt-4 border-t border-border">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground font-medium">Total Objects Detected</span>
-                <span className="font-bold text-foreground text-lg">{totalCount}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs mt-1">
-                <span className="text-muted-foreground font-medium">Total Valid Colonies</span>
-                <span className="font-bold text-green-600 text-lg">{validCount}</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Measurement Uncertainty */}
-          {analysis.uncertainty_u !== undefined && analysis.uncertainty_u !== null && (
-            <div className="bg-white dark:bg-card rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Info className="h-4 w-4 text-blue-500" />
-                Measurement Uncertainty (U)
+              <div className="mt-8 pt-6 border-t border-slate-50 flex flex-col gap-4">
+                 <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Biological Accuracy</span>
+                    <span className="text-lg font-black text-emerald-500">{(analysis.confidence_score * 100).toFixed(1)}%</span>
+                 </div>
+              </div>
+           </div>
+
+           {/* Confidence Histogram */}
+           <div className="dashboard-card p-8">
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6">Neural Confidence Profile</h3>
+              <div className="h-40 w-full">
+                 <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={analysis.detections.map((d, i) => ({ id: i, confidence: d.confidence * 100 }))}>
+                       <XAxis dataKey="id" hide />
+                       <YAxis hide domain={[0, 100]} />
+                       <RechartsTooltip 
+                          cursor={{ fill: '#f8fafc' }}
+                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '9px' }}
+                          labelStyle={{ display: 'none' }}
+                       />
+                       <Bar dataKey="confidence" fill="#6366f1" radius={[2, 2, 0, 0]} />
+                    </BarChart>
+                 </ResponsiveContainer>
+              </div>
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-4 text-center">Confidence distribution across all nodes</p>
+           </div>
+
+           {/* ISO Uncertainty */}
+           <div className="dashboard-card p-8 bg-slate-900 text-white shadow-2xl shadow-slate-900/20">
+              <h3 className="text-sm font-black uppercase tracking-widest mb-6 text-white/60 flex items-center gap-3">
+                 <Shield className="h-5 w-5 text-primary" />
+                 ISO 17025 Metrics
               </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">U (k=2, 95%)</span>
-                  <span className="font-bold text-foreground">{analysis.uncertainty_u.toLocaleString()} CFU/mL</span>
-                </div>
-                <div className="text-[10px] text-muted-foreground">
-                  Calculated based on GUM (ISO/IEC Guide 98-3)
-                </div>
+              <div className="space-y-6">
+                 <div>
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Uncertainty (U)</p>
+                    <p className="text-3xl font-black">{analysis.uncertainty_u?.toLocaleString() || '0.00'} <span className="text-sm text-white/40">CFU/mL</span></p>
+                 </div>
+                 <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl border border-white/10">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+                    <p className="text-[10px] font-bold text-white/60 leading-relaxed uppercase tracking-wider">
+                       GUM Protocol Compliant (k=2, 95% Confidence Interval)
+                    </p>
+                 </div>
               </div>
-            </div>
-          )}
+           </div>
 
-          {/* Legend */}
-          <div className="bg-white dark:bg-card rounded-xl border border-border p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Legend</h3>
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
-                <span className="text-muted-foreground">Valid Colony (Counted)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
-                <span className="text-muted-foreground">Merged Colony (Counted)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                <span className="text-muted-foreground">Bubble (Excluded)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
-                <span className="text-muted-foreground">Dust/Debris (Excluded)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-                <span className="text-muted-foreground">Media Crack (Excluded)</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Detection Registry Table */}
-      <div className="bg-white dark:bg-card rounded-xl border border-border overflow-hidden">
-        <div className="p-4 border-b border-border">
-          <h3 className="text-sm font-semibold text-foreground">Detection Registry</h3>
-        </div>
-        <div className="overflow-x-auto max-h-[300px]">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-muted-foreground sticky top-0">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium">Class</th>
-                <th className="text-left px-4 py-3 font-medium">Confidence</th>
-                <th className="text-left px-4 py-3 font-medium">Coordinates (x, y)</th>
-                <th className="text-left px-4 py-3 font-medium">Dimensions (w, h)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {analysis.detections.map((detection) => (
-                <tr key={detection.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${CLASS_COLORS[detection.class_name as DetectionClass]}`} />
-                      <span className="capitalize text-foreground">
-                        {CLASS_LABELS[detection.class_name as DetectionClass]}
-                      </span>
+           {/* Legend Quick Reference */}
+           <div className="dashboard-card p-8">
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6">Neural Legend</h3>
+              <div className="grid grid-cols-1 gap-4">
+                 {(Object.keys(CLASS_LABELS) as DetectionClass[]).map(cls => (
+                    <div 
+                       key={cls} 
+                       onClick={() => setFilterClass(filterClass === cls ? null : cls)}
+                       className={`flex items-center gap-4 group cursor-pointer p-2 rounded-xl transition-all ${filterClass === cls ? 'bg-slate-900 text-white shadow-lg' : 'hover:bg-slate-50'}`}
+                    >
+                       <div className={`w-8 h-8 rounded-lg ${CLASS_COLORS[cls]} bg-opacity-10 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                          <div className={`w-2.5 h-2.5 rounded-full ${CLASS_COLORS[cls]} shadow-sm shadow-black/10`} />
+                       </div>
+                       <div>
+                          <p className={`text-[11px] font-bold ${filterClass === cls ? 'text-white' : 'text-slate-700'}`}>{CLASS_LABELS[cls]}</p>
+                          <p className={`text-[8px] font-black uppercase tracking-widest ${filterClass === cls ? 'text-primary/70' : 'text-slate-400'}`}>
+                             {cls.includes('colony') ? 'Counted Specimen' : 'Rejected Artifact'}
+                          </p>
+                       </div>
                     </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 bg-muted h-1.5 rounded-full overflow-hidden">
-                        <div className="bg-primary h-full rounded-full" style={{ width: `${detection.confidence * 100}%` }} />
-                      </div>
-                      <span className="text-muted-foreground">{(detection.confidence * 100).toFixed(1)}%</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-muted-foreground">
-                    {detection.bbox.x.toFixed(1)}, {detection.bbox.y.toFixed(1)}
-                  </td>
-                  <td className="px-4 py-3 font-mono text-muted-foreground">
-                    {detection.bbox.width.toFixed(1)} × {detection.bbox.height.toFixed(1)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                 ))}
+              </div>
+           </div>
         </div>
       </div>
     </div>
   )
 }
+
+

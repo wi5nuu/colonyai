@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, images, analyses, reports, users, lims, maintenance, simulator, settings
+from app.api.v1.endpoints import auth, images, analyses, reports, users, lims, maintenance, simulator, settings, audit
 
 auth_router = APIRouter()
 auth_router.add_api_route("/login", auth.login, methods=["POST"])
@@ -57,3 +57,6 @@ settings_router.add_api_route("/preferences", settings.get_preferences, methods=
 settings_router.add_api_route("/notifications", settings.update_notification_preferences, methods=["PUT"])
 settings_router.add_api_route("/laboratory", settings.update_laboratory_defaults, methods=["PUT"])
 settings_router.add_api_route("/appearance", settings.update_appearance_preferences, methods=["PUT"])
+
+audit_router = APIRouter()
+audit_router.add_api_route("/", audit.list_audit_logs, methods=["GET"])

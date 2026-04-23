@@ -71,8 +71,9 @@ async def init_db():
         DB_AVAILABLE = True
         print("[DATABASE] Connection successful and tables synchronized.")
         
-        # Seed initial admin user
+        # Seed initial users
         async with AsyncSessionLocal() as session:
+            # 1. System Admin
             print(f"[DATABASE] Checking initial admin: {settings.INITIAL_ADMIN_EMAIL}")
             result = await session.execute(select(User).where(User.email == settings.INITIAL_ADMIN_EMAIL))
             admin_user = result.scalars().first()
@@ -85,7 +86,41 @@ async def init_db():
                     role=UserRole.SYSTEM_ADMIN
                 )
                 session.add(new_admin)
-                await session.commit()
+            else:
+                # Update password to match .env
+                admin_user.password_hash = get_password_hash(settings.INITIAL_ADMIN_PASSWORD)
+
+            # 2. Lead Analyst (from README)
+            analyst_email = "analyst@colonyai.diag"
+            result = await session.execute(select(User).where(User.email == analyst_email))
+            analyst_user = result.scalars().first()
+            if not analyst_user:
+                logger.info(f"Seeding lead analyst: {analyst_email}")
+                session.add(User(
+                    email=analyst_email,
+                    password_hash=get_password_hash("colony2026"),
+                    full_name="Lead Analyst Primary",
+                    role=UserRole.ANALYST
+                ))
+            else:
+                analyst_user.password_hash = get_password_hash("colony2026")
+
+            # 3. Lab Manager (from README)
+            manager_email = "manager@colonyai.diag"
+            result = await session.execute(select(User).where(User.email == manager_email))
+            manager_user = result.scalars().first()
+            if not manager_user:
+                logger.info(f"Seeding lab manager: {manager_email}")
+                session.add(User(
+                    email=manager_email,
+                    password_hash=get_password_hash("colony2026"),
+                    full_name="Laboratory Manager",
+                    role=UserRole.LAB_MANAGER
+                ))
+            else:
+                manager_user.password_hash = get_password_hash("colony2026")
+
+            await session.commit()
     except Exception as e:
         logger.warning(f"[DATABASE] Database connection failed: {e}")
         logger.warning("   Running in DEMO MODE. Endpoints respond but data not persisted.")

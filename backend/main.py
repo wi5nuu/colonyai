@@ -6,7 +6,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.core.rate_limiter import RateLimitMiddleware
-from app.api.v1 import auth_router, image_router, analysis_router, report_router, user_router, lims_router, maintenance_router, simulator_router, settings_router
+from app.api.v1 import auth_router, image_router, analysis_router, report_router, user_router, lims_router, maintenance_router, simulator_router, settings_router, audit_router
 from app.core.database import engine, Base
 
 
@@ -66,6 +66,7 @@ app.include_router(lims_router, prefix=f"{settings.API_V1_PREFIX}/lims", tags=["
 app.include_router(maintenance_router, prefix=f"{settings.API_V1_PREFIX}/maintenance", tags=["Maintenance"])
 app.include_router(simulator_router, prefix=f"{settings.API_V1_PREFIX}/simulator", tags=["Simulator"])
 app.include_router(settings_router, prefix=f"{settings.API_V1_PREFIX}/settings", tags=["User Settings"])
+app.include_router(audit_router, prefix=f"{settings.API_V1_PREFIX}/audit", tags=["Audit Logs"])
 
 
 @app.get("/")
