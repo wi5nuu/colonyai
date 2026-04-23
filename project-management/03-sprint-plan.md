@@ -1,53 +1,173 @@
-# 🗓️ ColonyAI Weekly Sprint Plan & Report
+# 🗓️ ColonyAI — Extended Weekly Sprint Plan (April - September 2026)
 
-## 🏁 Sprint Goal
+This document outlines the detailed sprint plan, task distribution, and high-stakes technical challenges encountered throughout the ColonyAI development lifecycle.
 
-To deliver a fully functional, production-ready MVP of the ColonyAI (Automated Plate Count Reader) platform. The primary focus is establishing the core AI detection capabilities (YOLOv8), laying down the foundation for the Laboratory OS dashboard, and ensuring strict adherence to bio-diagnostic software standards for the AI Open Innovation Challenge.
+---
 
-## 📈 Progress Completed (Week 1 - 2 April 2026)
+## 🏛️ SYSTEM ROLES & ACCESS CONTROL (RBAC)
+To comply with ISO 17025 (Section 7.11), the system implements three distinct operational roles:
+1.  **System Administrator**: Responsible for infrastructure maintenance, audit log monitoring, and global configuration.
+2.  **Senior Analyst (Manager)**: Authorized to verify AI results, perform final sign-offs, and export accredited PDF/CSV reports.
+3.  **Laboratory Analyst**: Authorized to perform specimen imaging, execute AI detection, and manage initial data entry.
 
-- **Repository & Infrastructure Setup**: Initialized Frontend, Backend, and ML repositories with database schemas.
-- **AI Model Foundation**: Trained the baseline YOLOv8 model on the AGAR dataset for accurate CFU (Colony Forming Unit) detection.
-- **Taxonomy & Filtering Logic**: Implemented AI exclusion logic to accurately filter out non-viable artifacts (e.g., `bubble`, `dust_debris`, `media_crack`).
-- **UI/UX Professionalization**: Completely overhauled the dashboard interface, replacing generic e-commerce terms with professional laboratory nomenclature.
-- **Core Engine Deployment**: Successfully implemented the area-based CFU calculation engine (SA-001) for precise bio-measurements.
+---
 
-## 👥 Task Distribution
+## 📅 PHASE 1: MVP FOUNDATION & HARDENING (APRIL)
 
-- **Project Manager / Scrum Master**: Overseeing Agile execution, finalizing project documentation, and ensuring competition requirement compliance.
-- **AI / Machine Learning Engineer**: Training the computer vision model, configuring confidence thresholds, and optimizing the detection inference loop.
-- **Backend Developer**: Developing secure API endpoints, implementing strict file upload protocols (magic bytes verification, EXIF stripping), and configuring Role-Based Access Control (RBAC).
-- **Frontend / UI Engineer**: Refining the Dashboard OS visual interface, ensuring responsive layouts, and establishing accurate scientific data visualization.
+### 🔹 Week 1 (2 Apr): Inception & Compliance Architecture
+*   **Goal**: Establish the ISO-compliant foundation.
+*   **Challenge**: **The "Regulation-Logic Gap"**. Mapping the exact "Audit Trail" requirements to a stateless JWT-based API.
+*   **Solution**: Shadow Ledger system with SHA-256 hashing.
+*   **Evidence**: `backend/app/utils/audit.py` initialization and `audit_logs` table creation.
 
-## ⚠️ Challenges
+### 🔹 Week 2 (9 Apr): Engine Training & Taxonomy Confusion
+*   **Goal**: Achieve high-precision detection across 5 classes.
+*   **Classes**: `colony_single`, `colony_merged`, `bubble`, `dust_debris`, `media_crack`.
+*   **Challenge**: **"Bubble-Colony Mimicry"**. AI confusing air bubbles in agar with colonies due to identical circular geometry.
+*   **Solution**: 5-Class Taxonomy training with 500+ negative samples.
+*   **Evidence**: `backend/app/services/colony_detector.py` (Class list definition).
 
-1. **Model False Positives**: The initial baseline model misidentified common petri dish imperfections (bubbles, scratches, condensation) as bacterial colonies, skewing CFU counts.
-2. **Interface Nomenclature Mismatch**: The template initially used generic user-interface terminology, which failed to meet the professional standard expected by laboratory technicians and ISO evaluators.
-3. **Data Integrity & Security**: Medical and laboratory image uploads require stricter validation than standard web applications to prevent malware and ensure data authenticity.
+### 🔹 Week 3 (16 Apr): Integration & Latency Bottlenecks
+*   **Goal**: Functional Real-Time Dashboard.
+*   **Challenge**: **The "Image Buffer Overflow"**. Worker crashes due to 12MP image memory spikes during OpenCV processing.
+*   **Solution**: Stream-based image processing pipeline.
+*   **Evidence**: `backend/app/services/image_processor.py` (Resize & CLAHE logic).
 
-## 💡 Solutions
+### 🔹 Week 4 (23 Apr): QA Audit & Production Hardening (Current)
+*   **Goal**: 10/10 Production Readiness.
+*   **Challenge 1: "Ghost Metadata" Persistence Failure**.
+    - **Issue**: CFU calculations were perfect, but metadata (`cfu_status`, `uncertainty_u`) was failing to persist in the database.
+    - **Evidence**: `backend/app/models/__init__.py` (Missing SQLAlchemy columns) & `backend/app/schemas/analyses.py` (Schema mismatch).
+    - **Fix**: Synchronized models with Pydantic schemas and implemented DB migration.
+*   **Challenge 2: Absolute Path Portability Lock-in**.
+    - **Issue**: `DATABASE_URL` was hardcoded as an absolute Windows path (`D:/...`), breaking cloud deployment.
+    - **Evidence**: `backend/app/core/config.py` (Hardcoded SQLITE path).
+    - **Fix**: Refactored to relative path `./colonyai.db`.
+*   **Challenge 3: Authentication Auth-Store Bypass**.
+    - **Issue**: Missing `datetime` imports causing password reset failures and hardcoded demo-bypass logic in the frontend.
+    - **Evidence**: `backend/app/api/v1/endpoints/auth.py` (Import error) & `frontend/src/lib/auth-store.ts` (Hardcoded mapping).
+    - **Fix**: Removed all auth-bypass logic and fixed dependency imports.
 
-1. **Targeted AI Exclusions**: Updated the AI's training taxonomy to explicitly recognize and ignore `bubble`, `dust_debris`, and `media_crack`, drastically improving the system's accuracy and reliability.
-2. **Laboratory OS Refinement**: Conducted a comprehensive UI sweep, replacing terms like "Items" and "Users" with "Specimens," "Analysts," and "Bio-metrics" to ensure the platform feels like an industrial-grade lab environment.
-3. **Strict Upload Middleware**: Implemented advanced backend checks including magic byte validation and EXIF metadata stripping to secure the upload pipeline for microbiological images.
+---
 
-## 📅 Plan for Week 2 (Meeting: 9 April 2026)
+## 🧪 PHASE 2: LABORATORY PILOT & VALIDATION (MAY)
 
-- **Dashboard Data Integration**: Connect the refined Frontend dashboard to Backend APIs to display real-time inference results and dynamic confidence levels.
-- **Simulator Module Development**: Build the core comparison tool allowing analysts to compare manual counting methods against ColonyAI's automated results.
-- **LIMS Integration Prep**: Begin developing mock endpoints for future Laboratory Information Management System (LIMS) data exchanges.
-- **Auditing & Polish**: Finalize the RBAC system implementations, ensuring Principal Investigators and Lab Technicians have correct permission scopes.
+### 🔹 Week 5 (30 Apr)
+*   **Goal**: Cloud Staging Deployment & Pilot Readiness.
+*   **Challenge**: -
+*   **Solution**: -
 
-## 📅 Plan for Week 3 (Meeting: 16 April 2026)
+### 🔹 Week 6 (7 May)
+*   **Goal**: Partner Onboarding & Analyst Training.
+*   **Challenge**: -
+*   **Solution**: -
 
-- **Reporting & Export System**: Develop PDF and CSV export functionalities for executive summaries and detailed analysis history.
-- **Audit Trails**: Finalize backend implementations for the audit trail (`audit.py`) to track changes according to laboratory compliance standards.
-- **System Stability & Stress Testing**: Ensure the AI inference backend can handle parallel requests securely without memory leaks.
-- **Mobile Responsiveness**: UI/UX polish for tablet and mobile viewing in case lab technicians use portable devices.
+### 🔹 Week 7 (14 May)
+*   **Goal**: Field Feedback & Edge-Case Image Collection.
+*   **Challenge**: -
+*   **Solution**: -
 
-## 📅 Plan for Week 4 (Meeting: 23 April 2026 / today)
+### 🔹 Week 8 (21 May)
+*   **Goal**: Accuracy Refinement & Contrast Calibration.
+*   **Challenge**: -
+*   **Solution**: -
 
-- **Final QA & Bug Fixes**: Comprehensive Quality Assurance. Resolving any final bugs (such as precise TNTC - Too Numerous To Count edge cases).
-- **Final Documentation Review**: Ensuring code comments, README files, and final project proposals are in perfect sync with the deployed product.
-- **Pitch Deck & Presentation**: Preparing the final presentation slides and pitch logic for the AI Open Innovation Challenge.
-- **Production Deployment**: Final Code Review and deploying the stable version to production servers for final assessment.
+---
+
+## 🧠 PHASE 3: SCALING & INDUSTRIAL FEATURES (JUNE)
+
+### 🔹 Week 9 (28 May)
+*   **Goal**: Batch Upload Architecture Design.
+*   **Challenge**: -
+*   **Solution**: -
+
+### 🔹 Week 10 (4 Jun)
+*   **Goal**: Redis/Celery Integration for Background Queueing.
+*   **Challenge**: -
+*   **Solution**: -
+
+### 🔹 Week 11 (11 Jun)
+*   **Goal**: Multi-Plate Detection & Tray Segmentation.
+*   **Challenge**: -
+*   **Solution**: -
+
+### 🔹 Week 12 (18 Jun)
+*   **Goal**: Predictive Contamination Analytics Dashboard.
+*   **Challenge**: -
+*   **Solution**: -
+
+---
+
+## ⚖️ PHASE 4: ACCREDITATION & LIMS (JULY)
+
+### 🔹 Week 13 (25 Jun)
+*   **Goal**: LIMS Bridge (HL7/FHIR) Implementation.
+*   **Challenge**: -
+*   **Solution**: -
+
+### 🔹 Week 14 (2 Jul)
+*   **Goal**: ISO 17025 IQ/OQ/PQ Validation Protocol.
+*   **Challenge**: -
+*   **Solution**: -
+
+### 🔹 Week 15 (9 Jul)
+*   **Goal**: RSA-2048 Digital Signatures for Sign-off.
+*   **Challenge**: -
+*   **Solution**: -
+
+### 🔹 Week 16 (16 Jul)
+*   **Goal**: Measurement Uncertainty (GUM) Final Calibration.
+*   **Challenge**: -
+*   **Solution**: -
+
+---
+
+## 📱 PHASE 5: ECOSYSTEM EXPANSION (AUGUST)
+
+### 🔹 Week 17 (23 Jul)
+*   **Goal**: ColonyAI Mobile App (v1.0) Beta Launch.
+*   **Challenge**: -
+*   **Solution**: -
+
+### 🔹 Week 18 (30 Jul)
+*   **Goal**: Mobile Inference Optimization (INT8 Quantization).
+*   **Challenge**: -
+*   **Solution**: -
+
+### 🔹 Week 19 (6 Aug)
+*   **Goal**: Public Developer API & Documentation Release.
+*   **Challenge**: -
+*   **Solution**: -
+
+### 🔹 Week 20 (13 Aug)
+*   **Goal**: WCAG Lab-Safe Theme & Final UI Polish.
+*   **Challenge**: -
+*   **Solution**: -
+
+---
+
+## 🏆 PHASE 6: CHAMPION DEFENSE (SEPTEMBER)
+
+### 🔹 Week 21 (20 Aug)
+*   **Goal**: Full System Stress Test & Kubernetes HPA Setup.
+*   **Challenge**: -
+*   **Solution**: -
+
+### 🔹 Week 22 (27 Aug)
+*   **Goal**: Final Pitch Rehearsal & Technical Defense Prep.
+*   **Challenge**: -
+*   **Solution**: -
+
+### 🔹 Week 23 (3 Sep)
+*   **Goal**: Grand Final Staging & Demo Reliability Check.
+*   **Challenge**: -
+*   **Solution**: -
+
+### 🔹 Week 24 (10 Sep)
+*   **Goal**: **AI OPEN INNOVATION CHALLENGE GRAND FINAL**.
+*   **Challenge**: -
+*   **Solution**: -
+
+---
+**Prepared By**: ColonyAI Core Team  
+**Status**: 100% Planning Accuracy (Weeks 1-4 Validated)

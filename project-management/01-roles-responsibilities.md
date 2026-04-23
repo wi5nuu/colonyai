@@ -1,48 +1,38 @@
-# 🤖 ColonyAI Team Roles & Responsibilities
+# 👥 Roles & Responsibilities — ColonyAI
 
-## Team Identity
-- **Team Name:** ColonyAI
-- **Institution:** President University
-- **Challenge:** AI Open Innovation Challenge 2026 (Microbiology Lab Automation)
-
-## 👥 Member Roles
-
-### 1. Wisnu Alfian Nur Ashar
-- **Role:** Product Owner & Frontend Lead
-- **Responsibilities:**
-  - Define product vision and feature priorities (Product Owner).
-  - Manage the Product Backlog and ensure alignment with competition goals.
-  - Lead Frontend development (Next.js, React, UI/UX implementation).
-  - **Key Deliverables:** Landing Page, Dashboard, User Interface, Project Roadmap.
-
-### 2. Muhammad Faras
-- **Role:** Scrum Master & AI/CV Integration
-- **Responsibilities:**
-  - Facilitate daily standups and remove blockers for the team.
-  - Train YOLOv8 model and manage dataset (Roboflow).
-  - Integrate AI model with FastAPI backend.
-  - **Key Deliverables:** YOLOv8 Model, Image Processing Pipeline, API Documentation.
-
-### 3. Suci
-- **Role:** Developer (UI/UX Designer)
-- **Responsibilities:**
-  - Design user interface prototypes (Figma).
-  - Implement responsive frontend components and styling.
-  - Ensure accessibility and user experience quality.
-  - **Key Deliverables:** Design System, Simulator UI, Mobile Responsiveness.
-
-### 4. Steven
-- **Role:** Developer (Data Analyst & QA Engineer)
-- **Responsibilities:**
-  - Develop Backend API (FastAPI, Database, Auth).
-  - Perform testing (Unit tests, Integration tests) and ensure code quality.
-  - Analyze test data and generate reports.
-  - **Key Deliverables:** Backend Endpoints, Database Schema, PDF/CSV Export, Testing Suite.
+This document outlines the core team structure and individual areas of focus for the ColonyAI project.
 
 ---
 
-## 🔄 Workflow Agreement
-- **Communication:** Daily updates via GitHub Projects & WhatsApp Group.
-- **Meetings:** Weekly sync with mentor/dosen every [Day/Time].
-- **Code Review:** All Pull Requests must be reviewed by at least one other member.
-- **Branching Strategy:** `main` (stable) <- `dev` (integration) <- `feature/xyz` (individual work).
+## 🏛️ Team Structure
+
+| Name | Role | Primary Focus |
+| :--- | :--- | :--- |
+| **Wisnu Alfian Nur Ashar** | Product Owner | **Frontend Lead** & UI/UX Vision. Responsible for the Dashboard OS, scientific nomenclature, and user experience. |
+| **Muhammad Faras** | Scrum Master | **AI/ML Lead**. Responsible for model training, dataset curation, inference optimization, and CI/CD pipelines. |
+| **Suci** | Developer | **UI/UX Designer**. Responsible for component styling, color-coded annotation systems, and marketing assets. |
+| **Steven** | Developer | **Backend Lead**. Responsible for API security, database architecture, ISO 17025 compliance, and report generation. |
+
+---
+
+## 📑 Detailed Responsibilities
+
+### Product Owner (Wisnu)
+- Ensuring the product meets microbiology laboratory standards.
+- Managing the sprint backlog and prioritizing high-value features.
+- Finalizing the presentation and defense strategy.
+
+### Scrum Master / AI Lead (Faras)
+- Facilitating daily standups and resolving technical blockers.
+- Fine-tuning YOLOv8 for 5-class detection.
+- Optimizing model performance for local and cloud environments.
+
+### Backend Engineer (Steven)
+- Implementing secure file upload protocols (EXIF stripping, magic bytes).
+- Developing the SA-001 CFU/ml calculation engine.
+- Managing the PostgreSQL/SQLite database and audit logging systems.
+
+### UI/UX Developer (Suci)
+- Developing responsive layouts using Tailwind CSS.
+- Creating intuitive data visualizations for laboratory analytics.
+- Ensuring the dashboard feels like a professional "Laboratory OS."
