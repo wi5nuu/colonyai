@@ -2,27 +2,16 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { 
-  Upload as UploadIcon, 
-  Camera, 
-  Image as ImageIcon, 
-  AlertCircle, 
-  Loader2, 
-  TrendingUp, 
+import {
+  Upload as UploadIcon,
+  Image as ImageIcon,
+  AlertCircle,
+  Loader2,
+  TrendingUp,
   Trash2,
-  BookOpen,
-  ChevronDown,
-  ChevronUp,
-  Lightbulb,
   CheckCircle2,
   Info,
-  HelpCircle,
-  XCircle,
-  Eye,
-  Zap,
-  Target,
-  FileText
+  FlaskConical,
 } from 'lucide-react'
 import { analysesApi } from '@/lib/analyses-api'
 import { MediaType } from '@/lib/types'
@@ -44,66 +33,37 @@ export default function UploadPage() {
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true)
-    } else if (e.type === "dragleave") {
-      setDragActive(false)
-    }
+    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true)
+    else if (e.type === 'dragleave') setDragActive(false)
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0])
-    }
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0])
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0])
-    }
+    if (e.target.files && e.target.files[0]) handleFile(e.target.files[0])
   }
 
   const handleFile = (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file')
-      return
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('File size must be less than 10MB')
-      return
-    }
-
+    if (!file.type.startsWith('image/')) { toast.error('Please upload an image file'); return }
+    if (file.size > 10 * 1024 * 1024) { toast.error('File size must be less than 10MB'); return }
     setSelectedFile(file)
     const reader = new FileReader()
-    reader.onloadend = () => {
-      setPreview(reader.result as string)
-    }
+    reader.onloadend = () => setPreview(reader.result as string)
     reader.readAsDataURL(file)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!selectedFile) {
-      toast.error('Please select a plate image')
-      return
-    }
-
-    if (!formData.sampleId.trim()) {
-      toast.error('Please enter a Sample ID')
-      return
-    }
-
+    if (!selectedFile) { toast.error('Please select a plate image'); return }
+    if (!formData.sampleId.trim()) { toast.error('Please enter a Sample ID'); return }
     setIsSubmitting(true)
-
     try {
       toast.loading('Analyzing plate image...')
-
       const analysis = await analysesApi.create({
         sample_id: formData.sampleId,
         media_type: formData.mediaType,
@@ -111,39 +71,43 @@ export default function UploadPage() {
         plated_volume_ml: formData.platedVolume,
         image: selectedFile,
       })
-
       toast.dismiss()
       toast.success(`Analysis complete: ${analysis.colony_count} colonies detected`)
-
-      // Navigate to results page
       router.push(`/dashboard/results/${analysis.id}`)
     } catch (error: any) {
       toast.dismiss()
-      console.error('Upload error:', error)
-      const message = error.response?.data?.detail || error.message || 'Analysis failed. Please try again.'
-      toast.error(message)
+      toast.error(error.response?.data?.detail || error.message || 'Analysis failed. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Spectral Input Section (Upload) */}
-        <div className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-3xl p-8 border border-border shadow-sm">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-primary/20 rounded-xl text-primary shadow-sm">
-               <UploadIcon className="h-5 w-5" />
+    <div className="max-w-5xl mx-auto">
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">New Analysis</h1>
+        <p className="text-slate-500 mt-1.5">Upload a petri plate image for AI-powered colony detection</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left: Image Upload */}
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center">
+              <ImageIcon className="h-5 w-5 text-orange-600" />
             </div>
-            <h2 className="text-xl font-bold tracking-tight uppercase">Spectral Input Stream</h2>
+            <div>
+              <h2 className="text-base font-bold text-slate-900">Plate Image</h2>
+              <p className="text-xs text-slate-500">PNG, JPG up to 10MB</p>
+            </div>
           </div>
 
           <div
-            className={`relative group border-2 border-dashed rounded-3xl p-1 transition-all duration-500 overflow-hidden ${
+            className={`flex-1 relative border-2 border-dashed rounded-xl transition-colors duration-150 overflow-hidden ${
               dragActive
-                ? 'border-primary bg-primary/10 scale-[1.02]'
-                : 'border-border/50 hover:border-primary/40 bg-muted/20'
+                ? 'border-orange-400 bg-orange-50'
+                : 'border-slate-200 hover:border-orange-300 bg-slate-50/50'
             }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -151,130 +115,135 @@ export default function UploadPage() {
             onDrop={handleDrop}
           >
             {preview ? (
-              <div className="relative group/preview">
+              <div className="relative group/preview h-64">
                 <img
                   src={preview}
-                  alt="Spectral Preview"
-                  className="w-full h-80 object-cover rounded-[22px] transition-all duration-500 group-hover/preview:brightness-75"
+                  alt="Plate Preview"
+                  className="w-full h-full object-cover rounded-[10px]"
                 />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transition-opacity">
-                   <button
+                <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transition-opacity duration-150 rounded-[10px]">
+                  <button
                     type="button"
-                    onClick={() => {
-                      setSelectedFile(null)
-                      setPreview(null)
-                    }}
-                    className="btn-secondary h-12 px-6 flex items-center bg-rose-500 border-rose-600 text-white hover:bg-rose-600 hover:scale-105 active:scale-95"
+                    onClick={() => { setSelectedFile(null); setPreview(null) }}
+                    className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white text-sm font-semibold rounded-lg hover:bg-rose-700 transition-colors"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" /> Purge Cache
+                    <Trash2 className="h-4 w-4" /> Remove Image
                   </button>
                 </div>
-                <div className="absolute top-4 right-4 px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-[10px] font-black text-white/90 uppercase tracking-widest border border-white/10">
-                   {selectedFile?.name} | {(selectedFile ? selectedFile.size / 1024 / 1024 : 0).toFixed(2)} MB
+                <div className="absolute bottom-3 left-3 right-3">
+                  <div className="bg-slate-900/70 backdrop-blur-sm text-white text-xs font-medium px-3 py-1.5 rounded-lg flex items-center gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+                    <span className="truncate">{selectedFile?.name}</span>
+                    <span className="ml-auto flex-shrink-0 text-slate-300">
+                      {(selectedFile ? selectedFile.size / 1024 / 1024 : 0).toFixed(2)} MB
+                    </span>
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-20 flex flex-col items-center">
-                <div className="relative mb-6">
-                   <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-150 animate-pulse" />
-                   <div className="relative h-20 w-20 flex items-center justify-center bg-background rounded-2xl border border-border shadow-2xl">
-                      <ImageIcon className="h-10 w-10 text-primary" />
-                   </div>
+              <div className="flex flex-col items-center justify-center py-16 px-4 text-center h-64">
+                <div className="w-14 h-14 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center justify-center mb-4">
+                  <UploadIcon className="h-7 w-7 text-slate-400" />
                 </div>
-                <div className="mt-4">
-                  <label
-                    htmlFor="file-upload"
-                    className="relative cursor-pointer font-black text-primary hover:text-primary/80 text-lg uppercase tracking-tight group"
-                  >
-                    <span>Bind Visual Entity</span>
-                    <div className="h-0.5 w-full bg-primary origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
-                    <input id="file-upload" name="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleChange} />
-                  </label>
-                  <p className="text-muted-foreground mt-2 font-bold text-sm tracking-tight">Drop Petri-Plate image into the field of view</p>
-                </div>
-                <div className="mt-6 flex gap-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
-                   <span>PNG</span>
-                   <span>JPG</span>
-                   <span>RAW</span>
-                </div>
+                <label htmlFor="file-upload" className="cursor-pointer">
+                  <span className="text-sm font-bold text-orange-600 hover:text-orange-700 transition-colors">
+                    Click to upload
+                  </span>
+                  <span className="text-sm text-slate-500"> or drag and drop</span>
+                  <input id="file-upload" name="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleChange} />
+                </label>
+                <p className="text-xs text-slate-400 mt-2">Petri plate images: PNG, JPG, JPEG, WEBP</p>
               </div>
             )}
-            
-            {/* Scanner line effect when drag active */}
-            {dragActive && (
-               <div className="absolute top-0 left-0 w-full h-1 bg-primary shadow-[0_0_15px_#0ea5e9] animate-bounce z-10" />
-            )}
+          </div>
+
+          {/* ISO Tip */}
+          <div className="mt-4 flex items-start gap-2.5 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+            <Info className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-blue-700 font-medium leading-relaxed">
+              For best accuracy, capture plates with uniform lighting under an ISO 17025-compliant laboratory setup.
+            </p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-3xl p-8 border border-border shadow-sm">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-amber-500/20 rounded-xl text-amber-600 shadow-sm">
-               <AlertCircle className="h-5 w-5" />
+        {/* Right: Protocol Form */}
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center">
+              <FlaskConical className="h-5 w-5 text-slate-600" />
             </div>
-            <h2 className="text-xl font-bold tracking-tight uppercase">Biological Protocol Definition</h2>
+            <div>
+              <h2 className="text-base font-bold text-slate-900">Biological Protocol</h2>
+              <p className="text-xs text-slate-500">SA-001 Standard Parameters</p>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label htmlFor="sampleId" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1">
-                Specimen ID Entity <span className="text-rose-500">*</span>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Sample ID */}
+            <div className="space-y-1.5">
+              <label htmlFor="sampleId" className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Specimen ID <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 id="sampleId"
                 required
-                className="input bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 font-bold text-sm focus:ring-primary/20"
+                className="w-full px-4 py-2.5 text-sm font-medium text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 value={formData.sampleId}
                 onChange={(e) => setFormData({ ...formData, sampleId: e.target.value })}
-                placeholder="e.g., ISO-PROTO-B2026"
+                placeholder="e.g., ISO-PCA-B2026-001"
               />
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="mediaType" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1">
+            {/* Media Type */}
+            <div className="space-y-1.5">
+              <label htmlFor="mediaType" className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Agar Media Protocol <span className="text-rose-500">*</span>
               </label>
               <select
                 id="mediaType"
                 required
-                className="input bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 font-bold text-sm"
+                className="w-full px-4 py-2.5 text-sm font-medium text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all appearance-none cursor-pointer"
                 value={formData.mediaType}
                 onChange={(e) => setFormData({ ...formData, mediaType: e.target.value as MediaType })}
               >
-                <option value="Plate Count Agar">PCA - (Plate Count Agar)</option>
-                <option value="VRBA">VRBA - (Violet Red Bile Agar)</option>
-                <option value="BGBB">BGBB - (Brilliant Green Bile Broth)</option>
-                <option value="R2A">R2A - (Reasoners 2A Agar)</option>
-                <option value="TSA">TSA - (Tryptic Soy Agar)</option>
-                <option value="MacConkey">MAC - (MacConkey Agar)</option>
-                <option value="Other">OTHER PROTOCOL</option>
+                <option value="Plate Count Agar">PCA — Plate Count Agar</option>
+                <option value="VRBA">VRBA — Violet Red Bile Agar</option>
+                <option value="BGBB">BGBB — Brilliant Green Bile Broth</option>
+                <option value="R2A">R2A — Reasoner's 2A Agar</option>
+                <option value="TSA">TSA — Tryptic Soy Agar</option>
+                <option value="MacConkey">MAC — MacConkey Agar</option>
+                <option value="Other">Other Protocol</option>
               </select>
             </div>
 
+            {/* Dilution & Volume */}
             <div className="grid grid-cols-2 gap-4">
-               <div className="space-y-2">
-                <label htmlFor="dilutionFactor" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1">
-                  Dilution (1:X) <span className="text-rose-500">*</span>
+              <div className="space-y-1.5">
+                <label htmlFor="dilutionFactor" className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Dilution (10⁻ˣ) <span className="text-rose-500">*</span>
                 </label>
-                <input
-                  type="number"
+                <select
                   id="dilutionFactor"
                   required
-                  step="0.000001"
-                  min="0.000001"
-                  className="input bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 font-bold text-sm"
+                  className="w-full px-4 py-2.5 text-sm font-medium text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all appearance-none cursor-pointer"
                   value={formData.dilutionFactor}
                   onChange={(e) => setFormData({ ...formData, dilutionFactor: parseFloat(e.target.value) })}
-                />
-                <p className="text-[10px] font-bold opacity-60 uppercase mt-2 tracking-widest pl-1">
-                   Ex: 10<sup className="text-[8px]">-3</sup> = 0.001
-                </p>
+                >
+                  <option value="1">1 (Neat)</option>
+                  <option value="0.1">10⁻¹ (1:10)</option>
+                  <option value="0.01">10⁻² (1:100)</option>
+                  <option value="0.001">10⁻³ (1:1000)</option>
+                  <option value="0.0001">10⁻⁴ (1:10000)</option>
+                  <option value="0.00001">10⁻⁵ (1:100000)</option>
+                  <option value="0.000001">10⁻⁶ (1:1000000)</option>
+                </select>
+                <p className="text-[10px] text-slate-400 font-medium pl-1 italic">Scientific Notation Required</p>
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="platedVolume" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1">
-                  Volume (ml) <span className="text-rose-500">*</span>
+              <div className="space-y-1.5">
+                <label htmlFor="platedVolume" className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Plated Volume (ml) <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -282,40 +251,43 @@ export default function UploadPage() {
                   required
                   step="0.1"
                   min="0.1"
-                  className="input bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 font-bold text-sm"
+                  className="w-full px-4 py-2.5 text-sm font-medium text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                   value={formData.platedVolume}
                   onChange={(e) => setFormData({ ...formData, platedVolume: parseFloat(e.target.value) })}
                 />
-                <p className="text-[10px] font-bold opacity-60 uppercase mt-2 tracking-widest pl-1">
-                   Std. P-Volume 1.0ml
-                </p>
+                <p className="text-[11px] text-slate-400 font-medium pl-1">Standard: 1.0 ml</p>
               </div>
             </div>
 
+            {/* Alert if no file */}
+            {!selectedFile && (
+              <div className="flex items-center gap-2.5 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                <p className="text-xs text-amber-700 font-medium">Please upload a plate image before submitting.</p>
+              </div>
+            )}
 
-            <div className="pt-6">
+            {/* Submit */}
+            <div className="pt-2">
               <button
                 type="submit"
                 disabled={!selectedFile || isSubmitting}
-                className="w-full btn-primary h-14 text-sm font-black uppercase tracking-[0.2em] disabled:opacity-30 flex items-center justify-center shadow-primary/30 group overflow-hidden relative"
+                className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-colors duration-150 shadow-sm"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="h-5 w-5 mr-3 animate-spin" />
-                    Executing Neural Engine...
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Analyzing with YOLOv8...
                   </>
                 ) : (
                   <>
-                    <TrendingUp className="h-5 w-5 mr-3 group-hover:scale-125 transition-transform" />
-                    Initiate Spectral Analysis
+                    <TrendingUp className="h-5 w-5" />
+                    Run AI Analysis
                   </>
                 )}
-                <div className="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[45deg] group-hover:left-[100%] transition-all duration-1000 ease-in-out" />
               </button>
             </div>
           </form>
-
-
         </div>
       </div>
     </div>

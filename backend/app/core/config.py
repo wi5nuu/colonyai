@@ -21,7 +21,7 @@ class Settings(BaseSettings):
 
     # Database  
     # Direct absolute path for Windows
-    DATABASE_URL: str = "sqlite+aiosqlite:///d:/lombapuai/backend/colonyai.db"
+    DATABASE_URL: str = os.getenv("DATABASE_URL") or "sqlite+aiosqlite:///./colonyai.db"
     DATABASE_POOL_SIZE: int = 10
     DATABASE_MAX_OVERFLOW: int = 20
     DATA_RETENTION_DAYS: int = 1825  # Retention policy per UU PDP compliance (5 years)

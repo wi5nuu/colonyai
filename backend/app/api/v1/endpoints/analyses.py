@@ -88,6 +88,10 @@ def _build_analysis_response(analysis: Analysis) -> AnalysisResponse:
         confidence_score=analysis.confidence_score,
         reliability=analysis.reliability or "high",
         status=analysis.status.value if isinstance(analysis.status, AnalysisStatus) else analysis.status,
+        cfu_status=getattr(analysis, 'cfu_status', None),
+        cfu_message=getattr(analysis, 'cfu_message', None),
+        uncertainty_u=getattr(analysis, 'uncertainty_u', None),
+        merged_estimation_method=getattr(analysis, 'merged_estimation_method', None),
         class_breakdown=class_breakdown or analysis.class_breakdown,
         detections=[_build_detection_response(d) for d in analysis.detections],
         warnings=analysis.warnings or [],
@@ -128,6 +132,10 @@ def _build_brief_response(analysis: Analysis) -> AnalysisBriefResponse:
         confidence_score=analysis.confidence_score,
         reliability=analysis.reliability or "high",
         status=analysis.status.value if isinstance(analysis.status, AnalysisStatus) else analysis.status,
+        cfu_status=getattr(analysis, 'cfu_status', None),
+        cfu_message=getattr(analysis, 'cfu_message', None),
+        uncertainty_u=getattr(analysis, 'uncertainty_u', None),
+        merged_estimation_method=getattr(analysis, 'merged_estimation_method', None),
         class_breakdown=class_breakdown or analysis.class_breakdown,
         warnings=analysis.warnings or [],
         is_valid_for_reporting=is_valid,
@@ -328,19 +336,15 @@ async def create_analysis(
         analysis.warnings = cfu_result.warnings
         analysis.class_breakdown = class_breakdown
         # Simpan metadata tambahan sebagai JSON jika kolom tersedia
-        if hasattr(analysis, 'cfu_status'):
-            analysis.cfu_status = cfu_result.status
-        if hasattr(analysis, 'cfu_message'):
-            analysis.cfu_message = cfu_result.message
-        if hasattr(analysis, 'uncertainty_u'):
-            analysis.uncertainty_u = (
-                cfu_result.uncertainty.U_expanded
-                if cfu_result.uncertainty else None
-            )
-        if hasattr(analysis, 'merged_estimation_method'):
-            analysis.merged_estimation_method = (
-                cfu_result.merged_estimate.estimation_method
-            )
+        analysis.cfu_status = cfu_result.status
+        analysis.cfu_message = cfu_result.message
+        analysis.uncertainty_u = (
+            cfu_result.uncertainty.U_expanded
+            if cfu_result.uncertainty else None
+        )
+        analysis.merged_estimation_method = (
+            cfu_result.merged_estimate.estimation_method
+        )
 
         await db.commit()
 
@@ -442,7 +446,21 @@ async def list_analyses(
         base_conditions.append(Analysis.media_type == media_type)
 
     if status_filter:
-        base_conditions.append(Analysis.status == status_filter)
+        # BUG-QA-05 FIX: Map frontend status values to DB AnalysisStatus
+        # Frontend sends: 'valid', 'TNTC', 'TFTC'
+        # DB stores: AnalysisStatus.COMPLETED for all completed analyses
+        # 'valid' = COMPLETED with cfu_per_ml IS NOT NULL (implied by no TNTC/TFTC warning)
+        if status_filter in ("TNTC", "TFTC"):
+            # Filter by warnings containing the status string
+            base_conditions.append(Analysis.warnings.contains(status_filter))
+        elif status_filter == "valid":
+            # valid = COMPLETED and no TNTC/TFTC in warnings
+            base_conditions.append(Analysis.status == AnalysisStatus.COMPLETED)
+            base_conditions.append(~Analysis.warnings.contains("TNTC"))
+            base_conditions.append(~Analysis.warnings.contains("TFTC"))
+        else:
+            # Allow raw DB status values as fallback
+            base_conditions.append(Analysis.status == status_filter)
 
     if date_from:
         # Handle 'Z' suffix for UTC and ensure naive datetime for DB comparison
@@ -623,7 +641,7 @@ async def approve_analysis(
     analysis_id: str,
     request: Request = None,
     # BUG-014: Hanya senior_analyst yang boleh approve (ISO 17025 Cl. 5.2 — pemisahan tanggungjawab)
-    current_user: dict = Depends(require_role("senior_analyst", "admin")),
+    current_user: dict = Depends(require_role("senior_analyst", "system_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """Approve an analysis and mark it as validated"""
@@ -637,12 +655,7 @@ async def approve_analysis(
 
     result = await db.execute(
         select(Analysis)
-        .where(
-            and_(
-                Analysis.id == analysis_uuid,
-                Analysis.user_id == current_user["user_id"],
-            )
-        )
+        .where(Analysis.id == analysis_uuid)  # BUG-QA-02 FIX: senior_analyst can approve ANY analysis
         .options(joinedload(Analysis.detections), joinedload(Analysis.user))
     )
     analysis = result.scalars().unique().first()
@@ -687,7 +700,7 @@ async def flag_for_review(
     analysis_id: str,
     body: FlagReviewRequest,
     http_request: Request = None,
-    current_user: dict = Depends(require_role("analyst", "admin")),
+    current_user: dict = Depends(require_role("analyst", "system_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """Flag an analysis for manual review"""

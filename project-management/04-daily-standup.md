@@ -11,7 +11,31 @@ Format:
 
 ## 🗓️ Log Entries
 
-### [Date: 2026-04-16] (Today)
+### [Week 4 Meeting: 2026-04-23] (Hari Ini)
+
+**Wisnu (PO & Frontend)**
+- ✅ **Done:** 
+- 🔄 **In Progress:** 
+- 🚧 **Blockers:** 
+
+**Faras (AI & Backend)**
+- ✅ **Done:** 
+- 🔄 **In Progress:** 
+- 🚧 **Blockers:** 
+
+**Steven (Backend & QA)**
+- ✅ **Done:** 
+- 🔄 **In Progress:** 
+- 🚧 **Blockers:** 
+
+**Suci (UI/UX)**
+- ✅ **Done:** 
+- 🔄 **In Progress:** 
+- 🚧 **Blockers:** 
+
+---
+
+### [Week 3 Meeting: 2026-04-16]
 
 **Wisnu (PO & Frontend)**
 - ✅ **Done:**
@@ -44,7 +68,7 @@ Format:
 
 ---
 
-### [Date: 2026-04-14]
+### [Week 2 Meeting: 2026-04-09]
 
 **Wisnu (PO & Frontend)**
 - ✅ **Done:**
@@ -72,7 +96,7 @@ Format:
 
 ---
 
-### [Date: 2026-04-10]
+### [Week 1 Meeting: 2026-04-02]
 
 **Wisnu (PO & Frontend)**
 - ✅ **Done:** Login and Register pages.

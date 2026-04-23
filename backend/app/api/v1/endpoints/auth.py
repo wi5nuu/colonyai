@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.core.database import get_db
 from app.core.security import (
@@ -145,11 +145,15 @@ async def register(request: RegisterRequest, http_request: Request = None, db: A
     }
 
 
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh_token(refresh_token: str, db: AsyncSession = Depends(get_db)):
+async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
     """Refresh an access token using a refresh token"""
     try:
-        payload = decode_token(refresh_token)
+        payload = decode_token(request.refresh_token)
 
         if payload.get("type") != "refresh":
             raise HTTPException(
@@ -266,7 +270,8 @@ async def change_password(
 
     # Update password
     user.password_hash = get_password_hash(request.new_password)
-    user.updated_at = datetime.utcnow()
+    from datetime import timezone
+    user.updated_at = datetime.now(timezone.utc)
     await db.commit()
 
     # TODO: Invalidate all other sessions for this user in production

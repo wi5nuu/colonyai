@@ -39,6 +39,18 @@ This document contains the prioritized and detailed Product Backlog for the Colo
 - **Assignee**: Wisnu
 - **Status**: ✅ Done
 
+### User Role Architecture
+### Epic: Security & Compliance
+- `[x]` **IAM-01**: Implement Role-Based Access Control (RBAC) for Analyst vs Manager.
+- `[x]` **IAM-02**: Advanced login protocol (Laboratory OS branding).
+- `[ ]` **IAM-03**: Immutable Audit Trail for result verification.
+- `[ ]` **IAM-04**: Session persistence management.
+
+### Epic: Intelligence & Analytics
+- `[x]` **ANA-01**: Real-time spectral telemetry dashboard.
+- `[/]` **ANA-02**: Managerial Oversight View (Team performance tracking).
+- `[ ]` **ANA-03**: Automated PDF report generation with ISO branding.
+
 ### 4. [PB-04] Security: Strict Image Upload Pipeline
 - **Type**: 🛡️ Security Feature
 - **Story**: As a Quality Assurance Lead, I want strict file validations on uploaded petri dish images so that malware payloads and tampered EXIF data cannot penetrate the server system.

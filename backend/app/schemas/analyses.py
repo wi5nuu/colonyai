@@ -52,6 +52,10 @@ class AnalysisResponse(BaseModel):
     confidence_score: Optional[float] = None
     reliability: Optional[str] = "high"
     status: str
+    cfu_status: Optional[str] = None
+    cfu_message: Optional[str] = None
+    uncertainty_u: Optional[float] = None
+    merged_estimation_method: Optional[str] = None
     class_breakdown: Optional[Dict[str, int]] = None
     detections: Optional[List[DetectionResponse]] = []
     warnings: Optional[List[str]] = []
@@ -79,6 +83,10 @@ class AnalysisBriefResponse(BaseModel):
     confidence_score: Optional[float] = None
     reliability: Optional[str] = "high"
     status: str
+    cfu_status: Optional[str] = None
+    cfu_message: Optional[str] = None
+    uncertainty_u: Optional[float] = None
+    merged_estimation_method: Optional[str] = None
     class_breakdown: Optional[Dict[str, int]] = None
     warnings: Optional[List[str]] = []
     is_valid_for_reporting: Optional[bool] = True

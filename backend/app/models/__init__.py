@@ -113,6 +113,12 @@ class Analysis(Base):
     warnings = Column(JSON, nullable=True)  # List of warning messages
     class_breakdown = Column(JSON, nullable=True)  # {class_name: count}
 
+    # ISO 17025 Additional Metadata
+    cfu_status = Column(String(50), nullable=True)  # valid, TNTC, TFTC
+    cfu_message = Column(Text, nullable=True)
+    uncertainty_u = Column(Float, nullable=True)
+    merged_estimation_method = Column(String(100), nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
@@ -183,7 +189,7 @@ class SimulatorComparison(Base):
 
     # Calculated agreement percentages
     agreement_single = Column(Float, nullable=True)
-    agreement_merged = Column(Integer, nullable=True)
+    agreement_merged = Column(Float, nullable=True)
     agreement_bubble = Column(Float, nullable=True)
     agreement_dust_debris = Column(Float, nullable=True)
     agreement_media_crack = Column(Float, nullable=True)

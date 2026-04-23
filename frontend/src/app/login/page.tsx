@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -97,7 +97,6 @@ const renderIcon = (name: string, className = 'w-5 h-5') => {
 export default function LoginPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -111,44 +110,34 @@ export default function LoginPage() {
     try {
       await login(formData.email, formData.password)
       toast.success('Access authorization granted')
-      // Go directly to dashboard
       router.push('/dashboard')
     } catch {
       // Error handled in store
     }
   }
 
-  const handleContinueToDashboard = () => {
-    setShowWelcomeModal(false)
-    router.push('/dashboard')
-  }
-
   return (
-    <div className="min-h-screen flex bg-background font-sans selection:bg-primary selection:text-primary-foreground">
+    <div className="min-h-screen flex bg-slate-50 font-sans selection:bg-blue-500 selection:text-white">
       {/* Sector Alpha - Authorization Matrix */}
-      <div className="w-full lg:w-[45%] flex items-center justify-center p-8 lg:p-16 relative overflow-hidden">
-        {/* Dynamic Background Elements */}
-        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-        <div className="absolute top-1/4 -left-20 w-64 h-64 bg-primary/5 rounded-full blur-[100px]" />
-        
+      <div className="w-full lg:w-[45%] flex items-center justify-center p-8 lg:p-16 relative overflow-hidden bg-white shadow-[20px_0_40px_rgba(0,0,0,0.02)] z-20">
         <div className="w-full max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
           {/* Laboratory ID */}
           <Link href="/" className="flex items-center gap-4 mb-16 group">
-            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 shadow-lg shadow-primary/5">
-              <div className="w-7 h-7">
+            <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center group-hover:bg-slate-900 transition-all duration-500 shadow-lg shadow-blue-500/20">
+              <div className="w-6 h-6 text-white">
                 <Icons.Flask />
               </div>
             </div>
             <div className="flex flex-col">
-               <span className="text-xl font-black tracking-[0.2em] text-foreground uppercase leading-none">ColonyAI</span>
-               <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mt-1">Laboratory OS</span>
+               <span className="text-lg font-black tracking-[0.2em] text-slate-900 uppercase leading-none">ColonyAI</span>
+               <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1">Laboratory OS</span>
             </div>
           </Link>
 
           {/* Verification Protocol Header */}
           <div className="mb-12">
-            <h1 className="text-4xl font-black text-foreground mb-3 tracking-tight">System Login</h1>
-            <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em]">Bio-Diagnostic Platform // Authorization Required</p>
+            <h1 className="text-3xl font-black text-slate-900 mb-2 tracking-tight uppercase">System Login</h1>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Bio-Diagnostic Platform // Authorization Required</p>
           </div>
 
           {/* Authorization Form */}
@@ -156,19 +145,19 @@ export default function LoginPage() {
             <div className="space-y-6">
               {/* Identity Identifier */}
               <div className="space-y-3">
-                <label htmlFor="email" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">
+                <label htmlFor="email" className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.1em] px-1">
                   Primary Analyst Identifier (Email)
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
-                    {renderIcon('Mail', 'w-4 h-4')}
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-blue-500 transition-colors">
+                    {renderIcon('Mail', 'w-3.5 h-3.5')}
                   </div>
                   <input
                     id="email"
                     name="email"
                     type="email"
                     required
-                    className="input h-14 bg-muted/20 border-border/40 pl-14 hover:border-primary/30 transition-all font-mono text-sm"
+                    className="w-full h-11 bg-slate-50 border border-slate-100 rounded-xl pl-12 pr-4 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-mono text-[13px] text-slate-900 placeholder:text-slate-300"
                     placeholder="analyst@colonyai.diag"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -178,117 +167,111 @@ export default function LoginPage() {
 
               {/* Security Key */}
               <div className="space-y-3">
-                <label htmlFor="password" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">
+                <label htmlFor="password" className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.1em] px-1">
                   Encryption Secret (Password)
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
-                    {renderIcon('Lock', 'w-4 h-4')}
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-blue-500 transition-colors">
+                    {renderIcon('Lock', 'w-3.5 h-3.5')}
                   </div>
                   <input
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
                     required
-                    className="input h-14 bg-muted/20 border-border/40 pl-14 pr-14 hover:border-primary/30 transition-all font-mono text-sm"
-                    placeholder="••••••••••••"
+                    className="w-full h-11 bg-slate-50 border border-slate-100 rounded-xl pl-12 pr-12 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-mono text-[13px] text-slate-900 placeholder:text-slate-300"
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-5 flex items-center text-muted-foreground hover:text-primary transition-colors"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-300 hover:text-blue-500 transition-colors"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? renderIcon('EyeOff', 'w-4 h-4') : renderIcon('Eye', 'w-4 h-4')}
+                    {showPassword ? renderIcon('EyeOff', 'w-3.5 h-3.5') : renderIcon('Eye', 'w-3.5 h-3.5')}
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Persistence & Recovery Protocol */}
             <div className="flex items-center justify-between">
-              <label className="flex items-center gap-3 cursor-pointer group">
+              <label className="flex items-center gap-2 cursor-pointer group">
                 <input
                   type="checkbox"
                   className="sr-only peer"
                   checked={formData.rememberMe}
                   onChange={(e) => setFormData({ ...formData, rememberMe: e.target.checked })}
                 />
-                <div className="w-5 h-5 rounded-lg border-2 border-border/40 bg-muted/20 peer-checked:bg-primary peer-checked:border-primary transition-all flex items-center justify-center">
-                  {formData.rememberMe && <div className="w-3 h-3 text-primary-foreground"><Icons.Check /></div>}
+                <div className="w-4 h-4 rounded border border-slate-200 bg-slate-50 peer-checked:bg-blue-500 peer-checked:border-blue-500 transition-all flex items-center justify-center">
+                  {formData.rememberMe && <div className="w-2.5 h-2.5 text-white"><Icons.Check /></div>}
                 </div>
-                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">Maintain Session</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide group-hover:text-slate-600 transition-colors">Maintain Session</span>
               </label>
-              <Link href="/forgot-password" className="text-[10px] font-black text-primary hover:text-foreground uppercase tracking-widest transition-colors">
+              <Link href="/forgot-password" className="text-[10px] font-bold text-blue-600 hover:text-blue-700 uppercase tracking-wide transition-colors">
                 Key Recovery
               </Link>
             </div>
 
-            {/* Error Handshake */}
             {error && (
               <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-2xl animate-in shake duration-500">
                 <p className="text-[10px] font-bold text-destructive uppercase tracking-widest text-center">{error}</p>
               </div>
             )}
 
-            {/* Execute Authorization */}
             <button
               type="submit"
               disabled={isLoading}
-              className="btn-primary w-full h-16 text-sm font-black uppercase tracking-[0.25em] flex items-center justify-center gap-3 shadow-xl shadow-primary/20 active:scale-[0.98] transition-all disabled:opacity-50"
+              className="w-full h-11 bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-slate-200 hover:bg-blue-600 active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {isLoading ? (
                 <>
-                  <div className="w-5 h-5"><Icons.Loader /></div>
-                  Validating Access...
+                  <div className="w-4 h-4 animate-spin"><Icons.Loader /></div>
+                  Validating...
                 </>
               ) : (
-                'Grant Access'
+                <>
+                  <div className="w-3.5 h-3.5"><Icons.Shield /></div>
+                  Grant Access
+                </>
               )}
             </button>
 
-            {/* Provisioning Redirect */}
-            <p className="text-center text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+            <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
               Unprovisioned Hardware?{' '}
-              <Link href="/register" className="text-primary hover:text-foreground transition-colors">
+              <Link href="/register" className="text-blue-600 font-black hover:text-blue-700 transition-colors">
                 Initialize Request
               </Link>
             </p>
           </form>
 
           {/* Documentation Footnote */}
-          <div className="mt-20 pt-10 border-t border-border/10">
-            <div className="flex justify-center gap-10 text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em]">
-              <a href="#" className="hover:text-primary transition-colors">Documentation</a>
-              <a href="#" className="hover:text-primary transition-colors">ISO Standards</a>
-              <a href="#" className="hover:text-primary transition-colors">Security</a>
+          <div className="mt-20 pt-8 border-t border-slate-100">
+            <div className="flex justify-center gap-8 text-[9px] font-bold text-slate-300 uppercase tracking-[0.2em]">
+              <a href="#" className="hover:text-blue-500 transition-colors">Documentation</a>
+              <a href="#" className="hover:text-blue-500 transition-colors">ISO Standards</a>
+              <a href="#" className="hover:text-blue-500 transition-colors">Security</a>
             </div>
           </div>
         </div>
       </div>
 
       {/* Sector Beta - Spectral Insight Visualizer */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden bg-muted/10 border-l border-border/10">
-        {/* Background Procedural Grid */}
+      <div className="hidden lg:flex flex-1 relative overflow-hidden bg-slate-950 border-l border-slate-900">
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
-        
-        {/* Animated Bioluminescence */}
-        <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[160px] animate-pulse" />
-        <div className="absolute -bottom-20 left-1/4 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[140px] animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[160px] animate-pulse" />
+        <div className="absolute -bottom-20 left-1/4 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[140px] animate-pulse" style={{ animationDelay: '1s' }} />
 
         <div className="relative z-10 flex flex-col justify-center px-24 max-w-3xl">
-          {/* Diagnostic Capability Overview */}
           <div className="mb-20">
-            <div className="text-primary text-[10px] font-black uppercase tracking-[0.4em] mb-4">Core Intelligence</div>
-            <h2 className="text-4xl font-black text-foreground mb-8 tracking-tighter leading-none uppercase">Precision Matrix<br />Bio-Diagnostics</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+            <div className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Core Intelligence</div>
+            <h2 className="text-4xl font-black text-white mb-8 tracking-tighter leading-none uppercase">Precision Matrix<br />Bio-Diagnostics</h2>
+            <p className="text-sm text-slate-400 leading-relaxed font-medium">
               Autonomous TPC analysis system utilizing high-frequency spectral imaging for clinical-grade microbiological counts. 
               Enabling standardized laboratory diagnostics at scale.
             </p>
           </div>
 
-          {/* Module Capabilities Registry */}
           <div className="grid grid-cols-1 gap-10 mb-20">
               {[
                 { icon: 'Brain', title: '5-Class Neural Object detection', desc: 'Simultaneous spectral classification: Colonies, Artifacts, Media Integrity' },
@@ -296,27 +279,26 @@ export default function LoginPage() {
                 { icon: 'Shield', title: 'ISO 17025 Compliance Node', desc: 'Immutable archival ledger with verified analyst sign-off protocols' },
               ].map((feature, index) => (
                 <div key={index} className="flex items-start gap-6 group">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 shadow-lg shadow-primary/5 flex-shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all duration-500 shadow-lg shadow-blue-500/5 flex-shrink-0">
                     {renderIcon(feature.icon, 'w-6 h-6')}
                   </div>
                   <div>
-                    <p className="text-xs font-black text-foreground uppercase tracking-widest mb-1.5 group-hover:text-primary transition-colors">{feature.title}</p>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight leading-relaxed">{feature.desc}</p>
+                    <p className="text-xs font-black text-white uppercase tracking-widest mb-1.5 group-hover:text-blue-500 transition-colors">{feature.title}</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight leading-relaxed">{feature.desc}</p>
                   </div>
                 </div>
               ))}
           </div>
 
-          {/* Telemetry Snapshot */}
           <div className="grid grid-cols-3 gap-8">
             {[
-              { value: '≥92%', label: 'ACCURACY' },
+              { value: 'â‰¥92%', label: 'ACCURACY' },
               { value: '500+', label: 'NODES' },
               { value: '5-CLASS', label: 'SPECTRUM' },
             ].map((stat, index) => (
-              <div key={index} className="p-6 rounded-2xl bg-muted/20 border border-border/20 backdrop-blur-3xl hover:border-primary/30 transition-all duration-500 group">
-                <p className="text-2xl font-black text-foreground tracking-tighter group-hover:text-primary transition-colors">{stat.value}</p>
-                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-60">{stat.label}</p>
+              <div key={index} className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 backdrop-blur-3xl hover:border-blue-500/50 transition-all duration-500 group">
+                <p className="text-2xl font-black text-white tracking-tighter group-hover:text-blue-500 transition-colors">{stat.value}</p>
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1 opacity-60">{stat.label}</p>
               </div>
             ))}
           </div>
