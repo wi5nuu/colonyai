@@ -44,20 +44,16 @@ class GUID(types.TypeDecorator):
 
 class UserRole(str, enum.Enum):
     """
-    6-role RBAC sesuai ISO 17025 Cl. 5.2 (pemisahan tanggungjawab):
-    - analyst: upload + submit
-    - senior_analyst: approve + override AI
-    - lab_manager: manage lab + set threshold
-    - quality_officer: audit trail + export
-    - system_admin: model management + cross-lab
-    - auditor: read-only cross-lab
+    4-role Streamlined RBAC for ColonyAI:
+    - analyst: Perform tests, upload samples, use simulator.
+    - manager: Technical review, approve results, view analytics & reports.
+    - auditor: Read-only access to records, reports, and audit trails.
+    - admin: Full system management, user administration, and settings.
     """
     ANALYST = "analyst"
-    SENIOR_ANALYST = "senior_analyst"
-    LAB_MANAGER = "lab_manager"
-    QUALITY_OFFICER = "quality_officer"
-    SYSTEM_ADMIN = "system_admin"
+    MANAGER = "manager"
     AUDITOR = "auditor"
+    ADMIN = "admin"
 
 
 class AnalysisStatus(str, enum.Enum):
@@ -76,6 +72,17 @@ class User(Base):
     full_name = Column(String(255), nullable=False)
     role = Column(SAEnum(UserRole), nullable=False, default=UserRole.ANALYST)
     laboratory_id = Column(GUID(), nullable=True)
+    
+    # Forgot Password flow
+    reset_token = Column(String(255), nullable=True, index=True)
+    reset_token_expires = Column(DateTime, nullable=True)
+
+    # Account Security
+    failed_login_attempts = Column(Integer, default=0, nullable=False)
+    last_failed_login = Column(DateTime, nullable=True)
+    is_locked_out = Column(SAEnum(enum.Enum('LockoutStatus', ['yes', 'no']), name='lockout_status'), nullable=False, default='no')
+    locked_until = Column(DateTime, nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
@@ -200,6 +207,17 @@ class SimulatorComparison(Base):
 
     user = relationship("User")
     analysis = relationship("Analysis")
+
+class TokenBlacklist(Base):
+    """
+    Store revoked JWT tokens (JTI) to prevent reuse after logout.
+    """
+    __tablename__ = "token_blacklist"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    jti = Column(String(255), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 # Import new models to register them with SQLAlchemy
 from app.models.preferences import UserPreference, UserSession

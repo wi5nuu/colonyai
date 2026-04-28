@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FlaskConical, ArrowLeft, Mail, CheckCircle, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { authApi } from '@/lib/auth-api'
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
@@ -17,15 +18,14 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      // TODO: Implement actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      await authApi.forgotPassword(email)
       setIsSent(true)
-      toast.success('Reset link sent', {
-        description: `Check ${email} for password reset instructions`,
+      toast.success('Access Request Sent', {
+        description: `Check ${email} for further instructions`,
       })
-    } catch {
-      toast.error('Failed to send reset link', {
-        description: 'Please try again later',
+    } catch (error: any) {
+      toast.error('Matrix Link Failure', {
+        description: error.response?.data?.detail || 'Failed to initiate recovery protocol',
       })
     } finally {
       setIsLoading(false)

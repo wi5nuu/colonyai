@@ -83,7 +83,7 @@ async def init_db():
                     email=settings.INITIAL_ADMIN_EMAIL,
                     password_hash=get_password_hash(settings.INITIAL_ADMIN_PASSWORD),
                     full_name="System Administrator",
-                    role=UserRole.SYSTEM_ADMIN
+                    role=UserRole.ADMIN
                 )
                 session.add(new_admin)
             else:
@@ -115,10 +115,27 @@ async def init_db():
                     email=manager_email,
                     password_hash=get_password_hash("colony2026"),
                     full_name="Laboratory Manager",
-                    role=UserRole.LAB_MANAGER
+                    role=UserRole.MANAGER
                 ))
             else:
                 manager_user.password_hash = get_password_hash("colony2026")
+                manager_user.role = UserRole.MANAGER
+
+            # 4. Independent Auditor
+            auditor_email = "auditor@colonyai.diag"
+            result = await session.execute(select(User).where(User.email == auditor_email))
+            auditor_user = result.scalars().first()
+            if not auditor_user:
+                logger.info(f"Seeding auditor: {auditor_email}")
+                session.add(User(
+                    email=auditor_email,
+                    password_hash=get_password_hash("colony2026"),
+                    full_name="External Auditor",
+                    role=UserRole.AUDITOR
+                ))
+            else:
+                auditor_user.password_hash = get_password_hash("colony2026")
+                auditor_user.role = UserRole.AUDITOR
 
             await session.commit()
     except Exception as e:

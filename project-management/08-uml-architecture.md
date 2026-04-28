@@ -33,7 +33,8 @@ classDiagram
     class AuditLog {
         +UUID id
         +String action
-        +String hash
+        +String previous_hash
+        +String current_hash
         +verify_integrity()
     }
 
@@ -109,6 +110,9 @@ graph LR
     M((Lab Manager)) --> UC1
     M --> UC4
     M --> UC5
+
+    U((Quality Auditor)) --> UC1
+    U --> UC5
 ```
 
 ---
@@ -213,5 +217,5 @@ stateDiagram-v2
 ```
 
 ---
-**Document Status:** 🟢 **100% Architectural Sync**  
-**Updated:** April 23, 2026
+**Document Status:** 🟢 **100% Architectural Sync — Champion Final Ready**  
+**Updated:** April 28, 2026

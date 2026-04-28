@@ -35,7 +35,8 @@ try:
     # Run inference
     results = model(dummy_img, device='cuda:0', verbose=False)
     print("✅ GPU inference working!")
-    print(f"✅ Device used: {results[0].device}")
+    # Fix: access device from the first tensor in results if needed, or just check success
+    print(f"✅ Inference successful on: {results[0].boxes.data.device}")
 except Exception as e:
     print(f"❌ GPU inference failed: {e}")
     exit(1)
@@ -43,18 +44,18 @@ except Exception as e:
 # Test 4: Dataset check
 print("\n[Test 4] Dataset Verification")
 from pathlib import Path
-dataset_path = Path("./datasets/colony_dataset")
+dataset_path = Path("./datasets/colony_mini")
 if (dataset_path / "data.yaml").exists():
     print(f"✅ data.yaml found")
-    train_count = len(list((dataset_path / "train/images").glob("*.jpg")))
-    val_count = len(list((dataset_path / "valid/images").glob("*.jpg")))
-    test_count = len(list((dataset_path / "test/images").glob("*.jpg")))
+    train_count = len(list((dataset_path / "train/images").glob("*.*")))
+    val_count = len(list((dataset_path / "valid/images").glob("*.*")))
+    test_count = len(list((dataset_path / "test/images").glob("*.*")))
     print(f"✅ Training images: {train_count}")
     print(f"✅ Validation images: {val_count}")
     print(f"✅ Test images: {test_count}")
     print(f"✅ Total: {train_count + val_count + test_count}")
 else:
-    print("❌ Dataset not configured")
+    print(f"❌ Dataset not configured at {dataset_path}")
     exit(1)
 
 print("\n" + "="*70)

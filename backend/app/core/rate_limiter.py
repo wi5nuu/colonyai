@@ -92,30 +92,41 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         )
         self._exempt_paths = set(exempt_paths or ['/health', '/', '/docs', '/openapi.json'])
     
-    def _get_client_ip(self, request: Request) -> str:
+    def _get_identifier(self, request: Request) -> str:
         """
-        Extract client IP address from request.
-        Handles X-Forwarded-For for proxied requests.
+        Identify client by User ID (from JWT) or IP address.
         """
-        # Check for forwarded header (for proxied deployments)
+        # 1. Try to get User ID from JWT if present
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            try:
+                from jose import jwt
+                from app.core.config import settings
+                token = auth_header.split(' ')[1]
+                payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+                user_id = payload.get("sub")
+                if user_id:
+                    return f"user:{user_id}"
+            except Exception:
+                pass # Fallback to IP if token is invalid
+        
+        # 2. Fallback to IP
         forwarded_for = request.headers.get('X-Forwarded-For')
         if forwarded_for:
-            # First IP is the original client
-            return forwarded_for.split(',')[0].strip()
+            return f"ip:{forwarded_for.split(',')[0].strip()}"
         
-        # Fall back to direct connection IP
         if request.client:
-            return request.client.host
+            return f"ip:{request.client.host}"
         
-        return 'unknown'
-    
+        return 'ip:unknown'
+
     def _is_exempt(self, path: str) -> bool:
         """Check if path is exempt from rate limiting."""
         return path in self._exempt_paths
     
     async def dispatch(self, request: Request, call_next) -> Response:
         """Process request through rate limiter."""
-        client_ip = self._get_client_ip(request)
+        identifier = self._get_identifier(request)
         path = request.url.path
         
         # Skip rate limiting for exempt paths
@@ -123,7 +134,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         
         # Get or create rate limit info for this client
-        rate_limit = self._limits[client_ip]
+        rate_limit = self._limits[identifier]
         
         # Try to consume a token
         if not rate_limit.consume():

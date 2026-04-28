@@ -36,3 +36,15 @@ This document outlines the core team structure and individual areas of focus for
 - Developing responsive layouts using Tailwind CSS.
 - Creating intuitive data visualizations for laboratory analytics.
 - Ensuring the dashboard feels like a professional "Laboratory OS."
+
+---
+
+## 🔐 Application Access Roles (RBAC)
+*Updated for Presentation Defense (April 30)*
+
+To ensure ISO 17025 compliance and separation of duties, ColonyAI implements a 4-tier access model:
+
+1.  **Laboratory Analyst**: Authorized for specimen imaging, executing AI diagnostics, and managing initial data entry.
+2.  **Laboratory Manager**: Authorized for results verification, final sign-offs, and generating accredited reports.
+3.  **Quality Auditor**: Authorized for viewing read-only audit trails, verifying cryptographic integrity chains, and monitoring compliance metrics.
+4.  **System Administrator**: Authorized for node governance, user provisioning, and real-time kernel health monitoring.

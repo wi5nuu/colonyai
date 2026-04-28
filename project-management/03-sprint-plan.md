@@ -5,10 +5,11 @@ This document outlines the detailed sprint plan, task distribution, and high-sta
 ---
 
 ## 🏛️ SYSTEM ROLES & ACCESS CONTROL (RBAC)
-To comply with ISO 17025 (Section 7.11), the system implements three distinct operational roles:
-1.  **System Administrator**: Responsible for infrastructure maintenance, audit log monitoring, and global configuration.
-2.  **Senior Analyst (Manager)**: Authorized to verify AI results, perform final sign-offs, and export accredited PDF/CSV reports.
-3.  **Laboratory Analyst**: Authorized to perform specimen imaging, execute AI detection, and manage initial data entry.
+To comply with ISO 17025 (Section 7.11), the system implements four distinct operational roles:
+1.  **System Administrator**: Responsible for node governance, user provisioning, and real-time kernel vitals monitoring (CPU/GPU/RAM).
+2.  **Laboratory Manager**: Authorized to verify AI results, perform final sign-offs, and export accredited PDF/CSV reports.
+3.  **Quality Auditor**: Authorized for read-only access to immutable audit trails and cryptographic integrity chain verification.
+4.  **Laboratory Analyst**: Authorized to perform specimen imaging, execute AI detection, and manage initial data entry.
 
 ---
 
@@ -45,17 +46,22 @@ To comply with ISO 17025 (Section 7.11), the system implements three distinct op
     - **Fix**: Refactored to relative path `./colonyai.db`.
 *   **Challenge 3: Authentication Auth-Store Bypass**.
     - **Issue**: Missing `datetime` imports causing password reset failures and hardcoded demo-bypass logic in the frontend.
-    - **Evidence**: `backend/app/api/v1/endpoints/auth.py` (Import error) & `frontend/src/lib/auth-store.ts` (Hardcoded mapping).
     - **Fix**: Removed all auth-bypass logic and fixed dependency imports.
+*   **Challenge 4: Multi-Role Governance Complexity**.
+    - **Issue**: Transitioning from 6 legacy roles to a streamlined 4-role model for presentation clarity.
+    - **Fix**: Refactored `backend/app/core/security.py` and frontend `auth-guard.tsx` to enforce Analyst, Manager, Auditor, and Admin permissions.
+*   **Challenge 5: Cryptographic Audit Visibility**.
+    - **Issue**: Audit logs were hashed but not visible to the auditor in a user-friendly way.
+    - **Fix**: Implemented "Integrity Chain" column in `AuditPage` showing Current/Previous hashes.
 
 ---
 
 ## 🧪 PHASE 2: LABORATORY PILOT & VALIDATION (MAY)
 
-### 🔹 Week 5 (30 Apr)
-*   **Goal**: Cloud Staging Deployment & Pilot Readiness.
-*   **Challenge**: -
-*   **Solution**: -
+### 🔹 Week 5 (30 Apr) — Presentation & Grand Final Defense
+*   **Goal**: Champion-Grade Pitch & Technical Demonstration.
+*   **Activity**: Live demo of the 5-class detection engine, ISO-compliant reporting, and the immutable audit trail to the jury.
+*   **Evidence**: Final Presentation Deck and Cloud-hosted Production URL.
 
 ### 🔹 Week 6 (7 May)
 *   **Goal**: Partner Onboarding & Analyst Training.

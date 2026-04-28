@@ -23,7 +23,8 @@ This document tracks the features, bugs, and technical requirements for the Colo
 *   [x] **BACKLOG-012**: Security Hardening: EXIF stripping & Magic-byte validation.
 *   [x] **BACKLOG-013**: Malware Scanning (ClamAV) integration.
 *   [x] **BACKLOG-014**: Measurement Uncertainty (U) per ISO/IEC Guide 98-3.
-*   [x] **BACKLOG-015**: Final Documentation (English) & Presentation Deck.
+*   [x] **BACKLOG-015**: Streamlined 4-Role RBAC (Analyst, Manager, Auditor, Admin).
+*   [x] **BACKLOG-016**: Final Documentation (English) & Presentation Deck.
 
 ## 🟡 FUTURE ROADMAP (May - September 2026)
 *   [ ] **BACKLOG-016**: Laboratory Pilot Program (3 labs).
@@ -34,5 +35,5 @@ This document tracks the features, bugs, and technical requirements for the Colo
 
 ---
 
-**Last Updated:** April 23, 2026  
-**Status:** MVP Ready (100% Sprint 1 & 2 Complete)
+**Last Updated:** April 28, 2026  
+**Status:** Champion-Grade Readiness (100% Sprint 1, 2, & 3 Complete)

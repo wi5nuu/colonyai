@@ -93,18 +93,41 @@
     @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
   }
 
-  .btn-primary {
-    @apply bg-primary text-primary-foreground rounded-lg px-5 py-2.5 font-bold transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:translate-y-0;
+  .glass-card {
+    @apply bg-white/60 backdrop-blur-xl border border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.04)];
   }
 
-  .input-search {
-    @apply bg-white rounded-lg px-6 py-3 w-full shadow-sm border border-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all;
+  .dark-glass {
+    @apply bg-slate-900/80 backdrop-blur-xl border border-white/10 shadow-2xl;
+  }
+
+  .dashboard-card {
+    @apply bg-white rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 transition-all duration-500 hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] hover:-translate-y-1;
+  }
+
+  .btn-primary {
+    @apply bg-slate-900 text-white rounded-2xl px-8 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-2xl shadow-slate-900/10 hover:bg-primary hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-95;
+  }
+
+  .neo-input {
+    @apply bg-slate-50 border-2 border-transparent rounded-2xl px-6 py-4 text-sm font-bold focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none transition-all;
   }
 }
 
 @layer utilities {
   .text-gradient {
     @apply bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent;
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 15s ease infinite;
+  }
+
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   .scrollbar-hide::-webkit-scrollbar {

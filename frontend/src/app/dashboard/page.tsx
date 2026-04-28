@@ -36,14 +36,16 @@ import { DashboardStats, Analysis } from '@/lib/types'
 import { DashboardSkeleton } from '@/components/skeleton'
 import { useAuthStore } from '@/lib/auth-store'
 import { toast } from 'sonner'
+import { useTranslationStore } from '@/lib/i18n/store'
 
 const POLLING_INTERVAL = 30000
 
 import { DEMO_STATS } from '@/lib/demo-data'
 
-const USE_DEMO_DATA = true // Set to false or delete to use real data
+const USE_DEMO_DATA = false // Set to false to use real data
 
 export default function DashboardPage() {
+  const { t } = useTranslationStore()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -134,7 +136,7 @@ export default function DashboardPage() {
     }
   }, [isAuthenticated, router])
 
-  const isManager = user?.role === 'viewer'
+  const isOperational = user?.role === 'analyst' || user?.role === 'admin'
 
 
   if (isLoading) return <div className="p-6"><DashboardSkeleton /></div>
@@ -144,18 +146,18 @@ export default function DashboardPage() {
       {/* Greeting Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-          Hello {user?.full_name?.split(' ')[0] || 'Lead'} !
+          {t('overview.greeting')} {user?.full_name?.split(' ')[0] || 'Lead'} !
         </h1>
-        <p className="text-slate-400 mt-1 text-[10px] font-black uppercase tracking-[0.3em]">Neural Matrix Command // ID: CLNY-B2026-X</p>
+        <p className="text-slate-400 mt-1 text-[10px] font-black uppercase tracking-[0.3em]">{t('overview.subtitle')}</p>
       </div>
 
       {/* Summary Cards Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
-          { label: 'Total Analyses', value: stats?.total_analyses || 1248, icon: FlaskConical, trend: '+14%', color: 'indigo' },
-          { label: 'Neural Confidence', value: '94.2%', icon: Zap, trend: '+2.1%', color: 'emerald' },
-          { label: 'Pending Audit', value: stats?.pending_review || 12, icon: Clock, trend: '-3', color: 'amber' },
-          { label: 'System Latency', value: '42ms', icon: Activity, trend: 'Optimal', color: 'blue' },
+          { label: t('overview.totalAnalyses'), value: stats?.total_analyses || 0, icon: FlaskConical, trend: '+14%', color: 'indigo' },
+          { label: t('overview.neuralConfidence'), value: `${stats?.neural_confidence || 0}%`, icon: Zap, trend: '+2.1%', color: 'emerald' },
+          { label: t('overview.pendingAudit'), value: stats?.pending_review || 0, icon: Clock, trend: '-3', color: 'amber' },
+          { label: t('overview.systemLatency'), value: `${stats?.system_latency_ms || 0}ms`, icon: Activity, trend: 'Optimal', color: 'blue' },
         ].map((card, i) => (
           <div key={i} className="bg-white border border-slate-200 p-5 rounded-lg shadow-sm group hover:border-primary/30 transition-all">
             <div className="flex justify-between items-start mb-4">
@@ -181,12 +183,12 @@ export default function DashboardPage() {
             <div className="dashboard-card col-span-1 rounded-lg">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                   <h3 className="font-black text-slate-900 text-xs uppercase tracking-[0.2em]">Specimen Trend</h3>
-                   <p className="text-[10px] text-slate-400 font-bold mt-0.5">Rolling 7-day throughput</p>
+                   <h3 className="font-black text-slate-900 text-xs uppercase tracking-[0.2em]">{t('overview.specimenTrend')}</h3>
+                   <p className="text-[10px] text-slate-400 font-bold mt-0.5">{t('overview.rolling7day')}</p>
                 </div>
                 <div className="flex items-center gap-2">
                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                   <span className="text-emerald-500 font-black text-[10px] uppercase tracking-widest">Active</span>
+                   <span className="text-emerald-500 font-black text-[10px] uppercase tracking-widest">{t('common.active')}</span>
                 </div>
               </div>
               <div className="h-64 w-full">
@@ -213,26 +215,26 @@ export default function DashboardPage() {
             {/* Project Overview / Analysis Breakdown */}
             <div className="dashboard-card col-span-1 rounded-lg">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="font-black text-slate-900 text-xs uppercase tracking-[0.2em]">Analysis Breakdown</h3>
+                <h3 className="font-black text-slate-900 text-xs uppercase tracking-[0.2em]">{t('overview.analysisBreakdown')}</h3>
                 <div className="bg-slate-50 border border-slate-200 rounded px-2 py-1 flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase">
                   Batch: 2026-04 <ChevronDown className="w-3 h-3" />
                 </div>
               </div>
               <div className="text-center mb-8">
                 <p className="text-2xl font-black text-slate-900 tracking-tighter">{stats?.total_analyses || 1248}</p>
-                <p className="text-[10px] text-slate-400 font-black mt-1 uppercase tracking-[0.2em]">Analyzed Specimens</p>
+                <p className="text-[10px] text-slate-400 font-black mt-1 uppercase tracking-[0.2em]">{t('overview.analyzedSpecimens')}</p>
               </div>
               {/* Segmented Progress Bar */}
               <div className="flex h-2 w-full rounded-full overflow-hidden mb-8 bg-slate-100">
-                <div className="bg-emerald-500 w-[65%]" />
-                <div className="bg-amber-500 w-[25%]" />
-                <div className="bg-rose-500 w-[10%]" />
+                <div className="bg-emerald-500" style={{ width: `${(stats?.verified_count || 0) / (stats?.total_analyses || 1) * 100}%` }} />
+                <div className="bg-amber-500" style={{ width: `${(stats?.pending_review || 0) / (stats?.total_analyses || 1) * 100}%` }} />
+                <div className="bg-rose-500" style={{ width: `${(stats?.failed_count || 0) / (stats?.total_analyses || 1) * 100}%` }} />
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                   { label: 'Verified', val: '650', color: 'text-emerald-500' },
-                   { label: 'Review', val: '35', color: 'text-amber-500' },
-                   { label: 'Failed', val: '20', color: 'text-rose-500' }
+                   { label: t('common.verified'), val: stats?.verified_count || 0, color: 'text-emerald-500' },
+                   { label: t('common.review'), val: stats?.pending_review || 0, color: 'text-amber-500' },
+                   { label: t('common.failed'), val: stats?.failed_count || 0, color: 'text-rose-500' }
                 ].map((item, i) => (
                   <div key={i} className="text-center">
                     <p className={`text-base font-black ${item.color}`}>{item.val}</p>
@@ -240,22 +242,35 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-              <button className="w-full mt-10 py-3 bg-slate-900 rounded-lg text-[10px] font-black text-white uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-900/20">
-                Go to Global Archive <ArrowRight className="w-3 h-3" />
-              </button>
+              {isOperational && (
+                <button 
+                  onClick={() => router.push('/dashboard/upload')}
+                  className="w-full mt-10 py-3 bg-slate-900 rounded-lg text-[10px] font-black text-white uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-900/20"
+                >
+                  {t('nav.newAnalysis')} <ArrowRight className="w-3 h-3" />
+                </button>
+              )}
+              {!isOperational && (
+                <button 
+                  onClick={() => router.push('/dashboard/history')}
+                  className="w-full mt-10 py-3 bg-slate-900 rounded-lg text-[10px] font-black text-white uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-900/20"
+                >
+                  {t('overview.goToGlobalArchive')} <ArrowRight className="w-3 h-3" />
+                </button>
+              )}
             </div>
           </div>
 
           {/* Performance Listed / Recent Analyses Table */}
           <div className="dashboard-card rounded-lg">
             <div className="flex items-center justify-between mb-8">
-              <h3 className="font-black text-slate-900 text-xs uppercase tracking-[0.2em]">Neural Output Registry</h3>
+              <h3 className="font-black text-slate-900 text-xs uppercase tracking-[0.2em]">{t('overview.neuralOutputRegistry')}</h3>
               <div className="flex items-center gap-3">
                  <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
                     <input 
                       type="text" 
-                      placeholder="Search nodes..." 
+                      placeholder={t('common.search')} 
                       className="bg-slate-50 border border-slate-200 rounded-md pl-8 pr-4 py-1.5 text-[10px] font-bold text-slate-900 outline-none focus:ring-1 focus:ring-primary/20 w-48"
                     />
                  </div>
@@ -268,36 +283,31 @@ export default function DashboardPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50">
-                    <th className="pb-4">Specimen ID</th>
-                    <th className="pb-4">Media Matrix</th>
-                    <th className="pb-4">Yield</th>
-                    <th className="pb-4 text-right">Status</th>
+                    <th className="pb-4">{t('overview.specimenId')}</th>
+                    <th className="pb-4">{t('overview.mediaMatrix')}</th>
+                    <th className="pb-4">{t('overview.yield')}</th>
+                    <th className="pb-4 text-right">{t('common.status')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {[
-                    { id: 'ISO-PCA-B2026-001', media: 'Plate Count Agar', count: 15, status: 'Verified', color: 'emerald' },
-                    { id: 'ISO-VRBA-B2026-005', media: 'VRBA Agar', count: 42, status: 'Pending', color: 'amber' },
-                    { id: 'ISO-R2A-C2026-012', media: 'R2A Agar', count: 104, status: 'Verified', color: 'emerald' },
-                    { id: 'ISO-TSA-D2026-089', media: 'Tryptic Soy Agar', count: 0, status: 'Failed', color: 'rose' },
-                  ].map((a, i) => (
+                  {stats?.recent_analyses.map((a, i) => (
                     <tr key={i} className="group hover:bg-slate-50 transition-colors">
                       <td className="py-4">
-                        <span className="text-[11px] font-black text-slate-800 font-mono">{a.id}</span>
+                        <span className="text-[11px] font-black text-slate-800 font-mono">{a.sample_id}</span>
                       </td>
                       <td className="py-4">
-                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{a.media}</span>
+                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{a.media_type}</span>
                       </td>
                       <td className="py-4">
-                         <span className="text-[11px] font-black text-slate-900">{a.count}</span>
+                         <span className="text-[11px] font-black text-slate-900">{a.colony_count}</span>
                          <span className="text-[9px] text-slate-400 ml-1 font-bold">CFU</span>
                       </td>
                       <td className="py-4 text-right">
                          <span className={`px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-widest ${
-                            a.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' : 
-                            a.color === 'amber' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
+                            a.status === 'completed' ? 'bg-emerald-50 text-emerald-600' : 
+                            a.status === 'processing' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
                          }`}>
-                            {a.status}
+                            {t(`common.${a.status}`)}
                          </span>
                       </td>
                     </tr>
@@ -314,16 +324,16 @@ export default function DashboardPage() {
           <div className="dashboard-card p-5">
              <div className="grid grid-cols-3 gap-4 text-center divide-x divide-slate-100">
                 <div>
-                   <p className="text-slate-400 text-[10px] font-bold uppercase mb-2">Verified</p>
-                   <p className="text-xl font-bold text-slate-900">650</p>
+                   <p className="text-slate-400 text-[10px] font-bold uppercase mb-2">{t('common.verified')}</p>
+                   <p className="text-xl font-bold text-slate-900">{stats?.verified_count || 0}</p>
                 </div>
                 <div>
-                   <p className="text-slate-400 text-[10px] font-bold uppercase mb-2">Review</p>
-                   <p className="text-xl font-bold text-slate-900">35</p>
+                   <p className="text-slate-400 text-[10px] font-bold uppercase mb-2">{t('common.review')}</p>
+                   <p className="text-xl font-bold text-slate-900">{stats?.pending_review || 0}</p>
                 </div>
                 <div>
-                   <p className="text-slate-400 text-[10px] font-bold uppercase mb-2">Failed</p>
-                   <p className="text-xl font-bold text-slate-900">20</p>
+                   <p className="text-slate-400 text-[10px] font-bold uppercase mb-2">{t('common.failed')}</p>
+                   <p className="text-xl font-bold text-slate-900">{stats?.failed_count || 0}</p>
                 </div>
              </div>
           </div>
@@ -331,13 +341,13 @@ export default function DashboardPage() {
           {/* System Health Terminal */}
           <div className="dashboard-card rounded-lg p-0 overflow-hidden border-slate-200">
              <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">Neural Node Status</h3>
+                <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">{t('overview.neuralNodeStatus')}</h3>
                 <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
              </div>
              <div className="p-4 space-y-3">
                 {[
-                  { id: 'NODE-01-A', status: 'Active', load: '12%', color: 'text-emerald-500' },
-                  { id: 'NODE-02-A', status: 'Active', load: '45%', color: 'text-emerald-500' },
+                  { id: 'NODE-01-A', status: t('common.active'), load: '12%', color: 'text-emerald-500' },
+                  { id: 'NODE-02-A', status: t('common.active'), load: '45%', color: 'text-emerald-500' },
                   { id: 'NODE-01-B', status: 'Idle', load: '0%', color: 'text-slate-300' },
                   { id: 'NODE-02-B', status: 'Standby', load: '2%', color: 'text-amber-500' },
                 ].map((node, i) => (
@@ -366,7 +376,7 @@ export default function DashboardPage() {
                    <Calendar className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">Today Events</p>
+                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">{t('overview.todayEvents')}</p>
                    <p className="text-sm font-bold">Batch Audit ISO-17025</p>
                 </div>
              </div>
@@ -375,7 +385,7 @@ export default function DashboardPage() {
 
           {/* Recent Alerts */}
           <div className="dashboard-card p-4">
-             <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-4">Recent System Alerts</h3>
+             <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-4">{t('overview.recentSystemAlerts')}</h3>
              <div className="space-y-4">
                 {[
                   { name: 'ISO-VRBA-005', desc: 'Low reliability detection', time: 'Only today', color: 'rose' },
@@ -407,7 +417,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
              </div>
              <div className="flex items-center justify-between mt-2">
-                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Diagnostic Yield</p>
+                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{t('overview.diagnosticYield')}</p>
                 <div className="flex items-center gap-1 text-emerald-500">
                    <ArrowUpRight className="w-4 h-4" />
                    <span className="text-xs font-black">+12%</span>
@@ -421,15 +431,15 @@ export default function DashboardPage() {
       <div className="mt-4 bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
            <div>
-              <h2 className="text-sm font-black text-slate-900 uppercase tracking-tighter">Neural Intelligence Layer</h2>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Real-time spectral analysis for colony-matrix.ai</p>
+              <h2 className="text-sm font-black text-slate-900 uppercase tracking-tighter">{t('overview.neuralIntelligenceLayer')}</h2>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{t('overview.realTimeSpectral')}</p>
            </div>
            <div className="flex items-center gap-4">
-              <button className="text-[9px] font-black text-blue-600 uppercase tracking-widest hover:underline">Download Dataset</button>
+              <button className="text-[9px] font-black text-blue-600 uppercase tracking-widest hover:underline">{t('overview.downloadDataset')}</button>
               <div className="h-3 w-[1px] bg-slate-200" />
               <div className="flex items-center gap-2">
                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                 <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Active Sink</span>
+                 <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">{t('overview.activeSink')}</span>
               </div>
            </div>
         </div>
@@ -437,30 +447,27 @@ export default function DashboardPage() {
         {/* Query Overview Dashboard */}
         <div className="px-6 py-4 space-y-4">
            <div className="flex border-b border-slate-100 gap-6">
-              {['Query overview', 'Throughput', 'Success rate'].map((tab, i) => (
+              {[t('overview.queryOverview'), t('overview.throughput'), t('overview.successRate')].map((tab, i) => (
                  <button key={tab} className={`pb-2 text-[10px] font-black uppercase tracking-widest transition-all ${i === 0 ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
                     {tab}
                  </button>
               ))}
            </div>
 
-           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-             {[
-               { label: 'PCA Matrix', val: '1.51k', color: 'bg-blue-500' },
-               { label: 'VRBA Matrix', val: '1.43k', color: 'bg-amber-500' },
-               { label: 'BGBB Matrix', val: '50', color: 'bg-emerald-500' },
-               { label: 'R2A Matrix', val: '20', color: 'bg-rose-500' },
-               { label: 'TSA Matrix', val: '10', color: 'bg-purple-500' },
-             ].map((s, i) => (
-               <div key={i} className="border-r border-slate-50 last:border-0 pr-4">
-                 <div className="flex items-center gap-2 mb-1">
-                    <div className={`w-1.5 h-1.5 rounded-full ${s.color}`} />
-                    <span className="text-[9px] font-bold text-slate-400 truncate uppercase">{s.label}</span>
-                 </div>
-                 <p className="text-base font-black text-slate-900 tracking-tighter">{s.val}</p>
-               </div>
-             ))}
-           </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {stats && Object.entries(stats.matrix_breakdown).slice(0, 5).map(([label, val], i) => (
+                <div key={i} className="border-r border-slate-50 last:border-0 pr-4">
+                  <div className="flex items-center gap-2 mb-1">
+                     <div className={`w-1.5 h-1.5 rounded-full ${['bg-blue-500', 'bg-amber-500', 'bg-emerald-500', 'bg-rose-500', 'bg-purple-500'][i % 5]}`} />
+                     <span className="text-[9px] font-bold text-slate-400 truncate uppercase">{label} Matrix</span>
+                  </div>
+                  <p className="text-base font-black text-slate-900 tracking-tighter">{val}</p>
+                </div>
+              ))}
+              {(!stats || Object.keys(stats.matrix_breakdown).length === 0) && (
+                <p className="text-[10px] text-slate-400 italic col-span-5">No matrix data available</p>
+              )}
+            </div>
 
            {/* Detailed Chart - Compact Height */}
            <div className="h-[180px] w-full pt-4">
@@ -482,16 +489,16 @@ export default function DashboardPage() {
         <div className="px-6 py-6 bg-slate-50/50 border-t border-slate-100">
            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                <div className="border-l-2 border-blue-500 pl-4">
-                 <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Total neural queries <Info className="w-2.5 h-2.5 inline ml-1 opacity-30" /></p>
-                 <p className="text-base font-black text-slate-900 tracking-tighter">3.04k</p>
+                 <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">{t('overview.totalNeuralQueries')} <Info className="w-2.5 h-2.5 inline ml-1 opacity-30" /></p>
+                 <p className="text-base font-black text-slate-900 tracking-tighter">{stats?.total_analyses || 0}</p>
               </div>
               <div className="border-l-2 border-slate-200 pl-4">
-                 <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Avg QPS <Info className="w-2.5 h-2.5 inline ml-1 opacity-30" /></p>
+                 <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">{t('overview.avgQps')} <Info className="w-2.5 h-2.5 inline ml-1 opacity-30" /></p>
                  <p className="text-base font-black text-slate-900 tracking-tighter">0.035</p>
               </div>
               <div className="border-l-2 border-slate-200 pl-4">
-                 <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Processing time <Info className="w-2.5 h-2.5 inline ml-1 opacity-30" /></p>
-                 <p className="text-base font-black text-slate-900 tracking-tighter">2.447<span className="text-[10px] ml-0.5 text-slate-400 font-bold uppercase">ms</span></p>
+                 <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">{t('overview.processingTime')} <Info className="w-2.5 h-2.5 inline ml-1 opacity-30" /></p>
+                 <p className="text-base font-black text-slate-900 tracking-tighter">{stats?.system_latency_ms || 0}<span className="text-[10px] ml-0.5 text-slate-400 font-bold uppercase">ms</span></p>
               </div>
            </div>
         </div>

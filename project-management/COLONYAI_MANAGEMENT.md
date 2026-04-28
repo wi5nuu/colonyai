@@ -83,5 +83,17 @@ saya ingin# 🏛️ COLONYAI MANAGEMENT MASTER LEDGER
 *   **Verdict:** ColonyAI is an **Enterprise-Grade Laboratory OS**, not just an AI model.
 
 ---
+ 
+## 🔑 VII. APPLICATION RBAC ROLES (The 4-Role System)
+Untuk menjaga keamanan standar internasional (Cyber Security) namun tetap efisien, ColonyAI menggunakan 4 role utama:
+
+| Role | Description | Key Access |
+| :--- | :--- | :--- |
++| **Analyst** | Personil Operasional | Upload, Simulator, Riwayat Pribadi. |
++| **Manager** | Reviewer & Verifikator | Analytics, Reports, Verifikasi Hasil, Audit Ledger. |
++| **Auditor** | Independent Watcher | Read-Only History, Reports, Audit Ledger. |
++| **Admin** | System Controller | Manajemen User, System Settings, Super Admin access. |
+
+---
 **Status Final:** 🟢 **100% READY FOR COMPETITION**  
-**Document Updated:** April 23, 2026 | **Author:** ColonyAI Team
+**Document Updated:** April 28, 2026 | **Author:** ColonyAI Team

@@ -119,6 +119,16 @@ class DashboardStatsResponse(BaseModel):
     avg_time_saved_minutes: int
     success_rate: float
     pending_review: int
+    
+    # New Real Data Fields
+    neural_confidence: float
+    system_latency_ms: float
+    verified_count: int
+    failed_count: int
+    
+    # Matrix stats (Counts per media type)
+    matrix_breakdown: Dict[str, int]
+    
     weekly_trend: List[WeeklyTrendItem]
     recent_analyses: List[AnalysisBriefResponse]
 

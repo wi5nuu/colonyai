@@ -32,13 +32,15 @@ This document maps the technical requirements from **Case 1: Automated Plate Cou
 
 | Control ID | ISO 17025 Ref | Requirement | Implementation Status |
 | :--- | :--- | :--- | :--- |
-| IAM-001 | 7.11.2 | Role-Based Access Control (RBAC) | **IMPLEMENTED** (Class-01 Analyst / Class-02 Observer) |
-| IAM-002 | 7.11.3 | Audit Trail Integrity | **IMPLEMENTED** (Analyst-specific sign-off on all spectral results) |
-| IAM-003 | 8.3.2 | Data Confidentiality | **IMPLEMENTED** (Encryption Secret & Primary Identifier Protocol) |
+| IAM-001 | 7.11.2 | Role-Based Access Control (RBAC) | **IMPLEMENTED** (Analyst, Manager, Auditor, Admin) |
+| IAM-002 | 7.11.3 | Audit Trail Integrity | **IMPLEMENTED** (Cryptographic Hash Chain validation) |
+| IAM-003 | 8.3.2 | Data Confidentiality | **IMPLEMENTED** (JWT Otorisasi & System Integrity Protocol) |
 
 #### Operational Clearance Levels:
-*   **Class-01 (Laboratory Analyst):** Full operational clearance. Authorized to perform spectral imaging, execute AI detection, and verify diagnostic results (Human-in-the-Loop).
-*   **Class-02 (Spectral Observer/Manager):** Oversight clearance. Authorized to monitor laboratory-wide performance analytics, audit historical ledgers, and export compliance reports. Restricted from altering raw diagnostic data.
+*   **Analyst**: Authorized for specimen imaging, executing AI diagnostics, and managing initial data entry.
+*   **Manager**: Authorized for results verification, final sign-offs, and generating accredited reports.
+*   **Auditor**: Authorized for read-only access to immutable audit trails and cryptographic integrity chain verification.
+*   **Admin**: Authorized for node governance, user provisioning, and real-time kernel health monitoring.
 
 ---
 
@@ -57,9 +59,9 @@ This document maps the technical requirements from **Case 1: Automated Plate Cou
 Features that set ColonyAI apart from typical competition entries:
 
 1.  **Measurement Uncertainty (U):** Calculates uncertainty (k=2, 95%) per ISO/IEC Guide 98-3 (GUM).
-2.  **Cryptographic Audit Trail:** Activity logs hashed with SHA-256 for data integrity (ISO 17025).
+2.  **Cryptographic Integrity Chain:** Activity logs hashed with SHA-256 with "Hash Chain" validation (ISO 17025).
 3.  **Real-Time API Security:** Validates magic bytes, strips EXIF, and scans for malware (ClamAV) on every upload.
-4.  **Regulatory Compliance:** Built-in UU PDP (5-year) data retention policy.
+4.  **Hardware Health Monitor:** Real-time visibility into CPU/GPU/RAM metrics for system administrators.
 
 ---
 

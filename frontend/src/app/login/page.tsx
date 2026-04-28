@@ -245,10 +245,7 @@ export default function LoginPage() {
             </button>
 
             <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              Unprovisioned Hardware?{' '}
-              <Link href="/register" className="text-blue-600 font-black hover:text-blue-700 transition-colors">
-                Initialize Request
-              </Link>
+              Protected Laboratory Access. Accounts managed by <span className="text-blue-600 font-black">System Administrator</span>.
             </p>
           </form>
 

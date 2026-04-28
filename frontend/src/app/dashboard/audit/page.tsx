@@ -15,12 +15,16 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '@/lib/auth-store'
 import { DEMO_AUDIT_LOGS } from '@/lib/demo-data'
+import { DocumentationSidebar, DocumentationToggle } from "@/components/DocumentationSidebar"
+import { useTranslationStore } from '@/lib/i18n/store'
 
 const USE_DEMO_DATA = true // Set to false to use real data from API
 
 export default function AuditPage() {
+  const { t } = useTranslationStore()
   const { user: currentUser } = useAuthStore()
   const [searchQuery, setSearchQuery] = useState('')
+  const [showDocs, setShowDocs] = useState(true)
 
   const [logs] = useState<any[]>(USE_DEMO_DATA ? DEMO_AUDIT_LOGS : [
     { id: 'LOG-001', action: 'NODE_LOGIN_SUCCESS', user_name: 'admin@colonyai.diag', timestamp: '2026-04-23 09:12:45', details: 'Authorized session established via Node Alpha', ip: '192.168.1.42', resource_type: 'security' },
@@ -32,25 +36,30 @@ export default function AuditPage() {
   )
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500">
-      {/* Audit Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 bg-slate-900 rounded-lg shadow-xl flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4 text-primary" />
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Security Ledger</h1>
-          </div>
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Immutable Neural Audit Trail // ISO 17025 Compliance</p>
-        </div>
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden">
+      <div className="flex relative min-h-[calc(100vh-200px)]">
+        <div className={`flex-1 transition-all duration-300 ${showDocs ? 'lg:mr-[350px]' : ''}`}>
+          <div className="max-w-[1500px] mx-auto px-6 py-8">
+            <div className="space-y-10">
+              {/* Audit Header */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-9 h-9 bg-slate-900 rounded-lg shadow-xl flex items-center justify-center">
+                      <ShieldCheck className="w-4 h-4 text-primary" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t('audit.title')}</h1>
+                  </div>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t('audit.subtitle')}</p>
+                  <DocumentationToggle showDocs={showDocs} setShowDocs={setShowDocs} text={t('audit.docsToggle')} />
+                </div>
         
         <div className="flex items-center gap-3">
            <div className="relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-primary transition-colors" />
               <input 
                 type="text" 
-                placeholder="Search Authorization Matrix..." 
+                placeholder={t('audit.searchPlaceholder')} 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2.5 bg-white border border-slate-100 rounded-lg text-[11px] font-bold outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all w-72 shadow-sm"
@@ -70,7 +79,7 @@ export default function AuditPage() {
                   <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]" />
                   <div className="flex items-center gap-2.5">
                     <Terminal className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Neural Event Stream</span>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('audit.eventStream')}</span>
                   </div>
                </div>
                <div className="flex gap-2">
@@ -84,7 +93,7 @@ export default function AuditPage() {
                <table className="w-full text-left whitespace-nowrap">
                   <thead>
                      <tr className="border-b border-slate-800 bg-slate-900/30">
-                         {['Sequence ID', 'Action Protocol', 'Source Analyst', 'Timestamp', 'Layer'].map(h => (
+                         {[t('audit.colSequenceId'), t('audit.colActionProtocol'), t('audit.colSourceAnalyst'), t('audit.colTimestamp'), t('audit.colLayer'), 'Integrity Chain'].map(h => (
                             <th key={h} className="px-6 py-4 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">{h}</th>
                          ))}
                      </tr>
@@ -125,6 +134,12 @@ export default function AuditPage() {
                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{log.resource_type}</span>
                             </div>
                          </td>
+                          <td className="px-6 py-4">
+                             <div className="flex flex-col gap-1">
+                                <span className="text-[7px] font-mono text-emerald-500 opacity-50 uppercase tracking-tighter">Current: {log.current_hash?.substring(0, 16) || 'N/A'}...</span>
+                                <span className="text-[7px] font-mono text-slate-600 uppercase tracking-tighter">Previous: {log.previous_hash?.substring(0, 16) || 'CHAIN_START'}...</span>
+                             </div>
+                          </td>
                       </tr>
                    ))}
                 </tbody>
@@ -152,6 +167,51 @@ export default function AuditPage() {
             </div>
           ))}
          </div>
+      </div>
+            </div>
+          </div>
+        </div>
+        <DocumentationSidebar 
+          showDocs={showDocs} 
+          setShowDocs={setShowDocs}
+          directory="Compliance Logs"
+          title={t('audit.docsTitle')}
+          description={t('audit.docsDescription')}
+        >
+          <section className="space-y-4">
+             <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">01</span>
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Overview</h2>
+             </div>
+             <p className="text-sm text-slate-600 leading-relaxed bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                Security Ledger menyimpan seluruh rekam jejak aktivitas (Audit Trail) yang terjadi di dalam sistem ColonyAI. Log ini bersifat immutable (tidak dapat diubah) dan merupakan syarat wajib kelulusan sertifikasi ISO-17025.
+             </p>
+          </section>
+
+          <section className="space-y-6 pt-2">
+             <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">02</span>
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Audit Protocol</h2>
+             </div>
+             <div className="space-y-6 ml-1">
+                {[
+                  { id: '1', title: 'Traceability', desc: 'Setiap entri memuat Sequence ID unik, protokol aksi (Action Protocol), dan Source Analyst yang melakukan tindakan.' },
+                  { id: '2', title: 'Layer Tracking', desc: 'Sistem mengkategorikan log ke dalam lapisan (Layer) seperti Security (otorisasi), System (perubahan config), dan Data (proses spesimen).' },
+                  { id: '3', title: 'Search & Export', desc: 'Gunakan filter pencarian untuk melacak anomali (Security Violations). Tombol Download memungkinkan ekspor log dalam format terenkripsi.' }
+                ].map((step) => (
+                  <div key={step.id} className="flex gap-4 group">
+                     <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-slate-900 text-white text-[11px] font-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        {step.id}
+                     </span>
+                     <div className="space-y-1.5">
+                        <h4 className="text-sm font-bold text-slate-900">{step.title}</h4>
+                        <p className="text-[12px] text-slate-500 leading-relaxed font-medium">{step.desc}</p>
+                     </div>
+                  </div>
+                ))}
+             </div>
+          </section>
+        </DocumentationSidebar>
       </div>
     </div>
   )

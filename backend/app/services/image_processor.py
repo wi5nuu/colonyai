@@ -4,6 +4,8 @@ from PIL import Image
 import io
 from typing import Tuple
 
+from app.services.colony_detector import VALID_COLONY_CLASSES
+
 
 class ImageProcessor:
     """Image preprocessing pipeline for agar plate images"""
@@ -48,11 +50,18 @@ class ImageProcessor:
     def preprocess_from_bytes(self, image_bytes: bytes) -> np.ndarray:
         """Preprocess image from bytes (for uploaded files)"""
         image = Image.open(io.BytesIO(image_bytes))
-        image_rgb = np.array(image)
 
-        # Convert RGBA to RGB if needed
-        if image_rgb.shape[2] == 4:
-            image_rgb = cv2.cvtColor(image_rgb, cv2.COLOR_RGBA2RGB)
+        # ── Normalize mode: convert semua ke RGB ──
+        if image.mode == 'RGBA':
+            image = image.convert('RGB')
+        elif image.mode == 'L':          # Grayscale
+            image = image.convert('RGB')
+        elif image.mode == 'P':          # Palette
+            image = image.convert('RGB')
+        elif image.mode != 'RGB':
+            image = image.convert('RGB')
+
+        image_rgb = np.array(image)
 
         # Normalize brightness and contrast
         normalized = self._normalize_brightness(image_rgb)
@@ -69,6 +78,7 @@ class ImageProcessor:
         resized = cv2.resize(roi, self.target_size, interpolation=cv2.INTER_AREA)
 
         return resized
+
     
     def _normalize_brightness(self, image: np.ndarray) -> np.ndarray:
         """Normalize brightness and contrast using CLAHE"""
@@ -187,27 +197,42 @@ class ImageProcessor:
             return image
     
     def _extract_roi(self, image: np.ndarray, mask: np.ndarray) -> np.ndarray:
-        """Extract region of interest using the plate mask"""
+        """Extract region of interest using the plate mask.
+        Jika ROI yang diekstrak terlalu kecil (< 10% dari image asli),
+        fallback ke full image untuk mencegah distorsi parah."""
         # Find contours of the mask
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
+
         if not contours:
             return image
-        
+
         # Get bounding rectangle of largest contour
         largest_contour = max(contours, key=cv2.contourArea)
         x, y, w, h = cv2.boundingRect(largest_contour)
-        
+
+        # ── Minimum ROI size guard (BUG-C fix) ──
+        # Jika ROI lebih kecil dari 10% dimensi image, kembalikan full image
+        # untuk mencegah resize distortion parah
+        min_width  = max(50, int(image.shape[1] * 0.10))
+        min_height = max(50, int(image.shape[0] * 0.10))
+        if w < min_width or h < min_height:
+            return image  # Fallback: full image lebih aman
+
         # Extract ROI with some padding
         padding = 10
         x_start = max(0, x - padding)
         y_start = max(0, y - padding)
-        x_end = min(image.shape[1], x + w + padding)
-        y_end = min(image.shape[0], y + h + padding)
-        
+        x_end   = min(image.shape[1], x + w + padding)
+        y_end   = min(image.shape[0], y + h + padding)
+
         roi = image[y_start:y_end, x_start:x_end]
-        
+
+        # Safety check: jika roi kosong, fallback
+        if roi.size == 0:
+            return image
+
         return roi
+
     
     def save_annotated_image(
         self,
@@ -217,78 +242,99 @@ class ImageProcessor:
         show_labels: bool = True,
         show_confidence: bool = True,
     ):
-        """Save image with bounding boxes drawn - 5-class color system
-        
-        Args:
-            image: RGB numpy array
-            detections: List of detection dicts with class_name, confidence, bbox, color
-            output_path: Path to save annotated image
-            show_labels: Whether to draw class labels
-            show_confidence: Whether to draw confidence scores
-        """
-        annotated = image.copy()
+        """Save image with bounding boxes drawn - 5-class color system.
 
-        # Color mapping per proposal specification
-        # Valid colonies: green/orange, Artifacts: blue/red/purple
+        PENTING: image input dalam format RGB (hasil preprocess).
+        OpenCV menggunakan BGR untuk drawing. Konversi dilakukan dulu
+        agar warna bounding box benar (hijau = koloni, merah = debris, dll).
+        """
+        # ── Konversi ke BGR untuk OpenCV drawing ──
+        annotated_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+        # Hitung colony count untuk label
+        colony_count = sum(
+            1 for d in detections
+            if d.get('class_name') in VALID_COLONY_CLASSES
+        )
+
         for detection in detections:
             bbox = detection['bbox']
             class_name = detection['class_name']
             confidence = detection['confidence']
-            # Use class-specific color from detector (BGR)
-            color = detection.get('color', (255, 255, 255))
+            # Color sudah dalam format BGR (dari CLASS_COLORS_BGR)
+            color = detection.get('color', (200, 200, 200))
             is_valid = detection.get('is_valid_colony', False)
 
-            # Draw bounding box
             x, y, w, h = bbox['x'], bbox['y'], bbox['width'], bbox['height']
 
-            # Line thickness based on confidence
-            thickness = 3 if confidence > 0.8 else 2
-            cv2.rectangle(annotated, (x, y), (x + w, y + h), color, thickness)
+            # Line thickness: tebal untuk koloni valid, tipis untuk artifact
+            thickness = 3 if (is_valid and confidence > 0.75) else 2
+            cv2.rectangle(annotated_bgr, (x, y), (x + w, y + h), color, thickness)
 
             if show_labels:
-                # Build label text
-                label_parts = [class_name.replace('_', ' ')]
+                label_parts = [class_name.replace('_', ' ').title()]
                 if show_confidence:
                     label_parts.append(f"{confidence:.0%}")
                 label = ' | '.join(label_parts)
 
-                # Calculate label background size
+                font       = cv2.FONT_HERSHEY_SIMPLEX
+                font_scale = 0.42
+                font_thick = 1
+
                 (label_w, label_h), baseline = cv2.getTextSize(
-                    label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2
+                    label, font, font_scale, font_thick
                 )
 
-                # Draw label background
-                cv2.rectangle(
-                    annotated,
-                    (x, y - label_h - 8),
-                    (x + label_w, y + baseline - 8),
-                    color,
-                    -1,
-                )
+                # Label background
+                lx1, ly1 = x, max(0, y - label_h - 6)
+                lx2, ly2 = x + label_w + 4, y
+                cv2.rectangle(annotated_bgr, (lx1, ly1), (lx2, ly2), color, -1)
 
-                # Draw label text (white on colored background)
+                # Label text (white)
                 cv2.putText(
-                    annotated,
-                    label,
-                    (x, y - 8),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
+                    annotated_bgr, label,
+                    (x + 2, max(label_h, y - 4)),
+                    font, font_scale,
                     (255, 255, 255),
-                    2,
+                    font_thick,
+                    cv2.LINE_AA,
                 )
 
-        # Add summary legend in top-left corner
-        legend_y = 30
+        # ── Watermark: ColonyAI branding + colony count ──
+        h_img, w_img = annotated_bgr.shape[:2]
+
+        # Background strip gelap di bagian bawah
+        strip_h = 32
+        overlay = annotated_bgr.copy()
+        cv2.rectangle(overlay, (0, h_img - strip_h), (w_img, h_img), (20, 20, 20), -1)
+        cv2.addWeighted(overlay, 0.75, annotated_bgr, 0.25, 0, annotated_bgr)
+
+        # ColonyAI label kiri
         cv2.putText(
-            annotated,
-            "ColonyAI - AI-Powered Plate Reader",
-            (10, legend_y),
+            annotated_bgr,
+            "ColonyAI v2.0 | AI-Powered Plate Reader",
+            (10, h_img - 10),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            (255, 255, 255),
-            2,
+            0.45,
+            (80, 220, 120),   # Hijau terang (BGR)
+            1,
+            cv2.LINE_AA,
         )
 
-        # Convert RGB to BGR for saving
-        annotated_bgr = cv2.cvtColor(annotated, cv2.COLOR_RGB2BGR)
+        # Colony count kanan
+        count_label = f"Colonies: {colony_count}"
+        (cw, _), _ = cv2.getTextSize(count_label, cv2.FONT_HERSHEY_SIMPLEX, 0.45, 1)
+        cv2.putText(
+            annotated_bgr,
+            count_label,
+            (w_img - cw - 10, h_img - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.45,
+            (255, 220, 80),   # Kuning (BGR)
+            1,
+            cv2.LINE_AA,
+        )
+
+        # ── Simpan dalam format BGR (OpenCV default) ──
         cv2.imwrite(output_path, annotated_bgr)
+

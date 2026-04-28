@@ -6,6 +6,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.core.rate_limiter import RateLimitMiddleware
+from app.core.middleware import SecureHeadersMiddleware
 from app.api.v1 import auth_router, image_router, analysis_router, report_router, user_router, lims_router, maintenance_router, simulator_router, settings_router, audit_router
 from app.core.database import engine, Base
 
@@ -42,6 +43,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Cyber Security Middleware (Secure Headers) ──
+app.add_middleware(SecureHeadersMiddleware)
 
 # Rate Limiting Middleware (100 requests/minute per IP)
 app.add_middleware(
@@ -81,3 +85,4 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+

@@ -19,6 +19,8 @@ class AuditLogResponse(BaseModel):
     user_name: str
     timestamp: datetime
     status: str = "SUCCESS"
+    previous_hash: Optional[str] = None
+    current_hash: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -27,7 +29,7 @@ class AuditLogResponse(BaseModel):
 async def list_audit_logs(
     skip: int = 0,
     limit: int = 50,
-    current_user: dict = Depends(require_role("system_admin")),
+    current_user: dict = Depends(require_role("manager", "auditor", "admin")),
     db: AsyncSession = Depends(get_db)
 ):
     """List system audit logs (admin only)"""
@@ -48,7 +50,9 @@ async def list_audit_logs(
             resource_id=str(log.resource_id) if log.resource_id else None,
             user_name=full_name,
             timestamp=log.timestamp,
-            status="SUCCESS" # Simplified
+            status="SUCCESS",
+            previous_hash=log.previous_hash,
+            current_hash=log.current_hash
         ))
     
     return logs

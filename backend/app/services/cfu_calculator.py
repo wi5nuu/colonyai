@@ -249,7 +249,7 @@ def estimate_merged_colonies(detections: list[dict[str, Any]]) -> MergedColonyEs
 
 def calculate_uncertainty(
     cfu_per_ml: float,
-    model_map: float = 0.90,
+    model_map: float = 0.941,
     colony_count: int = 1,
     pipette_cv: float = 0.01,
 ) -> UncertaintyBudget:
@@ -266,7 +266,8 @@ def calculate_uncertainty(
 
     Args:
         cfu_per_ml  : Nilai CFU/mL yang dihitung
-        model_map   : mAP model pada validation set (default 0.90 = 90%)
+        model_map   : mAP model pada validation set (default 0.941 = 94.1%)
+
         colony_count: Total koloni yang dihitung
         pipette_cv  : Coefficient of Variation pipet (default 0.01 = 1%)
 
@@ -329,7 +330,7 @@ class CFUCalculator:
         reliability: str = "high",
         class_breakdown: dict[str, int] | None = None,
         detections: list[dict[str, Any]] | None = None,
-        model_map: float = 0.90,
+        model_map: float = 0.941,
         pipette_cv: float = 0.01,
     ) -> CFUResult:
         """

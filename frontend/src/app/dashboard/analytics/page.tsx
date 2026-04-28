@@ -41,6 +41,8 @@ import { analysesApi } from "@/lib/analyses-api";
 import { reportsApi } from "@/lib/reports-api";
 import { Analysis, AnalysisListResponse, MediaType } from "@/lib/types";
 import { toast } from "sonner";
+import { DocumentationSidebar, DocumentationToggle } from "@/components/DocumentationSidebar";
+import { useTranslationStore } from "@/lib/i18n/store";
 
 type DateRange = "7d" | "30d" | "90d" | "custom";
 interface TimeSeriesPoint {
@@ -189,6 +191,7 @@ function groupByMonth(analyses: Analysis[]): MonthlySummary[] {
 }
 
 function ChartTooltip({ active, payload, label }: any) {
+  const { t } = useTranslationStore();
   if (!active || !payload?.length) return null;
   const p = payload[0]?.payload as TimeSeriesPoint;
   if (!p) return null;
@@ -200,13 +203,13 @@ function ChartTooltip({ active, payload, label }: any) {
       <div className="space-y-3">
         <div className="flex justify-between items-center gap-6">
           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-            Analyses
+            {t('analytics.tooltipAnalyses')}
           </span>
           <span className="text-sm font-bold text-white">{p.testCount}</span>
         </div>
         <div className="flex justify-between items-center gap-6">
           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-            Density
+            {t('analytics.tooltipDensity')}
           </span>
           <span className="text-sm font-bold text-primary">
             {formatCFU(p.avgCfu)}
@@ -214,7 +217,7 @@ function ChartTooltip({ active, payload, label }: any) {
         </div>
         <div className="flex justify-between items-center gap-6">
           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-            Success
+            {t('analytics.tooltipSuccess')}
           </span>
           <span className="text-sm font-bold text-emerald-400">
             {p.passRate}%
@@ -223,7 +226,7 @@ function ChartTooltip({ active, payload, label }: any) {
         {p.tntcCount > 0 && (
           <div className="flex justify-between items-center gap-6 pt-2 border-t border-slate-800">
             <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest">
-              TNTC Boundary
+              {t('analytics.tooltipBoundary')}
             </span>
             <span className="text-sm font-bold text-rose-500">
               {p.tntcCount}
@@ -240,6 +243,7 @@ import { ALL_DEMO_ANALYSES } from "@/lib/demo-data";
 const USE_DEMO_DATA = true; // Set to false to use real data from API
 
 export default function AnalyticsPage() {
+  const { t } = useTranslationStore();
   const [dateRange, setDateRange] = useState<DateRange>("30d");
   const [mediaType, setMediaType] = useState<MediaType | "all">("all");
   const [analystFilter, setAnalystFilter] = useState("all");
@@ -250,12 +254,6 @@ export default function AnalyticsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [showDocs, setShowDocs] = useState(true);
-
-  const handleCopyDocs = () => {
-    const text = "ColonyAI Analytics Documentation...";
-    navigator.clipboard.writeText(text);
-    toast.success("Documentation summary copied to clipboard");
-  };
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -294,7 +292,7 @@ export default function AnalyticsPage() {
       }
     } catch (e: any) {
       const msg =
-        e?.response?.data?.detail || e?.message || "Failed to load analytics";
+        e?.response?.data?.detail || e?.message || t('analytics.errorLoad');
       setError(msg);
       toast.error(msg);
     } finally {
@@ -369,9 +367,9 @@ export default function AnalyticsPage() {
         format: "csv",
       });
       window.open(r.url, "_blank");
-      toast.success("CSV exported");
+      toast.success(t('history.successExportCsv'));
     } catch (e: any) {
-      toast.error(e?.response?.data?.detail || "Export failed");
+      toast.error(e?.response?.data?.detail || t('analytics.errorExport'));
     } finally {
       setIsExporting(false);
     }
@@ -384,7 +382,7 @@ export default function AnalyticsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">
-          Syncing Intelligence Matrix...
+          {t('analytics.syncingMatrix')}
         </p>
       </div>
     );
@@ -397,7 +395,7 @@ export default function AnalyticsPage() {
         </div>
         <div className="max-w-md mx-auto">
           <h3 className="text-xl font-bold text-slate-900 mb-2">
-            Network Protocol Failure
+            {t('analytics.networkFailure')}
           </h3>
           <p className="text-sm font-medium text-slate-400">{error}</p>
         </div>
@@ -405,7 +403,7 @@ export default function AnalyticsPage() {
           className="btn-primary px-10 py-4 flex items-center gap-3 mx-auto"
           onClick={fetchData}
         >
-          <TrendingUp className="w-5 h-5" /> Re-Initialize Sync
+          <TrendingUp className="w-5 h-5" /> {t('analytics.reinitSync')}
         </button>
       </div>
     );
@@ -420,48 +418,39 @@ export default function AnalyticsPage() {
             {/* Cloudflare-style Header */}
             <div className="space-y-2 mb-10">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                ColonyAI // Intelligence
+                {t('analytics.supertitle')}
               </p>
               <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-                Analytics
+                {t('analytics.title')}
               </h1>
               <p className="text-sm text-slate-500 font-medium">
-                Analyze neural detection queries and specimen throughput.
+                {t('analytics.subtitle')}
               </p>
-              {!showDocs && (
-                <button
-                  onClick={() => setShowDocs(true)}
-                  className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold border border-blue-100 hover:bg-blue-100 transition-all mt-4 animate-in fade-in"
-                >
-                  <BarChart3 className="w-3 h-3" />
-                  Neural analytics documentation
-                </button>
-              )}
+              <DocumentationToggle showDocs={showDocs} setShowDocs={setShowDocs} text={t('analytics.docsToggle')} />
             </div>
 
             {/* Main Analytics Container */}
             <div className="bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden">
               <div className="px-6 py-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-bold text-slate-900">
-                  Neural queries for colony-matrix.ai
+                  {t('analytics.neuralQueriesHeader')}
                 </h2>
                 <div className="flex items-center gap-4">
                   <button className="flex items-center gap-2 text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline">
-                    Print report
+                    {t('analytics.printReport')}
                   </button>
                   <button
                     onClick={handleExport}
                     className="flex items-center gap-1 text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline"
                   >
-                    Download data <ArrowRight className="w-3 h-3" />
+                    {t('analytics.downloadData')} <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
               </div>
 
-              {/* Filter Bar */}
               <div className="px-6 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4 bg-slate-50/30">
                 <button className="flex items-center gap-2 px-3 py-1.5 bg-white border border-blue-200 text-blue-600 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 transition-all">
-                  <Filter className="w-3 h-3" /> Add filter
+                  <Filter className="w-3 h-3" /> {t('analytics.addFilter')}
                 </button>
 
                 <div className="flex items-center gap-2">
@@ -473,7 +462,7 @@ export default function AnalyticsPage() {
                     >
                       {DATE_RANGE_OPTIONS.map((o) => (
                         <option key={o.value} value={o.value}>
-                          {o.label}
+                          {o.value === '7d' ? t('analytics.last7Days') : o.value === '30d' ? t('analytics.last30Days') : o.value === '90d' ? t('analytics.last90Days') : t('analytics.customDate')}
                         </option>
                       ))}
                     </select>
@@ -485,10 +474,10 @@ export default function AnalyticsPage() {
               {/* Query Overview Pills */}
               <div className="px-6 py-6 space-y-4">
                 <div className="flex items-center gap-2 text-[11px] font-bold text-slate-900">
-                  Query overview <Clock className="w-3 h-3 text-slate-400" />
+                  {t('analytics.queryOverview')} <Clock className="w-3 h-3 text-slate-400" />
                 </div>
                 <div className="flex border-b border-slate-100 gap-6">
-                  {["Query name", "Query type", "Response code", "Data center"].map(
+                  {[t('analytics.tabQueryName'), t('analytics.tabQueryType'), t('analytics.tabResponseCode'), t('analytics.tabDataCenter')].map(
                     (tab, i) => (
                       <button
                         key={tab}
@@ -513,7 +502,7 @@ export default function AnalyticsPage() {
                     { label: "VRBA Matrix", val: "1.43k", color: "bg-amber-500" },
                     { label: "BGBB Protocol", val: "50", color: "bg-emerald-500" },
                     { label: "R2A Analytics", val: "20", color: "bg-rose-500" },
-                    { label: "TSA Diagnostic", val: "10", color: "bg-purple-500" },
+                    { label: "Compliance Integrity", val: "99.8%", color: "bg-emerald-400" },
                   ].map((s, i) => (
                     <div
                       key={i}
@@ -584,19 +573,19 @@ export default function AnalyticsPage() {
                   </ResponsiveContainer>
                 </div>
                 <p className="text-[9px] text-center text-slate-400 font-bold uppercase tracking-widest mt-4">
-                  Time (GMT+7)
+                  {t('analytics.timeGmt')}
                 </p>
               </div>
 
               {/* Query Statistics Section */}
               <div className="px-6 py-8 bg-slate-50/50 border-t border-slate-100">
                 <h3 className="text-xs font-bold text-slate-900 mb-6">
-                  Query statistics
+                  {t('analytics.queryStats')}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <div className="space-y-2 border-l-2 border-slate-100 pl-6">
                     <p className="text-[10px] font-bold text-slate-500">
-                      Total queries{" "}
+                      {t('analytics.totalQueries')}{" "}
                       <Info className="w-3 h-3 inline ml-1 opacity-50" />
                     </p>
                     <p className="text-2xl font-bold text-slate-900">
@@ -607,14 +596,14 @@ export default function AnalyticsPage() {
                   </div>
                   <div className="space-y-2 border-l-2 border-slate-100 pl-6">
                     <p className="text-[10px] font-bold text-slate-500">
-                      Average queries per second{" "}
+                      {t('analytics.avgQueriesSec')}{" "}
                       <Info className="w-3 h-3 inline ml-1 opacity-50" />
                     </p>
                     <p className="text-2xl font-bold text-slate-900">0.035</p>
                   </div>
                   <div className="space-y-2 border-l-2 border-slate-100 pl-6">
                     <p className="text-[10px] font-bold text-slate-500">
-                      Average processing time (ms){" "}
+                      {t('analytics.avgProcessingTime')}{" "}
                       <Info className="w-3 h-3 inline ml-1 opacity-50" />
                     </p>
                     <p className="text-2xl font-bold text-slate-900">2.447</p>
@@ -627,10 +616,10 @@ export default function AnalyticsPage() {
             <div className="bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden mt-10">
               <div className="px-6 py-6 border-b border-slate-100 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-slate-900">
-                  Intelligence Ledger
+                  {t('analytics.intelligenceLedger')}
                 </h2>
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  {monthlySummaries.length} Cycles Logged
+                  {monthlySummaries.length} {t('analytics.cyclesLogged')}
                 </span>
               </div>
 
@@ -638,7 +627,7 @@ export default function AnalyticsPage() {
                 <div className="py-24 text-center">
                   <FlaskConical className="w-16 h-16 text-slate-100 mx-auto mb-6" />
                   <p className="text-xs font-black text-slate-300 uppercase tracking-widest">
-                    No Monthly Intelligence Archived
+                    {t('analytics.noMonthlyArchived')}
                   </p>
                 </div>
               ) : (
@@ -647,11 +636,11 @@ export default function AnalyticsPage() {
                     <thead>
                       <tr className="bg-slate-50/50 border-b border-slate-100">
                         {[
-                          "Diagnostic Cycle",
-                          "Total Sequences",
-                          "Density Median",
-                          "Compliance integrity",
-                          "Authorized personnel",
+                          t('analytics.colDiagnosticCycle'),
+                          t('analytics.colTotalSequences'),
+                          t('analytics.colDensityMedian'),
+                          t('analytics.colComplianceIntegrity'),
+                          t('analytics.colAuthorizedPersonnel'),
                         ].map((h) => (
                           <th
                             key={h}
@@ -706,76 +695,13 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Right: Documentation Sidebar - FIXED TO RIGHT */}
-        {showDocs && (
-          <div className="w-80 lg:w-[350px] flex flex-col bg-white border-l border-slate-200 shadow-2xl overflow-hidden animate-in slide-in-from-right duration-300 fixed right-0 top-16 bottom-0 z-30">
-            {/* Header Section */}
-            <div className="px-4 py-4 border-b border-slate-100 flex items-center gap-3 bg-white sticky top-0 z-10">
-              <button onClick={() => setShowDocs(false)} className="p-2 hover:bg-slate-50 rounded-lg transition-colors group flex-shrink-0">
-                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-900" />
-              </button>
-              <div className="flex flex-col">
-                <h3 className="text-xl font-bold text-slate-900">Documentation</h3>
-                <a href="#" className="text-[10px] text-primary hover:underline flex items-center gap-1 mt-1 font-black uppercase tracking-widest">
-                  Go to full documentation <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-
-            {/* ColonyAI Style Docs Body */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 bg-white">
-              <div className="flex items-center justify-between pb-6 border-b border-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 bg-primary rounded flex items-center justify-center">
-                    <FlaskConical className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-sm font-bold text-slate-800 tracking-tight">ColonyAI Docs</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => toast('Neural Search engine initialized', { icon: '🔍' })}
-                    className="p-1 hover:bg-slate-50 rounded transition-colors"
-                  >
-                    <Search className="w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-900" />
-                  </button>
-                  <button 
-                    onClick={() => toast('Documentation index toggled', { icon: '📖' })}
-                    className="w-8 h-8 rounded border border-slate-200 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="w-3.5 h-[1.5px] bg-slate-600 relative before:absolute before:-top-1 before:left-0 before:w-3.5 before:h-[1.5px] before:bg-slate-600 after:absolute after:top-1 after:left-0 after:w-3.5 after:h-[1.5px] after:bg-slate-600" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 p-1 bg-white rounded-md border border-slate-200 w-fit shadow-sm">
-                <button className="flex items-center gap-2 px-2.5 py-1 text-[9px] font-bold text-slate-700 bg-slate-50 rounded-md border border-slate-200 hover:bg-slate-100 transition-colors">
-                  On this page <ChevronRight className="w-3 h-3" />
-                </button>
-                <span className="text-[9px] font-bold text-slate-800 px-2">Overview</span>
-              </div>
-
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex items-center gap-2 text-[10px] font-medium text-slate-400">
-                  <span>Directory</span>
-                  <ChevronRight className="w-2.5 h-2.5" />
-                  <span className="text-slate-600 font-bold uppercase tracking-tighter">Neural Analytics</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button 
-                    onClick={handleCopyDocs}
-                    className="flex items-center gap-1.5 px-2 py-1 border border-slate-200 rounded text-[9px] font-bold text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"
-                  >
-                    <Copy className="w-3 h-3" /> Copy
-                  </button>
-                </div>
-              </div>
-              
-              <div className="space-y-10">
-                {/* Title Section */}
-                <div>
-                  <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-tight mb-3">Analytics Matrix</h1>
-                  <p className="text-sm text-slate-500 leading-relaxed font-medium">Standard Operating Procedure (SOP) for interpreting neural detection queries and historical compliance trends.</p>
-                </div>
-                
+        <DocumentationSidebar 
+          showDocs={showDocs} 
+          setShowDocs={setShowDocs}
+          directory="Neural Analytics"
+          title={t('analytics.docsTitle')}
+          description={t('analytics.docsDescription')}
+        >
                 {/* 1. Overview */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2 mb-2">
@@ -863,38 +789,7 @@ export default function AnalyticsPage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Footer Links Section */}
-                <div className="pt-10 pb-8 border-t border-slate-100 mt-6 space-y-6">
-                  <div className="grid grid-cols-2 gap-y-4">
-                    {[
-                      'Support', 'System status', 'Careers', 'Terms of Use', 
-                      'Report Security Issues', 'Privacy Policy'
-                    ].map((link, i) => (
-                      <a key={i} href="#" className="text-[11px] text-slate-400 hover:text-primary transition-colors font-bold uppercase tracking-tight">
-                        {link}
-                      </a>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center gap-3 py-2 px-3 bg-white border border-slate-200 rounded-xl w-fit cursor-pointer hover:bg-slate-50 transition-all shadow-sm">
-                    <div className="flex">
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-500 border border-white -mr-1" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-white border border-blue-500" />
-                    </div>
-                    <span className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">Cookie Preferences</span>
-                  </div>
-
-                  <div className="pt-2">
-                    <p className="text-[10px] text-slate-300 font-black uppercase tracking-[0.2em]">
-                      © 2026 ColonyAI, Inc.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        </DocumentationSidebar>
       </div>
     </div>
   );

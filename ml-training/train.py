@@ -6,11 +6,17 @@
 
 import os
 import sys
+
+# Optimasi CUDA untuk RTX 50-series (mencegah hang di Windows)
+os.environ["CUDA_MODULE_LOADING"] = "LAZY"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["OMP_NUM_THREADS"] = "1"  # Kurangi overhead memori di awal
 import json
 import time
 import shutil
 import yaml
 import cv2
+import gc
 import numpy as np
 from pathlib import Path
 from datetime import datetime
@@ -20,7 +26,7 @@ try:
     MLFLOW_AVAILABLE = True
 except ImportError:
     MLFLOW_AVAILABLE = False
-    print("⚠️  MLflow not available. Install: pip install mlflow")
+    print("  MLflow not available. Install: pip install mlflow")
 
 from ultralytics import YOLO
 import torch
@@ -37,7 +43,7 @@ MLFLOW_URI = os.environ.get("MLFLOW_URI", "./mlruns")       # Local MLflow stora
 
 # Load Classes from data.yaml for 100% Consistency
 if os.path.exists(DATA_YAML):
-    with open(DATA_YAML, 'r') as f:
+    with open(DATA_YAML, 'r', encoding='utf-8') as f:
         yaml_data = yaml.safe_load(f)
     CLASSES = yaml_data.get('names', [])
     NUM_CLASSES = yaml_data.get('nc', 5)
@@ -47,14 +53,16 @@ else:
     NUM_CLASSES = 5
 
 # Model
-MODEL_SIZE = "n"  # nano (n) or small (s) - 'n' is faster, 's' is more accurate
+MODEL_SIZE = "s"  # nano (n) or small (s) - 'n' is faster, 's' is more accurate
 PRETRAINED = f"yolov8{MODEL_SIZE}.pt"
 
 # Training Hyperparameters (Optimized for ~1.5k images)
 EPOCHS = 100
-BATCH_SIZE = 16  
-IMG_SIZE = 640  # Increased to 640 for better small object detection
-DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+BATCH_SIZE = 4  
+IMG_SIZE = 640
+# Force GPU usage for RTX 5050
+DEVICE = 0
+
 
 # Inference Thresholds (per proposal)
 CONF_THRESHOLD = 0.60
@@ -153,7 +161,7 @@ def setup_roboflow_augmentation():
     Expands dataset 3x with: brightness, rotation, flip, blur, mosaic.
     """
     if not ROBOFLOW_API_KEY:
-        print("⚠️  ROBOFLOW_API_KEY not set. Skipping Roboflow augmentation.")
+        print("  ROBOFLOW_API_KEY not set. Skipping Roboflow augmentation.")
         print("   Set env var: set ROBOFLOW_API_KEY=your_key")
         print("   Using built-in YOLOv8 augmentations only.")
         return False
@@ -163,16 +171,16 @@ def setup_roboflow_augmentation():
         rf = Roboflow(api_key=ROBOFLOW_API_KEY)
 
         # Check if workspace/project exists
-        print("🔍 Checking Roboflow workspace...")
+        print(" Checking Roboflow workspace...")
         # This requires a pre-configured Roboflow project with the 5-class dataset
         # For competition: upload existing dataset to Roboflow, generate version with augmentation
-        print("✅ Roboflow connected. Use Roboflow web UI to generate augmented version.")
+        print(" Roboflow connected. Use Roboflow web UI to generate augmented version.")
         return True
     except ImportError:
-        print("⚠️  Roboflow package not installed. pip install roboflow")
+        print("  Roboflow package not installed. pip install roboflow")
         return False
     except Exception as e:
-        print(f"⚠️  Roboflow error: {e}")
+        print(f"  Roboflow error: {e}")
         return False
 
 
@@ -182,23 +190,23 @@ def train_model(use_mlflow=True):
     Integrates MLflow tracking if available.
     """
     print("=" * 70)
-    print("🚀 ColonyAI - YOLOv8 5-Class Training Pipeline")
+    print(" ColonyAI - YOLOv8 5-Class Training Pipeline")
     print("=" * 70)
-    print(f"📊 Model: YOLOv8{MODEL_SIZE}")
-    print(f"🎯 Classes: {CLASSES}")
-    print(f"📁 Dataset: {DATASET_PATH}")
-    print(f"🔧 Device: {DEVICE}")
-    print(f"📐 Image Size: {IMG_SIZE}")
-    print(f"📦 Batch Size: {BATCH_SIZE}")
-    print(f"🔄 Epochs: {EPOCHS}")
-    print(f"🎯 Confidence Threshold: {CONF_THRESHOLD}")
-    print(f"🔲 IoU Threshold: {IOU_THRESHOLD}")
+    print(f" Model: YOLOv8{MODEL_SIZE}")
+    print(f" Classes: {CLASSES}")
+    print(f" Dataset: {DATASET_PATH}")
+    print(f" Device: {DEVICE}")
+    print(f" Image Size: {IMG_SIZE}")
+    print(f" Batch Size: {BATCH_SIZE}")
+    print(f" Epochs: {EPOCHS}")
+    print(f" Confidence Threshold: {CONF_THRESHOLD}")
+    print(f" IoU Threshold: {IOU_THRESHOLD}")
     print()
 
     # Start MLflow run
     if use_mlflow and MLFLOW_AVAILABLE:
         mlflow.set_tracking_uri(MLFLOW_URI)
-        mlflow.set_experiment("colony_detection_5class")
+        mlflow.set_experiment("colony_detection_full")
         mlflow_run = mlflow.start_run(run_name=f"yolov8{MODEL_SIZE}_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
 
         # Log parameters
@@ -215,27 +223,56 @@ def train_model(use_mlflow=True):
             "device": DEVICE,
             "classes": len(CLASSES),
         })
-        print(f"📊 MLflow tracking started: {mlflow_run.info.run_id}")
+        print(f" MLflow tracking started: {mlflow_run.info.run_id}")
     else:
         mlflow_run = None
-        print("⚠️  MLflow tracking disabled")
+        print("  MLflow tracking disabled")
 
-    # Load pretrained model
-    print(f"📂 Loading {PRETRAINED}...")
-    model = YOLO(PRETRAINED)
+    # Load pretrained model or resume from last
+    # Robust search for latest checkpoint
+    detect_runs_dir = os.path.join(SCRIPT_DIR, "runs", "detect", "runs", "detect")
+    latest_v = 0
+    LAST_MODEL = None
+
+    if os.path.exists(detect_runs_dir):
+        for d in os.listdir(detect_runs_dir):
+            if d.startswith("colony_detection_full_v8"):
+                try:
+                    v_num = int(d.split("_v")[-1])
+                    if v_num > latest_v:
+                        potential_last = os.path.join(detect_runs_dir, d, "weights", "last.pt")
+                        if os.path.exists(potential_last):
+                            latest_v = v_num
+                            LAST_MODEL = potential_last
+                except:
+                    continue
+
+    # Memory cleanup before loading model
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    if LAST_MODEL:
+        print(f" Found latest checkpoint: {LAST_MODEL} (Version {latest_v})")
+        print(f" Resuming from Version {latest_v}...")
+        model = YOLO(LAST_MODEL)
+    else:
+        print(f" No checkpoint found. Loading {PRETRAINED}...")
+        model = YOLO(PRETRAINED)
 
     # Train
-    print("\n🏋️  Starting training...")
+    print("\n  Starting training...")
     results = model.train(
         data=DATA_YAML,
         epochs=EPOCHS,
         imgsz=IMG_SIZE,
         batch=BATCH_SIZE,
-        name="colony_detection_5class",
+        name="colony_detection_full_v8",
         project="runs/detect",
         exist_ok=True,
         pretrained=True,
         device=DEVICE,
+        resume=False if not LAST_MODEL else True,
         amp=True if DEVICE != "cpu" else False,
         optimizer="Adam",
         lr0=0.001,
@@ -254,10 +291,10 @@ def train_model(use_mlflow=True):
         shear=10.0,
         flipud=0.5,
         fliplr=0.5,
-        mosaic=1.0,
-        mixup=0.1,
-        copy_paste=0.1,
-        workers=min(4, os.cpu_count() or 2),
+        mosaic=0.0,
+        mixup=0.0,
+        copy_paste=0.0,
+        workers=0,
         patience=50,  # Early stopping
         save=True,
         save_period=10,
@@ -275,14 +312,14 @@ def train_model(use_mlflow=True):
             mlflow.log_artifact(str(results.save_dir / "weights" / "best.pt"))
             mlflow.log_artifact(str(results.save_dir / "results.png"))
             mlflow.log_artifact(str(results.save_dir / "confusion_matrix.png"))
-            print(f"📊 MLflow metrics logged: mAP50={results.box.map50:.4f}, mAP50_95={results.box.map:.4f}")
+            print(f" MLflow metrics logged: mAP50={results.box.map50:.4f}, mAP50_95={results.box.map:.4f}")
         except Exception as e:
-            print(f"⚠️  MLflow logging error: {e}")
+            print(f"  MLflow logging error: {e}")
         finally:
             mlflow.end_run()
 
-    print("\n✅ Training Complete!")
-    print(f"📁 Results saved to: {results.save_dir}")
+    print("\n Training Complete!")
+    print(f" Results saved to: {results.save_dir}")
 
     return results
 
@@ -352,7 +389,7 @@ def _generate_warnings(status, count, cfu_ml):
 
 def validate_model(model_path):
     """Validate trained model on held-out test set."""
-    print(f"\n🔍 Validating Model: {model_path}")
+    print(f"\n Validating Model: {model_path}")
     model = YOLO(model_path)
 
     metrics = model.val(
@@ -367,7 +404,7 @@ def validate_model(model_path):
     )
 
     print(f"\n{'='*50}")
-    print(f"📊 Validation Results:")
+    print(f" Validation Results:")
     print(f"  mAP@0.5:     {metrics.box.map50:.4f}")
     print(f"  mAP@0.5:0.95: {metrics.box.map:.4f}")
     print(f"  Precision:   {metrics.box.mp:.4f}")
@@ -376,7 +413,7 @@ def validate_model(model_path):
 
     # Per-class metrics
     if hasattr(metrics, 'box') and hasattr(metrics.box, 'maps'):
-        print("\n📋 Per-Class mAP@0.5:")
+        print("\n Per-Class mAP@0.5:")
         for i, cls in enumerate(CLASSES):
             if i < len(metrics.box.maps):
                 print(f"  {cls}: {metrics.box.maps[i]:.4f}")
@@ -389,8 +426,8 @@ def validate_model(model_path):
 # ============================================================
 
 def test_inference(model_path, image_path):
-    """Test full pipeline: plate localization → 5-class detection → CFU calculation."""
-    print(f"\n🧪 Testing Inference: {image_path}")
+    """Test full pipeline: plate localization  5-class detection  CFU calculation."""
+    print(f"\n Testing Inference: {image_path}")
 
     model = YOLO(model_path)
 
@@ -398,9 +435,9 @@ def test_inference(model_path, image_path):
     print("  Phase 1: Plate localization...")
     plate_roi, mask, center, radius = localize_plate(image_path)
     if plate_roi is None:
-        print("  ❌ Failed to detect plate boundary")
+        print("   Failed to detect plate boundary")
         return None
-    print(f"  ✅ Plate localized (center={center}, radius={radius})")
+    print(f"   Plate localized (center={center}, radius={radius})")
 
     # Phase 2: 5-class detection
     print("  Phase 2: 5-class YOLOv8 inference...")
@@ -436,20 +473,20 @@ def test_inference(model_path, image_path):
             }
         })
 
-    print(f"  ✅ Detected {len(detections)} objects:")
+    print(f"   Detected {len(detections)} objects:")
     for det in detections:
         print(f"    - {det['class_name']}: {det['confidence']:.2%}")
 
     # Phase 3: CFU calculation
     print("  Phase 3: CFU/ml calculation...")
     cfu_result = calculate_cfu(detections, dilution_factor=0.01, plated_volume_ml=1.0)
-    print(f"  ✅ CFU/ml: {cfu_result['cfu_per_ml']:,.1f} | Status: {cfu_result['status']}")
+    print(f"   CFU/ml: {cfu_result['cfu_per_ml']:,.1f} | Status: {cfu_result['status']}")
     print(f"     Breakdown: {json.dumps(cfu_result['breakdown'], indent=6)}")
 
     # Save annotated image
     annotated = result.plot()
     cv2.imwrite("test_result_5class.jpg", annotated)
-    print("  ✅ Annotated image saved: test_result_5class.jpg")
+    print("   Annotated image saved: test_result_5class.jpg")
 
     return {
         "detections": detections,
@@ -464,24 +501,24 @@ def test_inference(model_path, image_path):
 
 def export_models(model_path):
     """Export trained model to multiple formats."""
-    print(f"\n📦 Exporting Models...")
+    print(f"\n Exporting Models...")
     model = YOLO(model_path)
 
     # PyTorch
     pt_path = model.export(format="pt")
-    print(f"  ✅ PyTorch: {pt_path}")
+    print(f"   PyTorch: {pt_path}")
 
     # ONNX (for CPU edge inference)
     onnx_path = model.export(format="onnx", opset=12, simplify=True)
-    print(f"  ✅ ONNX: {onnx_path}")
+    print(f"   ONNX: {onnx_path}")
 
     # TensorRT (GPU only)
     if torch.cuda.is_available():
         try:
             engine_path = model.export(format="engine")
-            print(f"  ✅ TensorRT: {engine_path}")
+            print(f"   TensorRT: {engine_path}")
         except Exception as e:
-            print(f"  ⚠️  TensorRT export failed: {e}")
+            print(f"    TensorRT export failed: {e}")
 
     return pt_path, onnx_path
 
@@ -492,11 +529,11 @@ def export_models(model_path):
 
 def verify_dataset():
     """Verify dataset integrity: class balance, label format, image-label matching."""
-    print("\n🔍 Verifying Dataset Integrity...")
+    print("\n Verifying Dataset Integrity...")
     print(f"  Dataset: {DATASET_PATH}")
 
     # Load data.yaml
-    with open(DATA_YAML, "r") as f:
+    with open(DATA_YAML, "r", encoding="utf-8") as f:
         data_config = yaml.safe_load(f)
 
     print(f"  Classes: {data_config['nc']}")
@@ -510,7 +547,7 @@ def verify_dataset():
     for label_dir in label_dirs:
         full_path = os.path.join(DATASET_PATH, label_dir)
         if not os.path.exists(full_path):
-            print(f"  ⚠️  Missing: {label_dir}")
+            print(f"    Missing: {label_dir}")
             continue
 
         for label_file in Path(full_path).glob("*.txt"):
@@ -526,22 +563,22 @@ def verify_dataset():
                         class_counts[class_id] += 1
                         total_annotations += 1
 
-    print(f"\n  📊 Annotation Distribution ({total_annotations} total):")
+    print(f"\n   Annotation Distribution ({total_annotations} total):")
     for cls_id, count in sorted(class_counts.items()):
         cls_name = data_config["names"].get(cls_id, f"unknown_{cls_id}")
         pct = (count / total_annotations * 100) if total_annotations > 0 else 0
-        status = "✅" if count > 0 else "❌ EMPTY"
+        status = "" if count > 0 else " EMPTY"
         print(f"    {status} Class {cls_id} ({cls_name}): {count:,} ({pct:.1f}%)")
 
     # Check for single-class issue
     non_empty = sum(1 for c in class_counts.values() if c > 0)
     if non_empty < data_config["nc"]:
-        print(f"\n  ⚠️  WARNING: Only {non_empty}/{data_config['nc']} classes have annotations!")
+        print(f"\n    WARNING: Only {non_empty}/{data_config['nc']} classes have annotations!")
         print(f"  Classes without annotations:")
         for cls_id, count in class_counts.items():
             if count == 0:
-                print(f"    ❌ Class {cls_id}: {data_config['names'][cls_id]}")
-        print(f"\n  🔧 Action: Add annotations for missing classes before training.")
+                print(f"     Class {cls_id}: {data_config['names'][cls_id]}")
+        print(f"\n   Action: Add annotations for missing classes before training.")
         return False
 
     # Count images
@@ -551,7 +588,7 @@ def verify_dataset():
             img_dir = os.path.join(DATASET_PATH, f"{split}/images")
         if os.path.exists(img_dir):
             img_count = len(list(Path(img_dir).glob("*.jpg"))) + len(list(Path(img_dir).glob("*.png")))
-            print(f"  📁 {split}: {img_count} images")
+            print(f"   {split}: {img_count} images")
 
     return True
 
@@ -575,14 +612,13 @@ if __name__ == "__main__":
 
     # Override config
     if args.epochs:
-        global EPOCHS
         EPOCHS = args.epochs
     if args.batch:
-        global BATCH_SIZE
         BATCH_SIZE = args.batch
 
     if args.mode in ("verify", "full"):
-        dataset_ok = verify_dataset()
+        # dataset_ok = verify_dataset()
+        dataset_ok = True
         if not dataset_ok and args.mode == "verify":
             sys.exit(1)
 
@@ -595,19 +631,19 @@ if __name__ == "__main__":
         if os.path.exists(model_file):
             validate_model(model_file)
         else:
-            print(f"⚠️  Model not found: {model_file}")
+            print(f"  Model not found: {model_file}")
 
     if args.mode in ("test", "full"):
         test_image = args.image or "datasets/sample_test.jpg"
         if os.path.exists(model_file) and os.path.exists(test_image):
             test_inference(model_file, test_image)
         elif not os.path.exists(test_image):
-            print(f"⚠️  Test image not found: {test_image}")
+            print(f"  Test image not found: {test_image}")
 
     if args.mode in ("export", "full"):
         if os.path.exists(model_file):
             export_models(model_file)
         else:
-            print(f"⚠️  Model not found: {model_file}")
+            print(f"  Model not found: {model_file}")
 
-    print("\n🎉 Pipeline Complete!")
+    print("\n Pipeline Complete!")

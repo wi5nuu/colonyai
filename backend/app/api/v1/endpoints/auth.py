@@ -11,16 +11,53 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     decode_token,
-    get_current_user
+    get_current_user,
+    require_role
 )
 from app.core.config import settings
 from app.models import User, UserRole
 from app.utils.audit import write_audit_log
 import uuid
+import time
 from typing import Optional
 
 router = APIRouter()
 
+def validate_password_complexity(password: str):
+    """
+    Enterprise-grade password validation:
+    - Min 8 characters
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one digit
+    - At least one special character
+    """
+    if len(password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters long"
+        )
+    if not any(c.isupper() for c in password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must contain at least one uppercase letter"
+        )
+    if not any(c.islower() for c in password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must contain at least one lowercase letter"
+        )
+    if not any(c.isdigit() for c in password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must contain at least one digit"
+        )
+    import re
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must contain at least one special character"
+        )
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -41,24 +78,73 @@ class TokenResponse(BaseModel):
     user: Optional[dict] = None
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
 @router.post("/login")
 async def login(request: LoginRequest, http_request: Request = None, db: AsyncSession = Depends(get_db)):
-    """Authenticate user and return JWT tokens"""
+    """Authenticate user with Account Lockout protection"""
     # Find user in database
     result = await db.execute(select(User).where(User.email == request.email))
     user = result.scalar_one_or_none()
 
-    if not user or not verify_password(request.password, user.password_hash):
+    if not user:
+        # Avoid user enumeration by using a generic error and consistent time
+        time.sleep(0.1) # Subtle timing consistency
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
         )
 
+    # ── Check Account Lockout ──
+    if user.is_locked_out == 'yes':
+        if user.locked_until and user.locked_until > datetime.utcnow():
+            remaining = (user.locked_until - datetime.utcnow()).seconds // 60
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Account locked. Try again in {remaining} minutes."
+            )
+        else:
+            # Reset lockout after time expired
+            user.is_locked_out = 'no'
+            user.failed_login_attempts = 0
+            await db.commit()
+
+    if not verify_password(request.password, user.password_hash):
+        # ── Increment Failed Attempts ──
+        user.failed_login_attempts += 1
+        user.last_failed_login = datetime.utcnow()
+        
+        if user.failed_login_attempts >= 5:
+            user.is_locked_out = 'yes'
+            user.locked_until = datetime.utcnow() + timedelta(minutes=15)
+            await db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Too many failed attempts. Account locked for 15 minutes."
+            )
+        
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password"
+        )
+
+    # ── Success: Reset Failed Attempts ──
+    user.failed_login_attempts = 0
+    user.is_locked_out = 'no'
+    user.locked_until = None
+    await db.commit()
+
     # Create tokens
-    access_token_expires = timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": str(user.id), "email": user.email, "role": user.role.value},
-        expires_delta=access_token_expires
+        data={"sub": str(user.id), "email": user.email, "role": user.role.value}
     )
     refresh_token = create_refresh_token(
         data={"sub": str(user.id), "email": user.email, "role": user.role.value}
@@ -73,7 +159,6 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
         ip_address=ip, user_agent=ua,
     )
 
-    # Return user profile along with tokens
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -82,14 +167,22 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
             "id": str(user.id),
             "email": user.email,
             "full_name": user.full_name,
-            "role": user.role.value if hasattr(user.role, 'value') else str(user.role),
+            "role": user.role.value,
         }
     }
 
 
 @router.post("/register")
-async def register(request: RegisterRequest, http_request: Request = None, db: AsyncSession = Depends(get_db)):
-    """Register a new user"""
+async def register(
+    request: RegisterRequest, 
+    http_request: Request = None, 
+    current_user: dict = Depends(require_role("admin")), # Professional Lab: Admin only
+    db: AsyncSession = Depends(get_db)
+):
+    """Register a new user with Password Complexity enforcement"""
+    # ── Enforce Password Complexity ──
+    validate_password_complexity(request.password)
+
     # Check if user already exists
     result = await db.execute(select(User).where(User.email == request.email))
     existing_user = result.scalar_one_or_none()
@@ -140,7 +233,7 @@ async def register(request: RegisterRequest, http_request: Request = None, db: A
             "id": str(new_user.id),
             "email": new_user.email,
             "full_name": new_user.full_name,
-            "role": new_user.role.value if hasattr(new_user.role, 'value') else str(new_user.role),
+            "role": new_user.role.value,
         }
     }
 
@@ -201,8 +294,26 @@ async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends
 
 
 @router.post("/logout")
-async def logout(http_request: Request = None, current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
-    """Logout user (client should delete tokens)"""
+async def logout(
+    http_request: Request = None, 
+    current_user: dict = Depends(get_current_user), 
+    db: AsyncSession = Depends(get_db)
+):
+    """Secure Logout with JWT Blacklisting"""
+    from app.models import TokenBlacklist
+    
+    # ── Blacklist the JTI ──
+    jti = current_user.get("jti")
+    exp = current_user.get("exp") # timestamp
+    
+    if jti:
+        blacklist_item = TokenBlacklist(
+            jti=jti,
+            expires_at=datetime.fromtimestamp(exp, tz=timezone.utc).replace(tzinfo=None)
+        )
+        db.add(blacklist_item)
+        await db.commit()
+
     # Audit log: logout
     ip = http_request.client.host if http_request else None
     ua = http_request.headers.get("user-agent") if http_request else None
@@ -211,9 +322,65 @@ async def logout(http_request: Request = None, current_user: dict = Depends(get_
         resource_type="auth", resource_id=None,
         ip_address=ip, user_agent=ua,
     )
-    # In a production system, you might add the token to a blacklist
-    # For now, the client is responsible for deleting the tokens
-    return {"message": "Successfully logged out"}
+    
+    return {"message": "Successfully logged out. Token revoked."}
+
+
+@router.post("/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Initiate password reset flow.
+    Generates a token and (mock) sends an email.
+    """
+    result = await db.execute(select(User).where(User.email == request.email))
+    user = result.scalar_one_or_none()
+
+    # Always return success even if user not found (security best practice)
+    if user:
+        # Generate token
+        import secrets
+        token = secrets.token_urlsafe(32)
+        user.reset_token = token
+        user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+        await db.commit()
+        
+        # TODO: Send actual email in production
+        print(f"DEBUG: Password reset link: {settings.BACKEND_URL}/reset-password?token={token}")
+
+    return {"message": "If that email is registered, a reset link has been sent."}
+
+
+@router.post("/reset-password")
+async def reset_password(request: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Reset password using a valid token with Complexity enforcement.
+    """
+    result = await db.execute(
+        select(User).where(
+            User.reset_token == request.token,
+            User.reset_token_expires > datetime.utcnow()
+        )
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+
+    # ── Enforce Password Complexity ──
+    validate_password_complexity(request.new_password)
+
+    # Update password
+    user.password_hash = get_password_hash(request.new_password)
+    user.reset_token = None
+    user.reset_token_expires = None
+    user.updated_at = datetime.utcnow()
+    
+    await db.commit()
+
+    return {"message": "Password reset successfully. You can now login."}
 
 
 # ============================================================
@@ -237,12 +404,7 @@ async def change_password(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Change user password with validation.
-
-    Requirements:
-    - Current password must be correct
-    - New password must be >= 8 characters
-    - New password must contain uppercase, lowercase, and number
+    Change user password with strict Complexity enforcement.
     """
     user_id = uuid.UUID(current_user["user_id"])
     result = await db.execute(select(User).where(User.id == user_id))
@@ -253,28 +415,16 @@ async def change_password(
 
     # Verify current password
     if not verify_password(request.current_password, user.password_hash):
-        raise PasswordValidationError("Current password is incorrect")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect")
 
-    # Validate new password strength
-    if len(request.new_password) < 8:
-        raise PasswordValidationError("Password must be at least 8 characters")
-
-    if not re.search(r'[A-Z]', request.new_password):
-        raise PasswordValidationError("Password must contain at least one uppercase letter")
-
-    if not re.search(r'[a-z]', request.new_password):
-        raise PasswordValidationError("Password must contain at least one lowercase letter")
-
-    if not re.search(r'\d', request.new_password):
-        raise PasswordValidationError("Password must contain at least one number")
+    # ── Enforce Password Complexity ──
+    validate_password_complexity(request.new_password)
 
     # Update password
     user.password_hash = get_password_hash(request.new_password)
     from datetime import timezone
     user.updated_at = datetime.now(timezone.utc)
     await db.commit()
-
-    # TODO: Invalidate all other sessions for this user in production
 
     # Audit log
     ip = http_request.client.host if http_request else None

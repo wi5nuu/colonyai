@@ -12,17 +12,19 @@ import { toast } from 'sonner'
 import { AuthGuard } from '@/lib/auth-guard'
 import { useAuthStore } from '@/lib/auth-store'
 import { SmartAssistant } from '@/components/smart-assistant'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { useTranslationStore } from '@/lib/i18n/store'
 
 const navigation = [
-  { name: 'Overview', href: '/dashboard', icon: LayoutDashboard, roles: ['analyst', 'viewer', 'system_admin', 'senior_analyst', 'lab_manager', 'quality_officer'] },
-  { name: 'New Analysis', href: '/dashboard/upload', icon: Upload, roles: ['analyst', 'system_admin', 'senior_analyst'] },
-  { name: 'History', href: '/dashboard/history', icon: History, roles: ['analyst', 'viewer', 'system_admin', 'senior_analyst', 'lab_manager', 'quality_officer'] },
-  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3, roles: ['viewer', 'system_admin', 'lab_manager', 'quality_officer'] },
-  { name: 'Simulator', href: '/dashboard/simulator', icon: Scale, roles: ['analyst', 'system_admin', 'senior_analyst'] },
-  { name: 'Reports', href: '/dashboard/reports', icon: FileText, roles: ['viewer', 'system_admin', 'lab_manager', 'quality_officer'] },
-  { name: 'Audit Ledger', href: '/dashboard/audit', icon: ShieldCheck, roles: ['viewer', 'system_admin', 'quality_officer'] },
-  { name: 'Administration', href: '/dashboard/administration', icon: Lock, roles: ['system_admin'] },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings, roles: ['analyst', 'viewer', 'system_admin', 'senior_analyst', 'lab_manager', 'quality_officer'] },
+  { name: 'Overview', href: '/dashboard', icon: LayoutDashboard, roles: ['analyst', 'manager', 'auditor', 'admin'], tKey: 'nav.overview' },
+  { name: 'New Analysis', href: '/dashboard/upload', icon: Upload, roles: ['analyst', 'admin'], tKey: 'nav.newAnalysis' },
+  { name: 'History', href: '/dashboard/history', icon: History, roles: ['analyst', 'manager', 'auditor', 'admin'], tKey: 'nav.history' },
+  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3, roles: ['manager', 'admin'], tKey: 'nav.analytics' },
+  { name: 'Simulator', href: '/dashboard/simulator', icon: Scale, roles: ['analyst', 'admin'], tKey: 'nav.simulator' },
+  { name: 'Reports', href: '/dashboard/reports', icon: FileText, roles: ['manager', 'auditor', 'admin'], tKey: 'nav.reports' },
+  { name: 'Audit Ledger', href: '/dashboard/audit', icon: ShieldCheck, roles: ['manager', 'auditor', 'admin'], tKey: 'nav.auditLedger' },
+  { name: 'Administration', href: '/dashboard/administration', icon: Lock, roles: ['admin'], tKey: 'nav.administration' },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings, roles: ['analyst', 'manager', 'auditor', 'admin'], tKey: 'nav.settings' },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -37,6 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname()
   const router = useRouter()
   const auth = useAuthStore()
+  const { t } = useTranslationStore()
 
   const handleLogout = async () => {
     await auth.logout()
@@ -79,10 +82,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         ? (isCollapsed ? 'bg-white text-primary rounded-xl mx-3 justify-center' : 'bg-white text-primary rounded-l-xl ml-3 pl-4') 
                         : (isCollapsed ? 'text-white/70 hover:text-white hover:bg-white/10 mx-3 rounded-xl justify-center' : 'text-white/70 hover:text-white hover:bg-white/10 mx-3 rounded-xl px-4')
                     }`}
-                    title={isCollapsed ? item.name : ''}
+                    title={isCollapsed ? t(item.tKey) : ''}
                   >
                     <item.icon className={`transition-all ${isCollapsed ? 'h-6 w-6' : 'h-5 w-5'}`} />
-                    {!isCollapsed && <span className="animate-in fade-in slide-in-from-left-2 duration-300">{item.name}</span>}
+                    {!isCollapsed && <span className="animate-in fade-in slide-in-from-left-2 duration-300">{t(item.tKey)}</span>}
                   </Link>
                 )
             })}
@@ -93,12 +96,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {!isCollapsed && (
               <div className="bg-white/10 rounded-xl p-4 relative overflow-hidden group border border-white/5 animate-in fade-in zoom-in duration-300">
                 <div className="relative z-10">
-                  <p className="text-[10px] font-black text-white/90 mb-2 uppercase tracking-widest">Next Calibration Cycle</p>
+                  <p className="text-[10px] font-black text-white/90 mb-2 uppercase tracking-widest">{t('header.nextCalibration')}</p>
                   <div className="flex gap-2">
                     {[
-                      { val: '05', label: 'Days' },
-                      { val: '02', label: 'hours' },
-                      { val: '15', label: 'mins' }
+                      { val: '05', label: t('header.days') },
+                      { val: '02', label: t('header.hours') },
+                      { val: '15', label: t('header.mins') }
                     ].map((t, i) => (
                       <div key={i} className="flex flex-col items-center">
                         <div className="bg-white text-primary font-bold rounded-lg w-8 h-8 flex items-center justify-center text-xs shadow-sm">
@@ -118,10 +121,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <button
               onClick={handleLogout}
               className={`flex items-center gap-3 py-2.5 mt-4 transition-all text-white/70 hover:text-white hover:bg-white/10 rounded-xl ${isCollapsed ? 'justify-center mx-3' : 'px-4'}`}
-              title={isCollapsed ? 'Logout' : ''}
+              title={isCollapsed ? t('nav.logout') : ''}
             >
               <LogOut className={`${isCollapsed ? 'h-6 w-6' : 'h-4 w-4'}`} />
-              {!isCollapsed && <span className="text-xs">Logout</span>}
+              {!isCollapsed && <span className="text-xs">{t('nav.logout')}</span>}
             </button>
 
             {/* Collapse Toggle */}
@@ -151,15 +154,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
             <div className="hidden lg:flex items-center gap-6 ml-4">
                <button className="flex items-center gap-2 text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">
-                  <Activity className="w-3.5 h-3.5" /> Ask AI
+                  <Activity className="w-3.5 h-3.5" /> {t('header.askAi')}
                </button>
                <button className="flex items-center gap-2 text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">
-                  <Clock className="w-3.5 h-3.5" /> Support
+                  <Clock className="w-3.5 h-3.5" /> {t('header.support')}
                </button>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             <div className="relative">
               <button 
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
@@ -174,7 +178,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {notificationsOpen && (
                 <div className="absolute right-0 mt-3 w-80 bg-white rounded-lg shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="px-4 py-3 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-                    <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Neural Notifications</h3>
+                    <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{t('header.notifications')}</h3>
                     <button 
                       onClick={() => {
                         setNotifications(prev => prev.map(n => ({ ...n, read: true })))
@@ -182,7 +186,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       }}
                       className="text-[9px] font-black text-primary uppercase tracking-tighter hover:underline"
                     >
-                      Clear All
+                      {t('header.clearAll')}
                     </button>
                   </div>
                   <div className="max-h-[350px] overflow-y-auto">
@@ -205,12 +209,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     ) : (
                       <div className="p-8 text-center">
                         <Bell className="w-8 h-8 text-slate-100 mx-auto mb-2" />
-                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No new signals</p>
+                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{t('header.noNewSignals')}</p>
                       </div>
                     )}
                   </div>
                   <button className="w-full py-2 bg-slate-50 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors border-t border-slate-100">
-                    View System Log History
+                    {t('header.viewLogHistory')}
                   </button>
                 </div>
               )}

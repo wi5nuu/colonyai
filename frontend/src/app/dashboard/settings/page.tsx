@@ -6,6 +6,8 @@ import { useAuthStore } from "@/lib/auth-store";
 import { authApi } from "@/lib/auth-api";
 import { settingsApi } from "@/lib/settings-api";
 import { toast } from "sonner";
+import { DocumentationSidebar, DocumentationToggle } from "@/components/DocumentationSidebar";
+import { useTranslationStore } from '@/lib/i18n/store';
 
 const TABS = [
   { id: "profile", name: "Profile", icon: User },
@@ -20,16 +22,18 @@ const LABEL_CLS = "text-[8px] font-black text-slate-400 uppercase tracking-[0.2e
 const BTN_PRIMARY = "btn-primary py-2.5 px-5 flex items-center gap-2 rounded-lg text-[9px] font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed";
 
 export default function SettingsPage() {
+  const { t } = useTranslationStore();
   const [activeTab, setActiveTab] = useState("profile");
   const [preferences, setPreferences] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showDocs, setShowDocs] = useState(true);
 
   const loadPreferences = async () => {
     try {
       setIsLoading(true);
       const prefs = await settingsApi.getPreferences();
       setPreferences(prefs);
-    } catch { toast.error("Failed to load preferences"); }
+    } catch { toast.error(t('settings.errorLoadPrefs')); }
     finally { setIsLoading(false); }
   };
 
@@ -38,18 +42,22 @@ export default function SettingsPage() {
   const ActiveIcon = TABS.find(t => t.id === activeTab)?.icon || User;
 
   return (
-    <div className="max-w-6xl mx-auto animate-in fade-in duration-500">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 bg-slate-900 rounded-lg shadow-xl flex items-center justify-center">
-              <Settings2 className="w-4 h-4 text-primary" />
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden">
+      <div className="flex relative min-h-[calc(100vh-200px)]">
+        <div className={`flex-1 transition-all duration-300 ${showDocs ? 'lg:mr-[350px]' : ''}`}>
+          <div className="max-w-[1500px] mx-auto px-6 py-8">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-9 h-9 bg-slate-900 rounded-lg shadow-xl flex items-center justify-center">
+                    <Settings2 className="w-4 h-4 text-primary" />
+                  </div>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t('settings.title')}</h1>
+                </div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t('settings.subtitle')}</p>
+                <DocumentationToggle showDocs={showDocs} setShowDocs={setShowDocs} text={t('settings.docsToggle')} />
+              </div>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">System Configuration</h1>
-          </div>
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Laboratory Environment // Authorization Protocol</p>
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Sidebar Nav - 3 cols */}
@@ -95,7 +103,7 @@ export default function SettingsPage() {
                   <div className="w-20 h-20 rounded-[2rem] bg-slate-50 flex items-center justify-center">
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
                   </div>
-                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Syncing Preferences...</p>
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('settings.syncingPrefs')}</p>
                 </div>
               ) : (
                 <div className="animate-in slide-in-from-bottom-4 duration-500">
@@ -109,6 +117,50 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+            </div>
+          </div>
+        </div>
+        <DocumentationSidebar 
+          showDocs={showDocs} 
+          setShowDocs={setShowDocs}
+          directory="System Configuration"
+          title={t('settings.docsTitle')}
+          description={t('settings.docsDescription')}
+        >
+          <section className="space-y-4">
+             <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">01</span>
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Overview</h2>
+             </div>
+             <p className="text-sm text-slate-600 leading-relaxed bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                Panel System Configuration mengontrol seluruh infrastruktur perangkat lunak ColonyAI. Akses penuh hanya diberikan kepada pengguna dengan Role "Owner", yang dapat memodifikasi parameter sensitif seperti Token API dan enkripsi AES-256.
+             </p>
+          </section>
+
+          <section className="space-y-6 pt-2">
+             <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">02</span>
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Access Control Protocol</h2>
+             </div>
+             <div className="space-y-6 ml-1">
+                {[
+                  { id: '1', title: 'Profile Settings', desc: 'Identitas pengguna yang tertanam pada setiap log Audit Trail untuk memenuhi syarat ISO-17025.' },
+                  { id: '2', title: 'Security Protocol', desc: 'Manajemen siklus hidup token (Token Lifecycle). Owner berwenang untuk mencabut seluruh akses (Revoke All Sessions) secara instan dalam status darurat (Force Majeure).' },
+                  { id: '3', title: 'Laboratory Environment', desc: 'Kalibrasi variabel perhitungan standar seperti Media Default dan Nilai Dilusi.' }
+                ].map((step) => (
+                  <div key={step.id} className="flex gap-4 group">
+                     <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-slate-900 text-white text-[11px] font-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        {step.id}
+                     </span>
+                     <div className="space-y-1.5">
+                        <h4 className="text-sm font-bold text-slate-900">{step.title}</h4>
+                        <p className="text-[12px] text-slate-500 leading-relaxed font-medium">{step.desc}</p>
+                     </div>
+                  </div>
+                ))}
+             </div>
+          </section>
+        </DocumentationSidebar>
       </div>
     </div>
   );

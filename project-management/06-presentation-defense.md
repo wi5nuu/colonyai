@@ -38,8 +38,9 @@ If the judge asks: *"What is the specific selling point that solves current micr
 We designed features that aren't just "cool," but are **ISO 17025-Compliant**:
 - **Auto-CFU/ml (SA-001 Standard):** We don't make analysts calculate results manually. The system asynchronously totals `colony_single` and `colony_merged`, applies the *Dilution Factor*, and dictates the final *CFU/ml* instantly.
 - **Measurement Uncertainty (U):** Unlike simple counters, we calculate **U_expanded (k=2, 95%)** following the ISO/IEC Guide 98-3 (GUM). This is a critical requirement for accredited laboratories.
-- **Immutable Hashed Audit Trail:** Every "Approval" click seals the report into *PostgreSQL* using **SHA-256 hashing**. This stores the *User ID*, timestamp, and IP address, ensuring data integrity during BPOM or regulatory audits.
-- **Security-First Pipeline:** Our system performs **Malware Scanning (ClamAV)**, **EXIF stripping**, and **Magic-Byte validation** on every upload to protect laboratory digital infrastructure.
+- **Cryptographic Integrity Chain:** Every activity is sealed with **SHA-256 hashing**, including a "Hash Chain" (linking current record to previous hash). This ensures the audit trail is untamperable—a key requirement for Auditor roles.
+- **Operational Simplicity (4-Role RBAC):** We've streamlined complex laboratory hierarchy into 4 clear roles (**Analyst, Manager, Auditor, Admin**) to maximize efficiency while maintaining strict separation of duties.
+- **Security-First Pipeline:** Our system performs **Malware Scanning (ClamAV)**, **EXIF stripping**, and **Magic-Byte validation** on every upload.
 
 ## 🚀 4. Champion Pitch: The "Operational 100%" Accuracy Claim
 

@@ -1,0 +1,193 @@
+"""
+ColonyAI Re-Training Script - v8 (Balanced 5-Class)
+====================================================
+Re-trains from scratch (or from v7 checkpoint) after oversampling minority classes.
+Target: All 5 classes detected with confident predictions.
+- colony_single  (~72%)  -> no change
+- colony_merged  (~11%)  -> no change
+- bubble         (~14%)  -> no change
+- dust_debris    (1.9% -> ~5% after aug)
+- media_crack    (0.7% -> ~3% after aug)
+"""
+
+import os
+import sys
+import gc
+import shutil
+import yaml
+from pathlib import Path
+from datetime import datetime
+
+os.environ["CUDA_MODULE_LOADING"] = "LAZY"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["OMP_NUM_THREADS"] = "1"
+
+import torch
+from ultralytics import YOLO
+
+# ============================================================
+# CONFIG
+# ============================================================
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DATASET_PATH = os.path.join(SCRIPT_DIR, "datasets", "colony_dataset")
+DATA_YAML = os.path.join(DATASET_PATH, "data.yaml")
+
+# v7 best.pt as starting point (fine-tune, not from scratch)
+V7_BEST = os.path.join(SCRIPT_DIR, "runs", "detect", "runs", "detect", 
+                        "colony_detection_full_v7", "weights", "best.pt")
+
+# Training output directory
+RUN_NAME = "colony_v8_balanced"
+PROJECT_DIR = os.path.join(SCRIPT_DIR, "runs", "detect")
+
+EPOCHS = 80          # Enough to fine-tune; v7 already has good base
+BATCH_SIZE = 4       # Safe for RTX 5050 8GB
+IMG_SIZE = 640
+DEVICE = 0           # GPU
+PATIENCE = 30        # Early stopping
+
+# ============================================================
+# VERIFY OVERSAMPLING DONE
+# ============================================================
+def check_distribution():
+    train_lbl = os.path.join(DATASET_PATH, "train", "labels")
+    counts = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
+    for f in Path(train_lbl).glob("*.txt"):
+        with open(f) as fp:
+            for line in fp:
+                parts = line.strip().split()
+                if parts:
+                    cls = int(parts[0])
+                    if cls in counts:
+                        counts[cls] += 1
+    
+    total = sum(counts.values())
+    names = ['colony_single', 'colony_merged', 'bubble', 'dust_debris', 'media_crack']
+    print("\n=== DISTRIBUSI DATASET SETELAH OVERSAMPLING ===")
+    for cls_id, name in enumerate(names):
+        pct = (counts[cls_id] / total * 100) if total > 0 else 0
+        bar = "█" * int(pct / 2)
+        status = "✅" if pct >= 2.0 else "⚠️ "
+        print(f"  {status} {name:<20}: {counts[cls_id]:>8,} ({pct:.1f}%) {bar}")
+    print(f"  {'TOTAL':<22}: {total:>8,}")
+    print("================================================\n")
+    
+    return counts[3] > 50000 and counts[4] > 100000  # sanity check
+
+# ============================================================
+# MAIN TRAINING
+# ============================================================
+def main():
+    print("=" * 65)
+    print("  ColonyAI - Re-Training v8 (Balanced 5-Class)")
+    print("=" * 65)
+    
+    # Check distribution
+    balanced = check_distribution()
+    if not balanced:
+        print("⚠️  WARNING: Oversampling mungkin belum selesai atau kurang.")
+        print("    Lanjutkan? (y/n): ", end="")
+        ans = input().strip().lower()
+        if ans != 'y':
+            print("Aborted. Tunggu oversampling selesai dulu.")
+            return
+
+    # Determine starting weights
+    if os.path.exists(V7_BEST):
+        start_weights = V7_BEST
+        print(f"✅ Starting from v7 checkpoint: {V7_BEST}")
+        print("   (Fine-tuning dari v7 — lebih cepat konvergen)")
+    else:
+        start_weights = "yolov8s.pt"
+        print(f"⚠️  v7 checkpoint tidak ditemukan. Starting from {start_weights}")
+
+    # Memory cleanup
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        print(f"✅ GPU: {torch.cuda.get_device_name(0)}")
+        print(f"   VRAM: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
+    else:
+        print("⚠️  No GPU detected! Training on CPU (very slow)")
+
+    print(f"\n📊 Training config:")
+    print(f"   Epochs   : {EPOCHS}")
+    print(f"   Batch    : {BATCH_SIZE}")
+    print(f"   ImgSize  : {IMG_SIZE}")
+    print(f"   Patience : {PATIENCE} (early stop)")
+    print(f"   Output   : {PROJECT_DIR}/{RUN_NAME}")
+    print()
+
+    model = YOLO(start_weights)
+
+    results = model.train(
+        data=DATA_YAML,
+        epochs=EPOCHS,
+        imgsz=IMG_SIZE,
+        batch=BATCH_SIZE,
+        name=RUN_NAME,
+        project="runs/detect",
+        exist_ok=True,
+        pretrained=True,
+        device=DEVICE,
+        resume=False,
+        amp=True,
+        
+        # Optimizer
+        optimizer="AdamW",
+        lr0=0.0005,       # Lower LR for fine-tuning
+        lrf=0.01,
+        momentum=0.937,
+        weight_decay=0.0005,
+        warmup_epochs=3,
+        
+        # IoU
+        iou=0.45,
+        
+        # Augmentations (aggressive to help minority classes generalize)
+        hsv_h=0.02,
+        hsv_s=0.7,
+        hsv_v=0.4,
+        degrees=10.0,
+        translate=0.1,
+        scale=0.5,
+        shear=5.0,
+        flipud=0.5,
+        fliplr=0.5,
+        mosaic=0.3,       # Mosaic helps minority class visibility
+        mixup=0.1,
+        copy_paste=0.1,
+        
+        # Misc
+        workers=0,
+        patience=PATIENCE,
+        save=True,
+        save_period=10,
+        
+        # Class weights: give more weight to minority classes
+        # (comment out if causes issues)
+        # cls=1.0,
+    )
+
+    # ============================================================
+    # POST-TRAINING: Deploy to production
+    # ============================================================
+    best_pt = os.path.join(SCRIPT_DIR, "runs", "detect", RUN_NAME, "weights", "best.pt")
+    production_pt = r"D:\lombapuai\backend\models\colony_best.pt"
+    
+    if os.path.exists(best_pt):
+        shutil.copy2(best_pt, production_pt)
+        print(f"\n✅ DEPLOY SUKSES!")
+        print(f"   {best_pt}")
+        print(f"   → {production_pt}")
+        print(f"\n   mAP@0.5     : {results.box.map50:.4f}")
+        print(f"   mAP@0.5:0.95: {results.box.map:.4f}")
+        print(f"   Precision   : {results.box.mp:.4f}")
+        print(f"   Recall      : {results.box.mr:.4f}")
+        print(f"\n🚀 Restart backend untuk memuat model baru!")
+        print(f"   > cd D:\\lombapuai\\backend && uvicorn app.main:app --reload")
+    else:
+        print(f"❌ best.pt tidak ditemukan di: {best_pt}")
+
+if __name__ == "__main__":
+    main()

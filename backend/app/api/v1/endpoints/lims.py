@@ -48,7 +48,7 @@ class LIMSStatusUpdate(BaseModel):
 async def sync_to_lims(
     analysis_id: str,
     lims_endpoint_url: Optional[str] = None,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin")),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -93,7 +93,7 @@ async def receive_lims_status_update(
 
 @router.get("/lims-config")
 async def get_lims_configuration(
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_role("manager", "auditor", "admin"))
 ):
     """Get LIMS integration configuration"""
     # TODO: Get from database or config file
@@ -113,7 +113,7 @@ async def get_lims_configuration(
 @router.post("/configure")
 async def configure_lims_integration(
     lims_config: dict,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -142,7 +142,7 @@ async def configure_lims_integration(
 @router.post("/batch-sync")
 async def batch_sync_to_lims(
     analysis_ids: List[str],
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin")),
     db: AsyncSession = Depends(get_db)
 ):
     """Sync multiple analyses to LIMS in batch"""
@@ -168,7 +168,7 @@ async def batch_sync_to_lims(
 async def get_sync_history(
     skip: int = 0,
     limit: int = 50,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_role("manager", "auditor", "admin")),
     db: AsyncSession = Depends(get_db)
 ):
     """Get history of LIMS sync operations"""

@@ -11,14 +11,22 @@ VALID_COLONY_CLASSES = {'colony_single', 'colony_merged'}
 ARTIFACT_CLASSES = {'bubble', 'dust_debris', 'media_crack'}
 ALL_CLASSES = VALID_COLONY_CLASSES | ARTIFACT_CLASSES
 
-# Class-specific colors for annotation (BGR format for OpenCV)
-CLASS_COLORS = {
-    'colony_single': (0, 255, 0),      # Green
-    'colony_merged': (0, 165, 255),    # Orange
-    'bubble': (255, 0, 0),             # Blue
-    'dust_debris': (0, 0, 255),        # Red
-    'media_crack': (128, 0, 128),      # Purple
+# Class-specific colors for annotation
+# Format RGB (karena image dalam RGB mode setelah preprocess)
+# cv2.rectangle menerima BGR — dikonversi di save_annotated_image
+CLASS_COLORS_RGB = {
+    'colony_single': (0, 220, 80),      # Green
+    'colony_merged': (255, 140, 0),     # Orange
+    'bubble':        (30, 120, 255),    # Blue
+    'dust_debris':   (220, 50, 50),     # Red
+    'media_crack':   (160, 60, 200),    # Purple
 }
+# BGR version for OpenCV drawing (swapped from RGB)
+CLASS_COLORS_BGR = {
+    k: (v[2], v[1], v[0]) for k, v in CLASS_COLORS_RGB.items()
+}
+# Keep backward-compatible alias
+CLASS_COLORS = CLASS_COLORS_BGR
 
 
 class ColonyDetector:
@@ -75,7 +83,19 @@ class ColonyDetector:
 
         conf = confidence_override if confidence_override is not None else self.confidence_threshold
 
-        # Run inference dengan threshold yang sesuai
+        # BUG-F fix: gunakan threshold MINIMUM agar semua kelas lolos ke
+        # filtering per-class tahap 2 di analyses.py. Jika confidence_override
+        # terlalu tinggi (misal 0.65 dari colony_single PCA), class bubble (0.55)
+        # tidak akan pernah muncul di hasil awal, padahal akan difilter lagi.
+        # Solusi: pakai min dari semua class threshold agar tidak ada kelas
+        # yang terblokir terlalu awal.
+        if confidence_override is not None:
+            # confidence_override adalah threshold colony_single — ambil min
+            # agar kelas lain dengan threshold lebih rendah tetap bisa masuk
+            conf = min(confidence_override, self.confidence_threshold)
+        else:
+            conf = self.confidence_threshold
+
         results = self.model(
             image,
             conf=conf,           # Threshold awal — endpoint melakukan filter per-kelas setelahnya
@@ -107,7 +127,8 @@ class ColonyDetector:
                         'height': int(y2 - y1)
                     },
                     'is_valid_colony': class_name in VALID_COLONY_CLASSES,
-                    'color': CLASS_COLORS.get(class_name, (255, 255, 255))
+                    # Color di-store dalam BGR untuk konsistensi dengan OpenCV
+                    'color': CLASS_COLORS_BGR.get(class_name, (200, 200, 200))
                 }
                 detections.append(detection)
 
