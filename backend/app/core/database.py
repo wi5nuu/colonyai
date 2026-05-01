@@ -98,12 +98,12 @@ async def init_db():
                 logger.info(f"Seeding lead analyst: {analyst_email}")
                 session.add(User(
                     email=analyst_email,
-                    password_hash=get_password_hash("analyst_secure_2026"),
+                    password_hash=get_password_hash("[REDACTED_SECRET]"),
                     full_name="Lead Analyst Primary",
                     role=UserRole.ANALYST
                 ))
             else:
-                analyst_user.password_hash = get_password_hash("analyst_secure_2026")
+                analyst_user.password_hash = get_password_hash("[REDACTED_SECRET]")
 
             # 3. Lab Manager (from README)
             manager_email = "manager@colonyai.com"
@@ -113,12 +113,12 @@ async def init_db():
                 logger.info(f"Seeding lab manager: {manager_email}")
                 session.add(User(
                     email=manager_email,
-                    password_hash=get_password_hash("manager_secure_2026"),
+                    password_hash=get_password_hash("[REDACTED_SECRET]"),
                     full_name="Laboratory Manager",
                     role=UserRole.MANAGER
                 ))
             else:
-                manager_user.password_hash = get_password_hash("manager_secure_2026")
+                manager_user.password_hash = get_password_hash("[REDACTED_SECRET]")
                 manager_user.role = UserRole.MANAGER
 
             # 4. Independent Auditor
@@ -129,12 +129,12 @@ async def init_db():
                 logger.info(f"Seeding auditor: {auditor_email}")
                 session.add(User(
                     email=auditor_email,
-                    password_hash=get_password_hash("auditor_secure_2026"),
+                    password_hash=get_password_hash("[REDACTED_SECRET]"),
                     full_name="External Auditor",
                     role=UserRole.AUDITOR
                 ))
             else:
-                auditor_user.password_hash = get_password_hash("auditor_secure_2026")
+                auditor_user.password_hash = get_password_hash("[REDACTED_SECRET]")
                 auditor_user.role = UserRole.AUDITOR
 
             await session.commit()

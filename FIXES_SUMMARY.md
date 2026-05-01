@@ -289,7 +289,7 @@ http://localhost:3000
 
 # Try login with:
 # Email: admin@colonyai.com
-# Password: admin_secure_2026
+# Password: [REDACTED_SECRET]
 ```
 
 ### Troubleshoot:

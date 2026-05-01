@@ -101,7 +101,7 @@ npm run dev
 **Step 5: Test upload**
 
 1. Buka http://localhost:3000
-2. Login dengan: `admin@colonyai.com` / `admin_secure_2026`
+2. Login dengan: `admin@colonyai.com` / `[REDACTED_SECRET]`
 3. Go ke Dashboard → Upload
 4. Try upload image
 5. Check browser DevTools (F12) → Network tab untuk melihat request

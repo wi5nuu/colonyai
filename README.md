@@ -62,7 +62,7 @@ The system implements a streamlined **4-Tier Access Model** to maximize operatio
 
 | Email                  | Password              | Role            |
 | :--------------------- | :-------------------- | :-------------- |
-| `admin@colonyai.com`   | `admin_secure_2026`   | System Admin    |
+| `admin@colonyai.com`   | `[REDACTED_SECRET]`   | System Admin    |
 | `manager@colonyai.com` | `manager_secure_2026` | Lab Manager     |
 | `analyst@colonyai.com` | `analyst_secure_2026` | Lab Analyst     |
 | `auditor@colonyai.com` | `auditor_secure_2026` | Quality Auditor |

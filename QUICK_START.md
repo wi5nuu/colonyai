@@ -324,7 +324,7 @@ frontend\start_frontend.bat
 ### **Test Login:**
 ```
 Email: admin@colonyai.com
-Password: admin_secure_2026
+Password: [REDACTED_SECRET]
 ```
 
 **Expected flow:**
@@ -574,7 +574,7 @@ git push origin main
 ### **Admin Login:**
 ```
 Email: admin@colonyai.com
-Password: admin_secure_2026
+Password: [REDACTED_SECRET]
 ```
 
 ### **Database:**

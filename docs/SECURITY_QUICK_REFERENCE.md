@@ -246,7 +246,7 @@ _"ColonyAI implements enterprise-grade security dengan 10 independent layers —
 ┌─────────────────┬──────────────────────┬─────────────────┐
 │ Email           │ Password             │ Role            │
 ├─────────────────┼──────────────────────┼─────────────────┤
-│ admin@colonyai  │ admin_secure_2026    │ System Admin    │
+│ admin@colonyai  │ [REDACTED_SECRET]    │ System Admin    │
 │ manager@colony  │ manager_secure_2026  │ Lab Manager     │
 │ analyst@colony  │ analyst_secure_2026  │ Lab Analyst     │
 │ auditor@colony  │ auditor_secure_2026  │ Quality Auditor │

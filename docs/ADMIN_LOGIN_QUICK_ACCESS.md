@@ -25,7 +25,7 @@ Email: admin@colonyai.com
 
 #### **Password:**
 ```
-Password: admin_secure_2026
+Password: [REDACTED_SECRET]
 [Copy Button] → Click to copy to clipboard
 ```
 
@@ -227,7 +227,7 @@ frontend/src/app/dashboard/upload/page.tsx  ✅ UPDATED
 │  ║  Gunakan credential ini untuk testing langsung║  │
 │  ║                                               ║  │
 │  ║  Email: admin@colonyai.com     [Copy]        ║  │
-│  ║  Password: admin_secure_2026   [Copy]        ║  │
+│  ║  Password: [REDACTED_SECRET]   [Copy]        ║  │
 │  ║                                               ║  │
 │  ║  [🔓 Login Sekarang]                         ║  │
 │  ║                                               ║  │

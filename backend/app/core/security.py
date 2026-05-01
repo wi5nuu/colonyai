@@ -133,11 +133,7 @@ def require_role(*required_roles: str):
         if user_role == "super_admin":
             return current_user
             
-        # 2. Legacy / Local Admin check
-        if user_role == "admin" or user_role == "system_admin":
-            return current_user
-            
-        # 3. Specific role check
+        # 2. Specific role check
         if user_role not in required_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

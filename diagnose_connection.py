@@ -226,7 +226,7 @@ def print_next_steps():
    - API Docs: http://localhost:8000/docs
 
 5. Test upload:
-   - Login to frontend with admin@colonyai.com / admin_secure_2026
+   - Login to frontend with admin@colonyai.com / [REDACTED_SECRET]
    - Go to Dashboard → Upload
    - Try uploading an image
 
