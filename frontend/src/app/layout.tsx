@@ -21,6 +21,20 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'ColonyAI - AI-Powered Bacterial Colony Detection',
   description: 'Automated Plate Count Reader for Microbiology Laboratories',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'ColonyAI',
+  },
+}
+
+export const viewport = {
+  themeColor: '#6366f1',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({

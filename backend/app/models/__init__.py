@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import Column, String, DateTime, Enum as SAEnum, Float, Integer, Text, ForeignKey, JSON, Uuid
+from sqlalchemy import Column, String, DateTime, Enum as SAEnum, Float, Integer, Text, ForeignKey, JSON, Uuid, Boolean
 from sqlalchemy.orm import relationship
 import enum
 import uuid
@@ -44,16 +44,39 @@ class GUID(types.TypeDecorator):
 
 class UserRole(str, enum.Enum):
     """
-    4-role Streamlined RBAC for ColonyAI:
-    - analyst: Perform tests, upload samples, use simulator.
-    - manager: Technical review, approve results, view analytics & reports.
-    - auditor: Read-only access to records, reports, and audit trails.
-    - admin: Full system management, user administration, and settings.
+    5-role Multi-Tenant RBAC for ColonyAI:
+    - super_admin: Global system management, manage organizations, licenses, and global audit.
+    - admin: Local organization admin, user administration for their company.
+    - manager: Technical review, approve results for their company.
+    - auditor: Read-only access for auditing within their company.
+    - analyst: Perform tests and upload samples for their company.
     """
-    ANALYST = "analyst"
+    SUPER_ADMIN = "super_admin"
+    ADMIN = "admin"
     MANAGER = "manager"
     AUDITOR = "auditor"
-    ADMIN = "admin"
+    ANALYST = "analyst"
+
+
+class Organization(Base):
+    __tablename__ = "organizations"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=False)
+    slug = Column(String(100), unique=True, nullable=False, index=True)
+    location = Column(String(255), nullable=True)
+    
+    # Licensing & Compliance
+    license_key = Column(String(100), nullable=True)
+    license_expires_at = Column(DateTime, nullable=True)
+    is_active = Column(SAEnum(enum.Enum('OrgStatus', ['active', 'suspended', 'trial']), name='org_status'), default='active')
+    
+    # Metadata
+    max_users = Column(Integer, default=10)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    users = relationship("User", back_populates="organization")
 
 
 class AnalysisStatus(str, enum.Enum):
@@ -67,6 +90,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    organization_id = Column(GUID(), ForeignKey("organizations.id"), nullable=True, index=True) # Null for Super Admin
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     full_name = Column(String(255), nullable=False)
@@ -81,14 +105,15 @@ class User(Base):
     failed_login_attempts = Column(Integer, default=0, nullable=False)
     last_failed_login = Column(DateTime, nullable=True)
     is_locked_out = Column(SAEnum(enum.Enum('LockoutStatus', ['yes', 'no']), name='lockout_status'), nullable=False, default='no')
-    locked_until = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
+    organization = relationship("Organization", back_populates="users")
     analyses = relationship("Analysis", back_populates="user")
-    audit_logs = relationship("AuditLog", back_populates="user")
     preferences = relationship("UserPreference", back_populates="user", uselist=False)
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
+    audit_logs = relationship("AuditLog", back_populates="user")
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
 
 
@@ -96,6 +121,7 @@ class Analysis(Base):
     __tablename__ = "analyses"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    organization_id = Column(GUID(), ForeignKey("organizations.id"), nullable=False, index=True)
     version_id = Column(Integer, nullable=False, default=1)
 
     __mapper_args__ = {
@@ -125,10 +151,19 @@ class Analysis(Base):
     cfu_message = Column(Text, nullable=True)
     uncertainty_u = Column(Float, nullable=True)
     merged_estimation_method = Column(String(100), nullable=True)
+    
+    # New Compliance Fields
+    incubation_temp = Column(Float, nullable=True) # e.g. 35.0 C
+    incubation_time_hours = Column(Integer, nullable=True) # e.g. 48 hours
+    method_standard = Column(String(255), nullable=True, default="ISO 4833-1:2013")
+    
+    media_batch_number = Column(String(100), nullable=True)
+    incubator_id = Column(String(100), nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
+    organization = relationship("Organization")
     user = relationship("User", back_populates="analyses")
     detections = relationship("ColonyDetection", back_populates="analysis", cascade="all, delete-orphan")
 
@@ -156,8 +191,9 @@ class AuditLog(Base):
     __tablename__ = "audit_logs"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    organization_id = Column(GUID(), ForeignKey("organizations.id"), nullable=True, index=True)
     user_id = Column(GUID(), ForeignKey("users.id"), nullable=False)
-    action = Column(String(255), nullable=False)
+    action = Column(String(255), nullable=False, index=True)
     resource_type = Column(String(100), nullable=False)
     resource_id = Column(GUID(), nullable=True)
     details = Column(JSON, nullable=True)
@@ -179,6 +215,7 @@ class SimulatorComparison(Base):
     __tablename__ = "simulator_comparisons"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    organization_id = Column(GUID(), ForeignKey("organizations.id"), nullable=True, index=True)
     user_id = Column(GUID(), ForeignKey("users.id"), nullable=False)
     analysis_id = Column(GUID(), ForeignKey("analyses.id"), nullable=False)
 
@@ -219,5 +256,61 @@ class TokenBlacklist(Base):
     expires_at = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+class Notification(Base):
+    """
+    Real-time system notifications for users.
+    """
+    __tablename__ = "notifications"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    organization_id = Column(GUID(), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=True, index=True)
+    title = Column(String(255), nullable=False)
+    message = Column(Text, nullable=False)
+    notification_type = Column(String(50), default="info")  # info, success, warning, error
+    is_read = Column(Boolean, default=False)
+    link = Column(String(255), nullable=True)  # URL to click
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="notifications")
+
+
+class PasswordResetRequest(Base):
+    """
+    Admin-Mediated Password Reset Request.
+    A user submits a request; Admin must APPROVE within 24h.
+    Token is only generated AFTER admin approval.
+    Prevents phishing / self-service bypass.
+    """
+    __tablename__ = "password_reset_requests"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    organization_id = Column(GUID(), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=True)
+
+    # Request metadata for anti-phishing verification
+    requester_ip = Column(String(64), nullable=True)
+    requester_ua = Column(String(512), nullable=True)
+
+    # Status: pending | approved | rejected | expired
+    status = Column(String(20), nullable=False, default="pending", index=True)
+
+    # Timestamps
+    requested_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    expires_at = Column(DateTime, nullable=False)     # 24h after request
+    reviewed_at = Column(DateTime, nullable=True)
+
+    # Admin who reviewed
+    reviewed_by = Column(GUID(), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+    # Reset token only populated AFTER admin approval (1h validity)
+    reset_token = Column(String(255), nullable=True, unique=True, index=True)
+    token_expires_at = Column(DateTime, nullable=True)
+
+    user = relationship("User", foreign_keys=[user_id])
+    reviewer = relationship("User", foreign_keys=[reviewed_by])
+
+
 # Import new models to register them with SQLAlchemy
 from app.models.preferences import UserPreference, UserSession
+

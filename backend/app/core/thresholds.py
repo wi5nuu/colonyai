@@ -21,73 +21,60 @@ ColonyClassName = Literal[
 # Setiap media type memiliki threshold per kelas karena karakteristik visual berbeda.
 MEDIA_CONFIDENCE_THRESHOLDS: dict[str, dict[str, float]] = {
     "PCA": {
-        # Plate Count Agar: putih/transparan, koloni kuning/putih,
-        # kontras tinggi → threshold lebih ketat (model lebih percaya diri)
-        "colony_single": 0.65,
-        "colony_merged": 0.60,
-        "bubble":        0.55,
-        "dust_debris":   0.55,
-        "media_crack":   0.50,
+        "colony_single": 0.35,
+        "colony_merged": 0.35,
+        "bubble":        0.30,
+        "dust_debris":   0.30,
+        "media_crack":   0.30,
     },
     "VRBA": {
-        # Violet Red Bile Agar: merah-violet, koloni merah gelap,
-        # kontras rendah → threshold lebih longgar
-        "colony_single": 0.45,
-        "colony_merged": 0.40,
-        "bubble":        0.45,
-        "dust_debris":   0.45,
-        "media_crack":   0.40,
+        "colony_single": 0.30,
+        "colony_merged": 0.30,
+        "bubble":        0.25,
+        "dust_debris":   0.25,
+        "media_crack":   0.25,
     },
     "BGBB": {
-        # Brilliant Green Bile Broth
-        "colony_single": 0.55,
-        "colony_merged": 0.50,
-        "bubble":        0.50,
-        "dust_debris":   0.50,
-        "media_crack":   0.45,
+        "colony_single": 0.35,
+        "colony_merged": 0.35,
+        "bubble":        0.30,
+        "dust_debris":   0.30,
+        "media_crack":   0.30,
     },
     "TGEA": {
-        # Tryptone Glucose Extract Agar: mirip PCA
-        "colony_single": 0.62,
-        "colony_merged": 0.58,
-        "bubble":        0.55,
-        "dust_debris":   0.55,
-        "media_crack":   0.50,
+        "colony_single": 0.35,
+        "colony_merged": 0.35,
+        "bubble":        0.30,
+        "dust_debris":   0.30,
+        "media_crack":   0.30,
     },
     "TSA": {
-        # Tryptic Soy Agar: general purpose, mirip PCA tapi lebih kaya nutrisi
-        # Koloni lebih bervariasi ukuran → threshold sedikit lebih longgar
-        "colony_single": 0.60,
-        "colony_merged": 0.55,
-        "bubble":        0.55,
-        "dust_debris":   0.55,
-        "media_crack":   0.50,
+        "colony_single": 0.35,
+        "colony_merged": 0.35,
+        "bubble":        0.30,
+        "dust_debris":   0.30,
+        "media_crack":   0.30,
     },
     "MACCONKEY": {
-        # MacConkey Agar: pink-merah, koloni lactose-fermenting pink/merah
-        # Koloni lactose-nonfermenting colorless → threshold lebih longgar
-        "colony_single": 0.50,
-        "colony_merged": 0.45,
-        "bubble":        0.50,
-        "dust_debris":   0.50,
-        "media_crack":   0.45,
+        "colony_single": 0.30,
+        "colony_merged": 0.30,
+        "bubble":        0.25,
+        "dust_debris":   0.25,
+        "media_crack":   0.25,
     },
     "R2A": {
-        # Reasoner's 2A: media oligotroph, koloni kecil dan transparan
-        # Kontras sangat rendah → threshold paling longgar
-        "colony_single": 0.42,
-        "colony_merged": 0.38,
-        "bubble":        0.45,
-        "dust_debris":   0.45,
-        "media_crack":   0.40,
+        "colony_single": 0.25,
+        "colony_merged": 0.25,
+        "bubble":        0.20,
+        "dust_debris":   0.20,
+        "media_crack":   0.20,
     },
     "DEFAULT": {
-        # Fallback untuk media type yang belum dikalibrasi
-        "colony_single": 0.60,
-        "colony_merged": 0.55,
-        "bubble":        0.55,
-        "dust_debris":   0.55,
-        "media_crack":   0.50,
+        "colony_single": 0.35,
+        "colony_merged": 0.35,
+        "bubble":        0.30,
+        "dust_debris":   0.30,
+        "media_crack":   0.30,
     },
 }
 

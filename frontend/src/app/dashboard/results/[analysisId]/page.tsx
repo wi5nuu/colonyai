@@ -155,62 +155,45 @@ export default function ResultsPage() {
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-slate-100 mb-8 sm:mb-10">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard/history" className="w-10 h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center hover:bg-slate-50 transition-all shadow-sm">
-            <ArrowLeft className="h-4 w-4 text-slate-400" />
+          <Link href="/dashboard/history" className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-all shadow-sm group">
+            <ArrowLeft className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Intelligence Audit</h1>
-              <span className={`px-2.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border shadow-sm ${
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">Intelligence Audit</h1>
+              <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm ${
                 analysis.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'
               }`}>
                 {statusInfo.label}
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest flex items-center gap-2">
-              Sample: <span className="text-slate-900">{analysis.sample_id}</span>
-              <span className="text-slate-200">|</span>
-              Protocol: <span className="text-slate-900">{analysis.media_type}</span>
+            <p className="text-[10px] text-slate-400 mt-1 font-black uppercase tracking-[0.3em] flex items-center gap-3">
+              <span>Sample: <span className="text-slate-900">{analysis.sample_id}</span></span>
+              <span className="w-1 h-1 rounded-full bg-slate-200" />
+              <span>Protocol: <span className="text-slate-900">{analysis.media_type}</span></span>
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => toast('AI Assistant is generating insights...', { icon: '🤖' })}
-            className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-          >
-             Ask AI
-          </button>
-          <button 
-            onClick={() => toast.info('Support line connected')}
-            className="hidden md:flex items-center gap-2 px-4 py-2 bg-white text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-slate-200 hover:bg-slate-50 transition-all"
-          >
-             Support
-          </button>
-          <div className="w-9 h-9 rounded-full bg-slate-900 flex items-center justify-center text-primary text-xs font-black border-2 border-primary/20 shadow-xl cursor-pointer hover:scale-110 transition-transform">
-             L
-          </div>
-          <div className="h-8 w-[1px] bg-slate-200 mx-2" />
-          <div className="flex bg-white rounded-lg border border-slate-100 p-1 shadow-sm">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex bg-slate-50 p-1.5 rounded-xl border border-slate-200">
             <button 
               onClick={() => setViewMode('audit')}
-              className={`px-4 py-2 rounded-md text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === 'audit' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}
+              className={`px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'audit' ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/20' : 'text-slate-400 hover:text-slate-900'}`}
             >
-              Audit View
+              Audit Matrix
             </button>
             <button 
               onClick={() => setViewMode('certificate')}
-              className={`px-4 py-2 rounded-md text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === 'certificate' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-400 hover:bg-slate-50'}`}
+              className={`px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'certificate' ? 'bg-primary text-white shadow-xl shadow-primary/20' : 'text-slate-400 hover:text-slate-900'}`}
             >
               Certificate
             </button>
           </div>
-          <div className="h-8 w-[1px] bg-slate-200 mx-2" />
           <button
             onClick={handleExportPdf}
-            className="px-4 py-2.5 bg-white border border-slate-100 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2.5 shadow-sm"
+            className="px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-3 shadow-sm"
           >
             <Download className="h-4 w-4" />
             Export Protocol
@@ -218,10 +201,14 @@ export default function ResultsPage() {
           {analysis.status === 'completed' && canApprove && (
             <button
               onClick={handleApprove}
-              className="btn-primary py-2.5 px-5 flex items-center gap-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-lg shadow-primary/20"
+              className={`px-6 py-3.5 flex items-center justify-center gap-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl ${
+                analysis.is_valid_for_reporting 
+                  ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
+                  : 'bg-slate-900 text-white shadow-slate-900/20 hover:bg-slate-800 active:scale-95'
+              }`}
             >
               <CheckCircle className="h-4 w-4" />
-              {analysis.is_valid_for_reporting ? 'Verified Node' : 'Grant Approval'}
+              {analysis.is_valid_for_reporting ? 'Verified' : 'Verify Audit'}
             </button>
           )}
         </div>
@@ -249,56 +236,114 @@ export default function ResultsPage() {
       {viewMode === 'audit' ? (
         <>
           {/* Summary Matrix */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             {[
               { label: 'Final Result', value: formatCFU(analysis.cfu_per_ml), sub: 'CFU / mL Matrix', icon: Target, color: 'primary' },
-              { label: 'Neural Accuracy', value: `${(analysis.confidence_score * 100).toFixed(1)}%`, sub: 'AI Reliability Score', icon: Info, color: 'purple' },
+              { label: 'Neural Accuracy', value: `${(analysis.confidence_score * 100).toFixed(1)}%`, sub: 'AI Reliability Score', icon: BarChart3, color: 'indigo' },
               { label: 'Biological Match', value: validCount, sub: 'Confirmed Colonies', icon: CheckCircle, color: 'emerald' },
               { label: 'Neural Rejections', value: artifactCount, sub: 'Artifacts Filtered', icon: EyeOff, color: 'rose' },
             ].map((item, i) => (
-              <div key={i} className="dashboard-card p-4 flex flex-col justify-between rounded-xl">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{item.label}</p>
-                  <div className={`p-2 rounded-lg bg-${item.color === 'primary' ? 'primary' : item.color}-500/10`}>
-                     <item.icon className={`h-4 w-4 text-${item.color === 'primary' ? 'primary' : item.color === 'purple' ? 'purple-500' : item.color === 'emerald' ? 'emerald-500' : 'rose-500'}`} />
+              <div key={i} className="bg-white border border-slate-200/60 p-6 flex flex-col justify-between rounded-2xl shadow-sm group hover:shadow-md transition-all">
+                <div className="flex items-center justify-between mb-6">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</p>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm ${
+                    item.color === 'primary' ? 'bg-primary/5 text-primary border border-primary/10' : 
+                    item.color === 'indigo' ? 'bg-indigo-50 text-indigo-500 border border-indigo-100' :
+                    item.color === 'emerald' ? 'bg-emerald-50 text-emerald-500 border border-emerald-100' :
+                    'bg-rose-50 text-rose-500 border border-rose-100'
+                  }`}>
+                     <item.icon className="h-5 w-5" />
                   </div>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-900 mb-0.5">{item.value}</p>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{item.sub}</p>
+                  <p className="text-3xl font-black text-slate-900 tracking-tight mb-1">{item.value}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.sub}</p>
                 </div>
               </div>
             ))}
           </div>
 
+          {/* Compliance & Traceability Metadata (Audit Matrix View) */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-10">
+            <div className="bg-white border border-slate-200/60 p-6 rounded-2xl shadow-sm">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Incubation Parameters</p>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase">Temp</span>
+                  <span className="text-[11px] font-black text-slate-900">{analysis.incubation_temp ?? '—'} °C</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase">Time</span>
+                  <span className="text-[11px] font-black text-slate-900">{analysis.incubation_time_hours ?? '—'} Hours</span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white border border-slate-200/60 p-6 rounded-2xl shadow-sm">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Methodology</p>
+              <p className="text-[13px] font-black text-slate-900">{analysis.method_standard ?? 'ISO 4833-1:2013'}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Standard Reference</p>
+            </div>
+            <div className="bg-white border border-slate-200/60 p-6 rounded-2xl shadow-sm">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Traceability</p>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase">Batch/Lot</span>
+                  <span className="text-[11px] font-black text-slate-900">{analysis.media_batch_number || '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase">Incubator ID</span>
+                  <span className="text-[11px] font-black text-slate-900">{analysis.incubator_id || '—'}</span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white border border-slate-200/60 p-6 rounded-2xl shadow-sm">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Calculation Data</p>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase">Dilution</span>
+                  <span className="text-[11px] font-black text-slate-900">1:{1/analysis.dilution_factor}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase">Vol (ml)</span>
+                  <span className="text-[11px] font-black text-slate-900">{analysis.plated_volume_ml}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Visualizer - Left 8 */}
             <div className="lg:col-span-8 flex flex-col gap-6">
-              <div className="dashboard-card overflow-hidden !p-0 rounded-xl">
-                <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-                  <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">Neural Mapping Layer</h3>
+              <div className="bg-white border border-slate-200/60 overflow-hidden rounded-2xl shadow-sm">
+                <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 bg-white rounded-lg border border-slate-100 p-1.5 shadow-sm">
-                      <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="p-1 hover:bg-slate-50 rounded transition-colors">
-                        <ZoomOut className="h-3.5 w-3.5 text-slate-400" />
+                    <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center">
+                      <Camera className="h-4 w-4 text-primary" />
+                    </div>
+                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Neural Mapping Layer</h3>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 bg-white rounded-xl border border-slate-200 p-1.5 shadow-sm">
+                      <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="w-8 h-8 flex items-center justify-center hover:bg-slate-50 rounded-lg transition-colors">
+                        <ZoomOut className="h-4 w-4 text-slate-400" />
                       </button>
-                      <span className="text-[9px] font-black text-slate-900 w-8 text-center">{Math.round(zoom * 100)}%</span>
-                      <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="p-1 hover:bg-slate-50 rounded transition-colors">
-                        <ZoomIn className="h-3.5 w-3.5 text-slate-400" />
+                      <span className="text-[11px] font-black text-slate-900 w-12 text-center">{Math.round(zoom * 100)}%</span>
+                      <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="w-8 h-8 flex items-center justify-center hover:bg-slate-50 rounded-lg transition-colors">
+                        <ZoomIn className="h-4 w-4 text-slate-400" />
                       </button>
                     </div>
                     <button
                       onClick={() => setShowAnnotations(!showAnnotations)}
-                      className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border shadow-sm ${
-                        showAnnotations ? 'bg-primary text-white border-primary shadow-primary/20' : 'bg-white text-slate-400 border-slate-100'
+                      className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 border shadow-sm ${
+                        showAnnotations ? 'bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-900/20' : 'bg-white text-slate-400 border-slate-200 hover:text-slate-900'
                       }`}
                     >
-                      {showAnnotations ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                      {showAnnotations ? 'Mapping On' : 'Sensors Only'}
+                      {showAnnotations ? <Eye className="h-4 w-4 text-primary" /> : <EyeOff className="h-4 w-4" />}
+                      {showAnnotations ? 'Annotations Active' : 'Raw Sensor Data'}
                     </button>
                   </div>
                 </div>
-                <div className="relative bg-slate-100/50 min-h-[600px] flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing group">
+                <div className="relative bg-slate-100/50 min-h-[350px] sm:min-h-[600px] flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing group">
                    <div className="relative transition-all duration-500 ease-out shadow-2xl shadow-slate-900/10 rounded-[2rem] overflow-hidden bg-white" style={{ transform: `scale(${zoom})` }}>
                     {analysis.annotated_image_url ? (
                       <img
@@ -349,17 +394,26 @@ export default function ResultsPage() {
                 </div>
               </div>
 
-              {/* Registry Table */}
-              <div className="dashboard-card overflow-hidden !p-0">
-                <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/30">
-                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Neural Object Registry</h3>
+              {/* Registry List/Table */}
+              <div className="bg-white border border-slate-200/60 overflow-hidden rounded-2xl shadow-sm">
+                <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                   <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center">
+                        <BarChart3 className="h-4 w-4 text-primary" />
+                      </div>
+                      <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Neural Object Registry</h3>
+                   </div>
+                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    {analysis.detections.length} Classified Nodes
+                   </span>
                 </div>
-                <div className="overflow-x-auto max-h-[400px]">
+                
+                <div className="overflow-x-auto max-h-[500px]">
                   <table className="w-full text-left">
-                    <thead className="bg-white/80 backdrop-blur-md sticky top-0 z-10 border-b border-slate-50">
+                    <thead className="bg-white/80 backdrop-blur-md sticky top-0 z-10 border-b border-slate-100">
                       <tr>
                         {["Protocol Class", "Confidence", "Matrix (X, Y)", "Dimensions"].map(h => (
-                          <th key={h} className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
+                          <th key={h} className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -367,27 +421,27 @@ export default function ResultsPage() {
                       {analysis.detections
                         .filter(d => !filterClass || d.class_name === filterClass)
                         .map((detection) => (
-                        <tr key={detection.id} className={`hover:bg-slate-50/50 transition-all ${selectedDetection === detection.id ? 'bg-primary/5' : ''}`} onClick={() => setSelectedDetection(detection.id)}>
-                          <td className="px-8 py-5">
-                            <div className="flex items-center gap-4">
-                              <div className={`w-3 h-3 rounded-full ${CLASS_COLORS[detection.class_name as DetectionClass]} shadow-lg`} />
-                              <span className="text-sm font-bold text-slate-700">
+                        <tr key={detection.id} className={`hover:bg-slate-50/80 cursor-pointer transition-all ${selectedDetection === detection.id ? 'bg-primary/5' : ''}`} onClick={() => setSelectedDetection(detection.id)}>
+                          <td className="px-8 py-6">
+                            <div className="flex items-center gap-5">
+                              <div className={`w-3.5 h-3.5 rounded-full ${CLASS_COLORS[detection.class_name as DetectionClass]} shadow-lg shadow-black/5`} />
+                              <span className="text-[13px] font-bold text-slate-700">
                                 {CLASS_LABELS[detection.class_name as DetectionClass]}
                               </span>
                             </div>
                           </td>
-                          <td className="px-8 py-5">
-                            <div className="flex items-center gap-4">
-                              <div className="w-20 bg-slate-100 h-2 rounded-full overflow-hidden">
+                          <td className="px-8 py-6">
+                            <div className="flex items-center gap-5">
+                              <div className="w-24 bg-slate-100 h-2.5 rounded-full overflow-hidden shadow-inner">
                                 <div className="bg-primary h-full rounded-full transition-all duration-1000" style={{ width: `${detection.confidence * 100}%` }} />
                               </div>
-                              <span className="text-xs font-bold text-slate-900">{(detection.confidence * 100).toFixed(1)}%</span>
+                              <span className="text-[12px] font-black text-slate-900 font-mono">{(detection.confidence * 100).toFixed(1)}%</span>
                             </div>
                           </td>
-                          <td className="px-8 py-5 text-xs font-bold text-slate-400 font-mono">
+                          <td className="px-8 py-6 text-[12px] font-bold text-slate-400 font-mono">
                             {detection.bbox.x.toFixed(1)}, {detection.bbox.y.toFixed(1)}
                           </td>
-                          <td className="px-8 py-5 text-xs font-bold text-slate-400 font-mono">
+                          <td className="px-8 py-6 text-[12px] font-bold text-slate-400 font-mono">
                             {detection.bbox.width.toFixed(1)} × {detection.bbox.height.toFixed(1)}
                           </td>
                         </tr>
@@ -527,86 +581,110 @@ export default function ResultsPage() {
         </>
       ) : (
         /* Certificate of Analysis View */
-        <div className="max-w-4xl mx-auto bg-white p-12 lg:p-20 rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.05)] border border-slate-50 relative overflow-hidden animate-in zoom-in-95 duration-700">
+        <div className="max-w-4xl mx-auto bg-white p-6 sm:p-12 lg:p-20 rounded-[2rem] sm:rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.05)] border border-slate-50 relative overflow-hidden animate-in zoom-in-95 duration-700">
            {/* Watermark/Seal */}
-           <div className="absolute top-10 right-10 w-32 h-32 opacity-[0.03] rotate-12 pointer-events-none">
+           <div className="absolute top-6 sm:top-10 right-6 sm:right-10 w-20 sm:w-32 h-20 sm:h-32 opacity-[0.03] rotate-12 pointer-events-none">
               <Shield className="w-full h-full text-slate-900" />
            </div>
            
            {/* Header */}
-           <div className="border-b-2 border-slate-900 pb-10 mb-12 flex justify-between items-end">
+           <div className="border-b-2 border-slate-900 pb-6 sm:pb-10 mb-8 sm:mb-12 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-6">
               <div>
-                 <div className="flex items-center gap-3 mb-4">
-                    <FlaskConical className="h-8 w-8 text-primary" />
-                    <h2 className="text-3xl font-black tracking-tighter uppercase">ColonyAI <span className="text-primary">Analytics</span></h2>
+                 <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
+                    <FlaskConical className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                    <h2 className="text-xl sm:text-3xl font-black tracking-tighter uppercase">ColonyAI <span className="text-primary">Analytics</span></h2>
                  </div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Precision Microbiology Diagnostic Suite</p>
+                 <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] sm:tracking-[0.3em]">Precision Microbiology Diagnostic Suite</p>
               </div>
-              <div className="text-right">
-                 <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Certificate of Analysis</h3>
-                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Ref No: {analysis.id.substring(0, 13).toUpperCase()}</p>
+              <div className="sm:text-right border-t sm:border-t-0 pt-6 sm:pt-0 border-slate-100">
+                 <h3 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tight">Certificate of Analysis</h3>
+                 <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Ref No: {analysis.id.substring(0, 13).toUpperCase()}</p>
               </div>
            </div>
 
            {/* Core Data Grid */}
-           <div className="grid grid-cols-2 gap-16 mb-16">
-              <div className="space-y-8">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 sm:gap-16 mb-10 sm:mb-16">
+              <div className="space-y-6 sm:space-y-8">
                  <section>
-                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-4 border-b border-slate-100 pb-2">Sample Provenance</h4>
-                    <div className="grid grid-cols-1 gap-3">
-                       <div className="flex justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">Sample Identifier</span>
-                          <span className="text-[10px] font-black text-slate-900 uppercase">{analysis.sample_id}</span>
+                    <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">Sample Provenance</h4>
+                    <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
+                       <div className="flex justify-between gap-4">
+                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Sample ID</span>
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase text-right">{analysis.sample_id}</span>
                        </div>
-                       <div className="flex justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">Analysis Protocol</span>
-                          <span className="text-[10px] font-black text-slate-900 uppercase">{analysis.media_type}</span>
+                       <div className="flex justify-between gap-4">
+                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Protocol</span>
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase text-right">{analysis.media_type}</span>
                        </div>
-                       <div className="flex justify-between">
-                          <span className="text-[10px] font-black text-slate-900 uppercase">Acquisition Timestamp</span>
-                          <span className="text-[10px] font-black text-slate-900 uppercase">{new Date(analysis.created_at).toLocaleString()}</span>
+                       <div className="flex justify-between gap-4">
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase">Timestamp</span>
+                          <span className="text-[8px] sm:text-[10px] font-black text-slate-900 uppercase text-right">{new Date(analysis.created_at).toLocaleString()}</span>
                        </div>
                     </div>
                  </section>
 
                  <section>
-                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-4 border-b border-slate-100 pb-2">Neural Spectral Result</h4>
-                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex flex-col items-center justify-center text-center">
-                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Final Quantitative Output</p>
-                       <p className="text-5xl font-black text-slate-900 tracking-tighter mb-1">{formatCFU(analysis.cfu_per_ml)}</p>
-                       <p className="text-xs font-bold text-primary uppercase tracking-widest">CFU / mL Matrix</p>
+                    <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">ISO Compliance & Traceability</h4>
+                    <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
+                       <div className="flex justify-between gap-4">
+                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Incubation</span>
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase text-right">
+                            {analysis.incubation_temp ?? '—'}°C / {analysis.incubation_time_hours ?? '—'} Hours
+                          </span>
+                       </div>
+                       <div className="flex justify-between gap-4">
+                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Method Standard</span>
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase text-right">{analysis.method_standard ?? 'ISO 4833-1:2013'}</span>
+                       </div>
+                       <div className="flex justify-between gap-4">
+                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Media Batch</span>
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase text-right">{analysis.media_batch_number || '—'}</span>
+                       </div>
+                       <div className="flex justify-between gap-4">
+                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Incubator ID</span>
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase text-right">{analysis.incubator_id || '—'}</span>
+                       </div>
+                    </div>
+                 </section>
+
+                 <section>
+                    <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">Neural Spectral Result</h4>
+                    <div className="p-5 sm:p-6 bg-slate-50 rounded-2xl sm:rounded-3xl border border-slate-100 flex flex-col items-center justify-center text-center">
+                       <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 sm:mb-2">Final Quantitative Output</p>
+                       <p className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tighter mb-1">{formatCFU(analysis.cfu_per_ml)}</p>
+                       <p className="text-[10px] sm:text-xs font-bold text-primary uppercase tracking-widest">CFU / mL Matrix</p>
                     </div>
                  </section>
               </div>
 
-              <div className="space-y-8">
+              <div className="space-y-6 sm:space-y-8">
                  <section>
-                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-4 border-b border-slate-100 pb-2">Statistical Integrity</h4>
-                    <div className="space-y-4">
-                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">Reliability Index</span>
-                          <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-100">
-                             {analysis.reliability.toUpperCase()} ACCURACY
+                    <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">Statistical Integrity</h4>
+                    <div className="space-y-3 sm:space-y-4">
+                       <div className="flex justify-between items-center gap-4">
+                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Reliability</span>
+                          <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest border border-emerald-100">
+                             {analysis.reliability.toUpperCase()}
                           </span>
                        </div>
-                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">Uncertainty Budget (U)</span>
-                          <span className="text-[10px] font-black text-slate-900">± {analysis.uncertainty_u?.toFixed(2) || '0.00'} CFU/mL</span>
+                       <div className="flex justify-between items-center gap-4">
+                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Uncertainty (U)</span>
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900">± {analysis.uncertainty_u?.toFixed(2) || '0.00'}</span>
                        </div>
-                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">Neural Confidence</span>
-                          <span className="text-[10px] font-black text-slate-900">{(analysis.confidence_score * 100).toFixed(2)}%</span>
+                       <div className="flex justify-between items-center gap-4">
+                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">Confidence</span>
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900">{(analysis.confidence_score * 100).toFixed(2)}%</span>
                        </div>
                     </div>
                  </section>
 
                  <section>
-                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-4 border-b border-slate-100 pb-2">Classification Distribution</h4>
-                    <div className="h-32">
+                    <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">Classification Distribution</h4>
+                    <div className="h-24 sm:h-32">
                        <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={Object.entries(analysis.class_breakdown).map(([name, value]) => ({ name: CLASS_LABELS[name as DetectionClass], value }))}>
                              <XAxis dataKey="name" hide />
-                             <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                             <Bar dataKey="value" fill="#6366f1" radius={[3, 3, 0, 0]} />
                           </BarChart>
                        </ResponsiveContainer>
                     </div>
@@ -615,18 +693,18 @@ export default function ResultsPage() {
            </div>
 
            {/* Legal & ISO Footnote */}
-           <div className="mt-20 pt-10 border-t border-slate-100 grid grid-cols-3 gap-12">
-              <div className="col-span-2">
-                 <p className="text-[8px] font-bold text-slate-400 uppercase leading-relaxed tracking-wider">
+           <div className="mt-10 sm:mt-20 pt-8 sm:pt-10 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
+              <div className="sm:col-span-2">
+                 <p className="text-[7px] sm:text-[8px] font-bold text-slate-400 uppercase leading-relaxed tracking-wider">
                     This document certifies that the aforementioned sample was analyzed using the ColonyAI Neural Network (v4.2). 
                     All calculations are performed in accordance with ISO 4833-1:2013 and FDA BAM Chapter 3 standards. 
                     Expanded uncertainty (U) is reported at k=2 for a ~95% confidence interval.
                  </p>
               </div>
-              <div className="text-right flex flex-col items-end justify-end">
-                 <div className="w-32 h-[1px] bg-slate-200 mb-2" />
-                 <p className="text-[9px] font-black text-slate-900 uppercase tracking-widest">Digital Auth Signature</p>
-                 <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">Autonomous Core System</p>
+              <div className="sm:text-right flex flex-col items-start sm:items-end justify-end">
+                 <div className="w-24 sm:w-32 h-[1px] bg-slate-200 mb-2" />
+                 <p className="text-[8px] sm:text-[9px] font-black text-slate-900 uppercase tracking-widest">Digital Auth Signature</p>
+                 <p className="text-[6px] sm:text-[7px] font-bold text-slate-400 uppercase tracking-widest">Autonomous Core System</p>
               </div>
            </div>
         </div>

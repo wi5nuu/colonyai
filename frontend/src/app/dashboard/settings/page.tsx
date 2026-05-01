@@ -17,9 +17,9 @@ const TABS = [
   { id: "appearance", name: "Appearance", icon: Palette },
 ];
 
-const INPUT_CLS = "w-full px-4 py-2.5 text-[11px] font-bold text-slate-900 bg-slate-50/50 border border-slate-100 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-300";
-const LABEL_CLS = "text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1 mb-1.5 block";
-const BTN_PRIMARY = "btn-primary py-2.5 px-5 flex items-center gap-2 rounded-lg text-[9px] font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed";
+const INPUT_CLS = "w-full px-5 py-3 text-[13px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-300 shadow-sm";
+const LABEL_CLS = "text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1 mb-2 block";
+const BTN_PRIMARY = "bg-slate-900 hover:bg-slate-800 text-white py-3.5 px-6 flex items-center justify-center gap-3 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-slate-900/20 active:scale-95 disabled:opacity-50";
 
 export default function SettingsPage() {
   const { t } = useTranslationStore();
@@ -46,34 +46,41 @@ export default function SettingsPage() {
       <div className="flex relative min-h-[calc(100vh-200px)]">
         <div className={`flex-1 transition-all duration-300 ${showDocs ? 'lg:mr-[350px]' : ''}`}>
           <div className="max-w-[1500px] mx-auto px-6 py-8">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-slate-100 mb-8">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 bg-slate-900 rounded-lg shadow-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-slate-900 rounded-xl shadow-xl flex items-center justify-center">
                     <Settings2 className="w-4 h-4 text-primary" />
                   </div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t('settings.title')}</h1>
+                  <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">{t('settings.title')}</h1>
                 </div>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t('settings.subtitle')}</p>
-                <DocumentationToggle showDocs={showDocs} setShowDocs={setShowDocs} text={t('settings.docsToggle')} />
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-1">{t('settings.subtitle')}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                 <div className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                       <Shield className="w-3.5 h-3.5" />
+                       Auth: AES-256-GCM
+                    </span>
+                 </div>
               </div>
             </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Sidebar Nav - 3 cols */}
         <div className="lg:col-span-3">
-          <nav className="dashboard-card p-2 space-y-1 sticky top-24 rounded-xl">
+          <nav className="bg-white border border-slate-200/60 p-2.5 space-y-1.5 sticky top-24 rounded-2xl shadow-sm">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all duration-300 ${
+                className={`w-full flex items-center gap-4 px-5 py-4 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 ${
                   activeTab === tab.id
-                    ? "bg-slate-900 text-white shadow-xl shadow-slate-900/20 z-10"
+                    ? "bg-slate-900 text-white shadow-xl shadow-slate-900/20"
                     : "text-slate-400 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
-                <tab.icon className={`h-3.5 w-3.5 flex-shrink-0 ${activeTab === tab.id ? 'text-primary' : ''}`} />
+                <tab.icon className={`h-4.5 w-4.5 flex-shrink-0 ${activeTab === tab.id ? 'text-primary' : ''}`} />
                 {tab.name}
               </button>
             ))}
@@ -82,28 +89,28 @@ export default function SettingsPage() {
 
         {/* Content Panel - 9 cols */}
         <div className="lg:col-span-9">
-          <div className="dashboard-card overflow-hidden !p-0 rounded-xl">
+          <div className="bg-white border border-slate-200/60 overflow-hidden rounded-2xl shadow-sm">
             {/* Panel Header */}
-            <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/30 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center shadow-sm">
-                <ActiveIcon className="h-4 w-4 text-primary" />
+            <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                <ActiveIcon className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
-                  {TABS.find(t => t.id === activeTab)?.name} Protocol
+                <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">
+                  {TABS.find(t => t.id === activeTab)?.name} Configuration
                 </h2>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Configure your {TABS.find(t => t.id === activeTab)?.name.toLowerCase()} matrix</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Global node environment matrix</p>
               </div>
             </div>
 
             {/* Panel Body */}
-            <div className="p-6">
+            <div className="p-8 lg:p-10">
               {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-24 gap-6">
-                  <div className="w-20 h-20 rounded-[2rem] bg-slate-50 flex items-center justify-center">
+                <div className="flex flex-col items-center justify-center py-32 gap-6">
+                  <div className="w-24 h-24 rounded-[2.5rem] bg-slate-50 flex items-center justify-center border border-slate-100">
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
                   </div>
-                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('settings.syncingPrefs')}</p>
+                  <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t('settings.syncingPrefs')}</p>
                 </div>
               ) : (
                 <div className="animate-in slide-in-from-bottom-4 duration-500">
@@ -194,13 +201,13 @@ function ProfileSettings() {
         </div>
         <div className="space-y-1.5">
           <label className={LABEL_CLS}>Email Address</label>
-          <input type="email" className={`${INPUT_CLS} !bg-slate-50 !border-slate-100 !text-slate-400 cursor-not-allowed`} value={user?.email || ""} disabled />
-          <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-2 ml-1">Immutable Identifier</p>
+          <input type="email" className={`${INPUT_CLS} !bg-slate-50 !border-slate-200 !text-slate-400 cursor-not-allowed`} value={user?.email || ""} disabled />
+          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-2 ml-1">Immutable Identifier</p>
         </div>
         <div className="space-y-1.5">
           <label className={LABEL_CLS}>Node Role</label>
-          <input type="text" className={`${INPUT_CLS} !bg-slate-50 !border-slate-100 !text-slate-400 capitalize cursor-not-allowed`} value={user?.role || ""} disabled />
-          <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-2 ml-1">Provisioned by Root Admin</p>
+          <input type="text" className={`${INPUT_CLS} !bg-slate-50 !border-slate-200 !text-slate-400 capitalize cursor-not-allowed`} value={user?.role || ""} disabled />
+          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-2 ml-1">Provisioned by Root Admin</p>
         </div>
       </div>
       <div className="pt-8 border-t border-slate-50">
@@ -239,17 +246,17 @@ function NotificationSettings({ preferences, onRefresh }: { preferences: any; on
   return (
     <div className="space-y-4">
       {ITEMS.map((item) => (
-        <div key={item.key} className="flex items-center justify-between p-4 bg-slate-50/50 border border-slate-100 rounded-xl hover:bg-slate-50 hover:border-primary/20 transition-all group">
-          <div className="flex items-center gap-4">
-             <div className="w-10 h-10 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-primary group-hover:scale-110 transition-all shadow-sm">
-                <item.icon className="w-4 h-4" />
+        <div key={item.key} className="flex items-center justify-between p-6 bg-slate-50/50 border border-slate-200/60 rounded-2xl hover:bg-white hover:shadow-md transition-all group">
+          <div className="flex items-center gap-5">
+             <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 group-hover:text-primary group-hover:scale-110 transition-all shadow-sm">
+                <item.icon className="w-5 h-5" />
              </div>
              <div>
-               <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{item.title}</p>
-               <p className="text-[9px] text-slate-500 font-medium mt-0.5">{item.desc}</p>
+               <p className="text-[12px] font-black text-slate-900 uppercase tracking-widest">{item.title}</p>
+               <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">{item.desc}</p>
              </div>
           </div>
-          <div className="relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-all duration-300 ease-in-out bg-slate-200 peer-focus:ring-4 peer-focus:ring-primary/20 overflow-hidden">
+          <div className="relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-all duration-300 ease-in-out bg-slate-200 overflow-hidden">
             <input
               type="checkbox"
               checked={settings[item.key as keyof typeof settings]}
@@ -323,20 +330,20 @@ function SecuritySettings() {
         </div>
       </form>
 
-      <div className="pt-8 border-t border-slate-50">
-        <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4">Session Authorization</h3>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-rose-50/50 border border-rose-100 rounded-xl gap-6">
-          <div className="flex items-center gap-4">
-             <div className="w-12 h-12 rounded-lg bg-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-200">
-                <LogOut className="w-5 h-5" />
+      <div className="pt-10 border-t border-slate-100">
+        <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em] mb-6">Session Authorization Matrix</h3>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between p-8 bg-rose-50/30 border border-rose-100 rounded-2xl gap-8">
+          <div className="flex items-center gap-6">
+             <div className="w-16 h-16 rounded-2xl bg-rose-500 flex items-center justify-center text-white shadow-2xl shadow-rose-500/20">
+                <LogOut className="w-7 h-7" />
              </div>
              <div>
-               <p className="text-[11px] font-black text-rose-700 uppercase tracking-widest">Terminate All Sessions</p>
-               <p className="text-[9px] text-rose-600/70 font-bold mt-0.5">Force revoke every active node token. Critical if hardware is compromised.</p>
+               <p className="text-[14px] font-black text-rose-900 uppercase tracking-tight">Terminate All active Nodes</p>
+               <p className="text-[10px] text-rose-700/60 font-black uppercase tracking-widest mt-1">Force revoke every session across the global network</p>
              </div>
           </div>
-          <button onClick={handleRevokeAllSessions} className="px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-rose-200 flex-shrink-0">
-             Revoke Every Node
+          <button onClick={handleRevokeAllSessions} className="px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-rose-600/20 active:scale-95 flex-shrink-0">
+             Revoke Global Auth
           </button>
         </div>
       </div>
@@ -386,7 +393,7 @@ function LaboratorySettings({ preferences, onRefresh }: { preferences: any; onRe
         <div className="space-y-1.5">
           <label className={LABEL_CLS}>Standard Matrix Volume (mL)</label>
           <input type="number" step="0.1" min="0.1" className={INPUT_CLS} value={config.default_volume} onChange={e => setConfig({ ...config, default_volume: parseFloat(e.target.value) })} />
-          <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-2 ml-1">Calibrated to ISO 4833-1:2013 Standards</p>
+          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-3 ml-1">Calibrated to ISO 4833-1:2013 Standards</p>
         </div>
       </div>
       <div className="pt-8 border-t border-slate-50">

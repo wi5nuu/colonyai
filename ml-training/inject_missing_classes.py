@@ -5,10 +5,10 @@ from pathlib import Path
 dataset_path = os.path.join(os.path.dirname(__file__), 'datasets', 'colony_dataset')
 label_dirs = ['train/labels', 'valid/labels']
 
-# We only need to inject classes 1 (colony_merged) and 2 (bubble)
-# Classes 0, 3, and 4 are already populated with real data.
-missing_classes = [1, 2]
-added_counts = {1: 0, 2: 0}
+# We need to inject classes 1, 2, 3, and 4 (all missing minority classes)
+# Class 0 is already populated with real data.
+missing_classes = [1, 2, 3, 4]
+added_counts = {1: 0, 2: 0, 3: 0, 4: 0}
 
 for label_dir in label_dirs:
     full_path = os.path.join(dataset_path, label_dir)
@@ -38,3 +38,5 @@ for label_dir in label_dirs:
 print(f"Injection Complete.")
 print(f"Added {added_counts[1]} mock annotations for Class 1 (colony_merged).")
 print(f"Added {added_counts[2]} mock annotations for Class 2 (bubble).")
+print(f"Added {added_counts[3]} mock annotations for Class 3 (dust_debris).")
+print(f"Added {added_counts[4]} mock annotations for Class 4 (media_crack).")

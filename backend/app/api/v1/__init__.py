@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, images, analyses, reports, users, lims, maintenance, simulator, settings, audit
+from app.api.v1.endpoints import auth, images, analyses, reports, users, lims, maintenance, simulator, settings, audit, super
 
 auth_router = APIRouter()
 auth_router.add_api_route("/login", auth.login, methods=["POST"])
@@ -10,6 +10,11 @@ auth_router.add_api_route("/logout", auth.logout, methods=["POST"])
 auth_router.add_api_route("/password", auth.change_password, methods=["PUT"])
 auth_router.add_api_route("/sessions", auth.get_active_sessions, methods=["GET"])
 auth_router.add_api_route("/sessions/all", auth.revoke_all_sessions, methods=["DELETE"])
+auth_router.add_api_route("/forgot-password", auth.forgot_password, methods=["POST"])
+auth_router.add_api_route("/reset-password", auth.reset_password, methods=["POST"])
+auth_router.add_api_route("/reset-requests", auth.list_reset_requests, methods=["GET"])
+auth_router.add_api_route("/reset-requests/{request_id}/approve", auth.approve_reset_request, methods=["POST"])
+auth_router.add_api_route("/reset-requests/{request_id}/reject", auth.reject_reset_request, methods=["POST"])
 
 image_router = APIRouter()
 image_router.add_api_route("/upload", images.upload_image, methods=["POST"])
@@ -29,11 +34,15 @@ report_router = APIRouter()
 report_router.add_api_route("/pdf", reports.generate_pdf_report, methods=["POST"])
 report_router.add_api_route("/csv", reports.generate_csv_report, methods=["POST"])
 report_router.add_api_route("/{report_id}/download", reports.download_report, methods=["GET"])
+report_router.add_api_route("/admin/pdf-all", reports.admin_export_all_pdf, methods=["GET"])
+report_router.add_api_route("/admin/excel-all", reports.admin_export_all_excel, methods=["GET"])
 
 user_router = APIRouter()
 user_router.add_api_route("/me", users.get_current_user_profile, methods=["GET"])
 user_router.add_api_route("/me", users.update_current_user_profile, methods=["PATCH"])
 user_router.add_api_route("/", users.list_users, methods=["GET"])
+user_router.add_api_route("/admin-reset-password", users.admin_reset_password, methods=["POST"])
+user_router.add_api_route("/emergency-access", users.issue_emergency_access, methods=["POST"])
 
 lims_router = APIRouter()
 lims_router.add_api_route("/sync/{analysis_id}", lims.sync_to_lims, methods=["POST"])
@@ -60,3 +69,8 @@ settings_router.add_api_route("/appearance", settings.update_appearance_preferen
 
 audit_router = APIRouter()
 audit_router.add_api_route("/", audit.list_audit_logs, methods=["GET"])
+
+super_router = APIRouter()
+super_router.add_api_route("/stats", super.get_global_stats, methods=["GET"])
+super_router.add_api_route("/organizations", super.get_all_organizations, methods=["GET"])
+super_router.add_api_route("/provision", super.provision_new_organization, methods=["POST"])

@@ -91,50 +91,50 @@ async def init_db():
                 admin_user.password_hash = get_password_hash(settings.INITIAL_ADMIN_PASSWORD)
 
             # 2. Lead Analyst (from README)
-            analyst_email = "analyst@colonyai.diag"
+            analyst_email = "analyst@colonyai.com"
             result = await session.execute(select(User).where(User.email == analyst_email))
             analyst_user = result.scalars().first()
             if not analyst_user:
                 logger.info(f"Seeding lead analyst: {analyst_email}")
                 session.add(User(
                     email=analyst_email,
-                    password_hash=get_password_hash("colony2026"),
+                    password_hash=get_password_hash("analyst_secure_2026"),
                     full_name="Lead Analyst Primary",
                     role=UserRole.ANALYST
                 ))
             else:
-                analyst_user.password_hash = get_password_hash("colony2026")
+                analyst_user.password_hash = get_password_hash("analyst_secure_2026")
 
             # 3. Lab Manager (from README)
-            manager_email = "manager@colonyai.diag"
+            manager_email = "manager@colonyai.com"
             result = await session.execute(select(User).where(User.email == manager_email))
             manager_user = result.scalars().first()
             if not manager_user:
                 logger.info(f"Seeding lab manager: {manager_email}")
                 session.add(User(
                     email=manager_email,
-                    password_hash=get_password_hash("colony2026"),
+                    password_hash=get_password_hash("manager_secure_2026"),
                     full_name="Laboratory Manager",
                     role=UserRole.MANAGER
                 ))
             else:
-                manager_user.password_hash = get_password_hash("colony2026")
+                manager_user.password_hash = get_password_hash("manager_secure_2026")
                 manager_user.role = UserRole.MANAGER
 
             # 4. Independent Auditor
-            auditor_email = "auditor@colonyai.diag"
+            auditor_email = "auditor@colonyai.com"
             result = await session.execute(select(User).where(User.email == auditor_email))
             auditor_user = result.scalars().first()
             if not auditor_user:
                 logger.info(f"Seeding auditor: {auditor_email}")
                 session.add(User(
                     email=auditor_email,
-                    password_hash=get_password_hash("colony2026"),
+                    password_hash=get_password_hash("auditor_secure_2026"),
                     full_name="External Auditor",
                     role=UserRole.AUDITOR
                 ))
             else:
-                auditor_user.password_hash = get_password_hash("colony2026")
+                auditor_user.password_hash = get_password_hash("auditor_secure_2026")
                 auditor_user.role = UserRole.AUDITOR
 
             await session.commit()

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Dict, Any
@@ -14,7 +14,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_, desc
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.orm.exc import StaleDataError
 
 from app.core.security import get_current_user, require_role
@@ -41,6 +41,62 @@ from app.schemas.analyses import (
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# ============================================================
+# Simulation Endpoint (Case 1 Requirement)
+# ============================================================
+
+@router.post("/simulate", response_model=AnalysisResponse)
+async def simulate_analysis(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Real-time simulation for accuracy comparison (Case 1).
+    Processes image with AI but DOES NOT save to audit history.
+    """
+    from app.services.image_processor import ImageProcessor
+    from app.services.colony_detector import ColonyDetector
+    
+    # 1. Validation
+    contents = await file.read()
+    validate_and_sanitize_image(contents)
+    
+    # 2. Processing
+    processor = ImageProcessor()
+    detector = ColonyDetector()
+    
+    processed_img = processor.preprocess_from_bytes(contents)
+    detections = detector.detect(processed_img)
+    
+    # 3. Build a transient response (not saved to DB)
+    temp_id = uuid.uuid4()
+    
+    return {
+        "id": str(temp_id),
+        "sample_id": "SIMULATION-" + file.filename,
+        "media_type": "SIMULATED",
+        "status": "completed",
+        "colony_count": sum(1 for d in detections if d['is_valid_colony']),
+        "cfu_per_ml": 0.0, # Placeholder
+        "confidence_score": detector.get_average_confidence(detections),
+        "reliability": detector.get_reliability_indicator(detections),
+        "class_breakdown": detector.get_detection_summary(detections),
+        "created_at": datetime.utcnow().isoformat(),
+        "is_valid_for_reporting": False,
+        "detections": [
+            {
+                "id": str(uuid.uuid4()),
+                "analysis_id": str(temp_id),
+                "class_name": d['class_name'],
+                "confidence": d['confidence'],
+                "bbox": d['bbox']
+            } for d in detections
+        ],
+        "warnings": ["INI ADALAH MODE SIMULASI. Data tidak disimpan ke Audit Ledger."]
+    }
+
 
 # ============================================================
 # Helper Functions
@@ -94,6 +150,11 @@ def _build_analysis_response(analysis: Analysis) -> AnalysisResponse:
         cfu_message=getattr(analysis, 'cfu_message', None),
         uncertainty_u=getattr(analysis, 'uncertainty_u', None),
         merged_estimation_method=getattr(analysis, 'merged_estimation_method', None),
+        incubation_temp=getattr(analysis, 'incubation_temp', None),
+        incubation_time_hours=getattr(analysis, 'incubation_time_hours', None),
+        method_standard=getattr(analysis, 'method_standard', "ISO 4833-1:2013"),
+        media_batch_number=getattr(analysis, 'media_batch_number', None),
+        incubator_id=getattr(analysis, 'incubator_id', None),
         class_breakdown=class_breakdown or analysis.class_breakdown,
         detections=[_build_detection_response(d) for d in analysis.detections],
         warnings=analysis.warnings or [],
@@ -138,6 +199,11 @@ def _build_brief_response(analysis: Analysis) -> AnalysisBriefResponse:
         cfu_message=getattr(analysis, 'cfu_message', None),
         uncertainty_u=getattr(analysis, 'uncertainty_u', None),
         merged_estimation_method=getattr(analysis, 'merged_estimation_method', None),
+        incubation_temp=getattr(analysis, 'incubation_temp', None),
+        incubation_time_hours=getattr(analysis, 'incubation_time_hours', None),
+        method_standard=getattr(analysis, 'method_standard', "ISO 4833-1:2013"),
+        media_batch_number=getattr(analysis, 'media_batch_number', None),
+        incubator_id=getattr(analysis, 'incubator_id', None),
         class_breakdown=class_breakdown or analysis.class_breakdown,
         warnings=analysis.warnings or [],
         is_valid_for_reporting=is_valid,
@@ -189,6 +255,11 @@ async def create_analysis(
     media_type: str = Form(...),
     dilution_factor: float = Form(1.0),
     plated_volume_ml: float = Form(1.0),
+    incubation_temp: Optional[float] = Form(None),
+    incubation_time_hours: Optional[int] = Form(None),
+    method_standard: Optional[str] = Form("ISO 4833-1:2013"),
+    media_batch_number: Optional[str] = Form(None),
+    incubator_id: Optional[str] = Form(None),
     request: Request = None,
     current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin")),
     db: AsyncSession = Depends(get_db),
@@ -253,13 +324,23 @@ async def create_analysis(
             original_url = get_presigned_url(s3_key, expires_in=900) or s3_key
 
         # ── Step 2: Buat record analisis ──
+        # Multi-tenant: Tag with organization_id
+        org_id = current_user.get("organization_id")
+        target_org_id = uuid.UUID(org_id) if org_id else None
+
         analysis = Analysis(
             id=analysis_id,
             user_id=uuid.UUID(current_user["user_id"]),
+            organization_id=target_org_id,
             sample_id=sample_id,
             media_type=media_type,
             dilution_factor=dilution_factor,
             plated_volume_ml=plated_volume_ml,
+            incubation_temp=incubation_temp,
+            incubation_time_hours=incubation_time_hours,
+            method_standard=method_standard,
+            media_batch_number=media_batch_number,
+            incubator_id=incubator_id,
             original_image_url=original_url,
             status=AnalysisStatus.PROCESSING,
         )
@@ -393,13 +474,18 @@ async def create_analysis(
         ua = request.headers.get("user-agent") if request else None
         await write_audit_log(
             db, current_user["user_id"], "create_analysis",
-            "analysis", str(analysis_id),
+            "analysis", current_user.get("organization_id"), str(analysis_id),
             details={
                 "sample_id": sample_id,
                 "media_type": media_type,
                 "cfu_status": cfu_result.status,
                 "total_colonies": cfu_result.total_colonies,
                 "merged_method": cfu_result.merged_estimate.estimation_method,
+                "incubation_temp": incubation_temp,
+                "incubation_time": incubation_time_hours,
+                "media_batch": media_batch_number,
+                "incubator_id": incubator_id,
+                "method_standard": method_standard,
             },
             ip_address=ip, user_agent=ua,
         )
@@ -431,7 +517,7 @@ async def list_analyses(
     page_size: int = 20,
     search: Optional[str] = None,
     media_type: Optional[str] = None,
-    status_filter: Optional[str] = None,
+    status_filter: Optional[str] = Query(None, alias="status"),
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
     current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin")),
@@ -440,8 +526,16 @@ async def list_analyses(
     """
     List all analyses for the current user with pagination and filters.
     """
-    # Professional Lab: Analyst sees own, Manager/Auditor/Admin sees all
     base_conditions = []
+    # Multi-tenant security: restrict by organization_id
+    org_id = current_user.get("organization_id")
+    if current_user.get("role") != "super_admin":
+        if org_id:
+            base_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+        else:
+            # Analyst/Manager with no org? 
+            return AnalysisListResponse(analyses=[], total=0, page=page, page_size=page_size, total_pages=0)
+
     if current_user["role"] == "analyst":
         base_conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
 
@@ -483,20 +577,19 @@ async def list_analyses(
         base_conditions.append(Analysis.created_at <= datetime.fromisoformat(_dt).replace(tzinfo=None))
 
     # Get total count
-    count_query = select(func.count()).select_from(Analysis).where(and_(*base_conditions))
+    count_query = select(func.count()).select_from(Analysis)
+    if base_conditions:
+        count_query = count_query.where(and_(*base_conditions))
     total_result = await db.execute(count_query)
     total = total_result.scalar()
 
     # Get paginated results
     offset = (page - 1) * page_size
-    query = (
-        select(Analysis)
-        .where(and_(*base_conditions))
-        .options(joinedload(Analysis.detections))
-        .order_by(desc(Analysis.created_at))
-        .offset(offset)
-        .limit(page_size)
-    )
+    query = select(Analysis).options(selectinload(Analysis.detections), joinedload(Analysis.user))
+    if base_conditions:
+        query = query.where(and_(*base_conditions))
+    query = query.order_by(desc(Analysis.created_at)).offset(offset).limit(page_size)
+
     result = await db.execute(query)
     analyses = result.scalars().unique().all()
 
@@ -526,15 +619,23 @@ async def get_analysis(
             detail="Invalid analysis ID format",
         )
 
+    # Multi-tenant check
+    org_id = current_user.get("organization_id")
+    query_conditions = [Analysis.id == analysis_uuid]
+    
+    if current_user.get("role") != "super_admin":
+        if org_id:
+            query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+        else:
+            raise HTTPException(status_code=403, detail="Unauthorized access")
+            
+    if current_user["role"] == "analyst":
+        query_conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
+
     result = await db.execute(
         select(Analysis)
-        .where(
-            and_(
-                Analysis.id == analysis_uuid,
-                Analysis.user_id == current_user["user_id"],
-            )
-        )
-        .options(joinedload(Analysis.detections), joinedload(Analysis.user))
+        .where(and_(*query_conditions))
+        .options(selectinload(Analysis.detections), joinedload(Analysis.user))
     )
     analysis = result.scalars().unique().first()
 
@@ -562,90 +663,79 @@ async def get_dashboard_stats(
     current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
-    # Professional Lab: Stats visibility
-    base_query = select(Analysis)
+    # Multi-tenant security: Stats visibility
+    base_conditions = []
+    org_id = current_user.get("organization_id")
+    
+    if current_user.get("role") != "super_admin":
+        if org_id:
+            base_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+        else:
+            return DashboardStatsResponse(...) # Should return empty stats
+    
+    # Manager, Auditor, Admin see all stats in their org. Analyst sees only own stats.
     if current_user["role"] == "analyst":
-        base_query = base_query.where(Analysis.user_id == user_id)
+        user_id = uuid.UUID(current_user["user_id"])
+        base_conditions.append(Analysis.user_id == user_id)
+
+    def _apply_conditions(query):
+        if base_conditions:
+            return query.where(and_(*base_conditions))
+        return query
 
     # ── 1. Basic Counts ──
-    total_result = await db.execute(
-        select(func.count()).select_from(base_query.subquery())
-    )
+    count_query = select(func.count()).select_from(Analysis)
+    total_result = await db.execute(_apply_conditions(count_query))
     total_analyses = total_result.scalar() or 0
 
-    completed_result = await db.execute(
-        select(func.count()).select_from(Analysis).where(
-            and_(
-                Analysis.user_id == user_id,
-                Analysis.status == AnalysisStatus.COMPLETED,
-            )
-        )
+    completed_query = select(func.count()).select_from(Analysis).where(
+        Analysis.status == AnalysisStatus.COMPLETED
     )
+    completed_result = await db.execute(_apply_conditions(completed_query))
     completed_count = completed_result.scalar() or 0
     success_rate = (completed_count / total_analyses * 100) if total_analyses > 0 else 0.0
 
     # ── 2. Verified vs Failed vs Review ──
-    # Verified = Completed with NO warnings or just TNTC/TFTC (valid results)
-    # Failed = FAILED status
-    # Review = COMPLETED with 'Manual review' in warnings or low reliability
-    
-    verified_result = await db.execute(
-        select(func.count()).select_from(Analysis).where(
-            and_(
-                Analysis.user_id == user_id,
-                Analysis.status == AnalysisStatus.COMPLETED,
-                ~Analysis.warnings.contains("Manual review")
-            )
+    verified_query = select(func.count()).select_from(Analysis).where(
+        and_(
+            Analysis.status == AnalysisStatus.COMPLETED,
+            ~Analysis.warnings.contains("Manual review")
         )
     )
+    verified_result = await db.execute(_apply_conditions(verified_query))
     verified_count = verified_result.scalar() or 0
 
-    failed_result = await db.execute(
-        select(func.count()).select_from(Analysis).where(
-            and_(
-                Analysis.user_id == user_id,
-                Analysis.status == AnalysisStatus.FAILED,
-            )
-        )
+    failed_query = select(func.count()).select_from(Analysis).where(
+        Analysis.status == AnalysisStatus.FAILED
     )
+    failed_result = await db.execute(_apply_conditions(failed_query))
     failed_count = failed_result.scalar() or 0
 
-    review_result = await db.execute(
-        select(func.count()).select_from(Analysis).where(
-            and_(
-                Analysis.user_id == user_id,
-                Analysis.status == AnalysisStatus.COMPLETED,
-                or_(
-                    Analysis.reliability == "low",
-                    Analysis.warnings.contains("Manual review"),
-                ),
-            )
+    review_query = select(func.count()).select_from(Analysis).where(
+        and_(
+            Analysis.status == AnalysisStatus.COMPLETED,
+            or_(
+                Analysis.reliability == "low",
+                Analysis.warnings.contains("Manual review"),
+            ),
         )
     )
+    review_result = await db.execute(_apply_conditions(review_query))
     pending_review = review_result.scalar() or 0
 
     # ── 3. Performance Metrics (Confidence & Latency) ──
-    # Note: In a real system, latency might be logged in a separate table.
-    # Here we use the confidence_score from Analysis.
-    perf_result = await db.execute(
-        select(
-            func.avg(Analysis.confidence_score),
-        ).where(
-            and_(
-                Analysis.user_id == user_id,
-                Analysis.status == AnalysisStatus.COMPLETED,
-                Analysis.confidence_score.isnot(None)
-            )
+    perf_query = select(func.avg(Analysis.confidence_score)).where(
+        and_(
+            Analysis.status == AnalysisStatus.COMPLETED,
+            Analysis.confidence_score.isnot(None)
         )
     )
+    perf_result = await db.execute(_apply_conditions(perf_query))
     avg_conf = perf_result.scalar() or 0.0
 
     # ── 4. Matrix Breakdown (Media Types) ──
-    matrix_result = await db.execute(
-        select(Analysis.media_type, func.count())
-        .where(Analysis.user_id == user_id)
-        .group_by(Analysis.media_type)
-    )
+    matrix_query = select(Analysis.media_type, func.count()).group_by(Analysis.media_type)
+    matrix_result = await db.execute(_apply_conditions(matrix_query))
     matrix_breakdown = {row[0]: row[1] for row in matrix_result.all()}
 
     # ── 5. Weekly Trend ──
@@ -657,26 +747,19 @@ async def get_dashboard_stats(
         day_start = day_date.replace(hour=0, minute=0, second=0, microsecond=0).replace(tzinfo=None)
         day_end = day_start + timedelta(days=1)
 
-        day_count = await db.execute(
-            select(func.count()).select_from(Analysis).where(
-                and_(
-                    Analysis.user_id == user_id,
-                    Analysis.created_at >= day_start,
-                    Analysis.created_at < day_end,
-                )
+        day_query = select(func.count()).select_from(Analysis).where(
+            and_(
+                Analysis.created_at >= day_start,
+                Analysis.created_at < day_end,
             )
         )
+        day_count = await db.execute(_apply_conditions(day_query))
         weekly_trend.append(WeeklyTrendItem(day=day_name, analyses=day_count.scalar() or 0))
 
     # ── 6. Recent Analyses ──
     from sqlalchemy.orm import selectinload
-    recent_result = await db.execute(
-        select(Analysis)
-        .where(Analysis.user_id == user_id)
-        .options(selectinload(Analysis.detections))
-        .order_by(desc(Analysis.created_at))
-        .limit(5)
-    )
+    recent_query = select(Analysis).options(selectinload(Analysis.detections)).order_by(desc(Analysis.created_at)).limit(5)
+    recent_result = await db.execute(_apply_conditions(recent_query))
     recent_analyses = recent_result.scalars().unique().all()
 
     return DashboardStatsResponse(
@@ -684,7 +767,7 @@ async def get_dashboard_stats(
         avg_time_saved_minutes=total_analyses * 15, # 15 min saved per analysis
         success_rate=round(success_rate, 1),
         pending_review=pending_review,
-        neural_confidence=round(avg_conf * 100, 1) if avg_conf > 0 else 94.1, # fallback to baseline if no data
+        neural_confidence=round(avg_conf * 100, 1) if avg_conf > 0 else 0.0, # 0 if no data yet
         system_latency_ms=42.0, # Realistically this would come from logs
         verified_count=verified_count,
         failed_count=failed_count,
@@ -711,10 +794,17 @@ async def approve_analysis(
             detail="Invalid analysis ID format",
         )
 
+    # Multi-tenant security check
+    org_id = current_user.get("organization_id")
+    query_conditions = [Analysis.id == analysis_uuid]
+    
+    if current_user.get("role") != "super_admin" and org_id:
+        query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+
     result = await db.execute(
         select(Analysis)
-        .where(Analysis.id == analysis_uuid)  # Manager can approve ANY analysis
-        .options(joinedload(Analysis.detections), joinedload(Analysis.user))
+        .where(and_(*query_conditions))
+        .options(selectinload(Analysis.detections), joinedload(Analysis.user))
     )
     analysis = result.scalars().unique().first()
 
@@ -745,7 +835,7 @@ async def approve_analysis(
     ua = request.headers.get("user-agent") if request else None
     await write_audit_log(
         db, current_user["user_id"], "approve_analysis",
-        "analysis", analysis_id,
+        "analysis", current_user.get("organization_id"), analysis_id,
         details={"sample_id": analysis.sample_id},
         ip_address=ip, user_agent=ua,
     )
@@ -770,15 +860,19 @@ async def flag_for_review(
             detail="Invalid analysis ID format",
         )
 
+    org_id = current_user.get("organization_id")
+    query_conditions = [Analysis.id == analysis_uuid]
+    
+    if current_user.get("role") != "super_admin":
+        if org_id:
+            query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+        else:
+            raise HTTPException(status_code=403, detail="Unauthorized access")
+
     result = await db.execute(
         select(Analysis)
-        .where(
-            and_(
-                Analysis.id == analysis_uuid,
-                Analysis.user_id == current_user["user_id"],
-            )
-        )
-        .options(joinedload(Analysis.detections), joinedload(Analysis.user))
+        .where(and_(*query_conditions))
+        .options(selectinload(Analysis.detections), joinedload(Analysis.user))
     )
     analysis = result.scalars().unique().first()
 
@@ -800,7 +894,7 @@ async def flag_for_review(
     ua = http_request.headers.get("user-agent") if http_request else None
     await write_audit_log(
         db, current_user["user_id"], "flag_for_review",
-        "analysis", analysis_id,
+        "analysis", current_user.get("organization_id"), analysis_id,
         details={"sample_id": analysis.sample_id, "reason": body.reason},
         ip_address=ip, user_agent=ua,
     )

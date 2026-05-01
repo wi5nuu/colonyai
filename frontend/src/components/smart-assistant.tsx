@@ -157,19 +157,21 @@ export function SmartAssistant() {
       )}
 
       {!isOpen && (
-        <button onClick={() => setIsOpen(true)} className="group relative w-16 h-16 bg-purple-600 text-white rounded-2xl shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:bg-purple-700 active:scale-95">
-          <div className="absolute inset-0 rounded-2xl bg-purple-500 animate-ping opacity-20 group-hover:hidden" />
-          <Sparkles className="w-8 h-8 animate-pulse" />
-          <div className="absolute -top-1 -right-1 bg-emerald-500 w-4 h-4 rounded-full border-2 border-white" />
+        <button onClick={() => setIsOpen(true)} className="group relative w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 outline-none">
+          <div className="absolute inset-0 rounded-full bg-purple-500 animate-ping opacity-20 group-hover:hidden" />
+          <img src="/android-chrome-512x512.png" alt="AI Logo" className="w-full h-full object-contain drop-shadow-2xl" />
+          <div className="absolute top-0 right-0 bg-emerald-500 w-3.5 h-3.5 rounded-full border-2 border-white z-10" />
         </button>
       )}
 
       {isOpen && (
-        <div className="bg-white w-[380px] h-[600px] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
+        <div className="bg-white w-[90vw] sm:w-[380px] h-[80vh] sm:h-[600px] max-h-[800px] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
           <div className="bg-purple-600 p-6 text-white">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"><Sparkles className="w-6 h-6" /></div>
+                <div className="w-10 h-10 flex items-center justify-center drop-shadow-md">
+                  <img src="/android-chrome-512x512.png" alt="AI Logo" className="w-full h-full object-contain" />
+                </div>
                 <div>
                   <h3 className="font-bold text-sm tracking-tight uppercase tracking-widest">Neural Assistant</h3>
                   <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" /><span className="text-[10px] font-bold uppercase tracking-widest text-purple-200">System Broadcast Mode</span></div>

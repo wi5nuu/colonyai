@@ -1,17 +1,14 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { 
-  Users, 
-  UserPlus, 
-  ShieldAlert, 
-  Settings2, 
-  Key, 
-  Activity, 
-  Trash2, 
-  MoreVertical,
-  CheckCircle,
-  XCircle,
+import React, { useState, useEffect } from "react";
+import {
+  Users,
+  UserPlus,
+  ShieldAlert,
+  Settings2,
+  Key,
+  Activity,
+  Trash2,
   Database,
   Lock,
   ShieldCheck,
@@ -19,495 +16,934 @@ import {
   FileText,
   FileSpreadsheet,
   BarChart3,
-} from 'lucide-react'
-import { toast } from 'sonner'
+  Search,
+  Plus,
+} from "lucide-react";
+import { toast } from "sonner";
 
-import api from '@/lib/api'
+import api, { API_URL } from "@/lib/api";
+import { DocumentationSidebar } from "@/components/DocumentationSidebar";
+import { useTranslationStore } from "@/lib/i18n/store";
+import { ResetRequestsPanel } from "@/components/ResetRequestsPanel";
 
 interface Analyst {
-  id: string
-  name: string
-  email: string
-  role: string
-  status: string
-  lastActive: string
-  clearance: string
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  lastActive: string;
+  clearance: string;
 }
 
-import { DEMO_AUDIT_LOGS, DEMO_ANALYSTS } from '@/lib/demo-data'
-import { DocumentationSidebar, DocumentationToggle } from "@/components/DocumentationSidebar"
-import { useTranslationStore } from '@/lib/i18n/store'
 
-const USE_DEMO_DATA = true // Set to false to use real data from server
 
 export default function AdministrationPage() {
-  const { t } = useTranslationStore()
-  const [analysts, setAnalysts] = useState<Analyst[]>([])
-  const [auditLogs, setAuditLogs] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { t } = useTranslationStore();
+  const [analysts, setAnalysts] = useState<Analyst[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [performance, setPerformance] = useState({
     throughput: 4.2,
     latency: 4,
-    uptime: 99.98
-  })
-  const [showDocs, setShowDocs] = useState(true)
+    uptime: 99.98,
+  });
+  const [showDocs, setShowDocs] = useState(true);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [downloadingXls, setDownloadingXls] = useState(false);
+  
+  // Password Reset Modal State
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [targetUser, setTargetUser] = useState<Analyst | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
 
-  // Fetch Real Data
+  // Add User Modal State
+  const [addUserModalOpen, setAddUserModalOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newUserData, setNewUserData] = useState({
+    email: "",
+    password: "",
+    full_name: "",
+    role: "analyst"
+  });
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        if (USE_DEMO_DATA) {
-          // Use expanded demo data for presentation
-          setAnalysts(DEMO_ANALYSTS)
-          setAuditLogs(DEMO_AUDIT_LOGS.slice(0, 5)) // Show only top 5 in preview
-          // Simulate network delay
-          await new Promise(resolve => setTimeout(resolve, 800))
-        } else {
           const [usersRes, auditRes] = await Promise.all([
-            api.get<any[]>('/api/v1/users/'),
-            api.get<any[]>('/api/v1/audit/')
-          ])
+            api.get<any[]>("/api/v1/users/"),
+            api.get<any[]>("/api/v1/audit/"),
+          ]);
 
-          // Map backend users to Analyst interface
-          const mappedUsers = usersRes.data.map(u => ({
-            id: u.id,
-            name: u.full_name,
-            email: u.email,
-            role: u.role === 'system_admin' ? 'admin' : u.role,
-            status: 'active',
-            lastActive: 'Online',
-            clearance: u.role === 'system_admin' ? 'Level-04' : 'Class-01'
-          }))
+          const mappedUsers = usersRes.data.map((u) => {
+            const roleStr = u.role === "system_admin" ? "admin" : u.role;
+            let clearanceLevel = "Level-01";
+            if (roleStr === "admin") clearanceLevel = "Level-04";
+            else if (roleStr === "manager") clearanceLevel = "Level-03";
+            else if (roleStr === "auditor") clearanceLevel = "Level-02";
+            else if (roleStr === "analyst") clearanceLevel = "Level-01";
 
-          setAnalysts(mappedUsers)
-          setAuditLogs(auditRes.data)
-        }
+            return {
+              id: u.id,
+              name: u.full_name,
+              email: u.email,
+              role: roleStr,
+              status: "active",
+              lastActive: "Online",
+              clearance: clearanceLevel,
+            };
+          });
+
+          setAnalysts(mappedUsers);
+          setAuditLogs(auditRes.data);
       } catch (err) {
-        console.error('Failed to fetch admin data:', err)
-        toast.error('Gagal mengambil data nyata dari server.')
+        console.error("Failed to fetch admin data:", err);
+        toast.error("Gagal memuat data dari server. Pastikan backend berjalan.");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
-  // Simulated Performance Fluctuations (Representing live sensor data)
   useEffect(() => {
     const interval = setInterval(() => {
-      setPerformance(prev => ({
+      setPerformance((prev) => ({
         ...prev,
-        throughput: parseFloat((prev.throughput + (Math.random() * 0.4 - 0.2)).toFixed(2)),
-        latency: Math.max(2, Math.min(10, prev.latency + (Math.floor(Math.random() * 3) - 1)))
-      }))
-    }, 3000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [downloadingPdf, setDownloadingPdf]   = useState(false)
-  const [downloadingXls, setDownloadingXls]   = useState(false)
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+        throughput: parseFloat(
+          (prev.throughput + (Math.random() * 0.4 - 0.2)).toFixed(2),
+        ),
+        latency: Math.max(
+          2,
+          Math.min(10, prev.latency + (Math.floor(Math.random() * 3) - 1)),
+        ),
+      }));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleDownloadPdf = async () => {
-    setDownloadingPdf(true)
+    setDownloadingPdf(true);
     try {
-      const authStorage = localStorage.getItem('auth-storage')
-      const token = authStorage ? JSON.parse(authStorage).state?.accessToken : null
+      const authStorage = localStorage.getItem("auth-storage");
+      const token = authStorage
+        ? JSON.parse(authStorage).state?.accessToken
+        : null;
       const res = await fetch(`${API_URL}/api/v1/reports/admin/pdf-all`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!res.ok) throw new Error('Gagal mengunduh PDF')
-      const blob = await res.blob()
-      const url  = URL.createObjectURL(blob)
-      const a   = document.createElement('a')
-      a.href    = url
-      a.download = `colonyai-admin-report-${new Date().toISOString().slice(0,10)}.pdf`
-      a.click()
-      URL.revokeObjectURL(url)
-      toast.success('PDF berhasil diunduh!')
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ detail: "Gagal mengunduh PDF" }));
+        throw new Error(errorData.detail || "Gagal mengunduh PDF");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `colonyai-admin-report-${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("PDF berhasil diunduh!");
     } catch (e: any) {
-      toast.error(e.message || 'Gagal mengunduh PDF')
+      console.error("PDF Download Error:", e);
+      toast.error(e.message || "Gagal mengunduh PDF");
     } finally {
-      setDownloadingPdf(false)
+      setDownloadingPdf(false);
     }
-  }
+  };
 
   const handleDownloadExcel = async () => {
-    setDownloadingXls(true)
+    setDownloadingXls(true);
     try {
-      const authStorage = localStorage.getItem('auth-storage')
-      const token = authStorage ? JSON.parse(authStorage).state?.accessToken : null
+      const authStorage = localStorage.getItem("auth-storage");
+      const token = authStorage
+        ? JSON.parse(authStorage).state?.accessToken
+        : null;
       const res = await fetch(`${API_URL}/api/v1/reports/admin/excel-all`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!res.ok) throw new Error('Gagal mengunduh Excel')
-      const blob = await res.blob()
-      const url  = URL.createObjectURL(blob)
-      const a   = document.createElement('a')
-      a.href    = url
-      a.download = `colonyai-admin-analytics-${new Date().toISOString().slice(0,10)}.xlsx`
-      a.click()
-      URL.revokeObjectURL(url)
-      toast.success('Excel Analytics berhasil diunduh!')
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ detail: "Gagal mengunduh Excel" }));
+        throw new Error(errorData.detail || "Gagal mengunduh Excel");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `colonyai-admin-analytics-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Data Excel berhasil diunduh!");
     } catch (e: any) {
-      toast.error(e.message || 'Gagal mengunduh Excel')
+      console.error("Excel Download Error:", e);
+      toast.error(e.message || "Gagal mengunduh Excel");
     } finally {
-      setDownloadingXls(false)
+      setDownloadingXls(false);
     }
-  }
+  };
 
   const handleToggleStatus = (id: string) => {
-    setAnalysts(prev => prev.map(a => {
-      if (a.id === id) {
-        const newStatus = a.status === 'active' ? 'suspended' : 'active'
-        toast.info(`Analyst ${a.name} status updated to ${newStatus}`)
-        return { ...a, status: newStatus }
-      }
-      return a
-    }))
-  }
+    setAnalysts((prev) =>
+      prev.map((a) => {
+        if (a.id === id) {
+          const newStatus = a.status === "active" ? "suspended" : "active";
+          toast.info(`Analyst ${a.name} status updated to ${newStatus}`);
+          return { ...a, status: newStatus };
+        }
+        return a;
+      }),
+    );
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreating(true);
+    try {
+      await api.post("/api/v1/auth/register", newUserData);
+      toast.success(`User ${newUserData.full_name} has been provisioned.`);
+      setAddUserModalOpen(false);
+      setNewUserData({ email: "", password: "", full_name: "", role: "analyst" });
+      
+      // Refresh list
+      const usersRes = await api.get<any[]>("/api/v1/users/");
+      const mappedUsers = usersRes.data.map((u) => {
+        const roleStr = u.role === "system_admin" ? "admin" : u.role;
+        let clearanceLevel = "Level-01";
+        if (roleStr === "admin") clearanceLevel = "Level-04";
+        else if (roleStr === "manager") clearanceLevel = "Level-03";
+        else if (roleStr === "auditor") clearanceLevel = "Level-02";
+        else if (roleStr === "analyst") clearanceLevel = "Level-01";
+
+        return {
+          id: u.id,
+          name: u.full_name,
+          email: u.email,
+          role: roleStr,
+          status: "active",
+          lastActive: "Online",
+          clearance: clearanceLevel,
+        };
+      });
+      setAnalysts(mappedUsers);
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Gagal membuat user.");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!targetUser || !newPassword) return;
+    
+    setIsResetting(true);
+    try {
+      await api.post("/api/v1/users/admin-reset-password", {
+        user_id: targetUser.id,
+        new_password: newPassword
+      });
+      toast.success(`Password for ${targetUser.name} reset successfully.`);
+      setResetModalOpen(false);
+      setNewPassword("");
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Gagal mereset password.");
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   return (
     <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden pb-12">
       <div className="flex relative min-h-[calc(100vh-200px)]">
-        <div className={`flex-1 transition-all duration-300 ${showDocs ? 'lg:mr-[350px]' : ''}`}>
+        <div
+          className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
+        >
           <div className="max-w-[1500px] mx-auto px-6 py-8">
             <div className="space-y-6">
               {/* Header Administration */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="w-8 h-8 bg-slate-900 rounded-lg shadow-xl flex items-center justify-center">
-                      <Lock className="w-3.5 h-3.5 text-primary" />
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-slate-100">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-slate-900 rounded-xl shadow-xl flex items-center justify-center">
+                      <Lock className="w-5 h-5 text-primary" />
                     </div>
-                    <h1 className="text-xl font-black text-slate-900 tracking-tighter uppercase">{t('admin.title')}</h1>
+                    <div>
+                      <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase">
+                        System Control
+                      </h1>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                        Node Authorization & Governance Matrix
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-0.5">{t('admin.subtitle')}</p>
-                  <DocumentationToggle showDocs={showDocs} setShowDocs={setShowDocs} text={t('admin.docsToggle')} />
                 </div>
-        
-        <div className="flex items-center gap-3">
-           <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all">
-              <Database className="w-3.5 h-3.5 text-slate-400" />
-              {t('admin.backupMatrix')}
-           </button>
-           <button 
-             onClick={() => setShowAddModal(true)}
-             className="bg-slate-900 text-white py-2 px-5 flex items-center gap-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
-           >
-             <UserPlus className="w-4 h-4 text-primary" />
-             {t('admin.provisionNode')}
-           </button>
-        </div>
-      </div>
 
-      {/* Primary Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Active Clusters', value: '12/12', sub: 'Cluster health: optimal', icon: Activity, color: 'emerald' },
-          { label: 'Neural Throughput', value: `${performance.throughput} Gbps`, sub: 'Matrix bandwidth sync', icon: Database, color: 'primary' },
-          { label: 'Audit Compliance', value: 'ISO-17025', sub: 'Standard LIMS level', icon: ShieldCheck, color: 'purple' },
-          { label: 'Total Registry', value: analysts.length.toString(), sub: 'Authorized Personnel', icon: Users, color: 'slate' },
-        ].map((s, i) => (
-          <div key={i} className="dashboard-card p-4 rounded-lg flex flex-col justify-between border-slate-100 shadow-sm">
-             <div className="flex items-center justify-between mb-3">
-                <div className={`w-8 h-8 rounded bg-slate-50 flex items-center justify-center`}>
-                   <s.icon className={`w-3.5 h-3.5 text-${s.color === 'primary' ? 'primary' : s.color === 'purple' ? 'purple-500' : s.color === 'emerald' ? 'emerald-500' : 'slate-400'}`} />
-                </div>
-                <div className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded tracking-tighter">LIVE</div>
-             </div>
-             <div>
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{s.label}</p>
-                <p className="text-xl font-black text-slate-900 tracking-tighter mt-1">{s.value}</p>
-                <p className="text-[8px] font-bold text-slate-300 uppercase mt-0.5">{s.sub}</p>
-             </div>
-          </div>
-        ))}
-      </div>
-      
-      {/* Real-time Kernel Vitals */}
-      <div className="bg-slate-50 border border-slate-100 rounded-lg p-5 flex items-center justify-between shadow-sm">
-         <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-               <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Neural Kernel: Stable</span>
-            </div>
-            <div className="h-4 w-[1px] bg-slate-200" />
-            <div className="flex items-center gap-4">
-               {[
-                  { label: 'CPU', val: '14%' },
-                  { label: 'RAM', val: '2.4 / 16 GB' },
-                  { label: 'GPU', val: 'RTX 5050 (8% Load)' }
-               ].map((v, i) => (
-                  <div key={i} className="flex flex-col">
-                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{v.label}</span>
-                     <span className="text-[10px] font-bold text-slate-700">{v.val}</span>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="px-4 py-2 bg-white border border-slate-200 rounded-xl flex items-center gap-3 shadow-sm">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-xs font-black text-slate-600 uppercase tracking-widest">
+                      Master Node: Operational
+                    </span>
                   </div>
-               ))}
-            </div>
-         </div>
-         <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-            Uptime: 142d 06h 12m
-         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Main Personnel Table */}
-        <div className="lg:col-span-8 space-y-6">
-           <div className="dashboard-card overflow-hidden !p-0 rounded-lg border-slate-100 shadow-sm">
-             <div className="px-5 py-3 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
-               <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{t('admin.personnelRegistry')}</h3>
-               <span className="text-[9px] font-bold text-slate-400">{t('admin.total')}: {analysts.length} {t('admin.nodes')}</span>
-             </div>
-
-             <div className="overflow-x-auto">
-               <table className="w-full text-left">
-                 <thead className="bg-white/80 border-b border-slate-50">
-                   <tr>
-                     {[t('admin.colIdentity'), t('admin.colRole'), t('admin.colClearance'), t('admin.colStatus'), t('admin.colHeartbeat'), t('admin.colAction')].map(h => (
-                       <th key={h} className="px-5 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
-                     ))}
-                   </tr>
-                 </thead>
-                 <tbody className="divide-y divide-slate-50">
-                   {analysts.map((a) => (
-                     <tr key={a.id} className="group hover:bg-slate-50/50 transition-all">
-                       <td className="px-5 py-3">
-                         <div className="flex items-center gap-3">
-                           <div className="w-8 h-8 rounded bg-slate-900 text-primary flex items-center justify-center font-black text-[10px] shadow-sm">
-                             {a.name.split(' ').map(n => n[0]).join('')}
-                           </div>
-                           <div>
-                             <p className="text-[11px] font-black text-slate-900">{a.name}</p>
-                             <p className="text-[9px] font-medium text-slate-400">{a.email}</p>
-                           </div>
-                         </div>
-                       </td>
-                       <td className="px-5 py-3">
-                         <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-widest ${
-                           a.role === 'admin' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-slate-50 text-slate-400 border-slate-100'
-                         }`}>
-                           {a.role}
-                         </span>
-                       </td>
-                       <td className="px-5 py-3 text-[9px] font-black text-slate-500 uppercase tracking-widest">{a.clearance}</td>
-                       <td className="px-5 py-3">
-                         <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded border w-fit ${
-                           a.status === 'active' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'
-                         }`}>
-                           <div className={`w-1 h-1 rounded-full ${a.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                           <span className="text-[8px] font-black uppercase tracking-widest">{a.status}</span>
-                         </div>
-                       </td>
-                       <td className="px-5 py-3 text-[9px] font-bold text-slate-400 uppercase">{a.lastActive}</td>
-                       <td className="px-5 py-3">
-                         <button 
-                           onClick={() => handleToggleStatus(a.id)}
-                           className="p-1.5 text-slate-300 hover:text-rose-500 transition-colors"
-                         >
-                            <Trash2 className="w-4 h-4" />
-                         </button>
-                       </td>
-                     </tr>
-                   ))}
-                 </tbody>
-               </table>
-             </div>
-           </div>
-
-           {/* Recent Audit Trail Preview */}
-           <div className="dashboard-card overflow-hidden !p-0 rounded-lg border-slate-100 shadow-sm">
-              <div className="px-5 py-3 border-b border-slate-50 bg-slate-900 flex items-center justify-between">
-                <h3 className="text-[10px] font-black text-white uppercase tracking-widest">{t('admin.recentAudit')}</h3>
-                <button className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline">{t('admin.viewFullLedger')}</button>
+                  <button 
+                    onClick={() => setAddUserModalOpen(true)}
+                    className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary transition-all shadow-lg shadow-slate-900/10"
+                  >
+                    <Plus className="w-4 h-4" /> Provision New Staff
+                  </button>
+                </div>
               </div>
-              <div className="divide-y divide-slate-50">
-                 {auditLogs.map((log) => (
-                    <div key={log.id} className="px-5 py-3 flex items-center justify-between hover:bg-slate-50 transition-all">
-                       <div className="flex items-center gap-4">
-                          <span className="text-[10px] font-black text-slate-300 font-mono">{log.id.substring(0, 8)}</span>
-                          <div>
-                             <p className="text-[11px] font-black text-slate-900 tracking-tight">{log.action}</p>
-                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Executor: {log.user_name} // Resource: {log.resource_type}</p>
-                          </div>
-                       </div>
-                       <div className="text-right">
-                          <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-widest ${
-                             log.status === 'SUCCESS' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'
-                          }`}>
-                             {log.status}
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  {
+                    label: "Active Clusters",
+                    value: "12/12",
+                    sub: "Optimal",
+                    icon: Activity,
+                    color: "emerald",
+                  },
+                  {
+                    label: "Security Clearance",
+                    value: "Level-04",
+                    sub: "Root Access",
+                    icon: ShieldCheck,
+                    color: "primary",
+                  },
+                  {
+                    label: "System Uptime",
+                    value: `${performance.uptime}%`,
+                    sub: "Real-time",
+                    icon: Database,
+                    color: "purple",
+                  },
+                  {
+                    label: "Total Nodes",
+                    value: analysts.length.toString(),
+                    sub: "Authorized",
+                    icon: Users,
+                    color: "blue",
+                  },
+                ].map((s, i) => (
+                  <div
+                    key={i}
+                    className="bg-white border border-slate-200/60 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all group border-b-4"
+                    style={{
+                      borderBottomColor:
+                        s.color === "emerald"
+                          ? "#10b981"
+                          : s.color === "primary"
+                            ? "#6366f1"
+                            : s.color === "purple"
+                              ? "#a855f7"
+                              : "#3b82f6",
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div
+                        className={`w-10 h-10 rounded-xl bg-${s.color}-50 flex items-center justify-center`}
+                      >
+                        <s.icon
+                          className={`w-5 h-5 text-${s.color === "primary" ? "primary" : s.color + "-500"}`}
+                        />
+                      </div>
+                      <span className="text-xs font-black text-slate-300 uppercase tracking-widest">
+                        ID-0{i + 1}
+                      </span>
+                    </div>
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">
+                      {s.label}
+                    </p>
+                    <div className="flex items-end gap-2">
+                      <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                        {s.value}
+                      </h3>
+                      <span className="text-xs font-bold text-primary mb-1">
+                        {s.sub}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Personnel Registry */}
+              <div className="lg:col-span-12">
+                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border-slate-200/60 shadow-sm bg-white">
+                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">
+                        Authorized Personnel Registry
+                      </h3>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                        Verified Laboratory Analysts & Administrators
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder="Search Node ID..."
+                          className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-primary/10 outline-none w-48"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <table className="w-full text-left">
+                      <thead className="bg-slate-50/50 border-b border-slate-100">
+                        <tr>
+                          <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">
+                            Analyst Node
+                          </th>
+                          <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">
+                            Clearance
+                          </th>
+                          <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">
+                            Status
+                          </th>
+                          <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">
+                            Last Pulse
+                          </th>
+                          <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {analysts.map((a) => (
+                          <tr
+                            key={a.id}
+                            className="hover:bg-slate-50 transition-colors group"
+                          >
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-black text-slate-500 border border-slate-200">
+                                  {a.name.charAt(0)}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2 mb-0.5">
+                                    <p className="text-xs font-bold text-slate-900">
+                                      {a.name}
+                                    </p>
+                                    <span
+                                      className={`px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest rounded ${
+                                        a.role === "admin"
+                                          ? "bg-primary/10 text-primary"
+                                          : a.role === "manager"
+                                            ? "bg-amber-100 text-amber-700"
+                                            : a.role === "auditor"
+                                              ? "bg-purple-100 text-purple-700"
+                                              : "bg-slate-100 text-slate-600"
+                                      }`}
+                                    >
+                                      {a.role}
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] text-slate-400 font-medium">
+                                    {a.email}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="px-2 py-1 rounded-lg bg-slate-100 text-xs font-bold text-slate-600 border border-slate-200 uppercase">
+                                {a.clearance}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`w-1.5 h-1.5 rounded-full ${a.status === "active" ? "bg-emerald-500" : "bg-rose-500"}`}
+                                />
+                                <span
+                                  className={`text-xs font-black uppercase tracking-widest ${a.status === "active" ? "text-emerald-600" : "text-rose-600"}`}
+                                >
+                                  {a.status}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-tighter">
+                              {a.lastActive}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => {
+                                    setTargetUser(a);
+                                    setResetModalOpen(true);
+                                  }}
+                                  className="p-2 text-slate-300 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
+                                  title="Reset Password"
+                                >
+                                  <Key className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleToggleStatus(a.id)}
+                                  className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                  title="Suspend Node"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              {/* Password Reset Requests */}
+              <div className="lg:col-span-12">
+                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border-slate-200/60 shadow-sm bg-white">
+                  <div className="px-6 py-6 border-b border-slate-100 bg-slate-50/50">
+                    <ResetRequestsPanel />
+                  </div>
+                </div>
+              </div>
+
+              {/* Export Hub */}
+              <div className="lg:col-span-12">
+                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border-slate-200/60 shadow-lg group bg-white">
+                  <div className="px-6 py-6 border-b border-slate-100 bg-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                        <BarChart3 className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black text-white uppercase tracking-[0.2em]">
+                          Pusat Ekspor Data Administrator
+                        </h3>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">
+                          Protokol Ekstraksi Data Resmi Laboratorium
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg">
+                        <ShieldAlert className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                          ISO-17025 Compliant
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30">
+                    {/* PDF Export */}
+                    <div className="bg-white border border-slate-200/60 rounded-2xl p-6 flex flex-col gap-4 hover:border-red-200 hover:shadow-xl transition-all group/pdf relative overflow-hidden">
+                      <div className="flex items-center gap-4 relative z-10">
+                        <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center group-hover/pdf:scale-110 transition-transform">
+                          <FileText className="w-7 h-7 text-red-500" />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-black text-slate-900 tracking-tight">
+                            Buku Besar Tata Kelola Master
+                          </h4>
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                            Dokumen PDF Komprehensif
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-[13px] text-slate-500 leading-relaxed font-medium relative z-10">
+                        Laporan resmi untuk keperluan audit eksternal. Berisi
+                        seluruh rekam jejak spesimen, breakdown performa analis,
+                        dan tren kepatuhan laboratorium.
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 mb-2 relative z-10">
+                        {[
+                          "Global Summary",
+                          "Per-User Stats",
+                          "Audit Trail",
+                        ].map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-2 py-1 bg-slate-100 text-[10px] font-black text-slate-500 rounded-md uppercase tracking-widest"
+                          >
+                            {tag}
                           </span>
-                          <p className="text-[9px] font-bold text-slate-300 mt-1">{new Date(log.timestamp).toLocaleTimeString()}</p>
-                       </div>
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={handleDownloadPdf}
+                        disabled={downloadingPdf}
+                        className="w-full flex items-center justify-center gap-3 py-4 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-red-500/20 relative z-10"
+                      >
+                        {downloadingPdf ? (
+                          "Building Ledger..."
+                        ) : (
+                          <>
+                            <Download className="w-4 h-4" /> Download Master PDF
+                          </>
+                        )}
+                      </button>
                     </div>
-                 ))}
-              </div>
-           </div>
-        </div>
 
-        {/* Export Center */}
-        <div className="lg:col-span-12">
-          <div className="dashboard-card overflow-hidden !p-0 rounded-lg border-slate-100 shadow-sm">
-            <div className="px-5 py-3 border-b border-slate-50 bg-gradient-to-r from-slate-900 to-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-primary" />
-                <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Admin Export Center</h3>
-              </div>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">System Admin Only</span>
-            </div>
-            <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* PDF Export */}
-              <div className="border border-slate-100 rounded-lg p-4 flex flex-col gap-3 bg-slate-50/30 hover:bg-slate-50 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-red-500" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-black text-slate-900">Master PDF Report</p>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Semua analisis seluruh analis</p>
+                    {/* Excel Export */}
+                    <div className="bg-white border border-slate-200/60 rounded-2xl p-6 flex flex-col gap-4 hover:border-emerald-200 hover:shadow-xl transition-all group/excel relative overflow-hidden">
+                      <div className="flex items-center gap-4 relative z-10">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center group-hover/excel:scale-110 transition-transform">
+                          <FileSpreadsheet className="w-7 h-7 text-emerald-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-black text-slate-900 tracking-tight">
+                            Dataset Analitik Mentah
+                          </h4>
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                            Multi-Sheet Excel Export
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-[13px] text-slate-500 leading-relaxed font-medium relative z-10">
+                        Dataset mentah untuk sinkronisasi sistem informasi laboratorium.
+                        Mencakup distribusi data CFU, riwayat audit,
+                        dan metrik performa analis.
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 mb-2 relative z-10">
+                        {["Raw Records", "BI Sync", "Diagnostic Matrix"].map(
+                          (tag) => (
+                            <span
+                              key={tag}
+                              className="px-2 py-1 bg-slate-100 text-[10px] font-black text-slate-500 rounded-md uppercase tracking-widest"
+                            >
+                              {tag}
+                            </span>
+                          ),
+                        )}
+                      </div>
+
+                      <button
+                        onClick={handleDownloadExcel}
+                        disabled={downloadingXls}
+                        className="w-full flex items-center justify-center gap-3 py-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 relative z-10"
+                      >
+                        {downloadingXls ? (
+                          "Building Matrix..."
+                        ) : (
+                          <>
+                            <Download className="w-4 h-4" /> Download Analytics
+                            Excel
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <p className="text-[10px] text-slate-500 leading-relaxed">
-                  Laporan PDF komprehensif berisi: ringkasan global, breakdown per-analis, tren bulanan, dan detail setiap sampel yang pernah dianalisis.
-                </p>
-                <div className="flex flex-wrap gap-1 mb-1">
-                  {['Global Summary','Per-User Breakdown','Monthly Trend','All Samples'].map(tag => (
-                    <span key={tag} className="text-[8px] font-black px-1.5 py-0.5 rounded bg-red-50 text-red-500 border border-red-100 uppercase tracking-wider">{tag}</span>
-                  ))}
-                </div>
-                <button
-                  id="btn-admin-download-pdf"
-                  onClick={handleDownloadPdf}
-                  disabled={downloadingPdf}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-wait text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all shadow-sm shadow-red-100"
-                >
-                  {downloadingPdf ? (
-                    <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating PDF...</>
-                  ) : (
-                    <><Download className="w-3.5 h-3.5" />Download PDF — Semua Data</>
-                  )}
-                </button>
               </div>
 
-              {/* Excel Export */}
-              <div className="border border-slate-100 rounded-lg p-4 flex flex-col gap-3 bg-slate-50/30 hover:bg-slate-50 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-                    <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              {/* Recent Audit Trail - MOVED BELOW */}
+              <div className="lg:col-span-12">
+                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border-slate-200/60 shadow-xl bg-white">
+                  <div className="px-6 py-5 border-b border-slate-100 bg-slate-900 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                      <div>
+                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">
+                          Recent System Audit Trail
+                        </h3>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+                          Real-time Immutable Ledger Snapshot
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => window.location.href = '/dashboard/audit'}
+                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border border-white/5"
+                    >
+                      Lihat Lengkap
+                    </button>
                   </div>
-                  <div>
-                    <p className="text-[11px] font-black text-slate-900">Analytics Excel (.xlsx)</p>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">6 sheet statistik lengkap</p>
+                  <div className="divide-y divide-slate-100 bg-white">
+                    {auditLogs.slice(0, 10).map((log) => (
+                      <div
+                        key={log.id}
+                        className="px-6 py-5 flex items-center justify-between hover:bg-slate-50 transition-all group"
+                      >
+                        <div className="flex items-center gap-8">
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs font-black text-slate-300 font-mono group-hover:text-primary transition-colors">
+                              #{log.id.substring(0, 8)}
+                            </span>
+                            <div className="w-[1px] h-4 bg-slate-100 my-1" />
+                          </div>
+                          <div>
+                            <p className="text-[14px] font-black text-slate-900 tracking-tight">
+                              {log.action}
+                            </p>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                              <span className="text-slate-500 font-black">
+                                EXECUTOR:
+                              </span>{" "}
+                              {log.user_name}{" "}
+                              <span className="mx-2 text-slate-200">|</span>{" "}
+                              <span className="text-slate-500 font-black">
+                                RESOURCE:
+                              </span>{" "}
+                              {log.resource_type}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-10">
+                          <div className="text-right hidden md:block">
+                            <p className="text-xs font-black text-slate-900 uppercase tracking-widest">
+                              {new Date(log.timestamp).toLocaleDateString()}
+                            </p>
+                            <p className="text-xs font-bold text-slate-300 mt-1 font-mono tracking-tighter">
+                              {new Date(log.timestamp).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                              })}
+                            </p>
+                          </div>
+                          <div className="w-24 text-right">
+                            <span className={`inline-block text-xs font-black px-3 py-1.5 rounded-xl border uppercase tracking-widest shadow-sm ${
+                              log.status === 'SUCCESS' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                              log.status === 'FAILED' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                              'bg-slate-50 text-slate-700 border-slate-200'
+                            }`}>
+                              {log.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <p className="text-[10px] text-slate-500 leading-relaxed">
-                  File Excel multi-sheet dengan statistik super lengkap: ringkasan global, analitik per-analis, tren bulanan, breakdown media agar, distribusi CFU, dan semua raw record.
-                </p>
-                <div className="flex flex-wrap gap-1 mb-1">
-                  {['📊 Global Stats','👤 Per-User','📅 Monthly','🧪 Media','📈 CFU Dist.','📋 Raw Records'].map(tag => (
-                    <span key={tag} className="text-[8px] font-black px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase tracking-wider">{tag}</span>
-                  ))}
-                </div>
-                <button
-                  id="btn-admin-download-excel"
-                  onClick={handleDownloadExcel}
-                  disabled={downloadingXls}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-wait text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all shadow-sm shadow-emerald-100"
-                >
-                  {downloadingXls ? (
-                    <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating Excel...</>
-                  ) : (
-                    <><Download className="w-3.5 h-3.5" />Download Excel — Analytics Lengkap</>
-                  )}
-                </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Sidebar Info - Governance Context */}
-        <div className="lg:col-span-4 space-y-6">
-           <div className="dashboard-card p-5 rounded-lg border-slate-100 shadow-sm bg-slate-50/50">
-              <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-4">Node Performance Matrix</h4>
-              <div className="space-y-4">
-                 {[
-                   { label: 'Uptime (Global)', val: `${performance.uptime}%` },
-                   { label: 'Throughput', val: `${performance.throughput} Gbps` },
-                   { label: 'Sync Latency', val: `${performance.latency}ms (P95)` },
-                   { label: 'Matrix Patch', val: 'v2.4.1-stable' },
-                 ].map((stat, i) => (
-                   <div key={i} className="flex items-center justify-between border-b border-slate-100 pb-2 last:border-0 last:pb-0">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">{stat.label}</span>
-                      <span className="text-[11px] font-black text-slate-900 font-mono">{stat.val}</span>
-                   </div>
-                 ))}
-              </div>
-           </div>
-
-           <div className="dashboard-card p-5 rounded-lg border-slate-900 bg-slate-900 text-white shadow-xl shadow-slate-200">
-              <div className="flex items-center gap-3 mb-4">
-                 <ShieldCheck className="w-5 h-5 text-primary" />
-                 <h4 className="text-[10px] font-black uppercase tracking-widest">System Integrity Protocol</h4>
-              </div>
-              <p className="text-[11px] font-bold leading-relaxed text-slate-400">
-                 As a Level-01 Administrator, every state modification in this node is committed to the <span className="text-primary">immutable neural audit ledger</span>. Provisioning new analysts requires multi-factor cryptographic authorization in production.
-              </p>
-              <button className="w-full mt-6 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded text-[9px] font-black uppercase tracking-[0.2em] transition-all">
-                 Download Security SOP
-              </button>
-           </div>
-         </div>
-      </div>
-            </div>
-          </div>
-        </div>
-        <DocumentationSidebar 
-          showDocs={showDocs} 
+        {/* Documentation Sidebar */}
+        <DocumentationSidebar
+          showDocs={showDocs}
           setShowDocs={setShowDocs}
           directory="System Control"
           title="Node Governance"
           description="Standard Operating Procedure (SOP) for managing analysts and observing real-time system performance."
         >
           <section className="space-y-4">
-             <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">01</span>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Overview</h2>
-             </div>
-             <p className="text-sm text-slate-600 leading-relaxed bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                Modul Node Governance dirancang secara khusus untuk Administrator. Halaman ini adalah pusat komando untuk memberikan otorisasi kepada staf (Analyst Registry) serta memantau kesehatan operasional server (Performance Matrix).
-             </p>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+                01
+              </span>
+              <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                Overview
+              </h2>
+            </div>
+            <p className="text-sm text-slate-600 leading-relaxed bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+              Modul Node Governance dirancang secara khusus untuk Administrator.
+              Halaman ini adalah pusat komando untuk memberikan otorisasi kepada
+              staf (Analyst Registry) serta memantau kesehatan operasional
+              server (Performance Matrix).
+            </p>
           </section>
-
           <section className="space-y-6 pt-2">
-             <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">02</span>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Governance Protocol</h2>
-             </div>
-             <div className="space-y-6 ml-1">
-                {[
-                  { id: '1', title: 'Analyst Provisioning', desc: 'Gunakan fitur "Provision New Node" untuk mendaftarkan akun analis baru dengan izin spesifik (Clearance Level).' },
-                  { id: '2', title: 'Access Revocation', desc: 'Sesuai dengan protokol mitigasi risiko, Administrator dapat membekukan akses (Suspend) setiap analis melalui Action Toggle pada tabel Registry.' },
-                  { id: '3', title: 'System Auditing', desc: 'Kolom Recent System Audit Trail memberikan cuplikan cepat (snapshot) atas modifikasi sistem terbaru.' }
-                ].map((step) => (
-                  <div key={step.id} className="flex gap-4 group">
-                     <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-slate-900 text-white text-[11px] font-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        {step.id}
-                     </span>
-                     <div className="space-y-1.5">
-                        <h4 className="text-sm font-bold text-slate-900">{step.title}</h4>
-                        <p className="text-[12px] text-slate-500 leading-relaxed font-medium">{step.desc}</p>
-                     </div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+                02
+              </span>
+              <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                Governance Protocol
+              </h2>
+            </div>
+            <div className="space-y-6 ml-1">
+              {[
+                {
+                  id: "1",
+                  title: "Analyst Provisioning",
+                  desc: 'Gunakan fitur "Provision New Node" untuk mendaftarkan akun analis baru dengan izin spesifik (Clearance Level).',
+                },
+                {
+                  id: "2",
+                  title: "Access Revocation",
+                  desc: "Sesuai dengan protokol mitigasi risiko, Administrator dapat membekukan akses (Suspend) setiap analis melalui Action Toggle pada tabel Registry.",
+                },
+                {
+                  id: "3",
+                  title: "System Auditing",
+                  desc: "Kolom Recent System Audit Trail memberikan cuplikan cepat (snapshot) atas modifikasi sistem terbaru.",
+                },
+              ].map((step) => (
+                <div key={step.id} className="flex gap-4 group">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-slate-900 text-white text-[11px] font-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    {step.id}
+                  </span>
+                  <div className="space-y-1.5">
+                    <h4 className="text-sm font-bold text-slate-900">
+                      {step.title}
+                    </h4>
+                    <p className="text-[12px] text-slate-500 leading-relaxed font-medium">
+                      {step.desc}
+                    </p>
                   </div>
-                ))}
-             </div>
+                </div>
+              ))}
+            </div>
           </section>
         </DocumentationSidebar>
       </div>
+
+      {/* Professional Password Reset Modal */}
+      {resetModalOpen && targetUser && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => !isResetting && setResetModalOpen(false)} />
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
+            <div className="p-8 space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
+                  <Key className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Reset Authority</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Protocol-09 Security Recovery</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Target Analyst</p>
+                  <p className="text-sm font-bold text-slate-900">{targetUser.name}</p>
+                  <p className="text-xs text-slate-500">{targetUser.email}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">New Professional Password</label>
+                  <input 
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                    autoFocus
+                  />
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight italic">Minimum 8 characters with Uppercase, Number, and Special Char.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setResetModalOpen(false)}
+                  disabled={isResetting}
+                  className="flex-1 py-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all border border-slate-100"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleResetPassword}
+                  disabled={isResetting || !newPassword}
+                  className="flex-[2] py-4 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50"
+                >
+                  {isResetting ? "Synchronizing..." : "Update Authority"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Provision New Staff Modal */}
+      {addUserModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => !isCreating && setAddUserModalOpen(false)} />
+          <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
+            <form onSubmit={handleCreateUser} className="p-8 space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/20">
+                  <UserPlus className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Provision Staff</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Authorized Personnel Onboarding</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Legal Name</label>
+                    <input 
+                      required
+                      type="text"
+                      value={newUserData.full_name}
+                      onChange={(e) => setNewUserData({...newUserData, full_name: e.target.value})}
+                      placeholder="e.g. John Doe"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Assigned Role</label>
+                    <select 
+                      value={newUserData.role}
+                      onChange={(e) => setNewUserData({...newUserData, role: e.target.value})}
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                    >
+                      <option value="analyst">Analyst (Level-01)</option>
+                      <option value="auditor">Auditor (Level-02)</option>
+                      <option value="manager">Manager (Level-03)</option>
+                      <option value="admin">Admin (Level-04)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Identifier</label>
+                  <input 
+                    required
+                    type="email"
+                    value={newUserData.email}
+                    onChange={(e) => setNewUserData({...newUserData, email: e.target.value})}
+                    placeholder="staff@laboratory.diag"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Temporary Password</label>
+                  <input 
+                    required
+                    type="password"
+                    value={newUserData.password}
+                    onChange={(e) => setNewUserData({...newUserData, password: e.target.value})}
+                    placeholder="••••••••"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setAddUserModalOpen(false)}
+                  disabled={isCreating}
+                  className="flex-1 py-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all border border-slate-100"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isCreating}
+                  className="flex-[2] py-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-900/20 hover:bg-primary transition-all disabled:opacity-50"
+                >
+                  {isCreating ? "Initializing..." : "Provision Node"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
-  )
+  );
 }

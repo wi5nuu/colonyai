@@ -16,13 +16,10 @@ import {
 } from "lucide-react";
 import { analysesApi } from "@/lib/analyses-api";
 import { reportsApi } from "@/lib/reports-api";
-import { ALL_DEMO_ANALYSES } from "@/lib/demo-data";
 import { DocumentationSidebar, DocumentationToggle } from "@/components/DocumentationSidebar";
 import { useTranslationStore } from "@/lib/i18n/store";
 import { toast } from "sonner";
 import { AnalysisListResponse, MediaType, ReportType } from "@/lib/types";
-
-const USE_DEMO_DATA = true; // Set to false to use real data
 
 export default function HistoryPage() {
   const { t } = useTranslationStore();
@@ -40,37 +37,6 @@ export default function HistoryPage() {
     const loadHistory = async () => {
       setIsLoading(true);
       try {
-        if (USE_DEMO_DATA) {
-          // Simulation: Filter demo data
-          let filtered = [...ALL_DEMO_ANALYSES];
-          
-          if (searchTerm) {
-            filtered = filtered.filter(a => a.sample_id.toLowerCase().includes(searchTerm.toLowerCase()));
-          }
-          if (mediaFilter !== "all") {
-            filtered = filtered.filter(a => a.media_type === mediaFilter);
-          }
-          if (statusFilter !== "all") {
-            if (statusFilter === "valid") filtered = filtered.filter(a => a.status === 'completed' && a.is_valid_for_reporting);
-            else if (statusFilter === "TNTC") filtered = filtered.filter(a => a.warnings?.some(w => w.includes("TNTC")));
-            else if (statusFilter === "TFTC") filtered = filtered.filter(a => a.warnings?.some(w => w.includes("TFTC")));
-          }
-
-          const total = filtered.length;
-          const totalPages = Math.ceil(total / pageSize);
-          const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-          // Simulate network delay
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          setData({
-            analyses: paginated,
-            total,
-            page,
-            page_size: pageSize,
-            total_pages: totalPages
-          });
-        } else {
           const result = await analysesApi.list({
             page,
             page_size: pageSize,
@@ -79,7 +45,6 @@ export default function HistoryPage() {
             status: statusFilter !== "all" ? statusFilter : undefined,
           });
           setData(result);
-        }
       } catch (error: any) {
         toast.error(error.response?.data?.detail || t('history.errorLoadHistory'));
       } finally {
@@ -142,50 +107,37 @@ export default function HistoryPage() {
     <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden">
       <div className="flex relative min-h-[calc(100vh-200px)]">
         <div className={`flex-1 transition-all duration-300 ${showDocs ? 'lg:mr-[350px]' : ''}`}>
-          <div className="max-w-[1500px] mx-auto px-6 py-8">
+          <div className="max-w-[1500px] mx-auto px-2 py-2 sm:px-6 sm:py-8">
             {/* Page Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                   <div className="w-9 h-9 bg-slate-900 rounded-lg shadow-xl flex items-center justify-center">
-                      <History className="w-4 h-4 text-primary" />
-                   </div>
-                   <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t('history.title')}</h1>
+            <div className="flex flex-row items-center justify-between gap-2 pb-2 sm:pb-6 border-b border-slate-100 mb-3 sm:mb-8">
+              <div className="flex items-center gap-1.5 sm:gap-3">
+                <div className="w-5 h-5 sm:w-10 sm:h-10 bg-slate-900 rounded-md sm:rounded-xl shadow-xl flex items-center justify-center flex-shrink-0">
+                  <History className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-primary" />
                 </div>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t('history.subtitle')}</p>
-                <DocumentationToggle showDocs={showDocs} setShowDocs={setShowDocs} text={t('history.docsToggle')} />
+                <div>
+                  <h1 className="text-[11px] sm:text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">{t('history.title')}</h1>
+                  <p className="hidden sm:block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-0.5">{t('history.subtitle')}</p>
+                </div>
               </div>
-        <button
-          onClick={handleExportCsv}
-          className="btn-primary flex items-center gap-2 py-2.5 px-5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-lg shadow-primary/20"
-        >
-          <Download className="h-4 w-4" />
-          {t('history.exportCsv')}
-        </button>
-      </div>
+              <button onClick={handleExportCsv} className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 flex items-center gap-1 py-1 sm:py-2.5 px-2 sm:px-5 rounded-lg sm:rounded-xl text-[7px] sm:text-[10px] font-black uppercase tracking-wider transition-all shadow-sm flex-shrink-0">
+                <Download className="h-2.5 w-2.5 sm:h-4 sm:w-4 text-slate-400" />
+                <span className="hidden sm:inline">{t('history.exportCsv')}</span>
+                <span className="sm:hidden">Export</span>
+              </button>
+            </div>
 
       {/* Filters & Search */}
-      <div className="dashboard-card p-4 mb-8 bg-slate-50/50 border-slate-100/50 rounded-xl">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
+      <div className="bg-white border border-slate-200/60 p-2 sm:p-4 mb-3 sm:mb-8 rounded-xl sm:rounded-2xl shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           <div className="flex-1 relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-            <input
-              type="text"
-              placeholder={t('history.searchPlaceholder')}
-              className="w-full pl-12 pr-4 py-2.5 text-xs font-bold text-slate-900 bg-white border border-slate-100 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all placeholder:text-slate-300"
-              value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-            />
+            <Search className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-slate-400" />
+            <input type="text" placeholder={t('history.searchPlaceholder')}
+              className="w-full pl-7 sm:pl-12 pr-3 py-1.5 sm:py-3 text-[10px] sm:text-[13px] font-bold text-slate-900 bg-slate-50 border border-slate-100 rounded-lg sm:rounded-xl outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-300"
+              value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }} />
           </div>
-          {/* Media Filter */}
-          <div className="relative min-w-[200px]">
-            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-            <select
-              className="w-full pl-12 pr-8 py-2.5 text-xs font-bold text-slate-900 bg-white border border-slate-100 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all appearance-none cursor-pointer"
-              value={mediaFilter}
-              onChange={(e) => { setMediaFilter(e.target.value); setPage(1); }}
-            >
+          <div className="grid grid-cols-2 sm:flex gap-2">
+            <select className="w-full sm:min-w-[200px] pl-3 sm:pl-12 pr-2 py-1.5 sm:py-3 text-[9px] sm:text-[11px] font-black text-slate-900 bg-slate-50 border border-slate-100 rounded-lg sm:rounded-xl outline-none appearance-none cursor-pointer uppercase tracking-wider"
+              value={mediaFilter} onChange={(e) => { setMediaFilter(e.target.value); setPage(1); }}>
               <option value="all">{t('history.allMedia')}</option>
               <option value="Plate Count Agar">{t('history.pcaProtocol')}</option>
               <option value="VRBA">{t('history.vrbaProtocol')}</option>
@@ -194,14 +146,8 @@ export default function HistoryPage() {
               <option value="TSA">{t('history.tsaProtocol')}</option>
               <option value="MacConkey">{t('history.macProtocol')}</option>
             </select>
-          </div>
-          {/* Status Filter */}
-          <div className="relative min-w-[160px]">
-            <select
-              className="w-full px-4 py-2.5 text-xs font-bold text-slate-900 bg-slate-50/50 border border-slate-100 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all appearance-none cursor-pointer"
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            >
+            <select className="w-full sm:min-w-[150px] px-3 py-1.5 sm:py-3 text-[9px] sm:text-[11px] font-black text-slate-900 bg-slate-50 border border-slate-100 rounded-lg sm:rounded-xl outline-none appearance-none cursor-pointer uppercase tracking-wider"
+              value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
               <option value="all">{t('history.allStatuses')}</option>
               <option value="valid">{t('history.verifiedOnly')}</option>
               <option value="TNTC">{t('history.criticalTNTC')}</option>
@@ -212,14 +158,14 @@ export default function HistoryPage() {
       </div>
 
       {/* Results Table */}
-      <div className="dashboard-card overflow-hidden !p-0 rounded-xl">
+      <div className="bg-white border border-slate-200/60 overflow-hidden rounded-2xl shadow-sm">
         {/* Table Header */}
-        <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div>
-            <h2 className="text-sm font-bold text-slate-900">{t('history.archives')}</h2>
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{total} {t('history.recordsFound')}</p>
+            <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{t('history.archives')}</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{total} {t('history.recordsFound')}</p>
           </div>
-          {isLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+          {isLoading && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
         </div>
 
         {/* Empty State */}
@@ -243,118 +189,106 @@ export default function HistoryPage() {
 
         {/* Table */}
         {analyses.length > 0 && (
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-left whitespace-nowrap">
-              <thead>
-                <tr className="bg-slate-50/50">
-                  {[t('history.tableSpecimenId'), t('history.tableProtocol'), t('history.tableCount'), t('history.tableCfuMl'), t('history.tableConfidence'), t('history.tableTimestamp'), t('history.tableAuditStatus'), t('history.tableActions')].map((h) => (
-                    <th key={h} className="px-4 py-2.5 text-[8px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {analyses.map((analysis: any) => (
-                  <tr key={analysis.id} className="hover:bg-slate-50/50 transition-all duration-200 group">
-                    {/* Specimen ID */}
-                    <td className="px-4 py-2.5">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-colors duration-300 flex-shrink-0">
-                          <FlaskConical className="h-3.5 w-3.5 text-primary group-hover:text-white transition-colors" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-900">{analysis.sample_id}</p>
-                          <p className="text-[7px] text-slate-400 font-bold uppercase tracking-wider">{t('history.node')}: {analysis.id.slice(0, 8)}</p>
-                        </div>
+          <div>
+            {/* Mobile Cards (< sm) */}
+            <div className="sm:hidden divide-y divide-slate-50">
+              {analyses.map((analysis: any) => {
+                const statusOk = analysis.status === 'completed' && analysis.is_valid_for_reporting;
+                const isTNTC = analysis.warnings?.some((w: any) => w.includes('TNTC'));
+                return (
+                  <div key={analysis.id} className="p-3 hover:bg-slate-50 cursor-pointer active:bg-slate-100 transition-colors" onClick={() => handleViewAnalysis(analysis.id)}>
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <div>
+                        <p className="text-[11px] font-black text-slate-900 leading-tight">{analysis.sample_id}</p>
+                        <p className="text-[8px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Node: <span className="font-mono">{analysis.id.slice(0,8)}</span></p>
                       </div>
-                    </td>
-                    {/* Media */}
-                    <td className="px-8 py-5">
-                      <span className="px-3 py-1.5 bg-slate-100/50 text-slate-600 rounded-lg text-xs font-bold tracking-tight">
-                        {analysis.media_type}
+                      <span className={`text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider border flex-shrink-0 ${statusOk ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : isTNTC ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                        {statusOk ? t('history.verified') : isTNTC ? 'TNTC' : t('history.reviewRequired')}
                       </span>
-                    </td>
-                    {/* Colony Count */}
-                    <td className="px-8 py-5 text-sm font-bold text-slate-900">{analysis.colony_count}</td>
-                    {/* CFU/ml */}
-                    <td className="px-8 py-5">
-                      <span className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${
-                        analysis.warnings?.some((w: any) => w.includes("TNTC"))
-                          ? "bg-rose-50 text-rose-600 border-rose-100 shadow-sm shadow-rose-100"
-                          : analysis.warnings?.some((w: any) => w.includes("TFTC"))
-                          ? "bg-amber-50 text-amber-600 border-amber-100"
-                          : "bg-slate-50 text-slate-700 border-slate-100"
-                      }`}>
-                        {formatCFU(analysis.cfu_per_ml, analysis.warnings)}
-                      </span>
-                    </td>
-                    {/* Confidence */}
-                    <td className="px-8 py-5">
-                      <div className="w-24">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-[10px] font-black text-slate-500 uppercase">
-                            {(analysis.confidence_score * 100).toFixed(0)}{t('history.reliable')}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[8px] bg-slate-100 text-slate-600 rounded px-1.5 py-0.5 font-bold uppercase">{analysis.media_type.split(' ')[0]}</span>
+                      <span className="text-[8px] font-black text-slate-700">{analysis.colony_count} koloni</span>
+                      <span className="text-[8px] font-black text-slate-500">{formatCFU(analysis.cfu_per_ml, analysis.warnings)} CFU/ml</span>
+                      <span className="text-[8px] font-bold text-slate-400">{(analysis.confidence_score * 100).toFixed(0)}% conf.</span>
+                      <span className="text-[8px] text-slate-400 ml-auto">{new Date(analysis.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div className="h-1 w-full bg-slate-100 rounded-full mt-1.5 overflow-hidden">
+                      <div className={`h-full rounded-full ${analysis.confidence_score >= 0.85 ? 'bg-emerald-500' : 'bg-amber-500'}`} style={{width:`${analysis.confidence_score*100}%`}} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Desktop Table (>= sm) */}
+            <div className="hidden sm:block overflow-x-auto w-full">
+              <table className="w-full text-left whitespace-nowrap">
+                <thead>
+                  <tr className="bg-slate-50/50 border-b border-slate-100">
+                    {[t('history.tableSpecimenId'), 'Method & Matrix', t('history.tableCount'), t('history.tableCfuMl'), t('history.tableConfidence'), t('history.tableTimestamp'), 'Compliance Status', t('history.tableActions')].map((h) => (
+                      <th key={h} className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {analyses.map((analysis: any) => (
+                    <tr key={analysis.id} className="hover:bg-slate-50 transition-all duration-200 group cursor-pointer" onClick={() => handleViewAnalysis(analysis.id)}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-slate-900 text-primary flex items-center justify-center flex-shrink-0 shadow-lg">
+                            <FlaskConical className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="text-[13px] font-black text-slate-900">{analysis.sample_id}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Node: <span className="text-slate-600 font-mono">{analysis.id.slice(0,8)}</span></p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="px-2.5 py-1.5 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-100 w-fit">
+                            {analysis.media_type}
+                          </span>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+                            {analysis.method_standard || 'ISO 4833-1:2013'}
                           </span>
                         </div>
-                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-1000 ${analysis.confidence_score >= 0.85 ? 'bg-emerald-500' : 'bg-amber-500'}`}
-                            style={{ width: `${analysis.confidence_score * 100}%` }}
-                          />
+                      </td>
+                      <td className="px-6 py-4"><span className="text-[13px] font-black text-slate-900 tabular-nums">{analysis.colony_count}</span></td>
+                      <td className="px-6 py-4">
+                        <span className={`text-[11px] font-black px-3 py-1.5 rounded-lg border tabular-nums shadow-sm ${analysis.warnings?.some((w:any)=>w.includes('TNTC'))?'bg-rose-50 text-rose-600 border-rose-100':analysis.warnings?.some((w:any)=>w.includes('TFTC'))?'bg-amber-50 text-amber-600 border-amber-100':'bg-slate-50 text-slate-700 border-slate-100'}`}>
+                          {formatCFU(analysis.cfu_per_ml, analysis.warnings)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="w-32">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{(analysis.confidence_score*100).toFixed(0)}% Precise</span>
+                          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/60 mt-1.5">
+                            <div className={`h-full rounded-full ${analysis.confidence_score>=0.85?'bg-emerald-500':'bg-amber-500'}`} style={{width:`${analysis.confidence_score*100}%`}} />
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    {/* Date */}
-                    <td className="px-8 py-5">
-                      <p className="text-sm font-bold text-slate-800">
-                        {new Date(analysis.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
-                      </p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">
-                        {new Date(analysis.created_at).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                    </td>
-                    {/* Status Badge */}
-                    <td className="px-8 py-5">
-                      <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase border ${
-                        analysis.status === "completed" && analysis.is_valid_for_reporting
-                          ? "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm shadow-emerald-100"
-                          : analysis.warnings?.some((w: any) => w.includes("TNTC"))
-                          ? "bg-rose-50 text-rose-600 border-rose-100"
-                          : "bg-amber-50 text-amber-600 border-amber-100"
-                      }`}>
-                        {analysis.status === "completed" 
-                          ? (analysis.is_valid_for_reporting ? t('history.verified') : (analysis.warnings?.some((w: any) => w.includes("TNTC")) ? t('history.tntcCritical') : t('history.reviewRequired'))) 
-                          : analysis.status}
-                      </span>
-                    </td>
-                    {/* Actions */}
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleViewAnalysis(analysis.id)}
-                          className="p-2.5 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10 transition-all"
-                          title={t('history.viewIntelligence')}
-                        >
-                          <Eye className="h-5 w-5" />
-                        </button>
-                        <button
-                          className="p-2.5 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-100/10 transition-all"
-                          title={t('history.exportAudit')}
-                        >
-                          <Download className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(analysis.id, analysis.sample_id)}
-                          className="p-2.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-100/10 transition-all"
-                          title={t('history.purgeRecord')}
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-[12px] font-black text-slate-900">{new Date(analysis.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">{new Date(analysis.created_at).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase border shadow-sm ${analysis.status==='completed'&&analysis.is_valid_for_reporting?'bg-emerald-50 text-emerald-600 border-emerald-100':analysis.warnings?.some((w:any)=>w.includes('TNTC'))?'bg-rose-50 text-rose-600 border-rose-100':'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                          {analysis.status==='completed'?(analysis.is_valid_for_reporting?t('history.verified'):(analysis.warnings?.some((w:any)=>w.includes('TNTC'))?t('history.tntcCritical'):t('history.reviewRequired'))):analysis.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1">
+                          <button onClick={(e)=>{e.stopPropagation();handleViewAnalysis(analysis.id);}} className="p-2 rounded-xl text-slate-300 hover:text-primary hover:bg-primary/5 transition-all"><Eye className="h-4 w-4" /></button>
+                          <button onClick={(e)=>{e.stopPropagation();}} className="p-2 rounded-xl text-slate-300 hover:text-blue-600 hover:bg-blue-50 transition-all"><Download className="h-4 w-4" /></button>
+                          <button onClick={(e)=>{e.stopPropagation();handleDelete(analysis.id,analysis.sample_id);}} className="p-2 rounded-xl text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-all"><Trash2 className="h-4 w-4" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

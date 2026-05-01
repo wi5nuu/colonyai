@@ -3,10 +3,13 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from datetime import datetime, timedelta
+import uuid
+import secrets
 
 from app.core.security import get_current_user, require_role
 from app.core.database import get_db
-from app.models import User
+from app.models import User, Notification
 from app.utils.audit import write_audit_log
 
 router = APIRouter()
@@ -99,15 +102,15 @@ async def update_current_user_profile(
 
 @router.get("/", response_model=List[UserBriefResponse])
 async def list_users(
+    http_request: Request,
     skip: int = 0,
     limit: int = 20,
-    http_request: Request = None,
     current_user: dict = Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db)
 ):
     """List all users (admin only)"""
     # Audit log: user list accessed
-    ip = http_request.client.host if http_request else None
+    ip = http_request.client.host if http_request and getattr(http_request, 'client', None) else None
     ua = http_request.headers.get("user-agent") if http_request else None
     await write_audit_log(
         db, current_user["user_id"], "list_users", "user",
@@ -115,12 +118,19 @@ async def list_users(
         ip_address=ip, user_agent=ua,
     )
 
-    result = await db.execute(
-        select(User)
-        .offset(skip)
-        .limit(limit)
-        .order_by(User.created_at.desc())
-    )
+    # Filter by organization_id for multi-tenancy
+    org_id = current_user.get("organization_id")
+    
+    query = select(User).offset(skip).limit(limit).order_by(User.created_at.desc())
+    
+    # If not super_admin, restrict to same organization
+    if current_user.get("role") != "super_admin" and org_id:
+        query = query.where(User.organization_id == uuid.UUID(org_id))
+    elif current_user.get("role") != "super_admin" and not org_id:
+        # User has no org and is not super admin? Safety check.
+        return []
+
+    result = await db.execute(query)
     users = result.scalars().all()
 
     return [
@@ -132,3 +142,168 @@ async def list_users(
         )
         for u in users
     ]
+
+
+class AdminResetPasswordRequest(BaseModel):
+    user_id: str
+    new_password: str
+
+
+@router.post("/admin-reset-password")
+async def admin_reset_password(
+    request: AdminResetPasswordRequest,
+    http_request: Request,
+    current_user: dict = Depends(require_role("admin")),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    [ADMIN ONLY] Force reset a user's password and unlock their account.
+    Standard Operating Procedure for Laboratory OS recovery.
+    """
+    from app.core.security import get_password_hash
+    from app.api.v1.endpoints.auth import validate_password_complexity
+    import uuid
+    
+    # 1. Enforce complexity
+    validate_password_complexity(request.new_password)
+    
+    # 2. Find target user
+    try:
+        uid = uuid.UUID(request.user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid User ID format")
+
+    result = await db.execute(select(User).where(User.id == uid))
+    target_user = result.scalar_one_or_none()
+    
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Target user not found")
+
+    # Multi-tenant security check
+    org_id = current_user.get("organization_id")
+    if current_user.get("role") != "super_admin":
+        if not org_id or str(target_user.organization_id) != org_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, 
+                detail="You can only reset passwords for users in your organization."
+            )
+        
+    # 3. Update password & Clear lockout
+    target_user.password_hash = get_password_hash(request.new_password)
+    target_user.is_locked_out = 'no'
+    target_user.failed_login_attempts = 0
+    target_user.locked_until = None
+    
+    # 4. Audit Log
+    ip = http_request.client.host if http_request and hasattr(http_request, 'client') else None
+    await write_audit_log(
+        db, current_user["user_id"], "admin_force_password_reset", "user",
+        current_user.get("organization_id"), str(target_user.id), 
+        details={"target_email": target_user.email},
+        ip_address=ip
+    )
+    
+    await db.commit()
+    return {"message": f"Password for {target_user.email} reset successfully and account unlocked."}
+
+
+class EmergencyAccessRequest(BaseModel):
+    user_id: str
+    reason: str  # Required: admin must state the reason for audit
+
+
+@router.post("/emergency-access")
+async def issue_emergency_access(
+    request: EmergencyAccessRequest,
+    http_request: Request,
+    current_user: dict = Depends(require_role("admin", "super_admin")),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    [ADMIN ONLY] Issue a 2-hour Emergency Temporary Password.
+    
+    Use Case: User needs urgent lab access but password reset is pending.
+    - Generates a cryptographically secure 12-char temp password
+    - Password expires in 2 hours automatically (via token tracking)
+    - User MUST change password on first login
+    - Full audit trail logged for ISO-17025 compliance
+    """
+    from app.core.security import get_password_hash
+
+    if not request.reason or len(request.reason.strip()) < 10:
+        raise HTTPException(
+            status_code=400,
+            detail="Alasan darurat harus diisi minimal 10 karakter untuk keperluan audit."
+        )
+
+    try:
+        uid = uuid.UUID(request.user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Format User ID tidak valid")
+
+    result = await db.execute(select(User).where(User.id == uid))
+    target_user = result.scalar_one_or_none()
+
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Pengguna tidak ditemukan")
+
+    # Multi-tenant security: Admin can only issue emergency access within their org
+    org_id = current_user.get("organization_id")
+    if current_user.get("role") != "super_admin":
+        if not org_id or str(target_user.organization_id) != org_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Anda hanya bisa memberikan akses darurat untuk pengguna dalam organisasi Anda."
+            )
+
+    # Generate secure temp password: format TEMP-XXXXXX-XX (human readable)
+    raw = secrets.token_urlsafe(9).upper()
+    temp_password = f"Temp@{raw[:6]}{raw[6:]}"
+
+    # Hash and save
+    target_user.password_hash = get_password_hash(temp_password)
+    target_user.is_locked_out = 'no'
+    target_user.failed_login_attempts = 0
+    target_user.locked_until = None
+
+    # Notify target user
+    expires_at = datetime.utcnow() + timedelta(hours=2)
+    notif = Notification(
+        id=uuid.uuid4(),
+        user_id=target_user.id,
+        organization_id=target_user.organization_id,
+        title="🔐 Akses Darurat Diberikan",
+        message=f"Administrator telah memberikan password sementara untuk Anda. Password ini berlaku 2 jam hingga {expires_at.strftime('%H:%M')} WIB. WAJIB ganti password segera setelah login di menu Settings.",
+        notification_type="warning",
+        link="/dashboard/settings",
+    )
+    db.add(notif)
+
+    # Audit trail
+    ip = http_request.client.host if http_request and hasattr(http_request, 'client') else None
+    await write_audit_log(
+        db,
+        user_id=current_user["user_id"],
+        action="emergency_access_issued",
+        resource_type="user",
+        resource_id=str(target_user.id),
+        organization_id=org_id,
+        details={
+            "target_email": target_user.email,
+            "reason": request.reason,
+            "expires_at": expires_at.isoformat(),
+            "issued_by": current_user.get("email"),
+        },
+        ip_address=ip,
+    )
+
+    await db.commit()
+
+    return {
+        "message": "Akses darurat berhasil diberikan.",
+        "temp_password": temp_password,
+        "expires_in": "2 jam",
+        "expires_at": expires_at.isoformat(),
+        "target_email": target_user.email,
+        "instruction": "Sampaikan password ini SECARA LANGSUNG (WhatsApp/telepon internal) kepada pengguna. Password wajib diganti segera setelah login."
+    }

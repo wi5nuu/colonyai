@@ -56,6 +56,11 @@ class AnalysisResponse(BaseModel):
     cfu_message: Optional[str] = None
     uncertainty_u: Optional[float] = None
     merged_estimation_method: Optional[str] = None
+    incubation_temp: Optional[float] = None
+    incubation_time_hours: Optional[int] = None
+    method_standard: Optional[str] = "ISO 4833-1:2013"
+    media_batch_number: Optional[str] = None
+    incubator_id: Optional[str] = None
     class_breakdown: Optional[Dict[str, int]] = None
     detections: Optional[List[DetectionResponse]] = []
     warnings: Optional[List[str]] = []
@@ -87,6 +92,11 @@ class AnalysisBriefResponse(BaseModel):
     cfu_message: Optional[str] = None
     uncertainty_u: Optional[float] = None
     merged_estimation_method: Optional[str] = None
+    incubation_temp: Optional[float] = None
+    incubation_time_hours: Optional[int] = None
+    method_standard: Optional[str] = "ISO 4833-1:2013"
+    media_batch_number: Optional[str] = None
+    incubator_id: Optional[str] = None
     class_breakdown: Optional[Dict[str, int]] = None
     warnings: Optional[List[str]] = []
     is_valid_for_reporting: Optional[bool] = True

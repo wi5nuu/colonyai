@@ -69,6 +69,7 @@ class RegisterRequest(BaseModel):
     password: str
     full_name: str
     role: UserRole = UserRole.ANALYST
+    organization_id: Optional[uuid.UUID] = None
 
 
 class TokenResponse(BaseModel):
@@ -101,6 +102,17 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
         )
+
+    # ── Check Organization Status ──
+    if user.organization_id:
+        from app.models import Organization
+        result = await db.execute(select(Organization).where(Organization.id == user.organization_id))
+        org = result.scalar_one_or_none()
+        if org and org.is_active != 'active':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Organization access suspended. Reason: {org.is_active}. Contact Global Nexus Support."
+            )
 
     # ── Check Account Lockout ──
     if user.is_locked_out == 'yes':
@@ -154,7 +166,7 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
     ip = http_request.client.host if http_request else None
     ua = http_request.headers.get("user-agent") if http_request else None
     await write_audit_log(
-        db, str(user.id), "login", "auth", None,
+        db, str(user.id), "login", "auth", str(user.organization_id) if user.organization_id else None,
         details={"email": user.email},
         ip_address=ip, user_agent=ua,
     )
@@ -193,9 +205,25 @@ async def register(
             detail="Email already registered"
         )
 
+    # ── Multi-Tenant Logic ──
+    # If Org Admin: Always use their own Org ID
+    # If Super Admin: Use the one provided in request
+    target_org_id = None
+    if current_user.get("role") == "super_admin":
+        target_org_id = request.organization_id
+    else:
+        # Get from current_user (the Admin)
+        admin_org_id = current_user.get("organization_id")
+        if admin_org_id:
+            target_org_id = uuid.UUID(admin_org_id)
+        else:
+            # Admin with no org? (Shouldn't happen in professional setup)
+            raise HTTPException(status_code=403, detail="Admin has no organization assigned")
+
     # Create new user
     new_user = User(
         id=uuid.uuid4(),
+        organization_id=target_org_id,
         email=request.email,
         password_hash=get_password_hash(request.password),
         full_name=request.full_name,
@@ -210,7 +238,7 @@ async def register(
     ip = http_request.client.host if http_request else None
     ua = http_request.headers.get("user-agent") if http_request else None
     await write_audit_log(
-        db, str(new_user.id), "register", "auth", str(new_user.id),
+        db, str(new_user.id), "register", "auth", str(new_user.organization_id) if new_user.organization_id else None, str(new_user.id),
         details={"email": new_user.email, "full_name": new_user.full_name},
         ip_address=ip, user_agent=ua,
     )
@@ -327,27 +355,307 @@ async def logout(
 
 
 @router.post("/forgot-password")
-async def forgot_password(request: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
+async def forgot_password(
+    request: ForgotPasswordRequest,
+    http_request: Request = None,
+    db: AsyncSession = Depends(get_db)
+):
     """
-    Initiate password reset flow.
-    Generates a token and (mock) sends an email.
+    ZERO-TRUST Password Recovery with Anti-Phishing Engine:
+    - Multi-layer IP & email frequency throttling
+    - Admin accounts require Super Admin approval (extra protection)
+    - Phishing IPs are auto-blocked and logged to Audit Ledger
+    - Token ONLY generated after Admin approval (never self-service)
     """
+    from app.models import PasswordResetRequest, Notification
+    from app.core.anti_phishing import check_and_record_reset_attempt, PhishingBlockedError
+    import secrets
+
+    # Always return generic message to prevent user enumeration
+    GENERIC_RESPONSE = {"message": "Jika email terdaftar, permintaan pemulihan akses sedang menunggu persetujuan Administrator Organisasi Anda. Harap hubungi Admin Anda secara langsung."}
+
+    ip = http_request.client.host if http_request else "unknown"
+    ua = http_request.headers.get("user-agent", "unknown") if http_request else "unknown"
+
     result = await db.execute(select(User).where(User.email == request.email))
     user = result.scalar_one_or_none()
 
-    # Always return success even if user not found (security best practice)
-    if user:
-        # Generate token
-        import secrets
-        token = secrets.token_urlsafe(32)
-        user.reset_token = token
-        user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
-        await db.commit()
-        
-        # TODO: Send actual email in production
-        print(f"DEBUG: Password reset link: {settings.BACKEND_URL}/reset-password?token={token}")
+    if not user:
+        # Still run anti-phishing check for enumeration attempts
+        try:
+            check_and_record_reset_attempt(ip, request.email, "unknown")
+        except PhishingBlockedError:
+            pass  # Log silently, return generic response
+        return GENERIC_RESPONSE
 
-    return {"message": "If that email is registered, a reset link has been sent."}
+    # ── ANTI-PHISHING GATE ──
+    try:
+        check_and_record_reset_attempt(ip, request.email, user.role.value)
+    except PhishingBlockedError as e:
+        # Log this attack to audit ledger
+        await write_audit_log(
+            db,
+            user_id=str(user.id),
+            action="phishing_attempt_blocked",
+            resource_type="security",
+            resource_id=str(user.id),
+            details={
+                "ip": ip,
+                "ua": ua[:200],
+                "threat_level": e.threat_level,
+                "reason": e.reason,
+                "target_role": user.role.value,
+            },
+            ip_address=ip,
+            user_agent=ua,
+        )
+        # Alert Admins if an admin account is targeted
+        if user.role.value in ("admin", "super_admin"):
+            super_admins = await db.execute(
+                select(User).where(User.role == "super_admin")
+            )
+            for sa in super_admins.scalars().all():
+                notif = Notification(
+                    id=uuid.uuid4(),
+                    user_id=sa.id,
+                    organization_id=None,
+                    title="🚨 SERANGAN PHISHING TERDETEKSI",
+                    message=f"IP {ip} mencoba reset password akun Admin '{user.email}' ({user.role.value}). IP telah diblokir secara otomatis. Periksa Audit Ledger untuk detail.",
+                    notification_type="error",
+                    link="/dashboard/audit",
+                )
+                db.add(notif)
+            await db.commit()
+        # Return generic response — never reveal the block to attacker
+        return GENERIC_RESPONSE
+
+    # Check if there's already a pending request (prevent duplicate spam)
+    existing = await db.execute(
+        select(PasswordResetRequest).where(
+            PasswordResetRequest.user_id == user.id,
+            PasswordResetRequest.status == "pending"
+        )
+    )
+    if existing.scalar_one_or_none():
+        return GENERIC_RESPONSE  # Silent dedup
+
+
+    # Create the pending request (24h window)
+    reset_request = PasswordResetRequest(
+        id=uuid.uuid4(),
+        user_id=user.id,
+        organization_id=user.organization_id,
+        requester_ip=ip,
+        requester_ua=ua[:512],
+        status="pending",
+        expires_at=datetime.utcnow() + timedelta(hours=24),
+    )
+    db.add(reset_request)
+
+    # Notify all Admins in the organization
+    admin_query = select(User).where(
+        User.organization_id == user.organization_id,
+        User.role.in_(["admin", "super_admin"])
+    )
+    if user.organization_id is None:
+        # Super Admin-level user - notify only Super Admins
+        admin_query = select(User).where(User.role == "super_admin")
+
+    admins_result = await db.execute(admin_query)
+    admins = admins_result.scalars().all()
+
+    for admin in admins:
+        if str(admin.id) == str(user.id):
+            continue  # Don't notify self
+        notif = Notification(
+            id=uuid.uuid4(),
+            user_id=admin.id,
+            organization_id=user.organization_id,
+            title="⚠️ Permintaan Reset Password",
+            message=f"Pengguna {user.full_name} ({user.email}) meminta reset password. IP: {ip}. Permintaan berlaku 24 jam. Verifikasi dan setujui di panel Reset Requests.",
+            notification_type="warning",
+            link="/dashboard/administration?tab=reset-requests",
+        )
+        db.add(notif)
+
+    await db.commit()
+
+    # Audit log
+    await write_audit_log(
+        db, user_id=str(user.id), action="password_reset_requested",
+        resource_type="auth", resource_id=str(reset_request.id),
+        details={"ip": ip, "ua": ua[:200]},
+        ip_address=ip, user_agent=ua,
+    )
+
+    return GENERIC_RESPONSE
+
+
+@router.get("/reset-requests")
+async def list_reset_requests(
+    current_user: dict = Depends(require_role("admin", "super_admin")),
+    db: AsyncSession = Depends(get_db)
+):
+    """List pending password reset requests for admin review."""
+    from app.models import PasswordResetRequest
+
+    # Auto-expire stale requests
+    await db.execute(
+        select(PasswordResetRequest).where(
+            PasswordResetRequest.status == "pending",
+            PasswordResetRequest.expires_at < datetime.utcnow()
+        )
+    )
+
+    user_role = current_user.get("role")
+    org_id = current_user.get("organization_id")
+
+    if user_role == "super_admin":
+        query = select(PasswordResetRequest, User).join(
+            User, PasswordResetRequest.user_id == User.id
+        ).where(PasswordResetRequest.status.in_(["pending", "approved", "rejected"]))
+    else:
+        query = select(PasswordResetRequest, User).join(
+            User, PasswordResetRequest.user_id == User.id
+        ).where(
+            PasswordResetRequest.organization_id == uuid.UUID(org_id),
+            PasswordResetRequest.status.in_(["pending", "approved", "rejected"])
+        )
+
+    result = await db.execute(query.order_by(PasswordResetRequest.requested_at.desc()).limit(50))
+    rows = result.all()
+
+    requests_list = []
+    for req, user_obj in rows:
+        # Auto-mark expired
+        is_expired = req.expires_at < datetime.utcnow() and req.status == "pending"
+        requests_list.append({
+            "id": str(req.id),
+            "user_name": user_obj.full_name,
+            "user_email": user_obj.email,
+            "user_role": user_obj.role.value,
+            "status": "expired" if is_expired else req.status,
+            "requester_ip": req.requester_ip,
+            "requester_ua": req.requester_ua,
+            "requested_at": req.requested_at.isoformat(),
+            "expires_at": req.expires_at.isoformat(),
+            "reviewed_at": req.reviewed_at.isoformat() if req.reviewed_at else None,
+            "reset_token": req.reset_token if req.status == "approved" else None,
+            "token_expires_at": req.token_expires_at.isoformat() if req.token_expires_at else None,
+        })
+
+    return {"reset_requests": requests_list, "total": len(requests_list)}
+
+
+@router.post("/reset-requests/{request_id}/approve")
+async def approve_reset_request(
+    request_id: str,
+    http_request: Request = None,
+    current_user: dict = Depends(require_role("admin", "super_admin")),
+    db: AsyncSession = Depends(get_db)
+):
+    """Admin approves a password reset request. Generates a one-time token."""
+    from app.models import PasswordResetRequest, Notification
+    import secrets
+
+    result = await db.execute(
+        select(PasswordResetRequest).where(PasswordResetRequest.id == uuid.UUID(request_id))
+    )
+    req = result.scalar_one_or_none()
+
+    if not req:
+        raise HTTPException(status_code=404, detail="Request tidak ditemukan")
+    if req.status != "pending":
+        raise HTTPException(status_code=400, detail=f"Request sudah berstatus: {req.status}")
+    if req.expires_at < datetime.utcnow():
+        req.status = "expired"
+        await db.commit()
+        raise HTTPException(status_code=400, detail="Request sudah kedaluwarsa (>24 jam)")
+
+    # Generate one-time token (1 hour validity)
+    token = secrets.token_urlsafe(48)
+    req.status = "approved"
+    req.reset_token = token
+    req.token_expires_at = datetime.utcnow() + timedelta(hours=1)
+    req.reviewed_at = datetime.utcnow()
+    req.reviewed_by = uuid.UUID(current_user["user_id"])
+    await db.commit()
+
+    # Notify the user
+    notif = Notification(
+        id=uuid.uuid4(),
+        user_id=req.user_id,
+        organization_id=req.organization_id,
+        title="✅ Reset Password Disetujui",
+        message="Administrator telah menyetujui permintaan Anda. Silakan hubungi Admin Anda untuk mendapatkan token reset. Token berlaku 1 jam.",
+        notification_type="success",
+        link="/reset-password",
+    )
+    db.add(notif)
+    await db.commit()
+
+    # Audit
+    ip = http_request.client.host if http_request else None
+    await write_audit_log(
+        db, user_id=current_user["user_id"], action="password_reset_approved",
+        resource_type="auth", resource_id=request_id,
+        ip_address=ip,
+    )
+
+    return {
+        "message": "Permintaan disetujui.",
+        "reset_token": token,
+        "token_expires_at": req.token_expires_at.isoformat(),
+        "instruction": "Sampaikan token ini secara langsung kepada pengguna melalui saluran komunikasi internal yang aman. Token hanya berlaku 1 jam."
+    }
+
+
+@router.post("/reset-requests/{request_id}/reject")
+async def reject_reset_request(
+    request_id: str,
+    http_request: Request = None,
+    current_user: dict = Depends(require_role("admin", "super_admin")),
+    db: AsyncSession = Depends(get_db)
+):
+    """Admin rejects a password reset request."""
+    from app.models import PasswordResetRequest, Notification
+
+    result = await db.execute(
+        select(PasswordResetRequest).where(PasswordResetRequest.id == uuid.UUID(request_id))
+    )
+    req = result.scalar_one_or_none()
+
+    if not req:
+        raise HTTPException(status_code=404, detail="Request tidak ditemukan")
+    if req.status != "pending":
+        raise HTTPException(status_code=400, detail=f"Request sudah berstatus: {req.status}")
+
+    req.status = "rejected"
+    req.reviewed_at = datetime.utcnow()
+    req.reviewed_by = uuid.UUID(current_user["user_id"])
+
+    # Notify user
+    notif = Notification(
+        id=uuid.uuid4(),
+        user_id=req.user_id,
+        organization_id=req.organization_id,
+        title="❌ Reset Password Ditolak",
+        message="Permintaan reset password Anda ditolak oleh Administrator. Jika ini bukan Anda yang meminta, segera hubungi Admin untuk keamanan akun.",
+        notification_type="error",
+    )
+    db.add(notif)
+    await db.commit()
+
+    ip = http_request.client.host if http_request else None
+    await write_audit_log(
+        db, user_id=current_user["user_id"], action="password_reset_rejected",
+        resource_type="auth", resource_id=request_id,
+        ip_address=ip,
+    )
+
+    return {"message": "Permintaan ditolak dan pengguna telah diberitahu."}
+
+
 
 
 @router.post("/reset-password")

@@ -7,7 +7,7 @@ from pathlib import Path
 from app.core.config import settings
 from app.core.rate_limiter import RateLimitMiddleware
 from app.core.middleware import SecureHeadersMiddleware
-from app.api.v1 import auth_router, image_router, analysis_router, report_router, user_router, lims_router, maintenance_router, simulator_router, settings_router, audit_router
+from app.api.v1 import auth_router, image_router, analysis_router, report_router, user_router, lims_router, maintenance_router, simulator_router, settings_router, audit_router, super_router
 from app.core.database import engine, Base
 
 
@@ -71,6 +71,7 @@ app.include_router(maintenance_router, prefix=f"{settings.API_V1_PREFIX}/mainten
 app.include_router(simulator_router, prefix=f"{settings.API_V1_PREFIX}/simulator", tags=["Simulator"])
 app.include_router(settings_router, prefix=f"{settings.API_V1_PREFIX}/settings", tags=["User Settings"])
 app.include_router(audit_router, prefix=f"{settings.API_V1_PREFIX}/audit", tags=["Audit Logs"])
+app.include_router(super_router, prefix=f"{settings.API_V1_PREFIX}/super", tags=["Super Admin"])
 
 
 @app.get("/")
@@ -85,4 +86,18 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    print(f"--- Starting {settings.APP_NAME} Server ---")
+    
+    # Mematikan fitur reload otomatis untuk mencegah WinError 1450 di Windows
+    uvicorn.run(
+        "main:app", 
+        host="127.0.0.1", 
+        port=8000, 
+        reload=False
+    )
 

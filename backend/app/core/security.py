@@ -71,7 +71,7 @@ async def get_current_user(
 ) -> dict:
     """Get current authenticated user from JWT token and check blacklist"""
     # Note: real db session is injected via dependency in endpoints
-    from app.core.database import SessionLocal
+    from app.core.database import AsyncSessionLocal
     from app.models import TokenBlacklist, User
     from sqlalchemy import select
     
@@ -88,7 +88,7 @@ async def get_current_user(
         )
     
     # ── BLACKLIST CHECK ──
-    async with SessionLocal() as db:
+    async with AsyncSessionLocal() as db:
         result = await db.execute(select(TokenBlacklist).where(TokenBlacklist.jti == jti))
         blacklisted = result.scalar_one_or_none()
         
@@ -111,6 +111,7 @@ async def get_current_user(
         "user_id": user_id,
         "email": payload.get("email"),
         "role": payload.get("role"),
+        "organization_id": str(user.organization_id) if user.organization_id else None,
         "jti": jti,
         "exp": payload.get("exp")
     }
@@ -122,12 +123,22 @@ def require_role(*required_roles: str):
     Usage: `current_user: dict = Depends(require_role("manager", "analyst"))`
 
     Always chains through get_current_user first.
-    Users with 'admin' role are always authorized regardless of required_roles.
+    'super_admin' has god-mode access to all endpoints.
+    'admin' has full access to their organization's endpoints.
     """
     async def role_checker(current_user: dict = Depends(get_current_user)):
-        if current_user.get("role") == "admin":
+        user_role = current_user.get("role")
+        
+        # 1. Super Admin bypasses all checks
+        if user_role == "super_admin":
             return current_user
-        if current_user.get("role") not in required_roles:
+            
+        # 2. Legacy / Local Admin check
+        if user_role == "admin" or user_role == "system_admin":
+            return current_user
+            
+        # 3. Specific role check
+        if user_role not in required_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions"

@@ -15,10 +15,6 @@ interface GeneratedReport {
   url: string
 }
 
-import { ALL_DEMO_ANALYSES } from '@/lib/demo-data'
-
-const USE_DEMO_DATA = true // Set to false to use real data from API
-
 export default function ReportsPage() {
   const [analyses, setAnalyses] = useState<Analysis[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -33,15 +29,8 @@ export default function ReportsPage() {
     const loadAnalyses = async () => {
       setIsLoadingAnalyses(true)
       try {
-        if (USE_DEMO_DATA) {
-          // Use demo dataset
-          setAnalyses(ALL_DEMO_ANALYSES)
-          // Simulate network delay
-          await new Promise(resolve => setTimeout(resolve, 600))
-        } else {
-          const result = await analysesApi.list({ page_size: 100 })
+        const result = await analysesApi.list({ page_size: 100 })
           setAnalyses(result.analyses)
-        }
       } catch (error: any) {
         toast.error(error.response?.data?.detail || 'Failed to load analyses')
       } finally {
@@ -99,153 +88,140 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500">
       {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-           <div className="w-9 h-9 bg-slate-900 rounded-lg shadow-xl flex items-center justify-center">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-slate-100">
+        <div>
+          <div className="flex items-center gap-3 mb-1.5">
+            <div className="w-10 h-10 bg-slate-900 rounded-xl shadow-xl flex items-center justify-center">
               <FileText className="w-4 h-4 text-primary" />
-           </div>
-           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Intelligence Exports</h1>
+            </div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">Laboratory Reports</h1>
+          </div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-1">Generate ISO 17025 compliant diagnostic protocols</p>
         </div>
-        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Generate ISO 17025 compliant diagnostic protocols</p>
+        <div className="flex items-center gap-2">
+           <div className="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl">
+              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
+                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                 Ready for Export
+              </span>
+           </div>
+        </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="dashboard-card p-4 flex items-center gap-4 rounded-xl">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <FileText className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-slate-900">{analyses.length}</p>
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Stored Records</p>
-          </div>
-        </div>
-        <div className="dashboard-card p-4 flex items-center gap-4 rounded-xl">
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border transition-all duration-300 ${selectedIds.size > 0 ? 'bg-emerald-500 border-emerald-400 shadow-lg shadow-emerald-200' : 'bg-slate-50 border-slate-100'}`}>
-            <CheckCircle className={`h-5 w-5 ${selectedIds.size > 0 ? 'text-white' : 'text-slate-300'}`} />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-slate-900">{selectedIds.size}</p>
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Selected Buffer</p>
-          </div>
-        </div>
-        <div className="dashboard-card p-4 flex items-center gap-4 rounded-xl">
-          <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center flex-shrink-0 shadow-lg shadow-slate-200">
-            <TrendingUp className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-slate-900">{recentReports.length}</p>
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Session Exports</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Export Parameters */}
-      <div className="dashboard-card p-6 rounded-xl">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
-            <Filter className="h-4 w-4 text-slate-500" />
-          </div>
-          <h2 className="text-base font-bold text-slate-900">Export Parameters</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="space-y-2">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Range Start</label>
-            <input type="date" className="w-full px-4 py-2.5 text-xs font-bold text-slate-900 bg-slate-50/50 border border-slate-100 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 transition-all" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Range End</label>
-            <input type="date" className="w-full px-4 py-2.5 text-xs font-bold text-slate-900 bg-slate-50/50 border border-slate-100 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 transition-all" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Protocol Matrix</label>
-            <div className="relative">
-              <select className="w-full px-4 py-2.5 text-xs font-bold text-slate-900 bg-slate-50/50 border border-slate-100 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer" value={mediaType} onChange={(e) => setMediaType(e.target.value)}>
-                <option value="all">All Protocols</option>
-                <option value="Plate Count Agar">PCA Protocol</option>
-                <option value="VRBA">VRBA Protocol</option>
-                <option value="BGBB">BGBB Protocol</option>
-                <option value="R2A">R2A Protocol</option>
-                <option value="TSA">TSA Protocol</option>
-                <option value="MacConkey">MAC Protocol</option>
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                <ChevronDown className="w-4 h-4 text-slate-400" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        {[
+          { label: 'Available Records', val: analyses.length, icon: FileText, color: 'text-primary', bg: 'bg-primary/5' },
+          { label: 'Selected Samples', val: selectedIds.size, icon: CheckCircle, active: selectedIds.size > 0, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+          { label: 'Total Exports', val: recentReports.length, icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-50' },
+        ].map((card, i) => (
+          <div key={i} className="bg-white border border-slate-200/60 p-5 lg:p-6 rounded-2xl shadow-sm hover:shadow-md transition-all group">
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ${card.active ? 'bg-emerald-500 text-white' : `${card.bg} ${card.color}`}`}>
+                <card.icon className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-2xl font-black text-slate-900 tracking-tighter tabular-nums">{card.val}</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{card.label}</p>
               </div>
             </div>
           </div>
+        ))}
+      </div>
+
+      {/* Export Parameters */}
+      <div className="bg-white border border-slate-200/60 p-6 rounded-2xl shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100">
+            <Filter className="h-5 w-5 text-slate-400" />
+          </div>
+          <div>
+            <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">Report Parameters</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Define analytical range and protocol filters</p>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3 pt-6 border-t border-slate-50">
-          <button onClick={handleGeneratePdf} disabled={isGenerating || selectedIds.size === 0} className="btn-primary py-2.5 px-6 flex items-center gap-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed">
-            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-            Generate ISO PDF
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Start Date</label>
+            <input type="date" className="w-full px-4 py-3 text-[12px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">End Date</label>
+            <input type="date" className="w-full px-4 py-3 text-[12px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Media Protocol</label>
+            <select className="w-full px-4 py-3 text-[12px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none" value={mediaType} onChange={(e) => setMediaType(e.target.value)}>
+              <option value="all">All Media Types</option>
+              <option value="Plate Count Agar">PCA Protocol</option>
+              <option value="VRBA">VRBA Protocol</option>
+              <option value="BGBB">BGBB Protocol</option>
+              <option value="R2A">R2A Protocol</option>
+              <option value="TSA">TSA Protocol</option>
+              <option value="MacConkey">MAC Protocol</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center gap-4 pt-6 border-t border-slate-100">
+          <button 
+            onClick={handleGeneratePdf} 
+            disabled={isGenerating || selectedIds.size === 0} 
+            className="w-full sm:flex-1 flex items-center justify-center gap-3 py-4 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-slate-900/20"
+          >
+            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4 text-primary" />}
+            Generate PDF Report
           </button>
-          <button onClick={handleGenerateCsv} disabled={isGenerating || selectedIds.size === 0} className="px-6 py-2.5 bg-white border border-slate-100 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Export CSV Matrix
+          <button 
+            onClick={handleGenerateCsv} 
+            disabled={isGenerating || selectedIds.size === 0} 
+            className="w-full sm:flex-1 flex items-center justify-center gap-3 py-4 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all"
+          >
+            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 text-slate-400" />}
+            Export CSV Dataset
           </button>
-          {selectedIds.size === 0 && (
-            <div className="flex items-center gap-2 text-amber-500 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100 animate-pulse">
-               <Info className="w-3.5 h-3.5" />
-               <p className="text-[8px] font-black uppercase tracking-widest">Select specimens to enable</p>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Analysis Selection */}
-      <div className="dashboard-card overflow-hidden !p-0 rounded-xl">
-        <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-slate-900">Specimen Selection Pool</h2>
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{selectedIds.size} of {filteredAnalyses.length} selected for export</p>
-          </div>
-          <button onClick={selectAll} className="px-4 py-2 bg-white border border-slate-100 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
-            {selectedIds.size === filteredAnalyses.length ? 'Clear Selection' : 'Select All Pool'}
+      <div className="bg-white border border-slate-200/60 overflow-hidden rounded-2xl shadow-sm">
+        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+          <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Selected for Export: {selectedIds.size} / {filteredAnalyses.length}</h2>
+          <button onClick={selectAll} className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+            {selectedIds.size === filteredAnalyses.length ? 'Clear Selection' : 'Select All'}
           </button>
         </div>
 
         {isLoadingAnalyses ? (
-          <div className="flex justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>
+          <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
         ) : filteredAnalyses.length === 0 ? (
-          <div className="text-center py-24">
-            <div className="w-20 h-20 rounded-[2rem] bg-slate-50 flex items-center justify-center mx-auto mb-6">
-               <FileText className="h-10 w-10 text-slate-300" />
-            </div>
-            <p className="text-lg font-bold text-slate-600">No specimens match protocol filters</p>
+          <div className="flex flex-col items-center py-16 text-slate-400 gap-3">
+             <Info className="w-8 h-8 opacity-20" />
+             <p className="text-[12px] font-medium">No analyses match your current filters</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-50 max-h-[500px] overflow-y-auto custom-scrollbar">
+          <div className="divide-y divide-slate-100 max-h-[400px] overflow-y-auto scrollbar-hide">
             {filteredAnalyses.map((analysis) => (
               <div
                 key={analysis.id}
                 onClick={() => toggleSelection(analysis.id)}
-                className={`flex items-center justify-between px-8 py-5 cursor-pointer transition-all duration-200 group ${selectedIds.has(analysis.id) ? 'bg-primary/5 border-l-4 border-l-primary' : 'hover:bg-slate-50 border-l-4 border-l-transparent'}`}
+                className={`flex items-center justify-between px-6 py-4 cursor-pointer transition-all hover:bg-slate-50 ${selectedIds.has(analysis.id) ? 'bg-primary/5' : ''}`}
               >
-                <div className="flex items-center gap-6 flex-1 min-w-0">
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 transition-all duration-300 ${selectedIds.has(analysis.id) ? 'bg-primary border-primary shadow-lg shadow-primary/20' : 'border-slate-200 group-hover:border-primary/50'}`}>
-                    {selectedIds.has(analysis.id) && <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>}
+                <div className="flex items-center gap-4">
+                  <div className={`w-5 h-5 rounded-lg border-2 transition-all flex items-center justify-center ${selectedIds.has(analysis.id) ? 'bg-primary border-primary' : 'border-slate-300 bg-white'}`}>
+                     {selectedIds.has(analysis.id) && <CheckCircle className="w-3.5 h-3.5 text-white" />}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-900 group-hover:text-primary transition-colors">{analysis.sample_id}</p>
-                    <div className="flex items-center gap-4 mt-1.5">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md">{analysis.media_type}</span>
-                      <span className={`text-[10px] font-black uppercase tracking-widest ${
-                        analysis.status === 'completed' && analysis.is_valid_for_reporting ? 'text-emerald-500' : 
-                        analysis.warnings?.some(w => w.includes('TNTC')) ? 'text-rose-500' : 'text-amber-500'
-                      }`}>
-                        {analysis.status === 'completed' 
-                          ? (analysis.is_valid_for_reporting ? 'Verified' : (analysis.warnings?.some(w => w.includes('TNTC')) ? 'Critical' : 'Pending Review')) 
-                          : analysis.status}
-                      </span>
-                    </div>
+                  <div>
+                    <p className="text-[13px] font-black text-slate-900 tracking-tight">{analysis.sample_id}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{analysis.media_type}</p>
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0 ml-6">
-                  <p className="text-xs font-bold text-slate-600">{new Date(analysis.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-wider">Node: {analysis.id.slice(0, 8)}</p>
+                <div className="flex items-center gap-4 text-right">
+                   <div>
+                      <p className="text-[12px] font-black text-slate-900 font-mono">{analysis.colony_count}</p>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">CFU Total</p>
+                   </div>
                 </div>
               </div>
             ))}
@@ -255,27 +231,27 @@ export default function ReportsPage() {
 
       {/* Recent Session Exports */}
       {recentReports.length > 0 && (
-        <div className="dashboard-card overflow-hidden !p-0">
-          <div className="px-8 py-6 border-b border-slate-50 bg-slate-900">
-            <h2 className="text-sm font-black text-white uppercase tracking-[0.2em]">Live Session Export Queue</h2>
+        <div className="bg-white border border-slate-200/60 overflow-hidden rounded-2xl shadow-lg">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-900 flex items-center justify-between">
+            <h2 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Export Pipeline Queue</h2>
+            <span className="px-2 py-0.5 bg-primary/20 text-primary text-[9px] font-black rounded-full uppercase tracking-widest border border-primary/20">Session Active</span>
           </div>
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="p-3 space-y-2 bg-slate-50/50">
             {recentReports.map((report) => (
-              <div key={report.id} className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl hover:border-primary/30 transition-all group">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm ${report.format === 'pdf' ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-500'}`}>
+              <div key={report.id} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all group">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${report.format === 'pdf' ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'}`}>
                     <FileText className="h-5 w-5" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-bold text-slate-800 truncate group-hover:text-primary transition-colors">{report.filename}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border ${report.format === 'pdf' ? 'text-rose-500 border-rose-100' : 'text-emerald-500 border-emerald-100'}`}>{report.format} Matrix</span>
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">{new Date(report.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
+                  <div>
+                    <span className="text-[13px] font-black text-slate-900">{report.filename}</span>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                       {new Date(report.generatedAt).toLocaleTimeString()} // {report.format.toUpperCase()} Protocol
+                    </p>
                   </div>
                 </div>
-                <a href={report.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 text-[9px] font-black uppercase tracking-widest text-slate-700 bg-white border border-slate-100 hover:bg-slate-900 hover:text-white hover:border-slate-900 rounded-lg transition-all ml-4 shadow-sm">
-                  <Download className="h-3.5 w-3.5" /> Download
+                <a href={report.url} target="_blank" className="p-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 active:scale-95">
+                  <Download className="h-4 w-4" />
                 </a>
               </div>
             ))}
