@@ -180,7 +180,7 @@ export function AskAI({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
   const [isTyping, setIsTyping] = useState(false);
   const [loadingStep, setLoadingStep] = useState<number>(0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const userName = user?.name || user?.full_name || "Analyst";
+  const userName = user?.full_name || "Analyst";
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {

@@ -135,7 +135,8 @@ export function ResetRequestsPanel() {
     if (selectedIds.size === 0) return
     setIsBulkProcessing(true)
     let success = 0, failed = 0
-    for (const id of selectedIds) {
+    const idsArray = Array.from(selectedIds)
+    for (const id of idsArray) {
       try {
         const res = await fetch(`/api/v1/auth/reset-requests/${id}/approve`, {
           method: 'POST',
@@ -153,7 +154,8 @@ export function ResetRequestsPanel() {
     if (selectedIds.size === 0) return
     setIsBulkProcessing(true)
     let success = 0
-    for (const id of selectedIds) {
+    const idsArray = Array.from(selectedIds)
+    for (const id of idsArray) {
       try {
         await fetch(`/api/v1/auth/reset-requests/${id}/reject`, {
           method: 'POST',

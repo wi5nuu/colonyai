@@ -743,7 +743,7 @@ AUTHORITY: MASTER COMMAND`}
                 </div>
               )}
 
-              {remoteModal.step === 4 && (
+              {remoteModal.step >= 4 && (
                 <div className="mt-8 pt-8 border-t border-white/5 grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">CPU Utilization</p>
@@ -774,7 +774,7 @@ AUTHORITY: MASTER COMMAND`}
             {/* Terminal Footer */}
             <div className="px-6 py-3 bg-black/40 border-t border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${remoteModal.step === 4 ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
+                <div className={`w-1.5 h-1.5 rounded-full ${remoteModal.step >= 4 ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
                 <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest">
                   {remoteModal.step >= 4 ? 'Secure Tunnel Active' : 'Connecting...'}
                 </span>
