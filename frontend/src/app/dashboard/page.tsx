@@ -38,6 +38,11 @@ import { useAuthStore } from '@/lib/auth-store'
 import { toast } from 'sonner'
 import { useTranslationStore } from '@/lib/i18n/store'
 
+import { 
+  DocumentationSidebar, 
+  DocumentationToggle 
+} from '@/components/DocumentationSidebar'
+
 const POLLING_INTERVAL = 30000
 
 
@@ -51,6 +56,7 @@ export default function DashboardPage() {
   const [filteredAnalyses, setFilteredAnalyses] = useState<Analysis[]>([])
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
   const isMountedRef = useRef(true)
+  const [activeIntelTab, setActiveIntelTab] = useState(0)
 
   const loadStats = useCallback(async (isRefresh = false) => {
     if (isRefresh) setIsRefreshing(true)
@@ -126,20 +132,41 @@ export default function DashboardPage() {
   const isOperational = user?.role === 'analyst' || user?.role === 'admin'
 
 
-  if (isLoading) return <div className="p-6"><DashboardSkeleton /></div>
-  
-  return (
-    <div className="animate-in fade-in duration-500">
-      {/* Greeting Section */}
-      <div className="mb-2 sm:mb-8">
-        <h1 className="text-sm sm:text-3xl font-black text-slate-900 tracking-tight">
-          {t('overview.greeting')} {user?.full_name?.split(' ')[0] || 'Lead'} !
-        </h1>
-        <p className="text-slate-400 mt-0.5 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em]">{t('overview.subtitle')}</p>
+  const [showDocs, setShowDocs] = useState(true)
+
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <DashboardSkeleton />
       </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
+      <div className="flex relative min-h-[calc(100vh-200px)]">
+        {/* Main Content Area */}
+        <div className={`flex-1 transition-all duration-300 ${showDocs ? 'lg:mr-[350px]' : ''}`}>
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-6 py-0 sm:py-0">
+            {/* Greeting Section */}
+            <div className="mb-2 sm:mb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
+                  {t('overview.greeting')} {user?.full_name?.split(' ')[0] || 'Lead'} !
+                </h1>
+                <p className="text-slate-400 mt-1.5 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em]">{t('overview.subtitle')}</p>
+              </div>
+              <div className="hidden lg:block">
+                <DocumentationToggle
+                  showDocs={showDocs}
+                  setShowDocs={setShowDocs}
+                  text="SOP Ringkasan"
+                />
+              </div>
+            </div>
 
       {/* Summary Cards Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4">
         {[
           { label: t('overview.totalAnalyses'), value: stats?.total_analyses || 0, icon: FlaskConical, trend: '+14%', color: 'indigo' },
           { label: t('overview.neuralConfidence'), value: `${stats?.neural_confidence || 0}%`, icon: Zap, trend: '+2.1%', color: 'emerald' },
@@ -151,11 +178,11 @@ export default function DashboardPage() {
               <div className="p-1.5 sm:p-2 bg-slate-50 group-hover:bg-primary/5 rounded-lg sm:rounded-xl transition-colors">
                 <card.icon className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 group-hover:text-primary" />
               </div>
-              <span className={`text-[8px] sm:text-[10px] font-black ${card.trend.includes('+') ? 'text-emerald-500' : 'text-slate-400'} uppercase tracking-widest`}>{card.trend}</span>
+              <span className={`text-[8px] sm:text-[10px] font-bold ${card.trend.includes('+') ? 'text-emerald-500' : 'text-slate-400'} uppercase tracking-widest`}>{card.trend}</span>
             </div>
             <div>
-              <p className="text-slate-400 text-[7px] sm:text-[9px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-1">{card.label}</p>
-              <p className="text-base sm:text-3xl font-black text-slate-900 tabular-nums tracking-tighter">{card.value}</p>
+              <p className="text-slate-400 text-[7px] sm:text-[9px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-1">{card.label}</p>
+              <p className="text-base sm:text-3xl font-bold text-slate-900 tabular-nums tracking-tighter">{card.value}</p>
             </div>
             <div className="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
                <card.icon className="w-10 h-10 sm:w-16 sm:h-16" />
@@ -205,14 +232,16 @@ export default function DashboardPage() {
             {/* Project Overview / Analysis Breakdown */}
             <div className="dashboard-card col-span-1 rounded-lg">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="font-black text-slate-900 text-xs uppercase tracking-[0.2em]">{t('overview.analysisBreakdown')}</h3>
-                <div className="bg-slate-50 border border-slate-200 rounded px-2 py-1 flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase">
-                  Batch: 2026-04 <ChevronDown className="w-3 h-3" />
-                </div>
+                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-[0.2em]">{t('overview.analysisBreakdown')}</h3>
+                <select className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[10px] font-bold text-slate-500 uppercase outline-none cursor-pointer hover:border-primary/30 transition-colors appearance-none pr-6 relative">
+                  <option>Batch: 2026-04</option>
+                  <option>Batch: 2026-03</option>
+                  <option>Batch: 2026-02</option>
+                </select>
               </div>
               <div className="text-center mb-4 sm:mb-8">
-                <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tighter">{stats?.total_analyses || 0}</p>
-                <p className="text-[9px] sm:text-[10px] text-slate-400 font-black mt-0.5 sm:mt-1 uppercase tracking-[0.2em]">{t('overview.analyzedSpecimens')}</p>
+                <p className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tighter">{stats?.total_analyses || 0}</p>
+                <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold mt-0.5 sm:mt-1 uppercase tracking-[0.2em]">{t('overview.analyzedSpecimens')}</p>
               </div>
               {/* Segmented Progress Bar */}
               <div className="flex h-1.5 sm:h-2 w-full rounded-full overflow-hidden mb-4 sm:mb-8 bg-slate-100">
@@ -235,7 +264,7 @@ export default function DashboardPage() {
               {isOperational && (
                 <button 
                   onClick={() => router.push('/dashboard/upload')}
-                  className="w-full mt-4 sm:mt-10 py-2.5 sm:py-3 bg-slate-900 rounded-lg text-[9px] sm:text-[10px] font-black text-white uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-900/20"
+                  className="w-full mt-4 sm:mt-10 py-2.5 sm:py-3 bg-primary rounded-lg text-[9px] sm:text-[10px] font-bold text-slate-900 uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
                 >
                   {t('nav.newAnalysis')} <ArrowRight className="w-3 h-3" />
                 </button>
@@ -243,7 +272,7 @@ export default function DashboardPage() {
               {!isOperational && (
                 <button 
                   onClick={() => router.push('/dashboard/history')}
-                  className="w-full mt-4 sm:mt-10 py-2.5 sm:py-3 bg-slate-900 rounded-lg text-[9px] sm:text-[10px] font-black text-white uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-900/20"
+                  className="w-full mt-4 sm:mt-10 py-2.5 sm:py-3 bg-primary rounded-lg text-[9px] sm:text-[10px] font-bold text-slate-900 uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
                 >
                   {t('overview.goToGlobalArchive')} <ArrowRight className="w-3 h-3" />
                 </button>
@@ -361,18 +390,18 @@ export default function DashboardPage() {
           </div>
 
           {/* Today Events */}
-          <div className="bg-slate-900 rounded-lg p-4 text-white flex items-center justify-between group cursor-pointer hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10">
+          <Link href="/dashboard/audit" className="bg-white border border-slate-200 rounded-lg p-4 text-slate-900 flex items-center justify-between group cursor-pointer hover:bg-slate-50 transition-all shadow-sm">
              <div className="flex items-center gap-4">
-                <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
-                   <Calendar className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
+                   <Calendar className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">{t('overview.todayEvents')}</p>
+                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{t('overview.todayEvents')}</p>
                    <p className="text-sm font-bold">Batch Audit ISO-17025</p>
                 </div>
              </div>
-             <ChevronRight className="w-5 h-5 text-white/40 group-hover:translate-x-1 transition-transform" />
-          </div>
+             <ChevronRight className="w-5 h-5 text-slate-300 group-hover:translate-x-1 transition-transform" />
+          </Link>
 
           {/* Recent Alerts */}
           <div className="dashboard-card p-4">
@@ -422,15 +451,15 @@ export default function DashboardPage() {
       <div className="mt-4 bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
         <div className="px-6 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
            <div>
-              <h2 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em]">{t('overview.neuralIntelligenceLayer')}</h2>
+              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-[0.2em]">{t('overview.neuralIntelligenceLayer')}</h2>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t('overview.realTimeSpectral')}</p>
            </div>
            <div className="flex items-center gap-4">
-              <button className="text-[9px] font-black text-blue-600 uppercase tracking-widest hover:underline">{t('overview.downloadDataset')}</button>
+              <button className="text-[9px] font-bold text-blue-600 uppercase tracking-widest hover:underline">{t('overview.downloadDataset')}</button>
               <div className="h-3 w-[1px] bg-slate-200" />
               <div className="flex items-center gap-2">
                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                 <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">{t('overview.activeSink')}</span>
+                 <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">{t('overview.activeSink')}</span>
               </div>
            </div>
         </div>
@@ -439,7 +468,11 @@ export default function DashboardPage() {
         <div className="px-6 py-4 space-y-4">
            <div className="flex border-b border-slate-100 gap-6">
               {[t('overview.queryOverview'), t('overview.throughput'), t('overview.successRate')].map((tab, i) => (
-                 <button key={tab} className={`pb-2 text-[10px] font-black uppercase tracking-widest transition-all ${i === 0 ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                 <button 
+                   key={tab} 
+                   onClick={() => setActiveIntelTab(i)}
+                   className={`pb-2 text-[10px] font-bold uppercase tracking-widest transition-all ${activeIntelTab === i ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                 >
                     {tab}
                  </button>
               ))}
@@ -452,7 +485,7 @@ export default function DashboardPage() {
                      <div className={`w-1.5 h-1.5 rounded-full ${['bg-blue-500', 'bg-amber-500', 'bg-emerald-500', 'bg-rose-500', 'bg-purple-500'][i % 5]}`} />
                      <span className="text-[9px] font-bold text-slate-400 truncate uppercase">{label} Matrix</span>
                   </div>
-                  <p className="text-base font-black text-slate-900 tracking-tighter">{val}</p>
+                  <p className="text-base font-bold text-slate-900 tracking-tighter">{val}</p>
                 </div>
               ))}
               {(!stats || Object.keys(stats.matrix_breakdown).length === 0) && (
@@ -481,20 +514,82 @@ export default function DashboardPage() {
            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                <div className="border-l-2 border-blue-500 pl-4">
                  <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">{t('overview.totalNeuralQueries')} <Info className="w-2.5 h-2.5 inline ml-1 opacity-30" /></p>
-                 <p className="text-base font-black text-slate-900 tracking-tighter">{stats?.total_analyses || 0}</p>
+                 <p className="text-base font-bold text-slate-900 tracking-tighter">{stats?.total_analyses || 0}</p>
               </div>
               <div className="border-l-2 border-slate-200 pl-4">
                  <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">{t('overview.avgQps')} <Info className="w-2.5 h-2.5 inline ml-1 opacity-30" /></p>
-                 <p className="text-base font-black text-slate-900 tracking-tighter">0.035</p>
+                 <p className="text-base font-bold text-slate-900 tracking-tighter">0.035</p>
               </div>
               <div className="border-l-2 border-slate-200 pl-4">
                  <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">{t('overview.processingTime')} <Info className="w-2.5 h-2.5 inline ml-1 opacity-30" /></p>
-                 <p className="text-base font-black text-slate-900 tracking-tighter">{stats?.system_latency_ms || 0}<span className="text-[10px] ml-0.5 text-slate-400 font-bold uppercase">ms</span></p>
+                 <p className="text-base font-bold text-slate-900 tracking-tighter">{stats?.system_latency_ms || 0}<span className="text-[10px] ml-0.5 text-slate-400 font-bold uppercase">ms</span></p>
               </div>
            </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Documentation Sidebar */}
+      <div className="hidden lg:block">
+        <DocumentationSidebar
+          showDocs={showDocs}
+          setShowDocs={setShowDocs}
+          directory="System Overview"
+          title="Pusat Kontrol Saraf"
+          description="Ringkasan operasional dan kesehatan sistem ColonyAI secara real-time."
+          rawText={`PUSAT KONTROL SARAF COLONYAI
+===============================
+
+1. STATUS OPERASIONAL
+Ringkasan metrik utama laboratorium termasuk total analisis, tingkat kepercayaan saraf, dan latensi sistem.
+
+2. NEURAL INTELLIGENCE LAYER
+Monitoring throughput kueri saraf dan distribusi matriks media (PCA, VRBA, dll) yang sedang aktif diproses.
+
+3. KESEHATAN SISTEM (NODE STATUS)
+Status real-time dari setiap node komputasi (NODE-01-A, dll) yang menangani beban kerja AI.
+
+4. LOG AUDIT & EVENT
+Akses cepat ke event audit harian dan peringatan sistem terbaru untuk menjamin integritas ISO-17025.`}
+        >
+          <section className="space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">01</span>
+              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Status Operasional</h2>
+            </div>
+            <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+              Menampilkan indikator kesehatan global laboratorium. Metrik latensi sistem di bawah 200ms dianggap optimal untuk operasi real-time.
+            </p>
+          </section>
+
+          <section className="space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">02</span>
+              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Intelligence Layer</h2>
+            </div>
+            <div className="space-y-3 ml-0.5">
+              {[
+                { id: '1', title: 'Neural Throughput', desc: 'Volume data yang diproses oleh mesin saraf per unit waktu.' },
+                { id: '2', title: 'Matrix Distribution', desc: 'Persentase penggunaan berbagai jenis media agar dalam sistem.' },
+                { id: '3', title: 'System Health', desc: 'Pemantauan beban kerja pada setiap node komputasi aktif.' }
+              ].map((item) => (
+                <div key={item.id} className="flex gap-2.5">
+                  <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg">
+                    {item.id}
+                  </span>
+                  <div className="space-y-0.5">
+                    <h4 className="text-[10px] font-bold text-slate-900">{item.title}</h4>
+                    <p className="text-[9px] text-slate-500 leading-relaxed font-medium">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </DocumentationSidebar>
+      </div>
     </div>
+  </div>
   )
 }
 

@@ -7,6 +7,11 @@ import { reportsApi } from '@/lib/reports-api'
 import { Analysis, ReportType } from '@/lib/types'
 import { toast } from 'sonner'
 
+import { 
+  DocumentationSidebar, 
+  DocumentationToggle 
+} from '@/components/DocumentationSidebar'
+
 interface GeneratedReport {
   id: string
   filename: string
@@ -24,6 +29,7 @@ export default function ReportsPage() {
   const [mediaType, setMediaType] = useState('all')
   const [recentReports, setRecentReports] = useState<GeneratedReport[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
+  const [showDocs, setShowDocs] = useState(true)
 
   useEffect(() => {
     const loadAnalyses = async () => {
@@ -66,7 +72,7 @@ export default function ReportsPage() {
     setIsGenerating(true)
     try {
       const report = await reportsApi.generatePdf({ report_type: 'custom' as ReportType, date_from: dateFrom || undefined, date_to: dateTo || undefined, format: 'pdf' })
-      await reportsApi.downloadReport(report.url.split('/').pop() || 'latest')
+      await reportsApi.downloadReport(report.url.split('/').pop() || 'latest', report.filename)
       setRecentReports((prev) => [{ id: report.url.split('/').pop() || `pdf-${Date.now()}`, filename: report.filename, format: 'pdf', generatedAt: new Date().toISOString(), url: report.url }, ...prev])
       toast.success('PDF report generated and downloaded')
     } catch (error: any) {
@@ -79,7 +85,7 @@ export default function ReportsPage() {
     setIsGenerating(true)
     try {
       const report = await reportsApi.generateCsv({ report_type: 'custom' as ReportType, date_from: dateFrom || undefined, date_to: dateTo || undefined, format: 'csv' })
-      await reportsApi.downloadReport(report.url.split('/').pop() || 'latest')
+      await reportsApi.downloadReport(report.url.split('/').pop() || 'latest', report.filename)
       setRecentReports((prev) => [{ id: report.url.split('/').pop() || `csv-${Date.now()}`, filename: report.filename, format: 'csv', generatedAt: new Date().toISOString(), url: report.url }, ...prev])
       toast.success('CSV report generated and downloaded')
     } catch (error: any) {
@@ -88,27 +94,38 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Page Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-slate-100">
-        <div>
-          <div className="flex items-center gap-3 mb-1.5">
-            <div className="w-10 h-10 bg-slate-900 rounded-xl shadow-xl flex items-center justify-center">
-              <FileText className="w-4 h-4 text-primary" />
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
+      <div className="flex relative min-h-[calc(100vh-200px)]">
+        {/* Main Content Area */}
+        <div className={`flex-1 transition-all duration-300 ${showDocs ? 'lg:mr-[350px]' : ''}`}>
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-6 py-0 sm:py-0">
+            {/* Page Header */}
+            <div className="flex flex-row items-center justify-between gap-2 pb-2 border-b border-slate-100 mb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <div className="w-8 h-8 bg-slate-50 border border-slate-200 rounded-lg shadow-sm flex items-center justify-center">
+                    <FileText className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <h1 className="text-lg font-bold text-slate-900 tracking-tight uppercase leading-none">Laboratory Reports</h1>
+                </div>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Generate ISO 17025 compliant protocols</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="hidden lg:block">
+                  <DocumentationToggle
+                    showDocs={showDocs}
+                    setShowDocs={setShowDocs}
+                    text="Protokol Laporan"
+                  />
+                </div>
+                <div className="px-2 py-1 bg-emerald-50 border border-emerald-100 rounded-lg">
+                  <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1.5">
+                    <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                    Ready
+                  </span>
+                </div>
+              </div>
             </div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">Laboratory Reports</h1>
-          </div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-1">Generate ISO 17025 compliant diagnostic protocols</p>
-        </div>
-        <div className="flex items-center gap-2">
-           <div className="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl">
-              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
-                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                 Ready for Export
-              </span>
-           </div>
-        </div>
-      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
@@ -164,21 +181,21 @@ export default function ReportsPage() {
             </select>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-4 pt-6 border-t border-slate-100">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 border-t border-slate-100">
           <button 
             onClick={handleGeneratePdf} 
             disabled={isGenerating || selectedIds.size === 0} 
-            className="w-full sm:flex-1 flex items-center justify-center gap-3 py-4 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-slate-900/20"
+            className="w-full sm:w-auto px-10 flex items-center justify-center gap-3 py-3.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-slate-900/10 active:scale-95"
           >
-            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4 text-primary" />}
-            Generate PDF Report
+            {isGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5 text-primary" />}
+            Generate PDF Protocol
           </button>
           <button 
             onClick={handleGenerateCsv} 
             disabled={isGenerating || selectedIds.size === 0} 
-            className="w-full sm:flex-1 flex items-center justify-center gap-3 py-4 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all"
+            className="w-full sm:w-auto px-10 flex items-center justify-center gap-3 py-3.5 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95"
           >
-            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 text-slate-400" />}
+            {isGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 text-slate-400" />}
             Export CSV Dataset
           </button>
         </div>
@@ -206,21 +223,21 @@ export default function ReportsPage() {
               <div
                 key={analysis.id}
                 onClick={() => toggleSelection(analysis.id)}
-                className={`flex items-center justify-between px-6 py-4 cursor-pointer transition-all hover:bg-slate-50 ${selectedIds.has(analysis.id) ? 'bg-primary/5' : ''}`}
+                className={`flex items-center justify-between px-4 py-2.5 cursor-pointer transition-all hover:bg-slate-50 ${selectedIds.has(analysis.id) ? 'bg-primary/5' : ''}`}
               >
-                <div className="flex items-center gap-4">
-                  <div className={`w-5 h-5 rounded-lg border-2 transition-all flex items-center justify-center ${selectedIds.has(analysis.id) ? 'bg-primary border-primary' : 'border-slate-300 bg-white'}`}>
-                     {selectedIds.has(analysis.id) && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                <div className="flex items-center gap-3">
+                  <div className={`w-3.5 h-3.5 rounded border transition-all flex items-center justify-center ${selectedIds.has(analysis.id) ? 'bg-primary border-primary' : 'border-slate-300 bg-white'}`}>
+                     {selectedIds.has(analysis.id) && <CheckCircle className="w-2.5 h-2.5 text-white" />}
                   </div>
                   <div>
-                    <p className="text-[13px] font-black text-slate-900 tracking-tight">{analysis.sample_id}</p>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{analysis.media_type}</p>
+                    <p className="text-[11px] font-black text-slate-900 tracking-tight">{analysis.sample_id}</p>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{analysis.media_type}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 text-right">
+                <div className="flex items-center gap-3 text-right">
                    <div>
-                      <p className="text-[12px] font-black text-slate-900 font-mono">{analysis.colony_count}</p>
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">CFU Total</p>
+                      <p className="text-[11px] font-black text-slate-900 font-mono">{analysis.colony_count}</p>
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">CFU</p>
                    </div>
                 </div>
               </div>
@@ -258,6 +275,70 @@ export default function ReportsPage() {
           </div>
         </div>
       )}
+        </div>
+      </div>
+
+      {/* Documentation Sidebar */}
+      <div className="hidden lg:block">
+        <DocumentationSidebar
+          showDocs={showDocs}
+          setShowDocs={setShowDocs}
+          directory="Reporting System"
+          title="SOP Pelaporan"
+          description="Panduan pembuatan protokol laboratorium standar ISO-17025."
+          rawText={`SOP PELAPORAN LABORATORIUM COLONYAI
+====================================
+
+1. OVERVIEW: LABORATORY REPORTS
+Modul pelaporan berfungsi untuk mengonversi data hasil analisis saraf menjadi dokumen formal (PDF/CSV) yang siap diaudit.
+
+2. PARAMETER LAPORAN
+- Date Range: Saring spesimen berdasarkan rentang tanggal penerimaan.
+- Media Protocol: Kelompokkan laporan berdasarkan matriks media spesifik (PCA, VRBA, dll).
+- Selection: Pilih spesimen tertentu secara manual dari daftar untuk disertakan dalam satu laporan konsolidasi.
+
+3. EXPORT PIPELINE
+Seluruh laporan yang dibuat akan masuk ke dalam antrean (Queue) sesi aktif untuk diunduh. Laporan PDF mencakup metadata lengkap, tanda tangan digital (opsional), dan skor kepercayaan neural.
+
+STATUS: REPORTING READY
+STANDAR: Kepatuhan ISO-17025`}
+        >
+          <section className="space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">01</span>
+              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Overview</h2>
+            </div>
+            <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+              Modul pelaporan berfungsi untuk mengonversi data hasil analisis saraf menjadi dokumen formal (PDF/CSV) yang siap diaudit.
+            </p>
+          </section>
+
+          <section className="space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">02</span>
+              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Parameter Laporan</h2>
+            </div>
+            <div className="space-y-3 ml-0.5">
+              {[
+                { id: '1', title: 'Filter Rentang', desc: 'Saring spesimen berdasarkan tanggal mulai dan akhir penerimaan.' },
+                { id: '2', title: 'Matriks Media', desc: 'Pisahkan laporan berdasarkan protokol media agar (PCA, VRBA, dll).' },
+                { id: '3', title: 'Pipeline Queue', desc: 'Laporan yang dihasilkan akan muncul sementara di daftar unduhan sesi.' }
+              ].map((step) => (
+                <div key={step.id} className="flex gap-2.5 group">
+                   <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      {step.id}
+                   </span>
+                   <div className="space-y-0.5">
+                      <h4 className="text-[10px] font-bold text-slate-900">{step.title}</h4>
+                      <p className="text-[9px] text-slate-500 leading-relaxed font-medium">{step.desc}</p>
+                   </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </DocumentationSidebar>
+      </div>
+      </div>
     </div>
   )
 }

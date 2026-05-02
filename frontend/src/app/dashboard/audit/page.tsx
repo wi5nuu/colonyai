@@ -12,6 +12,8 @@ import {
   Terminal,
   AlertCircle,
   Loader2,
+  X,
+  Lock,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth-store";
 import api from "@/lib/api";
@@ -146,20 +148,20 @@ export default function AuditPage() {
         <div
           className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
         >
-          <div className="max-w-[1500px] mx-auto px-6 py-8">
-            <div className="space-y-10">
+          <div className="max-w-[1500px] mx-auto px-6 py-0 pt-0">
+            <div className="space-y-4">
               {/* Audit Header */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-2">
                 <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-9 h-9 bg-slate-900 rounded-lg shadow-xl flex items-center justify-center">
-                      <ShieldCheck className="w-4 h-4 text-primary" />
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="w-8 h-8 bg-slate-50 border border-slate-200 rounded-lg shadow-sm flex items-center justify-center">
+                      <ShieldCheck className="w-3.5 h-3.5 text-primary" />
                     </div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                    <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight uppercase">
                       {t("audit.title")}
                     </h1>
                   </div>
-                  <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">
+                  <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">
                     {t("audit.subtitle")}
                   </p>
                   <div className="hidden lg:block">
@@ -446,19 +448,36 @@ export default function AuditPage() {
             showDocs={showDocs}
             setShowDocs={setShowDocs}
             directory="Compliance Logs"
-            title={t("audit.docsTitle")}
-            description={t("audit.docsDescription")}
+            title="Log Keamanan & Audit"
+            description="Rekam jejak immutable seluruh aktivitas sistem sesuai standar ISO-17025."
+            rawText={`LOG KEAMANAN & AUDIT COLONYAI - ISO-17025
+============================================
+
+1. OVERVIEW: SECURITY LEDGER
+Security Ledger menyimpan seluruh rekam jejak aktivitas (Audit Trail) yang terjadi di dalam sistem ColonyAI secara immutable (tidak dapat diubah).
+
+2. AUDIT PROTOCOL
+A. TRACEABILITY: Setiap entri memuat Sequence ID unik, protokol aksi (Action Protocol), dan Source Analyst.
+B. LAYER TRACKING: Kategorisasi log ke dalam Security (otorisasi), System (konfigurasi), dan Data (proses spesimen).
+C. INTEGRITY CHAIN: Verifikasi integritas data menggunakan hash kriptografis yang menghubungkan setiap log dengan log sebelumnya.
+
+3. SEARCH & EXPORT
+- Filter Pencarian: Melacak anomali atau Security Violations secara instan.
+- Download: Ekspor log terenkripsi untuk keperluan audit eksternal.
+
+STATUS: SECURE CHAIN ACTIVE
+INTEGRITAS: 100% IMMUTABLE`}
           >
-            <section className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+            <section className="space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   01
                 </span>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
                   Overview
                 </h2>
               </div>
-              <p className="text-sm text-slate-600 leading-relaxed bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
                 Security Ledger menyimpan seluruh rekam jejak aktivitas (Audit
                 Trail) yang terjadi di dalam sistem ColonyAI. Log ini bersifat
                 immutable (tidak dapat diubah) dan merupakan syarat wajib
@@ -466,16 +485,16 @@ export default function AuditPage() {
               </p>
             </section>
 
-            <section className="space-y-6 pt-2">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+            <section className="space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   02
                 </span>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
                   Audit Protocol
                 </h2>
               </div>
-              <div className="space-y-6 ml-1">
+              <div className="space-y-3 ml-0.5">
                 {[
                   {
                     id: "1",
@@ -493,15 +512,15 @@ export default function AuditPage() {
                     desc: "Gunakan filter pencarian untuk melacak anomali (Security Violations). Tombol Download memungkinkan ekspor log dalam format terenkripsi.",
                   },
                 ].map((step) => (
-                  <div key={step.id} className="flex gap-4 group">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-slate-900 text-white text-[11px] font-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <div key={step.id} className="flex gap-2.5 group">
+                    <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                       {step.id}
                     </span>
-                    <div className="space-y-1.5">
-                      <h4 className="text-sm font-bold text-slate-900">
+                    <div className="space-y-0.5">
+                      <h4 className="text-[10px] font-bold text-slate-900">
                         {step.title}
                       </h4>
-                      <p className="text-[12px] text-slate-500 leading-relaxed font-medium">
+                      <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
                         {step.desc}
                       </p>
                     </div>

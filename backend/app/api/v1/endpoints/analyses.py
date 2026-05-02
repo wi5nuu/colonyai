@@ -261,7 +261,7 @@ async def create_analysis(
     media_batch_number: Optional[str] = Form(None),
     incubator_id: Optional[str] = Form(None),
     request: Request = None,
-    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin")),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -671,7 +671,19 @@ async def get_dashboard_stats(
         if org_id:
             base_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
         else:
-            return DashboardStatsResponse(...) # Should return empty stats
+            return DashboardStatsResponse(
+                total_analyses=0,
+                avg_time_saved_minutes=0,
+                success_rate=0.0,
+                pending_review=0,
+                neural_confidence=0.0,
+                system_latency_ms=0.0,
+                verified_count=0,
+                failed_count=0,
+                matrix_breakdown={},
+                weekly_trend=[],
+                recent_analyses=[]
+            )
     
     # Manager, Auditor, Admin see all stats in their org. Analyst sees only own stats.
     if current_user["role"] == "analyst":

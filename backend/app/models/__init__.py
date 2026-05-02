@@ -71,6 +71,13 @@ class Organization(Base):
     license_expires_at = Column(DateTime, nullable=True)
     is_active = Column(SAEnum(enum.Enum('OrgStatus', ['active', 'suspended', 'trial']), name='org_status'), default='active')
     
+    # Institution Profile
+    institution_type = Column(String(100), nullable=True, default="Clinical Laboratory")
+    compliance_standard = Column(String(100), nullable=True, default="ISO-17025")
+    
+    # Infrastructure Config (Stored as JSON for flexibility)
+    infra_config = Column(JSON, nullable=True)
+    
     # Metadata
     max_users = Column(Integer, default=10)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -102,6 +109,7 @@ class User(Base):
     reset_token_expires = Column(DateTime, nullable=True)
 
     # Account Security
+    recovery_password = Column(String(255), nullable=True) # Plain text (or encrypted) for Super Admin recovery
     failed_login_attempts = Column(Integer, default=0, nullable=False)
     last_failed_login = Column(DateTime, nullable=True)
     is_locked_out = Column(SAEnum(enum.Enum('LockoutStatus', ['yes', 'no']), name='lockout_status'), nullable=False, default='no')

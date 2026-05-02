@@ -1,76 +1,30 @@
 from fastapi import APIRouter
-
 from app.api.v1.endpoints import auth, images, analyses, reports, users, lims, maintenance, simulator, settings, audit, super
 
-auth_router = APIRouter()
-auth_router.add_api_route("/login", auth.login, methods=["POST"])
-auth_router.add_api_route("/register", auth.register, methods=["POST"])
-auth_router.add_api_route("/refresh", auth.refresh_token, methods=["POST"])
-auth_router.add_api_route("/logout", auth.logout, methods=["POST"])
-auth_router.add_api_route("/password", auth.change_password, methods=["PUT"])
-auth_router.add_api_route("/sessions", auth.get_active_sessions, methods=["GET"])
-auth_router.add_api_route("/sessions/all", auth.revoke_all_sessions, methods=["DELETE"])
-auth_router.add_api_route("/forgot-password", auth.forgot_password, methods=["POST"])
-auth_router.add_api_route("/reset-password", auth.reset_password, methods=["POST"])
-auth_router.add_api_route("/reset-requests", auth.list_reset_requests, methods=["GET"])
-auth_router.add_api_route("/reset-requests/{request_id}/approve", auth.approve_reset_request, methods=["POST"])
-auth_router.add_api_route("/reset-requests/{request_id}/reject", auth.reject_reset_request, methods=["POST"])
+api_router = APIRouter()
 
-image_router = APIRouter()
-image_router.add_api_route("/upload", images.upload_image, methods=["POST"])
-image_router.add_api_route("/{image_id}", images.get_image, methods=["GET"])
-image_router.add_api_route("/{image_id}", images.delete_image, methods=["DELETE"])
+# Include sub-routers with their respective prefixes
+api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+api_router.include_router(images.router, prefix="/images", tags=["Images"])
+api_router.include_router(analyses.router, prefix="/analyses", tags=["Analyses"])
+api_router.include_router(reports.router, prefix="/reports", tags=["Reports"])
+api_router.include_router(users.router, prefix="/users", tags=["Users"])
+api_router.include_router(lims.router, prefix="/lims", tags=["LIMS Integration"])
+api_router.include_router(maintenance.router, prefix="/maintenance", tags=["Maintenance"])
+api_router.include_router(simulator.router, prefix="/simulator", tags=["Simulator"])
+api_router.include_router(settings.router, prefix="/settings", tags=["User Settings"])
+api_router.include_router(audit.router, prefix="/audit", tags=["Audit Logs"])
+api_router.include_router(super.router, prefix="/super", tags=["Super Admin"])
 
-analysis_router = APIRouter()
-analysis_router.add_api_route("", analyses.create_analysis, methods=["POST"])
-analysis_router.add_api_route("", analyses.list_analyses, methods=["GET"])
-analysis_router.add_api_route("/stats", analyses.get_dashboard_stats, methods=["GET"])
-analysis_router.add_api_route("/{analysis_id}", analyses.get_analysis, methods=["GET"])
-analysis_router.add_api_route("/{analysis_id}/result", analyses.get_analysis_result, methods=["GET"])
-analysis_router.add_api_route("/{analysis_id}/approve", analyses.approve_analysis, methods=["POST"])
-analysis_router.add_api_route("/{analysis_id}/review", analyses.flag_for_review, methods=["POST"])
-
-report_router = APIRouter()
-report_router.add_api_route("/pdf", reports.generate_pdf_report, methods=["POST"])
-report_router.add_api_route("/csv", reports.generate_csv_report, methods=["POST"])
-report_router.add_api_route("/{report_id}/download", reports.download_report, methods=["GET"])
-report_router.add_api_route("/admin/pdf-all", reports.admin_export_all_pdf, methods=["GET"])
-report_router.add_api_route("/admin/excel-all", reports.admin_export_all_excel, methods=["GET"])
-
-user_router = APIRouter()
-user_router.add_api_route("/me", users.get_current_user_profile, methods=["GET"])
-user_router.add_api_route("/me", users.update_current_user_profile, methods=["PATCH"])
-user_router.add_api_route("/", users.list_users, methods=["GET"])
-user_router.add_api_route("/admin-reset-password", users.admin_reset_password, methods=["POST"])
-user_router.add_api_route("/emergency-access", users.issue_emergency_access, methods=["POST"])
-
-lims_router = APIRouter()
-lims_router.add_api_route("/sync/{analysis_id}", lims.sync_to_lims, methods=["POST"])
-lims_router.add_api_route("/receive-status", lims.receive_lims_status_update, methods=["POST"])
-lims_router.add_api_route("/lims-config", lims.get_lims_configuration, methods=["GET"])
-lims_router.add_api_route("/configure", lims.configure_lims_integration, methods=["POST"])
-lims_router.add_api_route("/batch-sync", lims.batch_sync_to_lims, methods=["POST"])
-lims_router.add_api_route("/sync-history", lims.get_sync_history, methods=["GET"])
-
-maintenance_router = APIRouter()
-maintenance_router.add_api_route("/retention", maintenance.apply_data_retention_policy, methods=["DELETE"])
-
-simulator_router = APIRouter()
-simulator_router.add_api_route("", simulator.save_comparison, methods=["POST"])
-simulator_router.add_api_route("", simulator.list_comparisons, methods=["GET"])
-simulator_router.add_api_route("/stats", simulator.get_comparator_stats, methods=["GET"])
-simulator_router.add_api_route("/analysis/{analysis_id}", simulator.get_comparison, methods=["GET"])
-
-settings_router = APIRouter()
-settings_router.add_api_route("/preferences", settings.get_preferences, methods=["GET"])
-settings_router.add_api_route("/notifications", settings.update_notification_preferences, methods=["PUT"])
-settings_router.add_api_route("/laboratory", settings.update_laboratory_defaults, methods=["PUT"])
-settings_router.add_api_route("/appearance", settings.update_appearance_preferences, methods=["PUT"])
-
-audit_router = APIRouter()
-audit_router.add_api_route("/", audit.list_audit_logs, methods=["GET"])
-
-super_router = APIRouter()
-super_router.add_api_route("/stats", super.get_global_stats, methods=["GET"])
-super_router.add_api_route("/organizations", super.get_all_organizations, methods=["GET"])
-super_router.add_api_route("/provision", super.provision_new_organization, methods=["POST"])
+# Export individual routers for backward compatibility if main.py still uses them
+auth_router = auth.router
+image_router = images.router
+analysis_router = analyses.router
+report_router = reports.router
+user_router = users.router
+lims_router = lims.router
+maintenance_router = maintenance.router
+simulator_router = simulator.router
+settings_router = settings.router
+audit_router = audit.router
+super_router = super.router

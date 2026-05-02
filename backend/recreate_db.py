@@ -6,7 +6,7 @@ from pathlib import Path
 # Setup path
 backend_path = Path(__file__).parent.resolve()
 sys.path.append(str(backend_path))
-db_file = backend_path / "colony.db"
+db_file = backend_path / "colonyai.db"
 
 async def recreate_database():
     print("--- ColonyAI Master Database Purge & Rebuild ---")

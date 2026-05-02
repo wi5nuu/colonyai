@@ -108,10 +108,15 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
         from app.models import Organization
         result = await db.execute(select(Organization).where(Organization.id == user.organization_id))
         org = result.scalar_one_or_none()
-        if org and org.is_active != 'active':
+        
+        # Ultra-robust status check
+        raw_status = str(org.is_active.value if hasattr(org.is_active, 'value') else org.is_active).lower()
+        
+        # If status is NOT in any of the known active formats, then deny
+        if org and raw_status not in ['active', '1', 'orgstatus.active', 'true', 'none']:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Organization access suspended. Reason: {org.is_active}. Contact Global Nexus Support."
+                detail=f"Organization access suspended. Status: {raw_status}. Hubungi Global Support."
             )
 
     # ── Check Account Lockout ──

@@ -38,6 +38,10 @@ import { reportsApi } from '@/lib/reports-api'
 import { Analysis, DetectionClass } from '@/lib/types'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/auth-store'
+import { 
+  DocumentationSidebar, 
+  DocumentationToggle 
+} from '@/components/DocumentationSidebar'
 
 // 1. TERMINOLOGY: Use Proposal Terms for Consistency
 const CLASS_LABELS: Record<DetectionClass, string> = {
@@ -91,6 +95,7 @@ export default function ResultsPage() {
   const [showAnnotations, setShowAnnotations] = useState(true)
   const [filterClass, setFilterClass] = useState<DetectionClass | null>(null)
   const [viewMode, setViewMode] = useState<'audit' | 'certificate'>('audit')
+  const [showDocs, setShowDocs] = useState(true)
 
   useEffect(() => {
     const loadAnalysis = async () => {
@@ -153,31 +158,42 @@ export default function ResultsPage() {
   const statusInfo = STATUS_COLORS[analysis.status] || STATUS_COLORS.pending
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-slate-100 mb-8 sm:mb-10">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard/history" className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-all shadow-sm group">
-            <ArrowLeft className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
-          </Link>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">Intelligence Audit</h1>
-              <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm ${
-                analysis.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'
-              }`}>
-                {statusInfo.label}
-              </span>
-            </div>
-            <p className="text-[10px] text-slate-400 mt-1 font-black uppercase tracking-[0.3em] flex items-center gap-3">
-              <span>Sample: <span className="text-slate-900">{analysis.sample_id}</span></span>
-              <span className="w-1 h-1 rounded-full bg-slate-200" />
-              <span>Protocol: <span className="text-slate-900">{analysis.media_type}</span></span>
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
+      <div className="flex relative min-h-[calc(100vh-200px)]">
+        {/* Main Content Area */}
+        <div className={`flex-1 transition-all duration-300 ${showDocs ? 'lg:mr-[350px]' : ''}`}>
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-8 py-0 sm:py-0">
+            {/* Header */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-slate-100 mb-8 sm:mb-10">
+              <div className="flex items-center gap-4">
+                <Link href="/dashboard/history" className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-all shadow-sm group">
+                  <ArrowLeft className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
+                </Link>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">Intelligence Audit</h1>
+                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm ${
+                      analysis.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'
+                    }`}>
+                      {statusInfo.label}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1 font-black uppercase tracking-[0.3em] flex items-center gap-3">
+                    <span>Sample: <span className="text-slate-900">{analysis.sample_id}</span></span>
+                    <span className="w-1 h-1 rounded-full bg-slate-200" />
+                    <span>Protocol: <span className="text-slate-900">{analysis.media_type}</span></span>
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="hidden lg:block">
+                  <DocumentationToggle
+                    showDocs={showDocs}
+                    setShowDocs={setShowDocs}
+                    text="Protokol Audit"
+                  />
+                </div>
+                <div className="flex bg-slate-50 p-1.5 rounded-xl border border-slate-200">
             <button 
               onClick={() => setViewMode('audit')}
               className={`px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'audit' ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/20' : 'text-slate-400 hover:text-slate-900'}`}
@@ -709,6 +725,73 @@ export default function ResultsPage() {
            </div>
         </div>
       )}
+          </div>
+        </div>
+      </div>
+
+      {/* Documentation Sidebar */}
+      <div className="hidden lg:block">
+        <DocumentationSidebar
+          showDocs={showDocs}
+          setShowDocs={setShowDocs}
+          directory="Post-Analysis Audit"
+          title="Interpretasi Hasil"
+          description="Panduan audit teknis untuk validasi deteksi saraf dan kepatuhan ISO-17025."
+          rawText={`INTERPRETASI HASIL AUDIT COLONYAI
+====================================
+
+1. NEURAL MAPPING LAYER
+Layer ini menampilkan visualisasi deteksi objek biologis. Gunakan toggle 'Annotations' untuk melihat kotak pembatas (Bounding Box) yang dihasilkan oleh AI.
+
+2. SPECTRAL DISTRIBUTION
+- Verified: Koloni yang diakui sebagai unit pembentuk koloni (CFU).
+- Filtered: Artefak (gelembung, debu, retakan) yang ditolak oleh sistem saraf untuk mencegah False Positive.
+
+3. KEPATUHAN ISO-17025 (METRIK GUM)
+- Uncertainty (U): Nilai ketidakpastian yang dihitung berdasarkan protokol GUM (Guide to the Expression of Uncertainty in Measurement).
+- Confidence Score: Tingkat kepercayaan model AI terhadap seluruh deteksi pada spesimen ini.
+
+4. VERIFIKASI AKHIR
+Manager atau Admin wajib menekan tombol 'Verify Audit' setelah meninjau keakuratan deteksi untuk melegitimasi laporan resmi.
+
+STATUS: AUDIT PENDING VERIFICATION
+MESIN: YOLOv8 SENSITIVE NODE`}
+        >
+          <section className="space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">01</span>
+              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Overview</h2>
+            </div>
+            <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+              Halaman Intelligence Audit menyajikan bukti teknis mendalam atas proses deteksi saraf. Auditor harus memastikan tidak ada koloni yang terlewat atau artefak yang salah diklasifikasikan.
+            </p>
+          </section>
+
+          <section className="space-y-3 pt-2">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">02</span>
+              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Protokol Audit</h2>
+            </div>
+            <div className="space-y-3 ml-0.5">
+              {[
+                { id: '1', title: 'Neural Mapping', desc: 'Tinjau kotak pembatas pada gambar. Klik objek untuk melihat detail skor kepercayaan individual.' },
+                { id: '2', title: 'Spectral Distribution', desc: 'Bandingkan jumlah Verified vs Filtered untuk memastikan integritas data biologis.' },
+                { id: '3', title: 'ISO Metrics', desc: 'Periksa nilai Uncertainty (U). Nilai tinggi mungkin memerlukan pengujian ulang spesimen.' }
+              ].map((step) => (
+                <div key={step.id} className="flex gap-2.5 group">
+                   <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      {step.id}
+                   </span>
+                   <div className="space-y-0.5">
+                      <h4 className="text-[10px] font-bold text-slate-900">{step.title}</h4>
+                      <p className="text-[9px] text-slate-500 leading-relaxed font-medium">{step.desc}</p>
+                   </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </DocumentationSidebar>
+      </div>
     </div>
   )
 }

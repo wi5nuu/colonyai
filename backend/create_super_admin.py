@@ -16,8 +16,8 @@ from sqlalchemy import select, text
 async def setup_super_admin():
     print("--- ColonyAI Super Admin Provisioning (Multi-Tenant) ---")
     
-    email = "master@colonyai.diag"
-    password = "SuperAdmin2026!"
+    email = os.getenv("SUPER_ADMIN_EMAIL", "master@colonyai.diag")
+    password = os.getenv("SUPER_ADMIN_PASSWORD", "SuperAdmin2026!")
     
     async with AsyncSessionLocal() as session:
         try:

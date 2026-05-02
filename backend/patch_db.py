@@ -12,12 +12,18 @@ def patch_db():
     cursor = conn.cursor()
     
     try:
-        # 1. Add is_active column to users table
+        # 1. Add columns to users table
         try:
             cursor.execute("ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1")
             print("Successfully added 'is_active' column to users table.")
         except sqlite3.OperationalError:
             print("Column 'is_active' already exists or users table missing.")
+
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN recovery_password VARCHAR(255)")
+            print("Successfully added 'recovery_password' column to users table.")
+        except sqlite3.OperationalError:
+            print("Column 'recovery_password' already exists.")
 
         # 2. Create notifications table
         cursor.execute("""
@@ -57,6 +63,21 @@ def patch_db():
         """)
         print("Ensured 'password_reset_requests' table exists.")
         
+        # 4. Patch organizations table for SaaS onboarding
+        org_columns = [
+            ("institution_type", "VARCHAR(100) DEFAULT 'Clinical Laboratory'"),
+            ("compliance_standard", "VARCHAR(100) DEFAULT 'ISO-17025'"),
+            ("infra_config", "TEXT"), # JSON in SQLite is TEXT
+            ("max_users", "INTEGER DEFAULT 10")
+        ]
+        
+        for col_name, col_type in org_columns:
+            try:
+                cursor.execute(f"ALTER TABLE organizations ADD COLUMN {col_name} {col_type}")
+                print(f"Successfully added '{col_name}' column to organizations table.")
+            except sqlite3.OperationalError:
+                print(f"Column '{col_name}' already exists in organizations table.")
+
         conn.commit()
     except Exception as e:
         print(f"Error during patching: {e}")

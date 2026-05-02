@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     # Initial Admin Seed
     INITIAL_ADMIN_EMAIL: str = "admin@colonyai.local"
     INITIAL_ADMIN_PASSWORD: str = "admin_secure_placeholder"
+    SEED_USERS_PASSWORD: str = os.getenv("SEED_USERS_PASSWORD", "ColonyAI2026!")
 
     # FIX QA-001: JWT secrets generated dynamically if not set
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY") or secrets.token_urlsafe(32)

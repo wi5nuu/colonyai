@@ -135,43 +135,46 @@ export default function UploadPage() {
         <div
           className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
         >
-          <div className="max-w-[1500px] mx-auto px-2 py-2 sm:px-8 sm:py-8">
+          <div className="max-w-[1500px] mx-auto px-1 sm:px-2 py-0 sm:py-0">
             {/* Page Header */}
-            <div className="flex flex-row items-center justify-between gap-2 pb-2 sm:pb-6 border-b border-slate-100 mb-3 sm:mb-10">
-              <div className="flex items-center gap-1.5 sm:gap-3">
-                <div className="w-5 h-5 sm:w-10 sm:h-10 bg-slate-900 rounded-md sm:rounded-xl shadow-xl flex items-center justify-center flex-shrink-0">
-                  <UploadIcon className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-primary" />
+            <div className="flex flex-row items-center justify-between gap-1 pb-1 border-b border-slate-100 mb-2">
+              <div className="flex items-center gap-1.5">
+                <div className="w-5 h-5 bg-slate-50 border border-slate-200 rounded-md shadow-sm flex items-center justify-center flex-shrink-0">
+                  <UploadIcon className="w-2.5 h-2.5 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-[11px] sm:text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">
-                    {t("upload.title")}
+                  <h1 className="text-[10px] sm:text-lg font-bold text-slate-900 tracking-tight uppercase leading-none">
+                    Pemasukan Data Kecerdasan
                   </h1>
-                  <p className="text-[8px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.15em] sm:tracking-[0.3em] mt-0.5 hidden sm:block">
-                    {t("upload.subtitle")}
+                  <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-0.5 hidden sm:block">
+                    Pemrosesan Saraf Spesimen Baru // Kepatuhan ISO-17025
                   </p>
                 </div>
               </div>
-              <div className="px-2 py-1 sm:px-4 sm:py-2 bg-primary/10 border border-primary/20 rounded-md sm:rounded-xl flex-shrink-0">
-                <span className="text-[7px] sm:text-xs font-black text-primary uppercase tracking-wider flex items-center gap-1">
-                  <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-                  Awaiting Input
-                </span>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <DocumentationToggle showDocs={showDocs} setShowDocs={setShowDocs} />
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-white border border-slate-200 rounded-md shadow-sm">
+                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                  <span className="text-[8px] sm:text-[10px] font-black text-slate-900 uppercase tracking-widest leading-none">
+                    Awaiting Input
+                  </span>
+                </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-8 items-start">
               {/* Left: Image Upload */}
-              <div className="bg-white border border-slate-200/60 flex flex-col p-3 sm:p-8 rounded-xl sm:rounded-2xl min-h-[220px] sm:min-h-[550px] shadow-sm">
-                <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-8">
-                  <div className="w-7 h-7 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10">
-                    <ImageIcon className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
+              <div className="bg-white border border-slate-200/60 flex flex-col p-3 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm">
+                <div className="flex items-center gap-2 sm:gap-4 mb-3">
+                  <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg bg-primary/5 flex items-center justify-center border border-primary/10">
+                    <ImageIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
                   <div>
-                    <h2 className="text-[10px] sm:text-[14px] font-black text-slate-900 uppercase tracking-widest">
-                      {t("upload.plateImage")}
+                    <h2 className="text-[9px] sm:text-[11px] font-black text-slate-900 uppercase tracking-widest">
+                      Gambar Cawan
                     </h2>
-                    <p className="text-[9px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5 sm:mt-1">
-                      {t("upload.imageRules")}
+                    <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 sm:mt-1">
+                      PNG, JPG maksimal 10MB
                     </p>
                   </div>
                 </div>
@@ -227,12 +230,12 @@ export default function UploadPage() {
                         <UploadIcon className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
                       </div>
                       <label htmlFor="file-upload" className="cursor-pointer">
-                        <span className="text-[10px] sm:text-[14px] font-black text-primary hover:text-primary/80 transition-colors uppercase tracking-widest">
-                          {t("upload.clickToUpload")}
+                        <span className="text-[9px] sm:text-[11px] font-black text-primary hover:text-primary/80 transition-colors uppercase tracking-widest">
+                          Klik untuk mengunggah
                         </span>
-                        <span className="text-[10px] sm:text-[14px] text-slate-400 font-black uppercase tracking-widest">
+                        <span className="text-[9px] sm:text-[11px] text-slate-400 font-black uppercase tracking-widest">
                           {" "}
-                          {t("upload.dragAndDrop")}
+                          atau seret dan lepas
                         </span>
                         <input
                           id="file-upload"
@@ -243,8 +246,8 @@ export default function UploadPage() {
                           onChange={handleChange}
                         />
                       </label>
-                      <p className="text-xs text-slate-400 mt-4 font-black uppercase tracking-[0.2em]">
-                        {t("upload.isoPreferred")}
+                      <p className="text-[8px] text-slate-400 mt-2 font-black uppercase tracking-[0.2em]">
+                        Diutamakan gambar sesuai ISO
                       </p>
                     </div>
                   )}
@@ -252,11 +255,11 @@ export default function UploadPage() {
 
                 {/* ISO Tip */}
                 <div className="mt-2 sm:mt-8 flex items-start gap-2 sm:gap-4 p-2 sm:p-5 bg-blue-50/50 border border-blue-100 rounded-xl sm:rounded-2xl">
-                  <div className="p-1 sm:p-2 bg-blue-500 rounded-lg sm:rounded-xl flex-shrink-0 shadow-lg shadow-blue-500/20">
-                    <Info className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                  <div className="p-1 sm:p-2 bg-blue-100 rounded-lg sm:rounded-xl flex-shrink-0 border border-blue-200">
+                    <Info className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
                   </div>
-                  <p className="text-[9px] sm:text-[11px] text-blue-700 font-bold leading-relaxed uppercase tracking-tight sm:tracking-widest">
-                    {t("upload.isoAdvisory")}
+                  <p className="text-[8px] sm:text-[9px] text-blue-700 font-bold leading-relaxed uppercase tracking-tight sm:tracking-widest">
+                    SARAN ISO 17025: Ambil gambar cawan dengan pencahayaan LED merata pada sudut 45° untuk deteksi saraf optimal.
                   </p>
                 </div>
               </div>
@@ -268,30 +271,29 @@ export default function UploadPage() {
                     <FlaskConical className="h-4 w-4 sm:h-6 sm:w-6 text-slate-400" />
                   </div>
                   <div>
-                    <h2 className="text-[10px] sm:text-[14px] font-black text-slate-900 uppercase tracking-widest">
-                      {t("upload.biologicalProtocol")}
+                    <h2 className="text-[9px] sm:text-[11px] font-black text-slate-900 uppercase tracking-widest">
+                      Protokol Biologis
                     </h2>
-                    <p className="text-[9px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5 sm:mt-1">
-                      {t("upload.parametersConfig")}
+                    <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 sm:mt-1">
+                      Konfigurasi Parameter
                     </p>
                   </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-8">
+                <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-4">
                   {/* Sample ID */}
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <label
                       htmlFor="sampleId"
-                      className="text-[8px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
+                      className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
                     >
-                      {t("upload.specimenIdentifier")}{" "}
-                      <span className="text-rose-500">*</span>
+                      Pengidentifikasi Spesimen *
                     </label>
                     <input
                       type="text"
                       id="sampleId"
                       required
-                      className="w-full px-3 py-2 sm:px-5 sm:py-3 text-[11px] sm:text-[13px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-300 shadow-sm"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-300 shadow-sm"
                       value={formData.sampleId}
                       onChange={(e) =>
                         setFormData({ ...formData, sampleId: e.target.value })
@@ -300,19 +302,18 @@ export default function UploadPage() {
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <label
                       htmlFor="mediaType"
-                      className="text-[8px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
+                      className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
                     >
-                      {t("upload.agarMediaMatrix")}{" "}
-                      <span className="text-rose-500">*</span>
+                      Matriks Media Agar *
                     </label>
                     <div className="relative">
                       <select
                         id="mediaType"
                         required
-                        className="w-full px-3 py-2 sm:px-5 sm:py-3 text-[11px] sm:text-[13px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
                         value={formData.mediaType}
                         onChange={(e) =>
                           setFormData({
@@ -344,19 +345,18 @@ export default function UploadPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 sm:gap-6">
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <label
                         htmlFor="dilutionFactor"
-                        className="text-[8px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
+                        className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
                       >
-                        {t("upload.dilutionFactor")}{" "}
-                        <span className="text-rose-500">*</span>
+                        Pengenceran (10⁻ˣ) *
                       </label>
                       <div className="relative">
                         <select
                           id="dilutionFactor"
                           required
-                          className="w-full px-3 py-2 sm:px-5 sm:py-3 text-[11px] sm:text-[13px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
+                          className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
                           value={formData.dilutionFactor}
                           onChange={(e) =>
                             setFormData({
@@ -379,13 +379,12 @@ export default function UploadPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <label
                         htmlFor="platedVolume"
-                        className="text-[8px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
+                        className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
                       >
-                        {t("upload.volume")}{" "}
-                        <span className="text-rose-500">*</span>
+                        Volume (ml) *
                       </label>
                       <input
                         type="number"
@@ -393,7 +392,7 @@ export default function UploadPage() {
                         required
                         step="0.1"
                         min="0.1"
-                        className="w-full px-3 py-2 sm:px-5 sm:py-3 text-[11px] sm:text-[13px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.platedVolume}
                         onChange={(e) =>
                           setFormData({
@@ -407,16 +406,16 @@ export default function UploadPage() {
 
                   {/* ISO Compliance: Incubation & Method */}
                   <div className="grid grid-cols-2 gap-2 sm:gap-6 pt-2">
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <label
-                        className="text-[8px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
+                        className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
                       >
                         Incubation Temp (°C)
                       </label>
                       <input
                         type="number"
                         step="0.1"
-                        className="w-full px-3 py-2 sm:px-5 sm:py-3 text-[11px] sm:text-[13px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.incubationTemp}
                         onChange={(e) =>
                           setFormData({
@@ -426,15 +425,15 @@ export default function UploadPage() {
                         }
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <label
-                        className="text-[8px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
+                        className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
                       >
                         Time (Hours)
                       </label>
                       <input
                         type="number"
-                        className="w-full px-3 py-2 sm:px-5 sm:py-3 text-[11px] sm:text-[13px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.incubationTime}
                         onChange={(e) =>
                           setFormData({
@@ -446,15 +445,15 @@ export default function UploadPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <label
-                      className="text-[8px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
+                      className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
                     >
                       Method Standard (ISO)
                     </label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 sm:px-5 sm:py-3 text-[11px] sm:text-[13px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                       value={formData.methodStandard}
                       onChange={(e) =>
                         setFormData({
@@ -469,14 +468,14 @@ export default function UploadPage() {
                   <div className="grid grid-cols-2 gap-2 sm:gap-6 pt-2">
                     <div className="space-y-2">
                       <label
-                        className="text-[8px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
+                        className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
                       >
                         Media Batch/Lot #
                       </label>
                       <input
                         type="text"
                         placeholder="e.g., LOT-2026-X"
-                        className="w-full px-3 py-2 sm:px-5 sm:py-3 text-[11px] sm:text-[13px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.mediaBatchNumber}
                         onChange={(e) =>
                           setFormData({
@@ -488,14 +487,14 @@ export default function UploadPage() {
                     </div>
                     <div className="space-y-2">
                       <label
-                        className="text-[8px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
+                        className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
                       >
                         Incubator ID
                       </label>
                       <input
                         type="text"
                         placeholder="e.g., INC-01"
-                        className="w-full px-3 py-2 sm:px-5 sm:py-3 text-[11px] sm:text-[13px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.incubatorId}
                         onChange={(e) =>
                           setFormData({
@@ -508,21 +507,21 @@ export default function UploadPage() {
                   </div>
 
                   {/* Submit */}
-                  <div className="pt-2 sm:pt-8 flex justify-center sm:block">
+                  <div className="pt-1 sm:pt-4 flex justify-center sm:block">
                     <button
                       type="submit"
                       disabled={!selectedFile || isSubmitting}
-                      className="w-auto sm:w-full min-w-[180px] sm:min-w-0 bg-slate-900 hover:bg-primary text-white px-4 sm:px-0 py-2 sm:py-4 text-[8px] sm:text-[11px] font-black uppercase tracking-[0.12em] sm:tracking-[0.3em] flex items-center justify-center gap-1.5 sm:gap-4 rounded-lg sm:rounded-xl shadow-lg sm:shadow-2xl shadow-slate-900/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group mx-auto"
+                      className="w-auto sm:w-full min-w-[150px] sm:min-w-0 bg-primary text-slate-900 px-3 py-1.5 sm:py-2.5 text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] flex items-center justify-center gap-1.5 sm:gap-3 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group mx-auto"
                     >
                       {isSubmitting ? (
                         <>
                           <Loader2 className="h-3 w-3 sm:h-5 sm:w-5 animate-spin" />
-                          {t("upload.analyzingSpecimen")}
+                          Menganalisis Spesimen...
                         </>
                       ) : (
                         <>
-                          <TrendingUp className="h-3 w-3 sm:h-5 sm:w-5 text-primary group-hover:text-white transition-colors" />
-                          {t("upload.initializeAiAudit")}
+                          <TrendingUp className="h-3 w-3 sm:h-5 sm:w-5 text-slate-900 transition-colors" />
+                          Inisialisasi Audit AI
                         </>
                       )}
                     </button>
@@ -539,20 +538,57 @@ export default function UploadPage() {
             showDocs={showDocs}
             setShowDocs={setShowDocs}
             directory="Neural Protocol"
-            title={t("upload.docsTitle")}
-            description={t("upload.docsDescription")}
+            title="Protokol Saraf ColonyAI"
+            description="Prosedur Operasional Standar (SOP) untuk penerimaan spesimen laboratorium dan urutan audit saraf."
+            rawText={`PROTOKOL SARAF COLONYAI - SOP ISO-17025
+==========================================
+
+1. OVERVIEW: INTELLIGENCE INTAKE
+Gerbang utama pemrosesan spesimen biologis menggunakan mesin saraf ColonyAI. Dirancang untuk akurasi tinggi ISO-17025.
+
+2. TATA CARA PEMASUKAN GAMBAR
+- Klik area unggah atau seret file PNG/JPG (Max 10MB).
+- Pastikan cawan petri berada di tengah frame.
+- Pencahayaan LED 45 derajat sangat disarankan untuk deteksi koloni yang akurat.
+- Resolusi minimal 300 DPI.
+
+3. KONFIGURASI PARAMETER (PROTOKOL BIOLOGIS)
+A. PENGIDENTIFIKASI SPESIMEN: Kunci utama pelacakan (Traceability). Masukkan kode unik laboratorium (e.g., ISO-PCA-B2026-001).
+B. MATRIKS MEDIA AGAR: Menentukan target mikroba. 
+   - PCA: Total mikroba umum.
+   - VRBA/BGBB: Kelompok Coliform.
+   - R2A: Bakteri air/stres.
+   - TSA/MAC: Pertumbuhan umum/Gram-negatif.
+C. FAKTOR PENGENCERAN: 10^-1 sampai 10^-6. Menjamin jumlah koloni 30-300 CFU untuk validitas statistik.
+D. VOLUME (ML): Volume sampel yang diplating.
+E. PARAMETER INKUBASI: 
+   - Incubation Temp: Suhu ideal pertumbuhan mikroba (misal: 35°C). Cara isi: Masukkan angka suhu operasional inkubator.
+   - Time (Hours): Durasi inkubasi (misal: 48 jam). Cara isi: Hitung total waktu sejak spesimen masuk hingga pembacaan.
+F. KEPATUHAN & TRACEABILITY:
+   - Method Standard (ISO): Referensi metode resmi (e.g., ISO 4833-1:2013). Cara isi: Kode standar ISO yang digunakan sebagai acuan.
+   - Media Batch/Lot #: Nomor produksi media agar. Cara isi: Lihat pada label kemasan media. Penting untuk validasi kualitas media.
+   - Incubator ID: Identitas mesin inkubator (e.g., INC-001). Cara isi: Masukkan ID alat untuk audit distribusi suhu.
+
+4. NEURAL DETECTION CLASSES
+- Common Bacteria: Koloni standar.
+- Yeast (Ragi): Cembung & opak.
+- Mold (Kapang): Berfilamen.
+- Spreader: Pertumbuhan meluas.
+- Artifacts: Partikel non-biologis diabaikan AI.
+
+STATUS: GA (General Availability)
+PRESISI: 99.8% pada PCA Standard.`}
           >
-            {/* 1. Overview */}
-            <section className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+            <section className="space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   01
                 </span>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
                   Overview: Intelligence Intake
                 </h2>
               </div>
-              <p className="text-sm text-slate-600 leading-relaxed bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
                 Sistem Intelligence Intake adalah gerbang utama pemrosesan
                 spesimen biologis menggunakan mesin saraf ColonyAI. Protokol ini
                 dirancang untuk memenuhi standar akurasi tinggi yang
@@ -560,69 +596,75 @@ export default function UploadPage() {
               </p>
             </section>
 
-            {/* 2. Tata Cara Penggunaan */}
-            <section className="space-y-6">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+            <section className="space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   02
                 </span>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                  Tata Cara Penggunaan
+                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+                  Protokol Konfigurasi Detail
                 </h2>
               </div>
-              <div className="space-y-6 ml-1">
+              <div className="space-y-4 ml-0.5">
                 {[
                   {
                     id: "1",
-                    title: "Identifikasi Spesimen",
-                    desc: "Masukkan kode unik pada kolom Specimen Identifier (contoh: ISO-PCA-B2026-001) untuk pelacakan data.",
+                    title: "Pengidentifikasi Spesimen (Traceability)",
+                    desc: "Alasan: Merupakan kunci utama pelacakan data (Data Integrity) sesuai ISO-17025. Cara: Masukkan kode unik laboratorium. Jika tidak ada, sistem akan menolak sinkronisasi audit.",
                   },
                   {
                     id: "2",
-                    title: "Pilih Media Matrix",
-                    desc: "Tentukan jenis media agar yang digunakan pada menu drop-down. Setiap media memiliki fungsi spesifik:",
+                    title: "Matriks Media Agar (Selectivity)",
+                    desc: "Alasan: Menentukan target mikroba yang dianalisis oleh AI. Jenis:",
                     list: [
-                      "PCA (Plate Count Agar): Total mikroba hidup (TPC).",
-                      "VRBA (Violet Red Bile Agar): Deteksi Coliform/Enterobacteriaceae.",
-                      "BGBB: Konfirmasi gas pada kelompok Coliform.",
-                      "R2A Agar: Bakteri heterotrofik sampel air.",
-                      "TSA (Tryptic Soy Agar): Pertumbuhan mikroba umum.",
-                      "MacConkey (MAC): Isolasi bakteri Gram-negatif.",
+                      "PCA: Untuk Total Plate Count (TPC) umum.",
+                      "VRBA/BGBB: Spesifik untuk kelompok Coliform/E.coli.",
+                      "R2A: Khusus bakteri stres/heterotrofik pada air.",
+                      "TSA/MAC: Untuk pertumbuhan umum atau selektif Gram-negatif.",
                     ],
                   },
                   {
                     id: "3",
-                    title: "Konfigurasi Dilusi",
-                    desc: "Pilih faktor pengenceran yang sesuai (contoh: 10 pangkat minus 3) untuk perhitungan otomatis.",
+                    title: "Faktor Pengenceran (Dilution)",
+                    desc: "Alasan: Memastikan jumlah koloni berada pada rentang hitung (30-300 CFU). Cara: Pilih tingkat dilusi sesuai SOP preparasi sampel (10⁻¹ hingga 10⁻⁶).",
                   },
                   {
                     id: "4",
-                    title: "Atur Volume Sampel",
-                    desc: "Input volume sampel dalam satuan ml yang telah ditanam pada media agar.",
+                    title: "Parameter Inkubasi & Volume",
+                    desc: "Alasan: Kondisi lingkungan (Suhu & Waktu) menentukan kecepatan pertumbuhan saraf koloni. Volume (ml) digunakan AI sebagai pembagi hasil akhir CFU/ml atau CFU/g.",
+                    list: [
+                      "Incubation Temp: Masukkan suhu operasional (e.g. 35°C).",
+                      "Time (Hours): Total durasi spesimen dalam inkubator (e.g. 48 jam).",
+                    ],
                   },
                   {
                     id: "5",
-                    title: "Inisialisasi Audit",
-                    desc: "Klik tombol Initialize AI Audit untuk memulai proses pemindaian saraf secara real-time.",
+                    title: "Kepatuhan Audit (Batch & Method)",
+                    desc: "Alasan: Menjamin ketertelusuran penuh (Full Traceability) sesuai standar audit ISO-17025.",
+                    list: [
+                      "Method Standard: Kode referensi ISO (e.g. ISO 4833).",
+                      "Media Batch/Lot: Nomor produksi media agar untuk validasi kualitas.",
+                      "Incubator ID: Kode unit alat untuk pelacakan distribusi suhu.",
+                    ],
                   },
                 ].map((step) => (
-                  <div key={step.id} className="flex gap-4 group">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-slate-900 text-white text-[11px] font-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <div key={step.id} className="flex gap-2.5 group">
+                    <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-50 border border-slate-200 text-slate-900 text-[8px] font-bold flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                       {step.id}
                     </span>
-                    <div className="space-y-1.5">
-                      <h4 className="text-sm font-bold text-slate-900">
+                    <div className="space-y-0.5">
+                      <h4 className="text-[10px] font-bold text-slate-900">
                         {step.title}
                       </h4>
-                      <p className="text-[12px] text-slate-500 leading-relaxed font-medium">
+                      <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
                         {step.desc}
                       </p>
                       {step.list && (
-                        <ul className="mt-2 space-y-1.5 border-l-2 border-slate-100 pl-4 py-1">
+                        <ul className="mt-1 space-y-1 border-l border-slate-100 pl-2.5 py-0.5">
                           {step.list.map((item, idx) => (
                             <li
                               key={idx}
-                              className="text-[11px] text-slate-400 font-medium list-none"
+                              className="text-[8px] text-slate-400 font-medium list-none"
                             >
                               • {item}
                             </li>
@@ -635,17 +677,16 @@ export default function UploadPage() {
               </div>
             </section>
 
-            {/* 3. Image Standards */}
-            <section className="space-y-4 pt-6 border-t border-slate-100">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+            <section className="space-y-2 pt-3 border-t border-slate-100">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   03
                 </span>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
                   Image Standards
                 </h2>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {[
                   {
                     label: "Resolusi",
@@ -656,12 +697,12 @@ export default function UploadPage() {
                 ].map((item, i) => (
                   <div
                     key={i}
-                    className="flex flex-col gap-1 pb-3 border-b border-slate-50 last:border-0"
+                    className="flex flex-col gap-0.5 pb-2 border-b border-slate-50 last:border-0"
                   >
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
                       {item.label}
                     </span>
-                    <span className="text-xs font-bold text-slate-700">
+                    <span className="text-[9px] font-bold text-slate-700">
                       {item.val}
                     </span>
                   </div>
@@ -669,17 +710,16 @@ export default function UploadPage() {
               </div>
             </section>
 
-            {/* 4. Neural Detection Classes */}
-            <section className="space-y-4 pt-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+            <section className="space-y-2 pt-2">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   04
                 </span>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
                   Neural Detection Classes
                 </h2>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {[
                   {
                     name: "Common Bacteria",
@@ -694,13 +734,13 @@ export default function UploadPage() {
                   { name: "Artifacts", desc: "Partikel non-biologis diabaikan." },
                 ].map((cls, i) => (
                   <div key={i} className="group">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-slate-900" />
-                      <span className="text-xs font-black text-slate-900 uppercase tracking-tight">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <div className="w-1 h-1 rounded-full bg-slate-900" />
+                      <span className="text-[9px] font-black text-slate-900 uppercase tracking-tight">
                         {cls.name}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-500 font-medium pl-3.5">
+                    <p className="text-[8px] text-slate-500 font-medium pl-2.5">
                       {cls.desc}
                     </p>
                   </div>
@@ -708,36 +748,35 @@ export default function UploadPage() {
               </div>
             </section>
 
-            {/* Status Alerts Section */}
-            <div className="space-y-4 pt-6">
-              <div className="p-5 bg-emerald-50 border border-emerald-100 rounded-2xl flex gap-4 shadow-sm">
-                <div className="w-5 h-5 flex-shrink-0 mt-0.5">
+            <div className="space-y-3 pt-4">
+              <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl flex gap-3 shadow-sm">
+                <div className="w-4 h-4 flex-shrink-0 mt-0.5">
                   <div className="w-full h-full rounded-full bg-emerald-600 flex items-center justify-center">
-                    <TrendingUp className="w-3 h-3 text-white" />
+                    <TrendingUp className="w-2.5 h-2.5 text-white" />
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-black text-emerald-900 uppercase tracking-widest">
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-black text-emerald-900 uppercase tracking-widest">
                     Protocol Status: GA
                   </p>
-                  <p className="text-[11px] text-emerald-700 leading-relaxed font-semibold">
+                  <p className="text-[9px] text-emerald-700 leading-relaxed font-semibold">
                     Tingkat presisi saat ini mencapai 99.8 persen pada media PCA
                     standar laboratorium.
                   </p>
                 </div>
               </div>
 
-              <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl flex gap-4 shadow-xl">
-                <div className="w-5 h-5 flex-shrink-0 mt-0.5">
-                  <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
-                    <Lock className="w-3 h-3 text-white" />
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex gap-3 shadow-sm">
+                <div className="w-4 h-4 flex-shrink-0 mt-0.5">
+                  <div className="w-full h-full rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                    <Lock className="w-2.5 h-2.5 text-primary" />
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-black text-white uppercase tracking-widest">
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">
                     ColonyAI Vault
                   </p>
-                  <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                  <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
                     Seluruh data dienkripsi dan disimpan untuk kepatuhan data
                     jangka panjang sesuai ISO-17025.
                   </p>

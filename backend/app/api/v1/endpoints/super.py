@@ -21,11 +21,15 @@ class ProvisionOrgRequest(BaseModel):
     admin_email: EmailStr
     admin_full_name: str
     license_tier: str = "Standard"
+    institution_type: Optional[str] = "Clinical Laboratory"
+    compliance_standard: Optional[str] = "ISO-17025"
+    infra_config: Optional[dict] = None
 
 class OrgAdminInfo(BaseModel):
     id: str
     full_name: str
     email: str
+    recovery_password: Optional[str]
     last_active: Optional[datetime]
 
 class OrganizationDetail(BaseModel):
@@ -113,7 +117,13 @@ async def get_all_organizations(
             "analyses_count": analyses_count,
             "growth_rate": "+0%",
             "admins": [
-                {"id": str(a.id), "full_name": a.full_name, "email": a.email, "last_active": a.updated_at}
+                {
+                    "id": str(a.id), 
+                    "full_name": a.full_name, 
+                    "email": a.email, 
+                    "recovery_password": a.recovery_password,
+                    "last_active": a.updated_at
+                }
                 for a in admins
             ]
         })
@@ -143,7 +153,10 @@ async def provision_new_organization(
         location=request.location,
         license_key=license_key,
         license_expires_at=datetime.utcnow() + timedelta(days=365), # 1 year default
-        is_active='active'
+        is_active='active',
+        institution_type=request.institution_type,
+        compliance_standard=request.compliance_standard,
+        infra_config=request.infra_config
     )
     db.add(new_org)
     
@@ -157,8 +170,9 @@ async def provision_new_organization(
         email=request.admin_email,
         full_name=request.admin_full_name,
         password_hash=get_password_hash(temp_password),
+        recovery_password=temp_password, # Save for Master Admin peek
         role=UserRole.ADMIN,
-        is_active='yes' if hasattr(User, 'is_active') else None # Check if User has is_active or is_locked_out
+        is_active=True if hasattr(User, 'is_active') else None 
     )
     
     # Ensure is_locked_out is set correctly
@@ -181,7 +195,7 @@ async def provision_new_organization(
         "organization_id": str(org_id),
         "license_key": license_key,
         "admin_temp_password": temp_password,
-        "message": f"Organization '{request.name}' provisioned successfully."
+        "message": f"Organization '{request.name}' provisioned on {request.infra_config.get('node', 'Default Node')} with {request.infra_config.get('storage', '1 TB')} storage."
     }
 
 class GlobalResetPasswordRequest(BaseModel):
@@ -212,9 +226,9 @@ async def global_reset_password(
         
     # 3. Update password & Clear lockout
     target_user.password_hash = get_password_hash(request.new_password)
+    target_user.recovery_password = request.new_password # Update peekable password
     target_user.is_locked_out = 'no'
     target_user.failed_login_attempts = 0
-    target_user.locked_until = None
     
     await db.commit()
     return {"message": f"Password for {target_user.email} reset successfully by Global Nexus."}
@@ -235,8 +249,8 @@ async def toggle_org_status(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
         
-    # Toggle status
-    new_status = 'suspended' if org.is_active == 'active' else 'active'
+    current_status = org.is_active.value if hasattr(org.is_active, 'value') else str(org.is_active)
+    new_status = 'suspended' if current_status == 'active' else 'active'
     org.is_active = new_status
     
     await db.commit()

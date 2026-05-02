@@ -200,18 +200,18 @@ function ChartTooltip({ active, payload, label }: any) {
   if (!p) return null;
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-5 min-w-[200px] animate-in fade-in zoom-in-95 duration-200">
-      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 pb-3 border-b border-slate-800">
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 pb-3 border-b border-slate-800">
         {label}
       </p>
       <div className="space-y-3">
         <div className="flex justify-between items-center gap-6">
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             {t("analytics.tooltipAnalyses")}
           </span>
           <span className="text-sm font-bold text-white">{p.testCount}</span>
         </div>
         <div className="flex justify-between items-center gap-6">
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             {t("analytics.tooltipDensity")}
           </span>
           <span className="text-sm font-bold text-primary">
@@ -219,7 +219,7 @@ function ChartTooltip({ active, payload, label }: any) {
           </span>
         </div>
         <div className="flex justify-between items-center gap-6">
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             {t("analytics.tooltipSuccess")}
           </span>
           <span className="text-sm font-bold text-emerald-400">
@@ -228,7 +228,7 @@ function ChartTooltip({ active, payload, label }: any) {
         </div>
         {p.tntcCount > 0 && (
           <div className="flex justify-between items-center gap-6 pt-2 border-t border-slate-800">
-            <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest">
+            <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest">
               {t("analytics.tooltipBoundary")}
             </span>
             <span className="text-sm font-bold text-rose-500">
@@ -254,6 +254,7 @@ export default function AnalyticsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [showDocs, setShowDocs] = useState(true);
+  const [activeTab, setActiveTab] = useState(0);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -297,6 +298,10 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     fetchData();
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchData();
+    }, 30000); // 30s polling
+    return () => clearInterval(interval);
   }, [fetchData]);
 
   const filtered = useMemo(
@@ -329,7 +334,7 @@ export default function AnalyticsPage() {
   const stats = useMemo(() => {
     const total = filtered.length;
     if (total === 0)
-      return { total: 0, avgCfu: 0, passRate: 0, tntc: 0, tftc: 0 };
+      return { total: 0, avgCfu: 0, passRate: 0, tntc: 0, tftc: 0, breakdown: {} };
     const valid = filtered.filter((a) => a.status === "valid").length;
     const cfuItems = filtered.filter((a) => a.cfu_per_ml != null);
     const avgCfu =
@@ -337,12 +342,18 @@ export default function AnalyticsPage() {
         ? cfuItems.reduce((s, a) => s + (a.cfu_per_ml || 0), 0) /
           cfuItems.length
         : 0;
+    const matrixBreakdown = filtered.reduce((acc, a) => {
+      acc[a.media_type] = (acc[a.media_type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
     return {
       total,
       avgCfu: Math.round(avgCfu * 10) / 10,
       passRate: Math.round((valid / total) * 1000) / 10,
       tntc: filtered.filter((a) => a.status === "TNTC").length,
       tftc: filtered.filter((a) => a.status === "TFTC").length,
+      breakdown: matrixBreakdown
     };
   }, [filtered]);
 
@@ -411,16 +422,16 @@ export default function AnalyticsPage() {
         <div
           className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
         >
-          <div className="max-w-[1200px] mx-auto px-6 py-8 pb-20">
+          <div className="max-w-[1200px] mx-auto px-4 py-0 pt-0 pb-6">
             {/* Cloudflare-style Header */}
-            <div className="space-y-2 mb-10">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <div className="space-y-0.5 mb-4">
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                 {t("analytics.supertitle")}
               </p>
-              <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
                 {t("analytics.title")}
               </h1>
-              <p className="text-sm text-slate-500 font-medium">
+              <p className="text-[11px] text-slate-500 font-medium">
                 {t("analytics.subtitle")}
               </p>
               <div className="hidden lg:block">
@@ -439,12 +450,15 @@ export default function AnalyticsPage() {
                   {t("analytics.neuralQueriesHeader")}
                 </h2>
                 <div className="flex items-center gap-4">
-                  <button className="flex items-center gap-2 text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline">
+                  <button 
+                    onClick={() => toast.info("Generating high-resolution report...")}
+                    className="flex items-center gap-2 text-blue-600 text-[10px] font-bold uppercase tracking-widest hover:underline"
+                  >
                     {t("analytics.printReport")}
                   </button>
                   <button
                     onClick={handleExport}
-                    className="flex items-center gap-1 text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline"
+                    className="flex items-center gap-1 text-blue-600 text-[10px] font-bold uppercase tracking-widest hover:underline"
                   >
                     {t("analytics.downloadData")}{" "}
                     <ArrowRight className="w-3 h-3" />
@@ -498,7 +512,8 @@ export default function AnalyticsPage() {
                   ].map((tab, i) => (
                     <button
                       key={tab}
-                      className={`pb-2 text-[9px] sm:text-[11px] font-bold transition-all whitespace-nowrap ${i === 0 ? "text-blue-600 border-b-2 border-blue-600" : "text-slate-400 hover:text-slate-600"}`}
+                      onClick={() => setActiveTab(i)}
+                      className={`pb-2 text-[9px] sm:text-[11px] font-bold transition-all whitespace-nowrap ${activeTab === i ? "text-blue-600 border-b-2 border-blue-600" : "text-slate-400 hover:text-slate-600"}`}
                     >
                       {tab}
                     </button>
@@ -507,48 +522,39 @@ export default function AnalyticsPage() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 py-4">
                   {[
-                    {
-                      label: "PCA Matrix",
-                      val:
-                        stats.total > 1000
-                          ? `${(stats.total / 1000).toFixed(2)}k`
-                          : stats.total,
-                      color: "bg-blue-500",
-                    },
-                    {
-                      label: "VRBA Matrix",
-                      val: "1.43k",
-                      color: "bg-amber-500",
-                    },
-                    {
-                      label: "BGBB Protocol",
-                      val: "50",
-                      color: "bg-emerald-500",
-                    },
-                    { label: "R2A Analytics", val: "20", color: "bg-rose-500" },
-                    {
-                      label: "Integrity",
-                      val: "99.8%",
-                      color: "bg-emerald-400",
-                    },
-                  ].map((s, i) => (
-                    <div
-                      key={i}
-                      className="space-y-1 sm:space-y-2 border-r border-slate-100 last:border-0 pr-2 sm:pr-4"
-                    >
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <div
-                          className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${s.color}`}
-                        />
-                        <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 truncate">
-                          {s.label}
-                        </span>
+                    { label: "PCA Matrix", key: "Plate Count Agar", color: "bg-blue-500" },
+                    { label: "VRBA Matrix", key: "VRBA", color: "bg-amber-500" },
+                    { label: "BGBB Protocol", key: "BGBB", color: "bg-emerald-500" },
+                    { label: "R2A Analytics", key: "R2A", color: "bg-rose-500" },
+                    { label: "Integrity", key: "Integrity", color: "bg-emerald-400" },
+                  ].map((s, i) => {
+                    let val: string | number = 0;
+                    if (s.key === "Integrity") {
+                      val = `${stats.passRate}%`;
+                    } else {
+                      const count = stats.breakdown[s.key] || 0;
+                      val = count > 1000 ? `${(count / 1000).toFixed(1)}k` : count;
+                    }
+                    
+                    return (
+                      <div
+                        key={i}
+                        className="space-y-1 sm:space-y-2 border-r border-slate-100 last:border-0 pr-2 sm:pr-4"
+                      >
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <div
+                            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${s.color}`}
+                          />
+                          <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 truncate">
+                            {s.label}
+                          </span>
+                        </div>
+                        <p className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                          {val}
+                        </p>
                       </div>
-                      <p className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                        {s.val}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Chart Container */}
@@ -649,7 +655,7 @@ export default function AnalyticsPage() {
                 <h2 className="text-lg font-bold text-slate-900">
                   {t("analytics.intelligenceLedger")}
                 </h2>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                   {monthlySummaries.length} {t("analytics.cyclesLogged")}
                 </span>
               </div>
@@ -657,7 +663,7 @@ export default function AnalyticsPage() {
               {monthlySummaries.length === 0 ? (
                 <div className="py-24 text-center">
                   <FlaskConical className="w-16 h-16 text-slate-100 mx-auto mb-6" />
-                  <p className="text-xs font-black text-slate-300 uppercase tracking-widest">
+                  <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">
                     {t("analytics.noMonthlyArchived")}
                   </p>
                 </div>
@@ -675,7 +681,7 @@ export default function AnalyticsPage() {
                         ].map((h) => (
                           <th
                             key={h}
-                            className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                            className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest"
                           >
                             {h}
                           </th>
@@ -695,7 +701,7 @@ export default function AnalyticsPage() {
                             {row.tests}
                           </td>
                           <td className="px-8 py-6">
-                            <span className="text-[11px] font-black text-blue-600">
+                            <span className="text-[11px] font-bold text-blue-600">
                               {formatCFU(row.avgCfu)} CFU/ML
                             </span>
                           </td>
@@ -731,20 +737,38 @@ export default function AnalyticsPage() {
             showDocs={showDocs}
             setShowDocs={setShowDocs}
             directory="Neural Analytics"
-            title={t("analytics.docsTitle")}
-            description={t("analytics.docsDescription")}
+            title="Matriks Analitik"
+            description="Prosedur Operasional Standar (SOP) untuk menafsirkan kueri deteksi saraf dan tren kepatuhan historis."
+            rawText={`MATRIKS ANALITIK COLONYAI - SOP ISO-17025
+==========================================
+
+1. OVERVIEW
+Modul Analytics berfungsi sebagai pusat intelijen data ColonyAI. Ini menyajikan visualisasi dinamis atas performa laboratorium, tingkat kepatuhan ISO, dan efisiensi throughput saraf (neural throughput) secara real-time.
+
+2. KOMPONEN UTAMA
+- Query Overview: Distribusi spesimen berdasarkan protokol media spesifik (PCA, VRBA, BGBB).
+- Time-Series Chart: Visualisasi interaktif Average CFU, Total Tests, dan Pass Rate harian.
+- Query Statistics: Indikator performa sistem (QPS & Processing Time).
+- Intelligence Ledger: Agregasi data bulanan (Median Densitas & Integritas Kepatuhan).
+
+3. EXPORT PROTOCOL
+- Format Ekspor: CSV Matrix (Comma Separated Values).
+- Validitas Data: Diakui untuk Audit ISO-17025.
+- Keamanan: Audit Trail di-hash secara kriptografis.
+
+STATUS: ANALYTICS READY
+INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
           >
-            {/* 1. Overview */}
-            <section className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+            <section className="space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   01
                 </span>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
                   Overview
                 </h2>
               </div>
-              <p className="text-sm text-slate-600 leading-relaxed bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
                 Modul Analytics berfungsi sebagai pusat intelijen data ColonyAI.
                 Ini menyajikan visualisasi dinamis atas performa laboratorium,
                 tingkat kepatuhan ISO, dan efisiensi throughput saraf (neural
@@ -752,17 +776,16 @@ export default function AnalyticsPage() {
               </p>
             </section>
 
-            {/* 2. Komponen Data */}
-            <section className="space-y-6">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+            <section className="space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   02
                 </span>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
                   Komponen Utama
                 </h2>
               </div>
-              <div className="space-y-6 ml-1">
+              <div className="space-y-3 ml-0.5">
                 {[
                   {
                     id: "1",
@@ -785,15 +808,15 @@ export default function AnalyticsPage() {
                     desc: "Agregasi data historis secara bulanan (Siklus Diagnostik) yang mencatat Median Densitas dan Integritas Kepatuhan (%) analis.",
                   },
                 ].map((step) => (
-                  <div key={step.id} className="flex gap-4 group">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-slate-900 text-white text-[11px] font-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <div key={step.id} className="flex gap-2.5 group">
+                    <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                       {step.id}
                     </span>
-                    <div className="space-y-1.5">
-                      <h4 className="text-sm font-bold text-slate-900">
+                    <div className="space-y-0.5">
+                      <h4 className="text-[10px] font-bold text-slate-900">
                         {step.title}
                       </h4>
-                      <p className="text-[12px] text-slate-500 leading-relaxed font-medium">
+                      <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
                         {step.desc}
                       </p>
                     </div>
@@ -802,17 +825,16 @@ export default function AnalyticsPage() {
               </div>
             </section>
 
-            {/* 3. Export Protocol */}
-            <section className="space-y-4 pt-6 border-t border-slate-100">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+            <section className="space-y-2 pt-3 border-t border-slate-100">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   03
                 </span>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
                   Export Protocol
                 </h2>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {[
                   {
                     label: "Format Ekspor",
@@ -829,12 +851,12 @@ export default function AnalyticsPage() {
                 ].map((item, i) => (
                   <div
                     key={i}
-                    className="flex flex-col gap-1 pb-3 border-b border-slate-50 last:border-0"
+                    className="flex flex-col gap-0.5 pb-2 border-b border-slate-50 last:border-0"
                   >
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
                       {item.label}
                     </span>
-                    <span className="text-xs font-bold text-slate-700">
+                    <span className="text-[9px] font-bold text-slate-700">
                       {item.val}
                     </span>
                   </div>
@@ -842,36 +864,35 @@ export default function AnalyticsPage() {
               </div>
             </section>
 
-            {/* Status Alerts Section */}
-            <div className="space-y-4 pt-6">
-              <div className="p-5 bg-blue-50 border border-blue-100 rounded-2xl flex gap-4 shadow-sm">
-                <div className="w-5 h-5 flex-shrink-0 mt-0.5">
+            <div className="space-y-3 pt-4">
+              <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl flex gap-3 shadow-sm">
+                <div className="w-4 h-4 flex-shrink-0 mt-0.5">
                   <div className="w-full h-full rounded-full bg-blue-600 flex items-center justify-center">
-                    <BarChart3 className="w-3 h-3 text-white" />
+                    <BarChart3 className="w-2.5 h-2.5 text-white" />
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-black text-blue-900 uppercase tracking-widest">
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-black text-blue-900 uppercase tracking-widest">
                     Analytics Ready
                   </p>
-                  <p className="text-[11px] text-blue-700 leading-relaxed font-semibold">
+                  <p className="text-[9px] text-blue-700 leading-relaxed font-semibold">
                     Sistem pelaporan ini dapat disinkronisasi ke berbagai
                     platform Business Intelligence (BI) eksternal.
                   </p>
                 </div>
               </div>
 
-              <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl flex gap-4 shadow-xl">
-                <div className="w-5 h-5 flex-shrink-0 mt-0.5">
+              <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl flex gap-3 shadow-xl">
+                <div className="w-4 h-4 flex-shrink-0 mt-0.5">
                   <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
-                    <Lock className="w-3 h-3 text-white" />
+                    <Lock className="w-2.5 h-2.5 text-white" />
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-black text-white uppercase tracking-widest">
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-black text-white uppercase tracking-widest">
                     ColonyAI Vault
                   </p>
-                  <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                  <p className="text-[9px] text-slate-400 leading-relaxed font-medium">
                     Seluruh data dienkripsi dan disimpan untuk kepatuhan data
                     jangka panjang sesuai ISO-17025.
                   </p>

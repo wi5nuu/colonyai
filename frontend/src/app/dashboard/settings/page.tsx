@@ -10,16 +10,17 @@ import { DocumentationSidebar, DocumentationToggle } from "@/components/Document
 import { useTranslationStore } from '@/lib/i18n/store';
 
 const TABS = [
-  { id: "profile", name: "Profile", icon: User },
-  { id: "notifications", name: "Notifications", icon: Bell },
-  { id: "security", name: "Security", icon: Shield },
-  { id: "laboratory", name: "Laboratory", icon: Database },
-  { id: "appearance", name: "Appearance", icon: Palette },
+  { id: "profile", name: "Profile", icon: User, roles: ["analyst", "manager", "auditor", "admin", "super_admin"] },
+  { id: "notifications", name: "Notifications", icon: Bell, roles: ["analyst", "manager", "auditor", "admin", "super_admin"] },
+  { id: "security", name: "Security", icon: Shield, roles: ["analyst", "manager", "auditor", "admin", "super_admin"] },
+  { id: "laboratory", name: "Laboratory", icon: Database, roles: ["admin", "manager", "super_admin"] },
+  { id: "system", name: "System", icon: Zap, roles: ["admin", "super_admin"] },
+  { id: "appearance", name: "Appearance", icon: Palette, roles: ["analyst", "manager", "auditor", "admin", "super_admin"] },
 ];
 
-const INPUT_CLS = "w-full px-5 py-3 text-[13px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-300 shadow-sm";
-const LABEL_CLS = "text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1 mb-2 block";
-const BTN_PRIMARY = "bg-slate-900 hover:bg-slate-800 text-white py-3.5 px-6 flex items-center justify-center gap-3 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-slate-900/20 active:scale-95 disabled:opacity-50";
+const INPUT_CLS = "w-full px-3 py-2 text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-300 shadow-sm";
+const LABEL_CLS = "text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1 mb-1 block";
+const BTN_PRIMARY = "bg-primary hover:bg-primary/90 text-slate-900 py-2.5 px-4 flex items-center justify-center gap-2 rounded-lg text-[10px] font-bold uppercase tracking-[0.2em] transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50";
 
 export default function SettingsPage() {
   const { t } = useTranslationStore();
@@ -39,91 +40,97 @@ export default function SettingsPage() {
 
   useEffect(() => { loadPreferences(); }, []);
 
-  const ActiveIcon = TABS.find(t => t.id === activeTab)?.icon || User;
+  const { user } = useAuthStore();
+  const filteredTabs = TABS.filter(tab => tab.roles.includes(user?.role || "analyst"));
+  const ActiveIcon = filteredTabs.find(t => t.id === activeTab)?.icon || User;
 
   return (
     <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden">
       <div className="flex relative min-h-[calc(100vh-200px)]">
         <div className={`flex-1 transition-all duration-300 ${showDocs ? 'lg:mr-[350px]' : ''}`}>
-          <div className="max-w-[1500px] mx-auto px-6 py-8">
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-slate-100 mb-8">
+          <div className="max-w-[1500px] mx-auto px-4 py-0 pt-0 sm:px-8 sm:py-0 sm:pt-0">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-2 pb-2 border-b border-slate-100 mb-4">
               <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-slate-900 rounded-xl shadow-xl flex items-center justify-center">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-9 h-9 bg-slate-50 border border-slate-200 rounded-lg shadow-sm flex items-center justify-center">
                     <Settings2 className="w-4 h-4 text-primary" />
                   </div>
-                  <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">{t('settings.title')}</h1>
+                  <h1 className="text-xl font-bold text-slate-900 tracking-tight uppercase leading-none">{t('settings.title')}</h1>
                 </div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-1">{t('settings.subtitle')}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] ml-1">{t('settings.subtitle')}</p>
               </div>
               <div className="flex items-center gap-3">
-                 <div className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                       <Shield className="w-3.5 h-3.5" />
-                       Auth: AES-256-GCM
-                    </span>
-                 </div>
+                <div className="hidden lg:block">
+                  <DocumentationToggle
+                    showDocs={showDocs}
+                    setShowDocs={setShowDocs}
+                    text="SOP Konfigurasi"
+                  />
+                </div>
+                <div className="bg-white border border-slate-200/60 p-2 rounded-xl shadow-sm">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-2">
+                    <Shield className="w-3.5 h-3.5" />
+                    Auth: AES-256-GCM
+                  </span>
+                </div>
               </div>
             </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Sidebar Nav - 3 cols */}
-        <div className="lg:col-span-3">
-          <nav className="bg-white border border-slate-200/60 p-2.5 space-y-1.5 sticky top-24 rounded-2xl shadow-sm">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-4 px-5 py-4 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 ${
-                  activeTab === tab.id
-                    ? "bg-slate-900 text-white shadow-xl shadow-slate-900/20"
-                    : "text-slate-400 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-              >
-                <tab.icon className={`h-4.5 w-4.5 flex-shrink-0 ${activeTab === tab.id ? 'text-primary' : ''}`} />
-                {tab.name}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Content Panel - 9 cols */}
-        <div className="lg:col-span-9">
-          <div className="bg-white border border-slate-200/60 overflow-hidden rounded-2xl shadow-sm">
-            {/* Panel Header */}
-            <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                <ActiveIcon className="h-6 w-6 text-primary" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div className="lg:col-span-3">
+                <nav className="bg-white border border-slate-200/60 p-2 space-y-1 sticky top-20 rounded-xl shadow-sm">
+                  {filteredTabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-[11px] font-bold uppercase tracking-widest rounded-lg transition-all duration-200 ${
+                        activeTab === tab.id
+                          ? "bg-primary/10 text-primary border border-primary/20 shadow-sm"
+                          : "text-slate-400 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                    >
+                      <tab.icon className={`h-4 w-4 flex-shrink-0 ${activeTab === tab.id ? 'text-primary' : ''}`} />
+                      {tab.name}
+                    </button>
+                  ))}
+                </nav>
               </div>
-              <div>
-                <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">
-                  {TABS.find(t => t.id === activeTab)?.name} Configuration
-                </h2>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Global node environment matrix</p>
-              </div>
-            </div>
 
-            {/* Panel Body */}
-            <div className="p-8 lg:p-10">
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-32 gap-6">
-                  <div className="w-24 h-24 rounded-[2.5rem] bg-slate-50 flex items-center justify-center border border-slate-100">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <div className="lg:col-span-9">
+                <div className="bg-white border border-slate-200/60 overflow-hidden rounded-xl shadow-sm">
+                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                      <ActiveIcon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-[11px] font-bold text-slate-900 uppercase tracking-[0.2em]">
+                        {TABS.find(t => t.id === activeTab)?.name} Configuration
+                      </h2>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Global node environment matrix</p>
+                    </div>
                   </div>
-                  <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t('settings.syncingPrefs')}</p>
+
+                  <div className="p-4 sm:p-5">
+                    {isLoading ? (
+                      <div className="flex flex-col items-center justify-center py-32 gap-6">
+                        <div className="w-24 h-24 rounded-[2.5rem] bg-slate-50 flex items-center justify-center border border-slate-100">
+                          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                        </div>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t('settings.syncingPrefs')}</p>
+                      </div>
+                    ) : (
+                      <div className="animate-in slide-in-from-bottom-4 duration-500">
+                        {activeTab === "profile" && <ProfileSettings />}
+                        {activeTab === "notifications" && <NotificationSettings preferences={preferences} onRefresh={loadPreferences} />}
+                        {activeTab === "security" && <SecuritySettings />}
+                        {activeTab === "laboratory" && <LaboratorySettings preferences={preferences} onRefresh={loadPreferences} />}
+                        {activeTab === "system" && <SystemStatusSettings />}
+                        {activeTab === "appearance" && <AppearanceSettings preferences={preferences} onRefresh={loadPreferences} />}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <div className="animate-in slide-in-from-bottom-4 duration-500">
-                  {activeTab === "profile" && <ProfileSettings />}
-                  {activeTab === "notifications" && <NotificationSettings preferences={preferences} onRefresh={loadPreferences} />}
-                  {activeTab === "security" && <SecuritySettings />}
-                  {activeTab === "laboratory" && <LaboratorySettings preferences={preferences} onRefresh={loadPreferences} />}
-                  {activeTab === "appearance" && <AppearanceSettings preferences={preferences} onRefresh={loadPreferences} />}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+              </div>
             </div>
           </div>
         </div>
@@ -131,44 +138,66 @@ export default function SettingsPage() {
           showDocs={showDocs} 
           setShowDocs={setShowDocs}
           directory="System Configuration"
-          title={t('settings.docsTitle')}
-          description={t('settings.docsDescription')}
+          title="Konfigurasi Sistem"
+          description="Panel kontrol infrastruktur perangkat lunak dan manajemen akses ColonyAI."
+          rawText={`KONFIGURASI SISTEM COLONYAI - SOP MANAJEMEN AKSES
+==================================================
+
+1. OVERVIEW: PUSAT KONTROL INFRASTRUKTUR
+Panel Konfigurasi adalah pusat pengaturan seluruh parameter operasional ColonyAI. Perubahan di sini berdampak pada seluruh node dalam organisasi Anda.
+
+2. PROTOKOL MANAJEMEN AKSES & IDENTITAS
+A. PROFILE SETTINGS: Setiap perubahan nama atau identitas akan dicatat dalam Audit Trail ISO-17025. Identitas ini melekat pada setiap spesimen yang Anda verifikasi.
+B. SECURITY LAYER: 
+   - Enkripsi Secret: Menggunakan standar AES-256-GCM. 
+   - Rotasi Kunci: Disarankan melakukan pembaruan kata sandi (kunci enkripsi) setiap 90 hari.
+   - Revoke Global Auth: Fitur darurat untuk memutus seluruh sesi aktif jika terdeteksi kebocoran akun.
+
+3. KALIBRASI LABORATORIUM (LABORATORY ENV)
+- Default Media: Mengatur media agar yang paling sering digunakan (misal: PCA) untuk mempercepat proses input.
+- Standard Matrix Volume: Mengatur volume plating standar (default: 1.0 ml) sesuai metodologi ISO 4833-1:2013.
+
+4. INFRASTRUCTURE TRANSPARENCY
+Organisasi Anda diisolasi dalam klaster saraf (Neural Cluster) khusus di region Jakarta (ap-southeast-1). Seluruh data dienkripsi saat diam (at rest) dan saat berpindah (in transit).
+
+STATUS: INFRASTRUCTURE SECURE
+MONITORING: 24/7 ACTIVE`}
         >
-          <section className="space-y-4">
-             <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">01</span>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Overview</h2>
+          <section className="space-y-3">
+             <div className="flex items-center gap-2 mb-1">
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">01</span>
+                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Overview</h2>
              </div>
-             <p className="text-sm text-slate-600 leading-relaxed bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                Panel System Configuration mengontrol seluruh infrastruktur perangkat lunak ColonyAI. Akses penuh hanya diberikan kepada pengguna dengan Role "Owner", yang dapat memodifikasi parameter sensitif seperti Token API dan enkripsi AES-256.
+             <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+                Panel System Configuration mengontrol seluruh infrastruktur perangkat lunak ColonyAI. Akses penuh hanya diberikan kepada Administrator.
              </p>
           </section>
 
-          <section className="space-y-6 pt-2">
-             <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">02</span>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Access Control Protocol</h2>
+          <section className="space-y-3 pt-2">
+             <div className="flex items-center gap-2 mb-1">
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">02</span>
+                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Access Control Protocol</h2>
              </div>
-             <div className="space-y-6 ml-1">
+             <div className="space-y-3 ml-0.5">
                 {[
-                  { id: '1', title: 'Profile Settings', desc: 'Identitas pengguna yang tertanam pada setiap log Audit Trail untuk memenuhi syarat ISO-17025.' },
-                  { id: '2', title: 'Security Protocol', desc: 'Manajemen siklus hidup token (Token Lifecycle). Owner berwenang untuk mencabut seluruh akses (Revoke All Sessions) secara instan dalam status darurat (Force Majeure).' },
-                  { id: '3', title: 'Laboratory Environment', desc: 'Kalibrasi variabel perhitungan standar seperti Media Default dan Nilai Dilusi.' }
+                  { id: '1', title: 'Profile Settings', desc: 'Identitas pengguna yang tertanam pada setiap log Audit Trail ISO-17025.' },
+                  { id: '2', title: 'Security Protocol', desc: 'Manajemen siklus hidup token dan rotasi kunci enkripsi AES-256.' },
+                  { id: '3', title: 'Laboratory Env', desc: 'Kalibrasi variabel perhitungan standar (Default Media & Volume).' }
                 ].map((step) => (
-                  <div key={step.id} className="flex gap-4 group">
-                     <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-slate-900 text-white text-[11px] font-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <div key={step.id} className="flex gap-2.5 group">
+                     <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                         {step.id}
                      </span>
-                     <div className="space-y-1.5">
-                        <h4 className="text-sm font-bold text-slate-900">{step.title}</h4>
-                        <p className="text-[12px] text-slate-500 leading-relaxed font-medium">{step.desc}</p>
+                     <div className="space-y-0.5">
+                        <h4 className="text-[10px] font-bold text-slate-900">{step.title}</h4>
+                        <p className="text-[9px] text-slate-500 leading-relaxed font-medium">{step.desc}</p>
                      </div>
                   </div>
                 ))}
              </div>
           </section>
-        </DocumentationSidebar>
-      </div>
+      </DocumentationSidebar>
+    </div>
     </div>
   );
 }
@@ -342,7 +371,7 @@ function SecuritySettings() {
                <p className="text-[10px] text-rose-700/60 font-black uppercase tracking-widest mt-1">Force revoke every session across the global network</p>
              </div>
           </div>
-          <button onClick={handleRevokeAllSessions} className="px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-rose-600/20 active:scale-95 flex-shrink-0">
+          <button onClick={handleRevokeAllSessions} className="px-8 py-4 bg-rose-500 hover:bg-rose-600 text-slate-900 text-[11px] font-bold uppercase tracking-[0.2em] rounded-xl transition-all shadow-lg shadow-rose-500/20 active:scale-95 flex-shrink-0">
              Revoke Global Auth
           </button>
         </div>
@@ -461,3 +490,69 @@ function AppearanceSettings({ preferences, onRefresh }: { preferences: any; onRe
   );
 }
 
+function SystemStatusSettings() {
+  const infra = {
+    node: "ap-southeast-1 (Jakarta)",
+    storage_quota: "1 TB",
+    storage_used: "12.4 GB",
+    retention: "5 Years",
+    compliance: "ISO-17025",
+    status: "Healthy"
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+             <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-primary shadow-sm">
+                <Database className="w-5 h-5" />
+             </div>
+             <div>
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">S3 Object Storage</p>
+               <p className="text-sm font-black text-slate-900 uppercase">Quota: {infra.storage_quota}</p>
+             </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between text-[9px] font-black uppercase text-slate-500">
+              <span>Usage Baseline</span>
+              <span>1.2%</span>
+            </div>
+            <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div className="h-full bg-primary w-[1.2%] shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" />
+            </div>
+            <p className="text-[9px] font-bold text-slate-400 uppercase mt-2">Data Retention: {infra.retention} Policy</p>
+          </div>
+        </div>
+
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+             <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-emerald-500 shadow-sm">
+                <Zap className="w-5 h-5" />
+             </div>
+             <div>
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Neural Node Status</p>
+               <p className="text-sm font-black text-slate-900 uppercase">{infra.node}</p>
+             </div>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg w-fit">
+             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+             <span className="text-[9px] font-black uppercase tracking-widest">{infra.status} // 24ms Latency</span>
+          </div>
+          <p className="text-[9px] font-bold text-slate-400 uppercase mt-4">Security Protocol: {infra.compliance} Compliant</p>
+        </div>
+      </div>
+
+      <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900">
+        <div className="flex items-center gap-3 mb-4">
+          <Shield className="w-5 h-5 text-primary" />
+          <h4 className="text-[11px] font-bold uppercase tracking-widest">Infrastructure Transparency</h4>
+        </div>
+        <p className="text-[10px] text-slate-500 leading-relaxed font-bold uppercase">
+          This organization is isolated within a dedicated neural cluster in the {infra.node} region. 
+          All storage operations are AES-256 encrypted at rest and monitored for ISO-17025 integrity.
+        </p>
+      </div>
+    </div>
+  );
+}

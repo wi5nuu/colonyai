@@ -22,7 +22,7 @@ import {
 import { toast } from "sonner";
 
 import api, { API_URL } from "@/lib/api";
-import { DocumentationSidebar } from "@/components/DocumentationSidebar";
+import { DocumentationSidebar, DocumentationToggle } from "@/components/DocumentationSidebar";
 import { useTranslationStore } from "@/lib/i18n/store";
 import { ResetRequestsPanel } from "@/components/ResetRequestsPanel";
 
@@ -262,13 +262,13 @@ export default function AdministrationPage() {
         <div
           className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
         >
-          <div className="max-w-[1500px] mx-auto px-6 py-8">
+          <div className="max-w-[1500px] mx-auto px-6 py-0 pt-0">
             <div className="space-y-6">
               {/* Header Administration */}
-              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-slate-100">
-                <div className="space-y-2">
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-4 border-b border-slate-100">
+                <div className="space-y-1">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-900 rounded-xl shadow-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-slate-50 border border-slate-200 rounded-xl shadow-sm flex items-center justify-center">
                       <Lock className="w-5 h-5 text-primary" />
                     </div>
                     <div>
@@ -289,9 +289,10 @@ export default function AdministrationPage() {
                       Master Node: Operational
                     </span>
                   </div>
+                  <DocumentationToggle showDocs={showDocs} setShowDocs={setShowDocs} text="SOP Kontrol" />
                   <button 
                     onClick={() => setAddUserModalOpen(true)}
-                    className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary transition-all shadow-lg shadow-slate-900/10"
+                    className="flex items-center gap-2 px-6 py-3 bg-primary text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/10"
                   >
                     <Plus className="w-4 h-4" /> Provision New Staff
                   </button>
@@ -721,73 +722,64 @@ export default function AdministrationPage() {
                     ))}
                   </div>
                 </div>
-              </div>
             </div>
           </div>
         </div>
+      </div>
 
         {/* Documentation Sidebar */}
         <DocumentationSidebar
           showDocs={showDocs}
           setShowDocs={setShowDocs}
           directory="System Control"
-          title="Node Governance"
-          description="Standard Operating Procedure (SOP) for managing analysts and observing real-time system performance."
+          title="Tata Kelola Node"
+          description="SOP Manajemen Personel dan Observasi Performa Sistem Real-time."
+          rawText={`TATA KELOLA NODE & SISTEM COLONYAI
+==================================
+
+1. OVERVIEW
+Modul Node Governance adalah pusat komando untuk Administrator dalam mengelola otorisasi staf dan memantau kesehatan infrastruktur.
+
+2. GOVERNANCE PROTOCOL
+A. ANALYST PROVISIONING: Pendaftaran akun analis baru dengan Clearance Level spesifik (Level 01-04).
+B. ACCESS REVOCATION: Pembekuan akses (Suspend) secara instan untuk mitigasi risiko keamanan.
+C. SYSTEM AUDITING: Pemantauan log aktivitas sistem secara real-time melalui Immutable Ledger.
+
+3. MASTER EXPORT CENTER
+- Buku Besar Tata Kelola: Ekspor PDF komprehensif untuk audit eksternal ISO-17025.
+- Dataset Analitik: Ekspor Excel mentah untuk integrasi sistem informasi lab (LIMS).
+
+STATUS: GOVERNANCE ACTIVE
+AUTORITAS: MASTER ROOT`}
         >
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-                01
-              </span>
-              <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                Overview
-              </h2>
+          <section className="space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">01</span>
+              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Overview</h2>
             </div>
-            <p className="text-sm text-slate-600 leading-relaxed bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-              Modul Node Governance dirancang secara khusus untuk Administrator.
-              Halaman ini adalah pusat komando untuk memberikan otorisasi kepada
-              staf (Analyst Registry) serta memantau kesehatan operasional
-              server (Performance Matrix).
+            <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+              Modul Node Governance dirancang secara khusus untuk Administrator sebagai pusat komando otorisasi staf dan pemantauan kesehatan operasional server.
             </p>
           </section>
-          <section className="space-y-6 pt-2">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-                02
-              </span>
-              <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                Governance Protocol
-              </h2>
+
+          <section className="space-y-3 pt-2">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">02</span>
+              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Governance Protocol</h2>
             </div>
-            <div className="space-y-6 ml-1">
+            <div className="space-y-3 ml-0.5">
               {[
-                {
-                  id: "1",
-                  title: "Analyst Provisioning",
-                  desc: 'Gunakan fitur "Provision New Node" untuk mendaftarkan akun analis baru dengan izin spesifik (Clearance Level).',
-                },
-                {
-                  id: "2",
-                  title: "Access Revocation",
-                  desc: "Sesuai dengan protokol mitigasi risiko, Administrator dapat membekukan akses (Suspend) setiap analis melalui Action Toggle pada tabel Registry.",
-                },
-                {
-                  id: "3",
-                  title: "System Auditing",
-                  desc: "Kolom Recent System Audit Trail memberikan cuplikan cepat (snapshot) atas modifikasi sistem terbaru.",
-                },
+                { id: "1", title: "Analyst Provisioning", desc: 'Gunakan "Provision New Node" untuk mendaftarkan akun analis baru dengan Clearance Level spesifik.' },
+                { id: "2", title: "Access Revocation", desc: "Administrator dapat membekukan akses (Suspend) setiap analis melalui Action Toggle pada tabel Registry." },
+                { id: "3", title: "Master Export Center", desc: "Gunakan fitur ekspor PDF/Excel untuk menghasilkan laporan tata kelola resmi standar ISO-17025." },
               ].map((step) => (
-                <div key={step.id} className="flex gap-4 group">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-slate-900 text-white text-[11px] font-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <div key={step.id} className="flex gap-2.5 group">
+                  <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                     {step.id}
                   </span>
-                  <div className="space-y-1.5">
-                    <h4 className="text-sm font-bold text-slate-900">
-                      {step.title}
-                    </h4>
-                    <p className="text-[12px] text-slate-500 leading-relaxed font-medium">
-                      {step.desc}
-                    </p>
+                  <div className="space-y-0.5">
+                    <h4 className="text-[10px] font-bold text-slate-900">{step.title}</h4>
+                    <p className="text-[9px] text-slate-500 leading-relaxed font-medium">{step.desc}</p>
                   </div>
                 </div>
               ))}
@@ -826,7 +818,7 @@ export default function AdministrationPage() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300"
                     autoFocus
                   />
                   <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight italic">Minimum 8 characters with Uppercase, Number, and Special Char.</p>
@@ -880,7 +872,7 @@ export default function AdministrationPage() {
                       value={newUserData.full_name}
                       onChange={(e) => setNewUserData({...newUserData, full_name: e.target.value})}
                       placeholder="e.g. John Doe"
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300"
                     />
                   </div>
                   <div className="space-y-2">
@@ -888,7 +880,7 @@ export default function AdministrationPage() {
                     <select 
                       value={newUserData.role}
                       onChange={(e) => setNewUserData({...newUserData, role: e.target.value})}
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300"
                     >
                       <option value="analyst">Analyst (Level-01)</option>
                       <option value="auditor">Auditor (Level-02)</option>
@@ -906,7 +898,7 @@ export default function AdministrationPage() {
                     value={newUserData.email}
                     onChange={(e) => setNewUserData({...newUserData, email: e.target.value})}
                     placeholder="staff@laboratory.diag"
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300"
                   />
                 </div>
 
@@ -918,7 +910,7 @@ export default function AdministrationPage() {
                     value={newUserData.password}
                     onChange={(e) => setNewUserData({...newUserData, password: e.target.value})}
                     placeholder="••••••••"
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300"
                   />
                 </div>
               </div>
