@@ -1,0 +1,225 @@
+// ColonyAI TypeScript Types - aligned with 5-class proposal architecture
+
+// ============================================================
+// AUTH TYPES
+// ============================================================
+
+export interface User {
+  id: string;
+  email: string;
+  full_name: string;
+  /**
+   * 4-role Streamlined RBAC for ColonyAI:
+   * - analyst: Perform tests, upload samples, use simulator.
+   * - manager: Technical review, approve results, view analytics & reports.
+   * - auditor: Read-only access to records, reports, and audit trails.
+   * - admin: Full system management, user administration, and settings.
+   */
+  role: 'analyst' | 'manager' | 'auditor' | 'admin';
+  laboratory_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  full_name: string;
+  role?: 'analyst' | 'viewer';
+}
+
+export interface AuthResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  user: User;
+}
+
+// ============================================================
+// ANALYSIS TYPES
+// ============================================================
+
+export type MediaType =
+  | 'Plate Count Agar'
+  | 'VRBA'
+  | 'BGBB'
+  | 'R2A'
+  | 'TSA'
+  | 'MacConkey'
+  | 'Other';
+
+/**
+ * Status CFU/mL hasil kalkulasi.
+ * - VALID: 25 <= count <= 250 (inklusif, sesuai ISO 4833-1:2013)
+ * - TNTC : count > 250 — cfu_per_ml = null (FDA BAM: jangan laporkan nilai absolut)
+ * - TFTC : count < 25  — cfu_per_ml = null
+ */
+export type CFUStatus = 'VALID' | 'TNTC' | 'TFTC';
+export type ReliabilityLevel = 'high' | 'medium' | 'low';
+
+
+// 5-class architecture per proposal
+export type DetectionClass =
+  | 'colony_single'
+  | 'colony_merged'
+  | 'bubble'
+  | 'dust_debris'
+  | 'media_crack';
+
+export interface Detection {
+  id: string;
+  analysis_id: string;
+  class_name: DetectionClass;
+  confidence: number;
+  bbox: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
+
+export interface AnalysisCreate {
+  sample_id: string;
+  media_type: MediaType;
+  dilution_factor: number;
+  plated_volume_ml: number;
+  incubation_temp?: number;
+  incubation_time_hours?: number;
+  method_standard?: string;
+  media_batch_number?: string;
+  incubator_id?: string;
+  image: File;
+}
+
+export interface Analysis {
+  id: string;
+  user_id: string;
+  sample_id: string;
+  media_type: MediaType;
+  dilution_factor: number;
+  plated_volume_ml: number;
+  original_image_url: string;
+  annotated_image_url: string;
+  /** Total koloni = colony_single + estimasi(colony_merged) via SA-001 */
+  colony_count: number;
+  /**
+   * BUG-003: null jika status TNTC atau TFTC.
+   * FDA BAM Chapter 3 melarang pelaporan nilai absolut dari plate TNTC.
+   */
+  cfu_per_ml: number | null;
+  /** Status VALID/TNTC/TFTC — gunakan ini untuk logika display, BUKAN cfu_per_ml */
+  cfu_status?: CFUStatus;
+  /** Pesan deskriptif untuk analis dari backend */
+  cfu_message?: string;
+  /** Rekomendasi tindak lanjut (pengenceran ulang dll) */
+  cfu_recommendation?: string;
+  /** Estimasi orde besaran untuk TNTC, e.g. ">310,000" */
+  estimated_cfu_order?: string;
+  confidence_score: number;
+  reliability: ReliabilityLevel;
+  status: string;  // DB status: PROCESSING | COMPLETED | FAILED
+  class_breakdown: Record<DetectionClass, number>;
+  detections: Detection[];
+  warnings: string[];
+  is_valid_for_reporting: boolean;
+  /** Metode estimasi colony_merged (SA-001): 'area_based' | 'fallback_*' */
+  merged_estimation_method?: string;
+  /** Expanded measurement uncertainty U (k=2, ~95%) dalam CFU/mL */
+  uncertainty_u?: number | null;
+  /** ISO Compliance Fields */
+  incubation_temp?: number | null;
+  incubation_time_hours?: number | null;
+  method_standard?: string | null;
+  media_batch_number?: string | null;
+  incubator_id?: string | null;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    full_name: string;
+    email: string;
+  };
+}
+
+export interface AnalysisListResponse {
+  analyses: Analysis[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+// ============================================================
+// IMAGE TYPES
+// ============================================================
+
+export interface ImageUploadResponse {
+  original_url: string;
+  annotated_url: string;
+}
+
+// ============================================================
+// REPORT TYPES
+// ============================================================
+
+export type ReportType = 'daily' | 'weekly' | 'custom';
+
+export interface ReportRequest {
+  report_type: ReportType;
+  date_from?: string;
+  date_to?: string;
+  format: 'pdf' | 'csv';
+}
+
+export interface ReportResponse {
+  url: string;
+  filename: string;
+  expires_at: string;
+}
+
+// ============================================================
+// DASHBOARD TYPES
+// ============================================================
+
+export interface DashboardStats {
+  total_analyses: number;
+  avg_time_saved_minutes: number;
+  success_rate: number;
+  pending_review: number;
+  
+  // Real Data Fields
+  neural_confidence: number;
+  system_latency_ms: number;
+  verified_count: number;
+  failed_count: number;
+  matrix_breakdown: Record<string, number>;
+  
+  weekly_trend: { day: string; analyses: number }[];
+  recent_analyses: Analysis[];
+}
+
+// ============================================================
+// API ERROR TYPES
+// ============================================================
+
+export interface ApiError {
+  detail: string;
+  status_code?: number;
+  errors?: Record<string, string[]>;
+}
+
+export class ApiClientError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number,
+    public data?: ApiError
+  ) {
+    super(message);
+    this.name = 'ApiClientError';
+  }
+}
