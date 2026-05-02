@@ -67,7 +67,7 @@ export default function ProvisionNodePage() {
           bsl: newOrgData.bsl_level
         }
       };
-      const res = await api.post("/api/v1/super/provision", payload);
+      const res = await api.post<any>("/api/v1/super/provision", payload);
       setProvisionResult(res.data);
       toast.success(`Node for ${newOrgData.name} successfully provisioned.`);
     } catch (error: any) {

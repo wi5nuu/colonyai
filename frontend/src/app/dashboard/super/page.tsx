@@ -276,7 +276,7 @@ export default function SuperAdminRealTimeDashboard() {
     setConfirmModal({ ...confirmModal, isOpen: false });
 
     try {
-      const res = await api.post(`/api/v1/super/organizations/${orgId}/toggle-status`);
+      const res = await api.post<{ status: string; message: string }>(`/api/v1/super/organizations/${orgId}/toggle-status`);
       toast.success(`Organization ${orgName} status: ${res.data.status.toUpperCase()}`, {
         description: res.data.message,
         icon: action === 'suspend' ? <Ban className="w-4 h-4 text-rose-500" /> : <CheckCircle2 className="w-4 h-4 text-emerald-500" />
