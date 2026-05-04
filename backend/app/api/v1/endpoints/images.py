@@ -6,7 +6,7 @@ import uuid
 import os
 from pathlib import Path
 
-from app.core.security import get_current_user
+from app.core.security import get_current_user, require_role
 from app.core.config import settings
 from app.core.database import get_db
 from app.utils.s3 import s3_is_configured, upload_to_s3, get_presigned_url, delete_from_s3
@@ -31,9 +31,9 @@ class ImageResponse(BaseModel):
 @router.post("/upload", response_model=ImageUploadResponse)
 async def upload_image(
     file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin"))
 ):
-    """Upload a plate image for analysis"""
+    """Upload a plate image for analysis (Auditor: no upload — read-only role)"""
     # Validate file type
     allowed_types = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
     if file.content_type not in allowed_types:
@@ -124,10 +124,10 @@ async def get_image(
 @router.delete("/{image_id}")
 async def delete_image(
     image_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin")),
     db: AsyncSession = Depends(get_db)
 ):
-    """Delete an image by ID"""
+    """Delete an image by ID (Auditor: no delete — read-only role)"""
     if s3_is_configured():
         # Delete from S3 (try both original and annotated prefixes)
         deleted = False

@@ -32,11 +32,13 @@ class ReportRequest(BaseModel):
 async def generate_pdf_report(
     request: ReportRequest,
     http_request: Request = None,
-    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin")),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Generate a BPOM-compliant PDF report using reportlab.
+    Generate a BPOM-compliant PDF report (own data only).
+    - Analyst/Manager/Admin: own analyses
+    - Super Admin: all analyses
 
     Format: A4, Times New Roman 12pt.
     Contents: sample info, detection summary table, CFU/ml value,
@@ -392,13 +394,13 @@ async def generate_pdf_report(
 @router.post("/csv", response_model=ReportResponse)
 async def generate_csv_report(
     request: ReportRequest,
-    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin")),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Generate CSV report with detailed detection data.
-    
-    Includes one row per detection across all analyses in the date range.
+    Generate CSV report with detailed detection data (own data only).
+    - Analyst/Manager/Admin: own analyses
+    - Super Admin: all analyses
     """
     # Query analyses for the date range
     conditions = [Analysis.user_id == current_user["user_id"]]
@@ -534,16 +536,18 @@ async def download_report(
 
 
 # ============================================================
-# ADMIN-ONLY: Export All Data
+# ORG-WIDE EXPORT: Admin & Manager can export all org data
 # ============================================================
 
 @router.get("/admin/pdf-all", response_class=FileResponse)
 async def admin_export_all_pdf(
-    current_user: dict = Depends(require_role("admin")),
+    current_user: dict = Depends(require_role("admin", "manager", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    [ADMIN ONLY] Export all analyses from all users as a single PDF report.
+    [ADMIN/MANAGER/SUPER_ADMIN] Export all org analyses as a single PDF report.
+    - Admin/Manager: scoped to their organization
+    - Super Admin: all analyses across all organizations
     """
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import cm
@@ -553,13 +557,19 @@ async def admin_export_all_pdf(
     from reportlab.lib.enums import TA_CENTER, TA_LEFT
     from collections import defaultdict
 
-    # Query ALL analyses (admin sees everything)
+    # Build query with role-based scoping
+    query = (
+        select(Analysis)
+        .options(joinedload(Analysis.detections), joinedload(Analysis.user))
+        .order_by(Analysis.created_at.desc())
+    )
+    if current_user.get("role") != "super_admin":
+        org_id = current_user.get("organization_id")
+        if org_id:
+            query = query.where(Analysis.organization_id == uuid.UUID(org_id))
+
     try:
-        result = await db.execute(
-            select(Analysis)
-            .options(joinedload(Analysis.detections), joinedload(Analysis.user))
-            .order_by(Analysis.created_at.desc())
-        )
+        result = await db.execute(query)
         analyses = result.scalars().unique().all()
 
         reports_dir = os.path.abspath(os.path.join(settings.UPLOAD_DIR, "reports"))
@@ -706,17 +716,16 @@ async def admin_export_all_pdf(
 
 @router.get("/admin/excel-all", response_class=FileResponse)
 async def admin_export_all_excel(
-    current_user: dict = Depends(require_role("admin")),
+    current_user: dict = Depends(require_role("admin", "manager", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    [ADMIN ONLY] Export comprehensive analytics as Excel (.xlsx) with multiple sheets:
-    - Sheet 1: Global Summary Stats
-    - Sheet 2: Per-User Analytics
-    - Sheet 3: Monthly Trend
-    - Sheet 4: Media Type Breakdown
-    - Sheet 5: CFU Distribution
-    - Sheet 6: All Raw Records
+    [ADMIN/MANAGER/SUPER_ADMIN] Export comprehensive analytics as Excel (.xlsx).
+    - Admin/Manager: scoped to their organization
+    - Super Admin: all data across all organizations
+
+    Sheets: Global Summary, Per-User Analytics, Monthly Trend,
+            Media Type Breakdown, CFU Distribution, All Raw Records
     """
     import openpyxl
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -725,11 +734,17 @@ async def admin_export_all_excel(
     import statistics
 
     try:
-        result = await db.execute(
+        query = (
             select(Analysis)
             .options(joinedload(Analysis.detections), joinedload(Analysis.user))
             .order_by(Analysis.created_at.desc())
         )
+        if current_user.get("role") != "super_admin":
+            org_id = current_user.get("organization_id")
+            if org_id:
+                query = query.where(Analysis.organization_id == uuid.UUID(org_id))
+
+        result = await db.execute(query)
         analyses = result.scalars().unique().all()
 
         wb = openpyxl.Workbook()
@@ -776,7 +791,7 @@ async def admin_export_all_excel(
         # ─────────────────────────────────────────────
         ws_dash = wb.active
         ws_dash.title = "📊 Executive Dashboard"
-        
+
         ws_dash.merge_cells("A1:J1")
         ws_dash["A1"] = "COLONYAI — LABORATORY INTELLIGENCE EXECUTIVE SUMMARY"
         ws_dash["A1"].font = Font(bold=True, size=18, color="FFFFFF")
@@ -790,7 +805,7 @@ async def admin_export_all_excel(
         confs_all = [a.confidence_score for a in analyses if a.confidence_score]
         tntc_count = sum(1 for a in analyses if a.cfu_status == "TNTC")
         tftc_count = sum(1 for a in analyses if a.cfu_status == "TFTC")
-        
+
         ws_dash.append([])
         ws_dash.append(["SYSTEM OVERVIEW", "", "", "", "PRODUCTIVITY GAINS"])
         ws_dash["A3"].font = Font(bold=True, size=12)
@@ -829,7 +844,7 @@ async def admin_export_all_excel(
         for a in analyses: media_counts[a.media_type or "Unknown"] += 1
         ws_hidden.append(["Media", "Count"])
         for m, c in media_counts.items(): ws_hidden.append([m, c])
-        
+
         mon_counts = defaultdict(int)
         for a in analyses: mon_counts[a.created_at.strftime("%b %Y")] += 1
         ws_hidden.append([])
@@ -861,7 +876,7 @@ async def admin_export_all_excel(
         # SHEET 2: Global Summary (Formula Driven)
         # ─────────────────────────────────────────────
         ws1 = wb.create_sheet("📋 Summary Table")
-        
+
         ws1.merge_cells("A1:C1")
         ws1["A1"] = "ColonyAI — Admin Analytics Summary"
         ws1["A1"].font = TITLE_FONT
@@ -879,20 +894,20 @@ async def admin_export_all_excel(
         ws1.append(["Failed Records", f'=COUNTIF(\'📋 All Records\'!N:N, "Failed")', "Status check"]) # B7
         ws1.append(["Success Rate", "=B6/B4", "Dynamic %"]) # B8
         ws1["B8"].number_format = '0.0%'
-        
+
         ws1.append(["TNTC Results", f'=COUNTIF(\'📋 All Records\'!J:J, "TNTC")', "High density"]) # B9
         ws1.append(["TFTC Results", f'=COUNTIF(\'📋 All Records\'!J:J, "TFTC")', "Low density"]) # B10
         ws1.append(["Total Colonies Detected", f"=SUM('📋 All Records'!H:H)", "Global sum"]) # B11
         ws1.append(["Average Colonies/Sample", "=B11/B4", "Mean distribution"]) # B12
-        
+
         cfus_avg = sum(cfus_all)/len(cfus_all) if cfus_all else 0
         ws1.append(["Average CFU/ml", cfus_avg, "Mean density"]) # B13
         ws1["B13"].number_format = '0.00E+00'
-        
+
         conf_avg = sum(confs_all)/len(confs_all) if confs_all else 0
         ws1.append(["Average Confidence", conf_avg, "Model reliability"]) # B14
         ws1["B14"].number_format = '0.0%'
-        
+
         ws1.append(["Efficiency Gain", 0.9, "AI vs Manual baseline"]) # B15
         ws1["B15"].number_format = '0%'
 

@@ -2,6 +2,13 @@
 Simulator API Endpoints - ColonyAI
 
 Manages manual vs AI comparison data for benchmarking and variability analysis.
+
+Role-based access:
+- Analyst: save/view own comparisons
+- Manager: save/view org comparisons + org stats
+- Admin: save/view org comparisons + org stats
+- Auditor: NO access (use Audit Log for verification data)
+- Super Admin: full access
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
@@ -10,10 +17,10 @@ from typing import Optional
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, and_
 from sqlalchemy.orm import joinedload
 
-from app.core.security import get_current_user
+from app.core.security import get_current_user, require_role
 from app.core.database import get_db
 from app.models import SimulatorComparison, User, Analysis
 from app.utils.audit import write_audit_log
@@ -73,32 +80,44 @@ def calculate_agreement(ai_count: int, manual_count: int) -> float:
 
 
 # ============================================================
-# Endpoints
+# WRITE Endpoints (Analyst, Manager, Admin, Super Admin)
 # ============================================================
 
 @router.post("/", response_model=ComparisonResponse)
 async def save_comparison(
     body: ComparisonCreate,
     request: Request = None,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Save a manual vs AI comparison for benchmarking.
-    Replaces localStorage-only storage with database persistence.
+    - Analyst: own comparisons only
+    - Manager/Admin: comparisons within their organization
+    - Super Admin: any comparison
     """
     try:
         analysis_uuid = uuid.UUID(body.analysis_id)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid analysis ID")
 
-    # Verify analysis exists and belongs to user
-    result = await db.execute(
-        select(Analysis).where(
-            Analysis.id == analysis_uuid,
+    # Verify analysis exists with role-based scoping
+    analysis_query = select(Analysis).where(Analysis.id == analysis_uuid)
+    user_role = current_user.get("role")
+
+    if user_role == "analyst":
+        analysis_query = analysis_query.where(
             Analysis.user_id == uuid.UUID(current_user["user_id"])
         )
-    )
+    elif user_role in ("manager", "admin"):
+        org_id = current_user.get("organization_id")
+        if org_id:
+            analysis_query = analysis_query.where(
+                Analysis.organization_id == uuid.UUID(org_id)
+            )
+    # Super Admin: no additional filter
+
+    result = await db.execute(analysis_query)
     analysis = result.scalars().first()
     if not analysis:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found")
@@ -118,14 +137,6 @@ async def save_comparison(
 
     # Overall accuracy = average of all 5 class agreements
     overall_accuracy = (agreement_single + agreement_merged + agreement_bubble + agreement_dust + agreement_crack) / 5
-
-    # Calculate error margins (absolute difference per class)
-    error_single = abs(ai_single - body.manual_colony_single)
-    error_merged = abs(ai_merged - body.manual_colony_merged)
-    error_bubble = abs(ai_breakdown.get("bubble", 0) - body.manual_bubble)
-    error_dust = abs(ai_breakdown.get("dust_debris", 0) - body.manual_dust_debris)
-    error_crack = abs(ai_breakdown.get("media_crack", 0) - body.manual_media_crack)
-    total_error = error_single + error_merged + error_bubble + error_dust + error_crack
 
     comparison = SimulatorComparison(
         id=uuid.uuid4(),
@@ -164,24 +175,48 @@ async def save_comparison(
     return comparison
 
 
+# ============================================================
+# READ Endpoints (Analyst=own, Manager/Admin=org, Auditor=org read, Super Admin=all)
+# ============================================================
+
 @router.get("/analysis/{analysis_id}")
 async def get_comparison(
     analysis_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "auditor", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get comparison for a specific analysis."""
+    """Get comparison for a specific analysis with role-based scoping."""
     try:
         analysis_uuid = uuid.UUID(analysis_id)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid analysis ID")
 
-    result = await db.execute(
-        select(SimulatorComparison).where(
+    query = (
+        select(SimulatorComparison)
+        .where(
             SimulatorComparison.analysis_id == analysis_uuid,
-            SimulatorComparison.user_id == uuid.UUID(current_user["user_id"])
-        ).order_by(desc(SimulatorComparison.created_at)).limit(1)
+        )
+        .order_by(desc(SimulatorComparison.created_at))
+        .limit(1)
     )
+
+    # Role-based scoping
+    user_role = current_user.get("role")
+    if user_role == "analyst":
+        query = query.where(
+            SimulatorComparison.user_id == uuid.UUID(current_user["user_id"])
+        )
+    elif user_role in ("manager", "admin", "auditor"):
+        org_id = current_user.get("organization_id")
+        if org_id:
+            # Join to Analysis to filter by organization
+            query = query.join(
+                Analysis, SimulatorComparison.analysis_id == Analysis.id
+            ).where(
+                Analysis.organization_id == uuid.UUID(org_id)
+            )
+
+    result = await db.execute(query)
     comparison = result.scalars().first()
 
     if not comparison:
@@ -194,30 +229,48 @@ async def get_comparison(
 async def list_comparisons(
     page: int = 1,
     page_size: int = 20,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "auditor", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
-    """List all comparisons for the current user."""
-    user_id = uuid.UUID(current_user["user_id"])
+    """
+    List comparisons with role-based scoping:
+    - Analyst: own comparisons only
+    - Manager/Admin/Auditor: all org comparisons
+    - Super Admin: all comparisons
+    """
+    user_role = current_user.get("role")
     offset = (page - 1) * page_size
 
-    result = await db.execute(
+    query = (
         select(SimulatorComparison)
-        .where(SimulatorComparison.user_id == user_id)
         .options(joinedload(SimulatorComparison.analysis))
         .order_by(desc(SimulatorComparison.created_at))
         .offset(offset)
         .limit(page_size)
     )
+
+    count_query = select(__import__('sqlalchemy').func.count()).select_from(SimulatorComparison)
+
+    if user_role == "analyst":
+        user_id = uuid.UUID(current_user["user_id"])
+        query = query.where(SimulatorComparison.user_id == user_id)
+        count_query = count_query.where(SimulatorComparison.user_id == user_id)
+    elif user_role in ("manager", "admin", "auditor"):
+        org_id = current_user.get("organization_id")
+        if org_id:
+            query = (
+                query.join(Analysis, SimulatorComparison.analysis_id == Analysis.id)
+                .where(Analysis.organization_id == uuid.UUID(org_id))
+            )
+            count_query = (
+                count_query.join(Analysis, SimulatorComparison.analysis_id == Analysis.id)
+                .where(Analysis.organization_id == uuid.UUID(org_id))
+            )
+
+    result = await db.execute(query)
     comparisons = result.scalars().unique().all()
 
-    # Get total count
-    count_result = await db.execute(
-        select(__import__('sqlalchemy').func.count()).select_from(SimulatorComparison).where(
-            SimulatorComparison.user_id == user_id
-        )
-    )
-    total = count_result.scalar() or 0
+    total = (await db.execute(count_query)).scalar() or 0
 
     return {
         "comparisons": [ComparisonResponse.model_validate(c) for c in comparisons],
@@ -230,18 +283,31 @@ async def list_comparisons(
 
 @router.get("/stats")
 async def get_comparator_stats(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "auditor", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Get aggregate statistics for variability analysis.
-    Used for executive summary PDF reports.
+    - Analyst: own stats only
+    - Manager/Admin/Auditor: org-wide stats
+    - Super Admin: global stats
     """
-    user_id = uuid.UUID(current_user["user_id"])
+    user_role = current_user.get("role")
 
-    result = await db.execute(
-        select(SimulatorComparison).where(SimulatorComparison.user_id == user_id)
-    )
+    query = select(SimulatorComparison)
+
+    if user_role == "analyst":
+        user_id = uuid.UUID(current_user["user_id"])
+        query = query.where(SimulatorComparison.user_id == user_id)
+    elif user_role in ("manager", "admin", "auditor"):
+        org_id = current_user.get("organization_id")
+        if org_id:
+            query = (
+                query.join(Analysis, SimulatorComparison.analysis_id == Analysis.id)
+                .where(Analysis.organization_id == uuid.UUID(org_id))
+            )
+
+    result = await db.execute(query)
     comparisons = result.scalars().all()
 
     if not comparisons:

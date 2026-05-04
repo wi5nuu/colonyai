@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
 @router.post("/simulate", response_model=AnalysisResponse)
 async def simulate_analysis(
     file: UploadFile = File(...),
-    current_user: dict = Depends(require_role("analyst", "manager", "admin")),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -58,21 +58,21 @@ async def simulate_analysis(
     """
     from app.services.image_processor import ImageProcessor
     from app.services.colony_detector import ColonyDetector
-    
+
     # 1. Validation
     contents = await file.read()
     validate_and_sanitize_image(contents)
-    
+
     # 2. Processing
     processor = ImageProcessor()
     detector = ColonyDetector()
-    
+
     processed_img = processor.preprocess_from_bytes(contents)
     detections = detector.detect(processed_img)
-    
+
     # 3. Build a transient response (not saved to DB)
     temp_id = uuid.uuid4()
-    
+
     return {
         "id": str(temp_id),
         "sample_id": "SIMULATION-" + file.filename,
@@ -231,9 +231,15 @@ def _get_file_url(file_path: str) -> str:
     """Generate URL for a locally stored file"""
     if not file_path:
         return ""
-    # Return relative URL path from uploads directory
-    rel_path = os.path.relpath(file_path, settings.UPLOAD_DIR)
-    return f"{settings.BACKEND_URL}/uploads/{rel_path.replace(os.sep, '/')}"
+    # Use resolved absolute paths to ensure correct relative computation on Windows
+    abs_file = Path(file_path).resolve()
+    abs_upload = Path(settings.UPLOAD_DIR).resolve()
+    try:
+        rel_path = abs_file.relative_to(abs_upload)
+        return f"{settings.BACKEND_URL}/uploads/{rel_path.as_posix()}"
+    except ValueError:
+        # Fallback: just use filename
+        return f"{settings.BACKEND_URL}/uploads/{Path(file_path).name}"
 
 
 # ============================================================
@@ -356,11 +362,11 @@ async def create_analysis(
         # BUG-007: Gunakan per-media threshold (bukan global 0.60)
         media_thresholds = get_all_thresholds(media_type)
         colony_detector = ColonyDetector()
-        
+
         # Inference dengan minimum threshold agar semua kelas bisa masuk
         # dan baru di-filter spesifik per kelas di tahap 2
         min_threshold = min(media_thresholds.values()) if media_thresholds else 0.40
-        
+
         start_time = time.time()
         detections = colony_detector.detect(
             processed_image,
@@ -373,7 +379,7 @@ async def create_analysis(
             d for d in detections
             if d["confidence"] >= media_thresholds.get(d["class_name"], 0.60)
         ]
-        
+
         logger.info(f"YOLOv8 Inference complete: {len(detections)} detections in {inference_time_ms:.1f}ms (min_thresh={min_threshold})")
 
         # ── Step 5: Hitung statistik deteksi ──
@@ -520,23 +526,28 @@ async def list_analyses(
     status_filter: Optional[str] = Query(None, alias="status"),
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
-    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin")),
+    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    List all analyses for the current user with pagination and filters.
+    List analyses with role-based data scoping:
+    - Analyst: own analyses only
+    - Manager/Admin: all org analyses
+    - Auditor: all org analyses (read-only)
+    - Super Admin: all analyses
     """
     base_conditions = []
-    # Multi-tenant security: restrict by organization_id
     org_id = current_user.get("organization_id")
-    if current_user.get("role") != "super_admin":
+    user_role = current_user.get("role")
+
+    if user_role != "super_admin":
         if org_id:
             base_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
         else:
-            # Analyst/Manager with no org? 
             return AnalysisListResponse(analyses=[], total=0, page=page, page_size=page_size, total_pages=0)
 
-    if current_user["role"] == "analyst":
+    # Analyst sees only own data; Manager/Admin/Auditor see all org data
+    if user_role == "analyst":
         base_conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
 
     # Apply filters
@@ -604,69 +615,15 @@ async def list_analyses(
     )
 
 
-@router.get("/{analysis_id}")
-async def get_analysis(
-    analysis_id: str,
-    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin")),
-    db: AsyncSession = Depends(get_db),
-):
-    """Get full analysis details with all detections"""
-    try:
-        analysis_uuid = uuid.UUID(analysis_id)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid analysis ID format",
-        )
-
-    # Multi-tenant check
-    org_id = current_user.get("organization_id")
-    query_conditions = [Analysis.id == analysis_uuid]
-    
-    if current_user.get("role") != "super_admin":
-        if org_id:
-            query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
-        else:
-            raise HTTPException(status_code=403, detail="Unauthorized access")
-            
-    if current_user["role"] == "analyst":
-        query_conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
-
-    result = await db.execute(
-        select(Analysis)
-        .where(and_(*query_conditions))
-        .options(selectinload(Analysis.detections), joinedload(Analysis.user))
-    )
-    analysis = result.scalars().unique().first()
-
-    if not analysis:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Analysis not found",
-        )
-
-    return _build_analysis_response(analysis)
-
-
-@router.get("/{analysis_id}/result")
-async def get_analysis_result(
-    analysis_id: str,
-    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin")),
-    db: AsyncSession = Depends(get_db),
-):
-    """Get detailed analysis result (alias for GET /{analysis_id})"""
-    return await get_analysis(analysis_id, current_user, db)
-
-
 @router.get("/stats")
 async def get_dashboard_stats(
-    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin")),
+    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     # Multi-tenant security: Stats visibility
     base_conditions = []
     org_id = current_user.get("organization_id")
-    
+
     if current_user.get("role") != "super_admin":
         if org_id:
             base_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
@@ -684,7 +641,7 @@ async def get_dashboard_stats(
                 weekly_trend=[],
                 recent_analyses=[]
             )
-    
+
     # Manager, Auditor, Admin see all stats in their org. Analyst sees only own stats.
     if current_user["role"] == "analyst":
         user_id = uuid.UUID(current_user["user_id"])
@@ -788,13 +745,71 @@ async def get_dashboard_stats(
         recent_analyses=[_build_brief_response(a) for a in recent_analyses],
     )
 
+@router.get("/{analysis_id}")
+async def get_analysis(
+    analysis_id: str,
+    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin", "super_admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get full analysis details with all detections"""
+    try:
+        analysis_uuid = uuid.UUID(analysis_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid analysis ID format",
+        )
+
+    # Multi-tenant check with role-based scoping
+    org_id = current_user.get("organization_id")
+    user_role = current_user.get("role")
+    query_conditions = [Analysis.id == analysis_uuid]
+
+    if user_role != "super_admin":
+        if org_id:
+            query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+        else:
+            raise HTTPException(status_code=403, detail="Unauthorized access")
+
+    # Analyst sees only own data; Manager/Admin/Auditor see all org data
+    if user_role == "analyst":
+        query_conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
+
+    result = await db.execute(
+        select(Analysis)
+        .where(and_(*query_conditions))
+        .options(selectinload(Analysis.detections), joinedload(Analysis.user))
+    )
+    analysis = result.scalars().unique().first()
+
+    if not analysis:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Analysis not found",
+        )
+
+    return _build_analysis_response(analysis)
+
+
+@router.get("/{analysis_id}/result")
+async def get_analysis_result(
+    analysis_id: str,
+    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin", "super_admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get detailed analysis result (alias for GET /{analysis_id})"""
+    return await get_analysis(analysis_id, current_user, db)
+
+
+
+
 
 @router.post("/{analysis_id}/approve")
 async def approve_analysis(
     analysis_id: str,
     request: Request = None,
-    # Professional Lab: Only MANAGER or ADMIN can approve results
-    current_user: dict = Depends(require_role("manager", "admin")),
+    # Only MANAGER, ADMIN, or SUPER_ADMIN can approve results
+    current_user: dict = Depends(require_role("manager", "admin", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """Approve an analysis and mark it as validated"""
@@ -809,7 +824,7 @@ async def approve_analysis(
     # Multi-tenant security check
     org_id = current_user.get("organization_id")
     query_conditions = [Analysis.id == analysis_uuid]
-    
+
     if current_user.get("role") != "super_admin" and org_id:
         query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
 
@@ -830,9 +845,9 @@ async def approve_analysis(
     # BUG-023: Optimistic Locking
     if analysis.status != AnalysisStatus.COMPLETED:
         analysis.status = AnalysisStatus.COMPLETED
-        
+
     analysis.updated_at = datetime.now(timezone.utc) # Force version increment
-    
+
     try:
         await db.commit()
     except StaleDataError:
@@ -860,7 +875,7 @@ async def flag_for_review(
     analysis_id: str,
     body: FlagReviewRequest,
     http_request: Request = None,
-    current_user: dict = Depends(require_role("analyst", "manager", "admin")),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """Flag an analysis for manual review"""
@@ -874,7 +889,7 @@ async def flag_for_review(
 
     org_id = current_user.get("organization_id")
     query_conditions = [Analysis.id == analysis_uuid]
-    
+
     if current_user.get("role") != "super_admin":
         if org_id:
             query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))

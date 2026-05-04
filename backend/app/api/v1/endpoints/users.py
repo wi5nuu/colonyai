@@ -9,7 +9,7 @@ import secrets
 
 from app.core.security import get_current_user, require_role
 from app.core.database import get_db
-from app.models import User, Notification
+from app.models import User, Notification, Organization
 from app.utils.audit import write_audit_log
 
 router = APIRouter()
@@ -35,6 +35,7 @@ class UserBriefResponse(BaseModel):
     email: str
     full_name: str
     role: str
+    organization_name: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -104,11 +105,16 @@ async def update_current_user_profile(
 async def list_users(
     http_request: Request,
     skip: int = 0,
-    limit: int = 20,
-    current_user: dict = Depends(require_role("admin")),
+    limit: int = 500,
+    current_user: dict = Depends(require_role("manager", "admin", "super_admin")),
     db: AsyncSession = Depends(get_db)
 ):
-    """List all users (admin only)"""
+    """
+    List users with role-based scoping:
+    - Manager: read-only, org users only
+    - Admin: read + manage, org users only
+    - Super Admin: read + manage, all users
+    """
     # Audit log: user list accessed
     ip = http_request.client.host if http_request and getattr(http_request, 'client', None) else None
     ua = http_request.headers.get("user-agent") if http_request else None
@@ -120,9 +126,9 @@ async def list_users(
 
     # Filter by organization_id for multi-tenancy
     org_id = current_user.get("organization_id")
-    
+
     query = select(User).offset(skip).limit(limit).order_by(User.created_at.desc())
-    
+
     # If not super_admin, restrict to same organization
     if current_user.get("role") != "super_admin" and org_id:
         query = query.where(User.organization_id == uuid.UUID(org_id))
@@ -133,12 +139,23 @@ async def list_users(
     result = await db.execute(query)
     users = result.scalars().all()
 
+    # Build org_id -> name map for efficiency
+    org_ids = list({u.organization_id for u in users if u.organization_id})
+    org_names: dict = {}
+    if org_ids:
+        org_result = await db.execute(
+            select(Organization).where(Organization.id.in_(org_ids))
+        )
+        for o in org_result.scalars().all():
+            org_names[o.id] = o.name
+
     return [
         UserBriefResponse(
             id=str(u.id),
             email=u.email,
             full_name=u.full_name,
             role=u.role.value if hasattr(u.role, 'value') else str(u.role),
+            organization_name=org_names.get(u.organization_id) if u.organization_id else None,
         )
         for u in users
     ]
@@ -153,20 +170,21 @@ class AdminResetPasswordRequest(BaseModel):
 async def admin_reset_password(
     request: AdminResetPasswordRequest,
     http_request: Request,
-    current_user: dict = Depends(require_role("admin")),
+    current_user: dict = Depends(require_role("admin", "super_admin")),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    [ADMIN ONLY] Force reset a user's password and unlock their account.
-    Standard Operating Procedure for Laboratory OS recovery.
+    [ADMIN/SUPER_ADMIN] Force reset a user's password and unlock their account.
+    - Admin: org users only
+    - Super Admin: any user
     """
     from app.core.security import get_password_hash
     from app.api.v1.endpoints.auth import validate_password_complexity
     import uuid
-    
+
     # 1. Enforce complexity
     validate_password_complexity(request.new_password)
-    
+
     # 2. Find target user
     try:
         uid = uuid.UUID(request.user_id)
@@ -175,7 +193,7 @@ async def admin_reset_password(
 
     result = await db.execute(select(User).where(User.id == uid))
     target_user = result.scalar_one_or_none()
-    
+
     if not target_user:
         raise HTTPException(status_code=404, detail="Target user not found")
 
@@ -184,25 +202,25 @@ async def admin_reset_password(
     if current_user.get("role") != "super_admin":
         if not org_id or str(target_user.organization_id) != org_id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, 
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only reset passwords for users in your organization."
             )
-        
+
     # 3. Update password & Clear lockout
     target_user.password_hash = get_password_hash(request.new_password)
     target_user.is_locked_out = 'no'
     target_user.failed_login_attempts = 0
     target_user.locked_until = None
-    
+
     # 4. Audit Log
     ip = http_request.client.host if http_request and hasattr(http_request, 'client') else None
     await write_audit_log(
         db, current_user["user_id"], "admin_force_password_reset", "user",
-        current_user.get("organization_id"), str(target_user.id), 
+        current_user.get("organization_id"), str(target_user.id),
         details={"target_email": target_user.email},
         ip_address=ip
     )
-    
+
     await db.commit()
     return {"message": f"Password for {target_user.email} reset successfully and account unlocked."}
 
@@ -221,7 +239,7 @@ async def issue_emergency_access(
 ):
     """
     [ADMIN ONLY] Issue a 2-hour Emergency Temporary Password.
-    
+
     Use Case: User needs urgent lab access but password reset is pending.
     - Generates a cryptographically secure 12-char temp password
     - Password expires in 2 hours automatically (via token tracking)

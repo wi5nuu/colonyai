@@ -108,10 +108,10 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
         from app.models import Organization
         result = await db.execute(select(Organization).where(Organization.id == user.organization_id))
         org = result.scalar_one_or_none()
-        
+
         # Ultra-robust status check
         raw_status = str(org.is_active.value if hasattr(org.is_active, 'value') else org.is_active).lower()
-        
+
         # If status is NOT in any of the known active formats, then deny
         if org and raw_status not in ['active', '1', 'orgstatus.active', 'true', 'none']:
             raise HTTPException(
@@ -137,7 +137,7 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
         # ── Increment Failed Attempts ──
         user.failed_login_attempts += 1
         user.last_failed_login = datetime.utcnow()
-        
+
         if user.failed_login_attempts >= 5:
             user.is_locked_out = 'yes'
             user.locked_until = datetime.utcnow() + timedelta(minutes=15)
@@ -146,7 +146,7 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Too many failed attempts. Account locked for 15 minutes."
             )
-        
+
         await db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -161,10 +161,12 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
 
     # Create tokens
     access_token = create_access_token(
-        data={"sub": str(user.id), "email": user.email, "role": user.role.value}
+        data={"sub": str(user.id), "email": user.email, "role": user.role.value,
+              "organization_id": str(user.organization_id) if user.organization_id else None}
     )
     refresh_token = create_refresh_token(
-        data={"sub": str(user.id), "email": user.email, "role": user.role.value}
+        data={"sub": str(user.id), "email": user.email, "role": user.role.value,
+              "organization_id": str(user.organization_id) if user.organization_id else None}
     )
 
     # Audit log: login
@@ -191,9 +193,9 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
 
 @router.post("/register")
 async def register(
-    request: RegisterRequest, 
-    http_request: Request = None, 
-    current_user: dict = Depends(require_role("admin")), # Professional Lab: Admin only
+    request: RegisterRequest,
+    http_request: Request = None,
+    current_user: dict = Depends(require_role("admin", "super_admin")),
     db: AsyncSession = Depends(get_db)
 ):
     """Register a new user with Password Complexity enforcement"""
@@ -328,17 +330,17 @@ async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends
 
 @router.post("/logout")
 async def logout(
-    http_request: Request = None, 
-    current_user: dict = Depends(get_current_user), 
+    http_request: Request = None,
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Secure Logout with JWT Blacklisting"""
     from app.models import TokenBlacklist
-    
+
     # ── Blacklist the JTI ──
     jti = current_user.get("jti")
     exp = current_user.get("exp") # timestamp
-    
+
     if jti:
         blacklist_item = TokenBlacklist(
             jti=jti,
@@ -355,7 +357,7 @@ async def logout(
         resource_type="auth", resource_id=None,
         ip_address=ip, user_agent=ua,
     )
-    
+
     return {"message": "Successfully logged out. Token revoked."}
 
 
@@ -690,7 +692,7 @@ async def reset_password(request: ResetPasswordRequest, db: AsyncSession = Depen
     user.reset_token = None
     user.reset_token_expires = None
     user.updated_at = datetime.utcnow()
-    
+
     await db.commit()
 
     return {"message": "Password reset successfully. You can now login."}

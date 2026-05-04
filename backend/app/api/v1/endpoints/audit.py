@@ -1,9 +1,21 @@
+"""
+Audit Log API Endpoints
+
+Role-based access:
+- Analyst: view own audit logs only
+- Manager: view all org audit logs
+- Auditor: view all org audit logs (read-only)
+- Admin: view all org audit logs
+- Super Admin: view all audit logs globally
+"""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, and_
 from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime
+import uuid
 
 from app.core.security import require_role
 from app.core.database import get_db
@@ -29,10 +41,18 @@ class AuditLogResponse(BaseModel):
 async def list_audit_logs(
     skip: int = 0,
     limit: int = 50,
-    current_user: dict = Depends(require_role("manager", "auditor", "admin")),
+    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin", "super_admin")),
     db: AsyncSession = Depends(get_db)
 ):
-    """List system audit logs (admin only)"""
+    """
+    List audit logs with role-based scoping:
+    - Analyst: own logs only
+    - Manager/Admin/Auditor: all org logs
+    - Super Admin: all logs globally
+    """
+    user_role = current_user.get("role")
+
+    # Build base query with user join for name
     stmt = (
         select(AuditLog, User.full_name)
         .join(User, AuditLog.user_id == User.id)
@@ -40,6 +60,16 @@ async def list_audit_logs(
         .offset(skip)
         .limit(limit)
     )
+
+    # Role-based scoping
+    if user_role == "analyst":
+        stmt = stmt.where(AuditLog.user_id == uuid.UUID(current_user["user_id"]))
+    elif user_role in ("manager", "admin", "auditor"):
+        org_id = current_user.get("organization_id")
+        if org_id:
+            stmt = stmt.where(AuditLog.organization_id == uuid.UUID(org_id))
+    # Super Admin: no filter — sees everything
+
     result = await db.execute(stmt)
     logs = []
     for log, full_name in result.all():
@@ -54,5 +84,5 @@ async def list_audit_logs(
             previous_hash=log.previous_hash,
             current_hash=log.current_hash
         ))
-    
+
     return logs
