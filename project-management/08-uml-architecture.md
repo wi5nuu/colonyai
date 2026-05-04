@@ -720,8 +720,7 @@ Production deployment topology with Docker containers and cloud services.
 ```mermaid
 graph TB
     subgraph "Client Devices"
-        WEB["Web Browser\n(Desktop/Mobile)"]
-        PHONE["Smartphone\n(Camera Upload)"]
+        WEB["Web Browser\n(Desktop/Mobile/Tablet)"]
     end
 
     subgraph "CDN Layer"

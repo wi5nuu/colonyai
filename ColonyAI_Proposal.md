@@ -53,7 +53,7 @@ ColonyAI is an AI-powered Automated Plate Count Reader designed to modernize Tot
 
 | Scope / Limitation                             | ColonyAI Solution                                                                                                                          |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Variations in lighting and camera quality**  | CLAHE-based adaptive histogram equalization + homography perspective correction normalizes any input before inference                      |
+| **Variations in lighting conditions**          | CLAHE-based adaptive histogram equalization + homography perspective correction normalizes any input before inference                      |
 | **Overlapping and low contrast colonies**      | YOLOv8 trained on colony_merged class; SA-001 area-based merged colony estimation; NMS with IoU 0.45; per-media-type confidence thresholds |
 | **Different media types and colors**           | Per-media-type confidence thresholds for 8+ agar types (PCA, VRBA, BGBB, TSA, TGEA, MacConkey, R2A, Other)                                 |
 | **Limited labeled dataset**                    | 1,477 images (56,124 bounding boxes) + YOLOv8 augmentation + planned AGAR dataset integration                                              |
@@ -72,7 +72,7 @@ The primary objective of ColonyAI is to eliminate human error and inconsistency 
 - Classify all detected objects into 5 defined classes (colony_single, colony_merged, bubble, dust_debris, media_crack) with artifact rejection precision > 90%.
 - Deliver consistent CFU/ml calculations with SA-001 area-based merged colony estimation and ISO/IEC Guide 98-3:2008 (GUM) measurement uncertainty — removing dependency on analyst experience level.
 - Provide a SHA-256 chained immutable digital audit trail integrated with LIMS, supporting ISO 17025, SNI 2897:2008, and UU PDP Indonesia compliance.
-- Deploy a scalable, multi-laboratory SaaS platform accessible via web browser, requiring no special hardware beyond a standard camera or smartphone.
+- Deploy a scalable, multi-laboratory SaaS platform accessible via web browser on any device.
 - Implement enterprise-grade security including Argon2 password hashing, JWT blacklisting, anti-phishing engine, magic-bytes file validation, EXIF stripping, ClamAV malware scanning, and 5-role RBAC (Super Admin, Admin, Manager, Analyst, Auditor).
 
 ### Expected Output — Deliverable Mapping
@@ -124,7 +124,7 @@ ColonyAI is a web-based intelligent laboratory platform that transforms agar pla
 
 - **AI Vision Engine:** A fine-tuned YOLOv8 object detection model trained on 8+ agar media types. The model simultaneously detects the plate boundary via Hough Circle Transform and classifies all detected objects into exactly 5 classes: colony_single, colony_merged, bubble, dust_debris, and media_crack. Per-media-type confidence thresholds ensure optimal detection across different agar types. SA-001 area-based estimation calculates the actual colony count within merged colony bounding boxes by computing the ratio of merged bbox area to median single colony area. Only colony_single and colony_merged contribute to CFU/ml; the remaining 3 classes are flagged as artifacts and excluded.
 
-- **Intelligent Web Dashboard (Next.js 14):** Analysts upload plate images via browser or mobile camera. The dashboard displays annotated results with color-coded bounding boxes per class (green=single, yellow=merged, red=bubble, orange=dust, purple=crack), CFU/ml calculations with GUM measurement uncertainty, historical test records, and trend analytics. Results require digital analyst sign-off before final submission. Role-based access control with 5 distinct roles (Super Admin, Admin, Manager, Analyst, Auditor) with data scoping ensures appropriate access levels for each laboratory position.
+- **Intelligent Web Dashboard (Next.js 14):** Analysts upload plate images via browser. The dashboard displays annotated results with color-coded bounding boxes per class (green=single, yellow=merged, red=bubble, orange=dust, purple=crack), CFU/ml calculations with GUM measurement uncertainty, historical test records, and trend analytics. Results require digital analyst sign-off before final submission. Role-based access control with 5 distinct roles (Super Admin, Admin, Manager, Analyst, Auditor) with data scoping ensures appropriate access levels for each laboratory position.
 
 - **Simulator & Reporting Module:** A built-in benchmarking tool allowing labs to compare AI counting accuracy against manual counts with per-class agreement scoring. Reports are exportable in PDF (BPOM-compliant A4, Times New Roman 12pt) and multi-sheet Excel formats compatible with LIMS. SHA-256 chained immutable audit logs provide tamper-evident records for ISO 17025 compliance.
 
@@ -133,13 +133,13 @@ ColonyAI is a web-based intelligent laboratory platform that transforms agar pla
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         CLIENT LAYER                                 │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │
-│  │  Web Browser     │  │  Mobile Browser  │  │  Smartphone      │  │
-│  │  (Desktop)       │  │  (Responsive)    │  │  Camera Upload   │  │
-│  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘  │
-└───────────┼─────────────────────┼─────────────────────┼─────────────┘
-            │                     │                     │
-            └─────────────────────┼─────────────────────┘
+│  ┌──────────────────┐  ┌──────────────────┐                        │
+│  │  Web Browser     │  │  Mobile Browser  │                        │
+│  │  (Desktop)       │  │  (Responsive)    │                        │
+│  └────────┬─────────┘  └────────┬─────────┘                        │
+└───────────┼─────────────────────┼───────────────────────────────────┘
+            │                     │
+            └─────────────────────┘
                                   │ HTTPS / REST API
                                   ▼
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -248,7 +248,7 @@ ColonyAI is a web-based intelligent laboratory platform that transforms agar pla
 **Mid-Term (6–24 Months Post-Deployment):**
 
 - Expansion to 20+ accredited laboratories across Java and Sumatra. Target: 10,000+ TPC analyses processed monthly through the platform.
-- Development of a mobile-native PWA capture module enabling field sampling with smartphone cameras.
+- Development of a mobile-native PWA for field data entry and result viewing.
 - Full integration with LIMS platforms (SampleManager, LabVantage) for direct result synchronization.
 - Revenue generation through SaaS subscription model, achieving operational sustainability within 18 months.
 - Publication of validation study results in a peer-reviewed journal documenting model performance across all 5 detection classes.
@@ -268,7 +268,7 @@ ColonyAI is a web-based intelligent laboratory platform that transforms agar pla
 - **5-Role RBAC with Data Scoping:** Granular role-based access control (Super Admin, Admin, Manager, Analyst, Auditor) with query-level data scoping. Analyst sees own data; Manager/Admin see org data; Auditor sees org data read-only; Super Admin sees all data globally.
 - **Anti-Phishing Engine:** Multi-layer defense against credential stuffing, admin account targeting, IP throttling, auto-blocking, and enumeration attacks. All blocks are logged to the Audit Ledger.
 - **Indonesia-Contextual Design:** Built around BPOM/SNI reporting formats (A4 PDF, Times New Roman 12pt) and Bahasa Indonesia interface, addressing a gap where international tools lack local regulatory context.
-- **No Hardware Lock-in:** Requires only a standard camera and web browser. Commercial alternatives (ProtoCOL 3, SphereFlash) require proprietary hardware costing USD 15,000–60,000, excluding most Indonesian labs.
+- **No Hardware Lock-in:** Requires only a web browser. Commercial alternatives (ProtoCOL 3, SphereFlash) require proprietary hardware costing USD 15,000–60,000, excluding most Indonesian labs.
 - **Enterprise Security Stack:** Argon2 password hashing, JWT blacklisting, magic-bytes file validation, UUID filename generation, EXIF stripping, ClamAV malware scanning, account lockout, SecureHeadersMiddleware (HSTS, CSP, X-Frame-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy).
 
 ### Positioning Compared to Existing Approaches
@@ -319,7 +319,7 @@ YOLOv8 was selected because it provides the optimal balance of speed (< 50ms per
 
 - **Phase 0 — Security Validation:** Magic-bytes MIME type verification via python-magic (not Content-Type header), UUID filename generation (anti-path-traversal), EXIF metadata stripping via piexif (GPS privacy), ClamAV malware scanning (fail-open with warning), minimum dimension check (100×100px), NaN/Inf dilution factor guard.
 
-- **Phase 1 — Plate Localization:** CLAHE (Contrast Limited Adaptive Histogram Equalization) adaptive histogram equalization normalizes brightness/contrast. Hough Circle Transform (OpenCV) detects the circular agar plate boundary and creates a region-of-interest mask. Perspective correction via homography transform normalizes elliptical camera angles. ROI extraction isolates the agar area, with minimum size guard to prevent extreme distortion.
+- **Phase 1 — Plate Localization:** CLAHE (Contrast Limited Adaptive Histogram Equalization) adaptive histogram equalization normalizes brightness/contrast. Hough Circle Transform (OpenCV) detects the circular agar plate boundary and creates a region-of-interest mask. Perspective correction via homography transform normalizes elliptical plate views. ROI extraction isolates the agar area, with minimum size guard to prevent extreme distortion.
 
 - **Phase 2 — 5-Class Detection & Classification:** Fine-tuned YOLOv8 performs simultaneous object detection across all 5 classes (colony_single, colony_merged, bubble, dust_debris, media_crack) with per-media-type confidence thresholds from alias-mapped configuration. NMS with IoU threshold 0.45 resolves overlapping bounding boxes. SA-001 area-based estimation calculates actual colony count within merged regions: estimated_count = round(area_merged_bbox / median_area_single_bbox), with fallback = 2 and per-bbox cap = 50. OOM guard caps input at 1024px.
 
