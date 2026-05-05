@@ -59,7 +59,7 @@ export default function HistoryPage() {
     };
     const debounce = setTimeout(loadHistory, 300);
     return () => clearTimeout(debounce);
-  }, [searchTerm, mediaFilter, statusFilter, page]);
+  }, [searchTerm, mediaFilter, statusFilter, page, t]);
 
   const handleViewAnalysis = (id: string) =>
     router.push(`/dashboard/results/${id}`);
@@ -85,7 +85,7 @@ export default function HistoryPage() {
   };
 
   const handleDelete = async (id: string, sampleId: string) => {
-    if (!window.confirm(t("history.confirmDelete").replace("{id}", sampleId)))
+    if (!window.confirm(t("history.confirmDelete", { id: sampleId })))
       return;
     try {
       await analysesApi.delete(id);
@@ -273,7 +273,7 @@ export default function HistoryPage() {
                         ].map((h) => (
                           <th
                             key={h}
-                            className="px-4 py-3 text-[9px] font-black text-slate-500 uppercase tracking-widest"
+                            className="px-4 py-3 text-[9px] font-black text-slate-700 uppercase tracking-widest"
                           >
                             {h}
                           </th>
@@ -290,19 +290,19 @@ export default function HistoryPage() {
                           <td className="px-4 py-3 font-bold text-slate-900">
                             {analysis.sample_id}
                           </td>
-                          <td className="px-4 py-3 font-bold text-slate-500">
+                          <td className="px-4 py-3 font-bold text-slate-700">
                             {analysis.media_type}
                           </td>
-                          <td className="px-4 py-3 font-mono">
+                          <td className="px-4 py-3 font-mono text-slate-700">
                             {analysis.colony_count}
                           </td>
-                          <td className="px-4 py-3 font-black tabular-nums">
+                          <td className="px-4 py-3 font-black tabular-nums text-slate-900">
                             {formatCFU(analysis.cfu_per_ml, analysis.warnings)}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 text-slate-600 font-medium">
                             {(analysis.confidence_score * 100).toFixed(0)}%
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 text-slate-500 font-medium">
                             {new Date(analysis.created_at).toLocaleDateString()}
                           </td>
                           <td className="px-4 py-3">

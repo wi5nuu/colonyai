@@ -1,9 +1,14 @@
 import api from './api';
-import { LoginRequest, RegisterRequest, AuthResponse, User } from './types';
+import { LoginRequest, RegisterRequest, AuthResponse, User, MFAVerifyRequest } from './types';
 
 export const authApi = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>('/api/v1/auth/login', data);
+    return response.data;
+  },
+
+  verifyMfa: async (data: MFAVerifyRequest): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>('/api/v1/auth/verify-mfa', data);
     return response.data;
   },
 

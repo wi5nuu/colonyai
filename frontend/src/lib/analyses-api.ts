@@ -80,6 +80,6 @@ export const analysesApi = {
 
   getLimsLogs: async (limit: number = 50): Promise<any[]> => {
     const response = await api.get('/api/v1/lims/logs', { params: { limit } });
-    return response.data;
+    return response.data as any[];
   },
 };

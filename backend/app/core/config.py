@@ -14,13 +14,11 @@ class Settings(BaseSettings):
     # Application
     APP_NAME: str = "ColonyAI Backend"
     APP_VERSION: str = "1.0.0"
-    # FIX QA-004: DEBUG default False for production safety
     DEBUG: bool = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
     SECRET_KEY: str = os.getenv("SECRET_KEY") or secrets.token_urlsafe(32)
     API_V1_PREFIX: str = "/api/v1"
 
     # Database  
-    # Direct absolute path for Windows
     DATABASE_URL: str = os.getenv("DATABASE_URL") or "sqlite+aiosqlite:///./colonyai.db"
     DATABASE_POOL_SIZE: int = 10
     DATABASE_MAX_OVERFLOW: int = 20
@@ -40,16 +38,15 @@ class Settings(BaseSettings):
     AWS_S3_URL_EXPIRY: int = 3600
 
     # Local file storage (fallback when S3 not configured)
-    # Use absolute path to ensure consistent file serving regardless of working directory
     UPLOAD_DIR: str = str(Path(__file__).parent.parent.parent / "uploads")
-    BACKEND_URL: str = "http://localhost:8000"
+    BACKEND_URL: str = "http://127.0.0.1:8000"
 
     # Initial Admin Seed
     INITIAL_ADMIN_EMAIL: str = "admin@colonyai.local"
     INITIAL_ADMIN_PASSWORD: str = "admin_secure_placeholder"
     SEED_USERS_PASSWORD: str = os.getenv("SEED_USERS_PASSWORD", "ColonyAI2026!")
 
-    # FIX QA-001: JWT secrets generated dynamically if not set
+    # JWT Security
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY") or secrets.token_urlsafe(32)
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
@@ -81,6 +78,15 @@ class Settings(BaseSettings):
     LIMS_MODE: str = os.getenv("LIMS_MODE", "simulated")
     LIMS_WEBHOOK_URL: str = os.getenv("LIMS_WEBHOOK_URL", "")
 
+    # SMTP Settings (Phase II MFA)
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USER: str = os.getenv("SMTP_USER", "")
+    SMTP_PASS: str = os.getenv("SMTP_PASS", "")
+    EMAILS_FROM_EMAIL: str = os.getenv("EMAILS_FROM_EMAIL", "noreply@colonyai.diag")
+    EMAILS_FROM_NAME: str = os.getenv("EMAILS_FROM_NAME", "ColonyAI Security")
+    SMTP_TLS: bool = True
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -95,6 +101,5 @@ class Settings(BaseSettings):
             Path(f"{self.UPLOAD_DIR}/original").mkdir(parents=True, exist_ok=True)
             Path(f"{self.UPLOAD_DIR}/annotated").mkdir(parents=True, exist_ok=True)
             Path(f"{self.UPLOAD_DIR}/reports").mkdir(parents=True, exist_ok=True)
-
 
 settings = Settings()

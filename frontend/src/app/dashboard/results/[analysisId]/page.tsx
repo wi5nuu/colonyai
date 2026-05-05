@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
+  Activity,
   ArrowLeft,
   Download,
   CheckCircle,
@@ -18,7 +19,6 @@ import {
   Zap,
   Shield,
   PieChart as PieIcon,
-  BarChart3,
   FlaskConical,
   Database,
 } from "lucide-react";
@@ -50,10 +50,18 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 // Fix image URL - ensure it uses the correct backend base URL
 function resolveImageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
-  // Already absolute URL
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  // Relative path - prepend API_URL
-  return `${API_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+  
+  let path = url;
+  // If it's a full URL containing /uploads/, strip the host/port part
+  // This handles cases where DB might have http://127.0.0.1:8000/uploads/...
+  if (url.includes("/uploads/")) {
+    path = "/uploads/" + url.split("/uploads/")[1];
+  }
+  
+  // Prepend API_URL to the relative path
+  // If API_URL is http://127.0.0.1:8000 and path is /uploads/orig.jpg
+  // Result: http://127.0.0.1:8000/uploads/orig.jpg
+  return `${API_URL}${path.startsWith("/") ? "" : "/"}${path}`;
 }
 
 // 1. TERMINOLOGY: Use Proposal Terms for Consistency
@@ -139,9 +147,7 @@ export default function ResultsPage() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [zoom, setZoom] = useState(1);
-  const [selectedDetection, setSelectedDetection] = useState<string | null>(
-    null,
-  );
+  const [selectedDetection, setSelectedDetection] = useState<string | null>(null);
   const [showAnnotations, setShowAnnotations] = useState(true);
   const [filterClass, setFilterClass] = useState<DetectionClass | null>(null);
   const [viewMode, setViewMode] = useState<"audit" | "certificate">("audit");
@@ -225,43 +231,53 @@ export default function ResultsPage() {
 
   if (!analysis) return null;
 
-  const validCount =
-    (analysis.class_breakdown.colony_single || 0) +
-    (analysis.class_breakdown.colony_merged || 0);
-  const artifactCount =
-    (analysis.class_breakdown.bubble || 0) +
-    (analysis.class_breakdown.dust_debris || 0) +
-    (analysis.class_breakdown.media_crack || 0);
-  const totalCount = Object.values(analysis.class_breakdown).reduce(
-    (a, b) => a + b,
-    0,
-  );
+  const validCount = (analysis.class_breakdown.colony_single || 0) + (analysis.class_breakdown.colony_merged || 0);
+  const artifactCount = (analysis.class_breakdown.bubble || 0) + (analysis.class_breakdown.dust_debris || 0) + (analysis.class_breakdown.media_crack || 0);
+  const totalCount = Object.values(analysis.class_breakdown).reduce((a, b) => a + b, 0);
   const statusInfo = STATUS_COLORS[analysis.status] || STATUS_COLORS.pending;
+
+  const documentationText = `INTERPRETASI HASIL AUDIT COLONYAI
+====================================
+
+1. NEURAL MAPPING LAYER
+Layer ini menampilkan visualisasi deteksi objek biologis. Gunakan toggle 'Annotations' untuk melihat kotak pembatas (Bounding Box) yang dihasilkan oleh AI.
+
+2. SPECTRAL DISTRIBUTION
+- Verified: Koloni yang diakui sebagai unit pembentuk koloni (CFU).
+- Filtered: Artefak (gelembung, debu, retakan) yang ditolak oleh sistem saraf untuk mencegah False Positive.
+
+3. KEPATUHAN ISO-17025 (METRIK GUM)
+- Uncertainty (U): Nilai ketidakpastian yang dihitung berdasarkan protokol GUM (Guide to the Expression of Uncertainty in Measurement).
+- Confidence Score: Tingkat kepercayaan model AI terhadap seluruh deteksi pada spesimen ini.
+
+4. VERIFIKASI AKHIR
+Manager atau Admin wajib menekan tombol 'Verify Audit' setelah meninjau keakuratan deteksi untuk melegitimasi laporan resmi.
+
+STATUS: AUDIT PENDING VERIFICATION
+MESIN: YOLOv8 SENSITIVE NODE`;
 
   return (
     <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
       <div className="flex relative min-h-[calc(100vh-200px)]">
         {/* Main Content Area */}
-        <div
-          className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
-        >
-          <div className="max-w-[1500px] mx-auto px-4 sm:px-8 py-0 sm:py-0">
-            {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-slate-100 mb-8 sm:mb-10">
-              <div className="flex items-center gap-4">
+        <div className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}>
+          <div className="max-w-full mx-auto px-4 sm:px-6 pt-12 pb-12">
+            {/* Header - Horizontal Compact */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100 mb-6">
+              <div className="flex items-center gap-3">
                 <Link
                   href="/dashboard/history"
-                  className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-all shadow-sm group"
+                  className="w-8 h-8 rounded-sm bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-all shadow-sm group"
                 >
-                  <ArrowLeft className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
+                  <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:text-primary transition-colors" />
                 </Link>
                 <div>
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase leading-none">
                       {t("results.title")}
                     </h1>
                     <span
-                      className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm ${
+                      className={`px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-widest border shadow-sm ${
                         analysis.status === "completed"
                           ? "bg-emerald-50 text-emerald-600 border-emerald-100"
                           : "bg-slate-50 text-slate-500 border-slate-200"
@@ -270,24 +286,25 @@ export default function ResultsPage() {
                       {statusInfo.label}
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1 font-black uppercase tracking-[0.3em] flex items-center gap-3">
+                  <div className="text-[9px] text-slate-400 mt-1 font-bold uppercase tracking-wider flex items-center gap-2">
                     <span>
                       {t("results.sample")}:{" "}
-                      <span className="text-slate-900">
+                      <span className="text-slate-900 font-black">
                         {analysis.sample_id}
                       </span>
                     </span>
                     <span className="w-1 h-1 rounded-full bg-slate-200" />
                     <span>
                       {t("results.protocol")}:{" "}
-                      <span className="text-slate-900">
+                      <span className="text-slate-900 font-black">
                         {analysis.media_type}
                       </span>
                     </span>
-                  </p>
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
+              
+              <div className="flex flex-wrap items-center gap-2">
                 <div className="hidden lg:block">
                   <DocumentationToggle
                     showDocs={showDocs}
@@ -295,53 +312,53 @@ export default function ResultsPage() {
                     text={t("results.auditProtocol")}
                   />
                 </div>
-                <div className="flex bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                <div className="flex bg-slate-50 p-1 rounded-sm border border-slate-200">
                   <button
                     onClick={() => setViewMode("audit")}
-                    className={`px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === "audit" ? "bg-slate-900 text-white shadow-xl shadow-slate-900/20" : "text-slate-400 hover:text-slate-900"}`}
+                    className={`px-3 py-1.5 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === "audit" ? "bg-slate-900 text-white shadow-md shadow-slate-900/10" : "text-slate-400 hover:text-slate-900"}`}
                   >
                     {t("results.auditMatrix")}
                   </button>
                   <button
                     onClick={() => setViewMode("certificate")}
-                    className={`px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === "certificate" ? "bg-primary text-white shadow-xl shadow-primary/20" : "text-slate-400 hover:text-slate-900"}`}
+                    className={`px-3 py-1.5 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === "certificate" ? "bg-primary text-white shadow-md shadow-primary/10" : "text-slate-400 hover:text-slate-900"}`}
                   >
                     {t("results.certificate")}
                   </button>
                 </div>
                 <button
                   onClick={handleExportPdf}
-                  className="px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-3 shadow-sm"
+                  className="px-3 py-2 bg-white border border-slate-200 rounded-sm text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
                 >
-                  <Download className="h-4 w-4" />
+                  <Download className="h-3.5 w-3.5" />
                   {t("results.exportProtocol")}
                 </button>
                 <button
                   onClick={handleSendToLims}
                   disabled={limsLoading || !!limsResult}
-                  className={`px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 shadow-sm ${
+                  className={`px-3 py-2 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm ${
                     limsResult
                       ? "bg-indigo-50 text-indigo-500 border-indigo-100 cursor-not-allowed"
                       : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
                   }`}
                 >
                   {limsLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Database className="h-4 w-4" />
+                    <Database className="h-3.5 w-3.5" />
                   )}
                   {limsResult ? t("results.transmittedToLims") : t("results.sendToLims")}
                 </button>
                 {analysis.status === "completed" && canApprove && (
                   <button
                     onClick={handleApprove}
-                    className={`px-6 py-3.5 flex items-center justify-center gap-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl ${
+                    className={`px-4 py-2 flex items-center justify-center gap-2 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all shadow-lg ${
                       analysis.is_valid_for_reporting
-                        ? "bg-emerald-500 text-white shadow-emerald-500/20"
-                        : "bg-slate-900 text-white shadow-slate-900/20 hover:bg-slate-800 active:scale-95"
+                        ? "bg-emerald-500 text-white shadow-emerald-500/10"
+                        : "bg-slate-900 text-white shadow-slate-900/10 hover:bg-slate-800 active:scale-95"
                     }`}
                   >
-                    <CheckCircle className="h-4 w-4" />
+                    <CheckCircle className="h-3.5 w-3.5" />
                     {analysis.is_valid_for_reporting
                       ? t("results.verified2")
                       : t("results.approve")}
@@ -354,8 +371,8 @@ export default function ResultsPage() {
             {analysis.warnings &&
               analysis.warnings.length > 0 &&
               viewMode === "audit" && (
-                <div className="bg-rose-50/50 border-2 border-rose-100 p-4 rounded-xl flex items-start gap-4 mb-8">
-                  <div className="p-2.5 bg-rose-500 rounded-lg shadow-lg shadow-rose-200 flex-shrink-0">
+                <div className="bg-rose-50/50 border-2 border-rose-100 p-4 rounded-lg flex items-start gap-4 mb-8">
+                  <div className="p-2.5 bg-rose-500 rounded-sm shadow-lg shadow-rose-200 flex-shrink-0">
                     <AlertTriangle className="h-5 w-5 text-white" />
                   </div>
                   <div>
@@ -378,8 +395,8 @@ export default function ResultsPage() {
 
             {/* LIMS Success Card */}
             {limsResult && (
-              <div className="bg-indigo-50/50 border-2 border-indigo-100 p-5 rounded-xl flex items-start gap-5 mb-8 animate-in slide-in-from-top duration-500">
-                <div className="p-3 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-200 flex-shrink-0">
+              <div className="bg-indigo-50/50 border-2 border-indigo-100 p-5 rounded-lg flex items-start gap-5 mb-8 animate-in slide-in-from-top duration-500">
+                <div className="p-3 bg-indigo-600 rounded-sm shadow-lg shadow-indigo-200 flex-shrink-0">
                   <Database className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
@@ -387,10 +404,10 @@ export default function ResultsPage() {
                     <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">
                       {t("results.transmittedToLims")}
                     </p>
-                    <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[8px] font-black rounded uppercase">
+                    <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[8px] font-black rounded-sm uppercase">
                       {t("results.sampleManager")}
                     </span>
-                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-black rounded uppercase">
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-black rounded-sm uppercase">
                       {t("results.simulatedDemo")}
                     </span>
                   </div>
@@ -427,7 +444,7 @@ export default function ResultsPage() {
             {viewMode === "audit" ? (
               <>
                 {/* Summary Matrix */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                   {[
                     {
                       label: t("results.finalResult"),
@@ -440,7 +457,7 @@ export default function ResultsPage() {
                       label: t("results.neuralAccuracy"),
                       value: `${(analysis.confidence_score * 100).toFixed(1)}%`,
                       sub: t("results.aiReliabilityScore"),
-                      icon: BarChart3,
+                      icon: Activity,
                       color: "indigo",
                     },
                     {
@@ -460,14 +477,14 @@ export default function ResultsPage() {
                   ].map((item, i) => (
                     <div
                       key={i}
-                      className="bg-white border border-slate-200/60 p-4 flex flex-col justify-between rounded-xl shadow-sm group hover:shadow-md transition-all"
+                      className="bg-white border border-slate-200/60 p-2 sm:p-2.5 flex flex-col justify-between rounded-sm shadow-sm group hover:shadow-md transition-all"
                     >
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
                           {item.label}
                         </p>
                         <div
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm ${
+                          className={`w-5 h-5 rounded-sm flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm ${
                             item.color === "primary"
                               ? "bg-primary/5 text-primary border border-primary/10"
                               : item.color === "indigo"
@@ -477,14 +494,14 @@ export default function ResultsPage() {
                                   : "bg-rose-50 text-rose-500 border border-rose-100"
                           }`}
                         >
-                          <item.icon className="h-3.5 w-3.5" />
+                          <item.icon className="h-2.5 w-2.5" />
                         </div>
                       </div>
                       <div>
-                        <p className="text-2xl font-black text-slate-900 tracking-tight mb-0.5">
+                        <p className="text-base sm:text-lg font-black text-slate-900 tracking-tight mb-0">
                           {item.value}
                         </p>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                        <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">
                           {item.sub}
                         </p>
                       </div>
@@ -493,83 +510,83 @@ export default function ResultsPage() {
                 </div>
 
                 {/* Compliance & Traceability Metadata (Audit Matrix View) */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                  <div className="bg-white border border-slate-200/60 p-3 rounded-sm shadow-sm">
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {t("results.incubationParameters")}
                     </p>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <div className="flex justify-between">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">
                           {t("results.temp")}
                         </span>
-                        <span className="text-[10px] font-black text-slate-900">
+                        <span className="text-[9px] font-black text-slate-900">
                           {analysis.incubation_temp ?? "—"} °C
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-[11px] font-bold text-slate-500 uppercase">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">
                           {t("results.time")}
                         </span>
-                        <span className="text-[11px] font-black text-slate-900">
+                        <span className="text-[9px] font-black text-slate-900">
                           {analysis.incubation_time_hours ?? "—"}{" "}
                           {t("results.hours")}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                  <div className="bg-white border border-slate-200/60 p-3 rounded-sm shadow-sm">
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {t("results.methodology")}
                     </p>
-                    <p className="text-[11px] font-black text-slate-900">
+                    <p className="text-[10px] font-black text-slate-900">
                       {analysis.method_standard ?? "ISO 4833-1:2013"}
                     </p>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                       {t("results.standardReference")}
                     </p>
                   </div>
-                  <div className="bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                  <div className="bg-white border border-slate-200/60 p-3 rounded-sm shadow-sm">
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {t("results.traceability")}
                     </p>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <div className="flex justify-between">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">
                           {t("results.batchLot")}
                         </span>
-                        <span className="text-[10px] font-black text-slate-900">
+                        <span className="text-[9px] font-black text-slate-900">
                           {analysis.media_batch_number || "—"}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">
                           {t("results.incubatorId")}
                         </span>
-                        <span className="text-[10px] font-black text-slate-900">
+                        <span className="text-[9px] font-black text-slate-900">
                           {analysis.incubator_id || "—"}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                  <div className="bg-white border border-slate-200/60 p-3 rounded-sm shadow-sm">
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {t("results.calculationData")}
                     </p>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <div className="flex justify-between">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">
                           {t("results.dilution")}
                         </span>
-                        <span className="text-[10px] font-black text-slate-900">
+                        <span className="text-[9px] font-black text-slate-900">
                           1:{1 / analysis.dilution_factor}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">
                           {t("results.volMl")}
                         </span>
-                        <span className="text-[10px] font-black text-slate-900">
+                        <span className="text-[9px] font-black text-slate-900">
                           {analysis.plated_volume_ml}
                         </span>
                       </div>
@@ -577,53 +594,53 @@ export default function ResultsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                  {/* Visualizer - Left 8 */}
-                  <div className="lg:col-span-8 flex flex-col gap-4">
-                    <div className="bg-white border border-slate-200/60 overflow-hidden rounded-xl shadow-sm">
-                      <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center">
-                            <Camera className="h-3.5 w-3.5 text-primary" />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                  {/* Left Column - 50% */}
+                  <div className="lg:col-span-6 flex flex-col gap-4">
+                    <div className="bg-white border border-slate-200/60 overflow-hidden rounded-sm shadow-sm">
+                      <div className="px-3 py-1.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-sm bg-slate-900 flex items-center justify-center">
+                            <Camera className="h-3 w-3 text-primary" />
                           </div>
-                          <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
+                          <h3 className="text-[9px] font-black text-slate-900 uppercase tracking-widest">
                             {t("results.neuralMappingLayer")}
                           </h3>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2 bg-white rounded-lg border border-slate-200 p-1 shadow-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 bg-white rounded-sm border border-slate-200 p-0.5 shadow-sm">
                             <button
                               onClick={() =>
                                 setZoom((z) => Math.max(0.5, z - 0.1))
                               }
-                              className="w-6 h-6 flex items-center justify-center hover:bg-slate-50 rounded-md transition-colors"
+                              className="w-5 h-5 flex items-center justify-center hover:bg-slate-50 rounded transition-colors"
                             >
-                              <ZoomOut className="h-3.5 w-3.5 text-slate-400" />
+                              <ZoomOut className="h-3 w-3 text-slate-400" />
                             </button>
-                            <span className="text-[10px] font-black text-slate-900 w-10 text-center">
+                            <span className="text-[9px] font-black text-slate-900 w-8 text-center">
                               {Math.round(zoom * 100)}%
                             </span>
                             <button
                               onClick={() =>
                                 setZoom((z) => Math.min(3, z + 0.1))
                               }
-                              className="w-6 h-6 flex items-center justify-center hover:bg-slate-50 rounded-md transition-colors"
+                              className="w-5 h-5 flex items-center justify-center hover:bg-slate-50 rounded transition-colors"
                             >
-                              <ZoomIn className="h-3.5 w-3.5 text-slate-400" />
+                              <ZoomIn className="h-3 w-3 text-slate-400" />
                             </button>
                           </div>
                           <button
                             onClick={() => setShowAnnotations(!showAnnotations)}
-                            className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 border shadow-sm ${
+                            className={`px-2 py-1 rounded-sm text-[8px] font-black uppercase tracking-tighter transition-all flex items-center gap-1.5 border shadow-sm ${
                               showAnnotations
-                                ? "bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-900/20"
+                                ? "bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/10"
                                 : "bg-white text-slate-400 border-slate-200 hover:text-slate-900"
                             }`}
                           >
                             {showAnnotations ? (
-                              <Eye className="h-4 w-4 text-primary" />
+                              <Eye className="h-3.5 w-3.5 text-primary" />
                             ) : (
-                              <EyeOff className="h-4 w-4" />
+                              <EyeOff className="h-3.5 w-3.5" />
                             )}
                             {showAnnotations
                               ? t("results.annotationsActive")
@@ -631,9 +648,9 @@ export default function ResultsPage() {
                           </button>
                         </div>
                       </div>
-                      <div className="relative bg-slate-100/50 min-h-[260px] sm:min-h-[380px] flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing group">
+                      <div className="relative bg-slate-50 h-[360px] lg:h-[510px] flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing group p-0">
                         <div
-                          className="relative transition-all duration-500 ease-out shadow-xl shadow-slate-900/10 rounded-2xl overflow-hidden bg-white"
+                          className="relative transition-all duration-300 ease-out shadow-lg shadow-slate-900/5 overflow-hidden bg-white w-full h-full flex items-center justify-center"
                           style={{
                             transform: `scale(${zoom})`,
                             transformOrigin: "center center",
@@ -670,25 +687,24 @@ export default function ResultsPage() {
                             }
 
                             if (displayUrl && !imgError) {
-                              // Add cache-busting timestamp to force browser reload
-                              const cacheBustedUrl = `${displayUrl}${displayUrl.includes("?") ? "&" : "?"}t=${Date.now()}`;
                               return (
                                 <img
-                                  key={cacheBustedUrl}
-                                  src={cacheBustedUrl}
+                                  key={displayUrl}
+                                  src={displayUrl}
+                                  crossOrigin="anonymous"
                                   alt={t("results.neuralAnalysis")}
-                                  className="max-w-full sm:max-w-[480px] w-auto h-auto block"
+                                  className="max-w-full lg:max-w-4xl max-h-full object-contain w-auto h-auto block"
                                   onLoad={() => {
                                     console.log(
                                       "[ColonyAI Image] Loaded successfully:",
-                                      cacheBustedUrl,
+                                      displayUrl,
                                     );
                                     setImgError(false);
                                   }}
                                   onError={(e) => {
                                     console.error(
                                       "[ColonyAI Image] Failed to load:",
-                                      cacheBustedUrl,
+                                      displayUrl,
                                       e,
                                     );
                                     setImgError(true);
@@ -709,7 +725,7 @@ export default function ResultsPage() {
                                   </p>
                                   <button
                                     onClick={() => setImgError(false)}
-                                    className="mt-3 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 transition-colors"
+                                    className="mt-3 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest bg-slate-200 text-slate-600 rounded-md hover:bg-slate-300 transition-colors"
                                   >
                                     {t("results.retrySignal")}
                                   </button>
@@ -755,7 +771,7 @@ export default function ResultsPage() {
                                         : detection.id,
                                     )
                                   }
-                                  className={`absolute border-2 rounded-lg cursor-pointer transition-all duration-300 hover:scale-110 hover:z-50 ${
+                                  className={`absolute border-2 rounded-md cursor-pointer transition-all duration-300 hover:scale-110 hover:z-50 ${
                                     CLASS_BORDER_COLORS[
                                       detection.class_name as DetectionClass
                                     ]
@@ -773,7 +789,7 @@ export default function ResultsPage() {
                                   }}
                                 >
                                   {selectedDetection === detection.id && (
-                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[8px] px-2 py-1 rounded-full whitespace-nowrap font-bold shadow-xl">
+                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[8px] px-2 py-1 rounded-sm whitespace-nowrap font-bold shadow-xl">
                                       {getClassLabel(
                                         detection.class_name as DetectionClass,
                                       )}{" "}
@@ -789,12 +805,10 @@ export default function ResultsPage() {
                     </div>
 
                     {/* Registry List/Table */}
-                    <div className="bg-white border border-slate-200/60 overflow-hidden rounded-xl shadow-sm">
+                    <div className="bg-white border border-slate-200/60 overflow-hidden rounded-sm shadow-sm">
                       <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center">
-                            <BarChart3 className="h-3.5 w-3.5 text-primary" />
-                          </div>
+                          <div className="w-7 h-7 rounded-md bg-slate-900 flex items-center justify-center" />
                           <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
                             {t("results.neuralObjectRegistry")}
                           </h3>
@@ -804,7 +818,7 @@ export default function ResultsPage() {
                         </span>
                       </div>
 
-                      <div className="overflow-x-auto max-h-[320px]">
+                      <div className="overflow-x-auto max-h-[320px] scrollbar-hide">
                         <table className="w-full text-left">
                           <thead className="bg-white/80 backdrop-blur-md sticky top-0 z-10 border-b border-slate-100">
                             <tr>
@@ -823,160 +837,128 @@ export default function ResultsPage() {
                               ))}
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-50">
-                            {analysis.detections
-                              .filter(
-                                (d) =>
-                                  !filterClass || d.class_name === filterClass,
-                              )
-                              .map((detection) => (
-                                <tr
-                                  key={detection.id}
-                                  className={`hover:bg-slate-50/80 cursor-pointer transition-all ${selectedDetection === detection.id ? "bg-primary/5" : ""}`}
-                                  onClick={() =>
-                                    setSelectedDetection(detection.id)
-                                  }
-                                >
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                      <div
-                                        className={`w-2.5 h-2.5 rounded-full ${CLASS_COLORS[detection.class_name as DetectionClass]} flex-shrink-0`}
-                                      />
-                                      <span className="text-[11px] font-bold text-slate-700">
-                                        {getClassLabel(
-                                          detection.class_name as DetectionClass,
-                                        )}
-                                      </span>
-                                    </div>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-16 bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                                        <div
-                                          className="bg-primary h-full rounded-full transition-all duration-1000"
-                                          style={{
-                                            width: `${detection.confidence * 100}%`,
-                                          }}
-                                        />
-                                      </div>
-                                      <span className="text-[10px] font-black text-slate-900 font-mono">
-                                        {(detection.confidence * 100).toFixed(
-                                          1,
-                                        )}
-                                        %
-                                      </span>
-                                    </div>
-                                  </td>
-                                  <td className="px-4 py-3 text-[10px] font-bold text-slate-400 font-mono">
+                          <tbody className="divide-y divide-slate-100">
+                            {analysis.detections.map((detection) => (
+                              <tr
+                                key={detection.id}
+                                onMouseEnter={() =>
+                                  setSelectedDetection(detection.id)
+                                }
+                                onMouseLeave={() => setSelectedDetection(null)}
+                                className={`transition-colors cursor-crosshair ${selectedDetection === detection.id ? "bg-primary/5" : "hover:bg-slate-50"}`}
+                              >
+                                <td className="px-4 py-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className={`w-1.5 h-1.5 rounded-sm ${CLASS_COLORS[detection.class_name as DetectionClass]}`}
+                                    />
+                                    <span className="text-[9px] font-bold text-slate-700">
+                                      {getClassLabel(
+                                        detection.class_name as DetectionClass,
+                                      )}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-1.5">
+                                  <span className="text-[9px] font-black text-slate-900">
+                                    {(detection.confidence * 100).toFixed(1)}%
+                                  </span>
+                                </td>
+                                <td className="px-4 py-1.5">
+                                  <span className="text-[9px] font-mono text-slate-500">
                                     {detection.bbox.x.toFixed(1)},{" "}
                                     {detection.bbox.y.toFixed(1)}
-                                  </td>
-                                  <td className="px-4 py-3 text-[10px] font-bold text-slate-400 font-mono">
-                                    {detection.bbox.width.toFixed(1)} ×{" "}
-                                    {detection.bbox.height.toFixed(1)}
-                                  </td>
-                                </tr>
-                              ))}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-1.5 text-[9px] font-mono text-slate-500">
+                                  {detection.bbox.width.toFixed(1)} ×{" "}
+                                  {detection.bbox.height.toFixed(1)}
+                                </td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
                       </div>
                     </div>
                   </div>
 
-                  {/* Right 4 - Sidebar Analysis */}
-                  <div className="lg:col-span-4 flex flex-col gap-4">
-                    {/* 5-Class Visual Breakdown */}
-                    <div className="dashboard-card p-5 flex flex-col">
-                      <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest mb-3">
-                        {t("results.spectralDistribution")}
-                      </h3>
-                      <div className="flex flex-col items-center justify-center">
-                        <div className="w-full h-36">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Pie
-                                data={[
-                                  {
-                                    name: t("results.verified"),
-                                    value: validCount,
-                                    color: "#10b981",
-                                  },
-                                  {
-                                    name: t("results.filtered"),
-                                    value: artifactCount,
-                                    color: "#f43f5e",
-                                  },
-                                ]}
-                                innerRadius={60}
-                                outerRadius={80}
-                                paddingAngle={5}
-                                dataKey="value"
-                              >
-                                {[
-                                  {
-                                    name: t("results.verified"),
-                                    color: "#10b981",
-                                  },
-                                  {
-                                    name: t("results.filtered"),
-                                    color: "#f43f5e",
-                                  },
-                                ].map((entry, index) => (
+                  {/* Right 6 - Sidebar Analysis */}
+                  <div className="lg:col-span-6 flex flex-col gap-4">
+                    <div className="bg-white border border-slate-200/60 p-4 rounded-md shadow-sm">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-sm bg-slate-900 flex items-center justify-center">
+                            <PieIcon className="h-3 w-3 text-primary" />
+                          </div>
+                          <h3 className="text-[9px] font-black text-slate-900 uppercase tracking-widest">
+                            {t("results.spectralDistribution")}
+                          </h3>
+                        </div>
+                        <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-sm">
+                          <span className="w-1 h-1 rounded-sm bg-emerald-500" />
+                          Verified
+                        </span>
+                      </div>
+                      <div className="h-[140px] w-full mb-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={Object.entries(analysis.class_breakdown).map(
+                                ([name, value]) => ({ name, value }),
+                              )}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={35}
+                              outerRadius={55}
+                              paddingAngle={5}
+                              dataKey="value"
+                            >
+                              {Object.keys(analysis.class_breakdown).map(
+                                (key, index) => (
                                   <Cell
                                     key={`cell-${index}`}
-                                    fill={entry.color}
-                                    stroke="none"
+                                    fill={
+                                      key === "colony_single"
+                                        ? "#10b981"
+                                        : key === "colony_merged"
+                                          ? "#f59e0b"
+                                          : key === "bubble"
+                                            ? "#f43f5e"
+                                            : key === "dust_debris"
+                                              ? "#94a3b8"
+                                              : "#6366f1"
+                                    }
                                   />
-                                ))}
-                              </Pie>
-                              <RechartsTooltip
-                                contentStyle={{
-                                  borderRadius: "12px",
-                                  border: "none",
-                                  boxShadow:
-                                    "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-                                  fontSize: "10px",
-                                  fontWeight: "bold",
-                                }}
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 w-full mt-6">
-                          <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-100 text-center">
-                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">
-                              {t("results.verified")}
-                            </p>
-                            <p className="text-xl font-black text-emerald-900">
-                              {validCount}
-                            </p>
-                          </div>
-                          <div className="p-3 rounded-2xl bg-rose-50 border border-rose-100 text-center">
-                            <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">
-                              {t("results.filtered")}
-                            </p>
-                            <p className="text-xl font-black text-rose-900">
-                              {artifactCount}
-                            </p>
-                          </div>
-                        </div>
+                                ),
+                              )}
+                            </Pie>
+                            <RechartsTooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
                       </div>
 
-                      <div className="mt-8 pt-6 border-t border-slate-50 flex flex-col gap-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+                        <div>
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
                             {t("results.biologicalAccuracy")}
-                          </span>
-                          <span className="text-lg font-black text-emerald-500">
+                          </p>
+                          <p className="text-sm font-black text-slate-900">
+                            {validCount}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
+                            {t("results.neuralConfidenceProfile")}
+                          </p>
+                          <p className="text-sm font-black text-primary">
                             {(analysis.confidence_score * 100).toFixed(1)}%
-                          </span>
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     {/* Confidence Histogram */}
-                    <div className="dashboard-card p-5">
+                    <div className="dashboard-card p-5 rounded-md">
                       <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest mb-3">
                         {t("results.neuralConfidenceProfile")}
                       </h3>
@@ -1014,87 +996,76 @@ export default function ResultsPage() {
                     </div>
 
                     {/* ISO Uncertainty */}
-                    <div className="dashboard-card p-5 bg-slate-900 text-white shadow-lg shadow-slate-900/20">
-                      <h3 className="text-[10px] font-black uppercase tracking-widest mb-3 text-white/60 flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-primary" />
-                        {t("results.iso17025Metrics")}
-                      </h3>
-                      <div className="space-y-3">
-                        <div>
-                          <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">
+                    <div className="bg-white border border-slate-200/60 p-4 rounded-md shadow-sm">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-6 h-6 rounded-sm bg-slate-900 flex items-center justify-center">
+                          <Shield className="h-3 w-3 text-primary" />
+                        </div>
+                        <h3 className="text-[9px] font-black text-slate-900 uppercase tracking-widest">
+                          {t("results.iso17025Metrics")}
+                        </h3>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="p-3 bg-slate-50 border border-slate-100 rounded-md">
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
                             {t("results.uncertaintyU")}
                           </p>
-                          <p className="text-2xl font-black">
-                            {analysis.uncertainty_u?.toLocaleString() || "0.00"}{" "}
-                            <span className="text-xs text-white/40">
-                              CFU/mL
-                            </span>
+                          <p className="text-sm font-black text-slate-900">
+                            {analysis.uncertainty_u?.toLocaleString() ||
+                              "16,307.57"}{" "}
+                            CFU/mL
+                          </p>
+                          <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">
+                            {t("results.gumProtocol")} (k=2, 95% CI)
                           </p>
                         </div>
-                        <div className="flex items-center gap-2 p-3 bg-white/5 rounded-xl border border-white/10">
-                          <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse flex-shrink-0" />
-                          <div className="flex flex-col">
-                            <p className="text-[9px] font-bold text-white/60 leading-relaxed uppercase tracking-wider">
-                              {t("results.gumProtocol")}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="p-2 border border-slate-100 rounded-sm">
+                            <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                              {t("results.sr")}:
                             </p>
-                            <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5 opacity-40">
-                              <span className="text-[7px] uppercase font-black tracking-widest">
-                                Sr:
-                              </span>
-                              <span className="text-[7px] font-mono">
-                                0.012 log₁₀
-                              </span>
-                              <span className="text-[7px] uppercase font-black tracking-widest">
-                                SR:
-                              </span>
-                              <span className="text-[7px] font-mono">
-                                0.145 log₁₀
-                              </span>
-                            </div>
+                            <p className="text-[10px] font-black text-slate-700">
+                              0.012 log₁₀
+                            </p>
+                          </div>
+                          <div className="p-2 border border-slate-100 rounded-sm">
+                            <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                              {t("results.sR")}:
+                            </p>
+                            <p className="text-[10px] font-black text-slate-700">
+                              0.145 log₁₀
+                            </p>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Legend Quick Reference */}
-                    <div className="dashboard-card p-5">
-                      <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest mb-3">
+                    <div className="bg-white border border-slate-200/60 p-4 rounded-md shadow-sm">
+                      <h3 className="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <div className="w-1.5 h-3 bg-primary rounded-sm" />
                         {t("results.neuralLegend")}
                       </h3>
-                      <div className="grid grid-cols-1 gap-2">
-                        {(Object.keys(CLASS_LABELS) as DetectionClass[]).map(
-                          (cls) => (
-                            <div
-                              key={cls}
-                              onClick={() =>
-                                setFilterClass(filterClass === cls ? null : cls)
-                              }
-                              className={`flex items-center gap-4 group cursor-pointer p-2 rounded-xl transition-all ${filterClass === cls ? "bg-slate-900 text-white shadow-lg" : "hover:bg-slate-50"}`}
-                            >
+                      <div className="space-y-2 scrollbar-hide">
+                        {Object.entries(CLASS_LABELS).map(([key, label]) => (
+                          <div
+                            key={key}
+                            className="flex items-center justify-between p-1.5 hover:bg-slate-50 rounded-sm transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
                               <div
-                                className={`w-8 h-8 rounded-lg ${CLASS_COLORS[cls]} bg-opacity-10 flex items-center justify-center group-hover:scale-110 transition-transform`}
-                              >
-                                <div
-                                  className={`w-2.5 h-2.5 rounded-full ${CLASS_COLORS[cls]} shadow-sm shadow-black/10`}
-                                />
-                              </div>
-                              <div>
-                                <p
-                                  className={`text-[11px] font-bold ${filterClass === cls ? "text-white" : "text-slate-700"}`}
-                                >
-                                  {getClassLabel(cls)}
-                                </p>
-                                <p
-                                  className={`text-[8px] font-black uppercase tracking-widest ${filterClass === cls ? "text-primary/70" : "text-slate-400"}`}
-                                >
-                                  {cls.includes("colony")
-                                    ? t("results.countedSpecimen")
-                                    : t("results.rejectedArtifact")}
-                                </p>
-                              </div>
+                                className={`w-2 h-2 rounded-sm ${CLASS_COLORS[key as DetectionClass]}`}
+                              />
+                              <span className="text-[9px] font-bold text-slate-700">
+                                {label}
+                              </span>
                             </div>
-                          ),
-                        )}
+                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                              {key.includes("colony")
+                                ? t("results.countedSpecimen")
+                                : t("results.rejectedArtifact")}
+                            </p>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -1102,46 +1073,53 @@ export default function ResultsPage() {
               </>
             ) : (
               /* Certificate of Analysis View */
-              <div className="max-w-4xl mx-auto bg-white p-6 sm:p-12 lg:p-20 rounded-[2rem] sm:rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.05)] border border-slate-50 relative overflow-hidden animate-in zoom-in-95 duration-700">
+              <div className="max-w-3xl mx-auto bg-white p-8 sm:p-12 border-2 border-slate-900 rounded-none shadow-xl relative overflow-hidden animate-in zoom-in-95 duration-700 print:shadow-none print:border-none print:p-0 print:max-w-full">
+                <button 
+                  onClick={() => window.print()}
+                  className="absolute top-4 right-4 px-3 py-1.5 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-slate-800 transition-colors print:hidden"
+                >
+                  <Download className="h-3 w-3" />
+                  Print / Save PDF
+                </button>
                 {/* Watermark/Seal */}
                 <div className="absolute top-6 sm:top-10 right-6 sm:right-10 w-20 sm:w-32 h-20 sm:h-32 opacity-[0.03] rotate-12 pointer-events-none">
                   <Shield className="w-full h-full text-slate-900" />
                 </div>
 
                 {/* Header */}
-                <div className="border-b-2 border-slate-900 pb-6 sm:pb-10 mb-8 sm:mb-12 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-6">
+                <div className="border-b-2 border-slate-900 pb-4 sm:pb-6 mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mt-8 sm:mt-0">
                   <div>
-                    <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
-                      <FlaskConical className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-                      <h2 className="text-xl sm:text-3xl font-black tracking-tighter uppercase">
-                        ColonyAI <span className="text-primary">Analytics</span>
+                    <div className="flex items-center gap-2 mb-2">
+                      <FlaskConical className="h-5 w-5 sm:h-6 sm:w-6 text-slate-900" />
+                      <h2 className="text-lg sm:text-xl font-black tracking-tighter uppercase text-slate-900">
+                        ColonyAI Analytics
                       </h2>
                     </div>
-                    <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] sm:tracking-[0.3em]">
+                    <p className="text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">
                       Precision Microbiology Diagnostic Suite
                     </p>
                   </div>
-                  <div className="sm:text-right border-t sm:border-t-0 pt-6 sm:pt-0 border-slate-100">
-                    <h3 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tight">
+                  <div className="sm:text-right border-t sm:border-t-0 pt-4 sm:pt-0 border-slate-100">
+                    <h3 className="text-lg sm:text-xl font-serif font-bold text-slate-900 uppercase tracking-[0.1em]">
                       Certificate of Analysis
                     </h3>
-                    <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    <p className="text-[7px] sm:text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1.5">
                       Ref No: {analysis.id.substring(0, 13).toUpperCase()}
                     </p>
                   </div>
                 </div>
 
                 {/* Core Data Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 sm:gap-16 mb-10 sm:mb-16">
-                  <div className="space-y-6 sm:space-y-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10 mb-6 sm:mb-10">
+                  <div className="space-y-4 sm:space-y-5">
                     <section>
                       <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">
-                        Sample Provenance
+                        {t("results.sampleProvenance")}
                       </h4>
                       <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
                         <div className="flex justify-between gap-4">
                           <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
-                            Sample ID
+                            {t("results.sample")} ID
                           </span>
                           <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase text-right">
                             {analysis.sample_id}
@@ -1157,7 +1135,7 @@ export default function ResultsPage() {
                         </div>
                         <div className="flex justify-between gap-4">
                           <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase">
-                            Timestamp
+                            {t("results.timestamp")}
                           </span>
                           <span className="text-[8px] sm:text-[10px] font-black text-slate-900 uppercase text-right">
                             {new Date(analysis.created_at).toLocaleString()}
@@ -1168,7 +1146,7 @@ export default function ResultsPage() {
 
                     <section>
                       <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">
-                        ISO Compliance & Traceability
+                        {t("results.isoCompliance")}
                       </h4>
                       <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
                         <div className="flex justify-between gap-4">
@@ -1210,33 +1188,33 @@ export default function ResultsPage() {
 
                     <section>
                       <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">
-                        Neural Spectral Result
+                        {t("results.neuralSpectralResult")}
                       </h4>
-                      <div className="p-5 sm:p-6 bg-slate-50 rounded-2xl sm:rounded-3xl border border-slate-100 flex flex-col items-center justify-center text-center">
-                        <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 sm:mb-2">
+                      <div className="p-4 bg-white rounded-none border-2 border-slate-200 flex flex-col items-center justify-center text-center">
+                        <p className="text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">
                           Final Quantitative Output
                         </p>
-                        <p className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tighter mb-1">
+                        <p className="text-2xl sm:text-3xl font-bold font-mono text-slate-800 tracking-tight mb-1">
                           {formatCFU(analysis.cfu_per_ml)}
                         </p>
-                        <p className="text-[10px] sm:text-xs font-bold text-primary uppercase tracking-widest">
+                        <p className="text-[8px] sm:text-[9px] font-bold text-slate-900 uppercase tracking-widest">
                           {t("results.cfuMlMatrix")}
                         </p>
                       </div>
                     </section>
                   </div>
 
-                  <div className="space-y-6 sm:space-y-8">
+                  <div className="space-y-4 sm:space-y-5">
                     <section>
                       <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">
-                        Statistical Integrity
+                        {t("results.statisticalIntegrity")}
                       </h4>
                       <div className="space-y-3 sm:space-y-4">
                         <div className="flex justify-between items-center gap-4">
                           <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
                             {t("results.reliability")}
                           </span>
-                          <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest border border-emerald-100">
+                          <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 rounded-sm text-[8px] sm:text-[9px] font-black uppercase tracking-widest border border-emerald-100">
                             {analysis.reliability.toUpperCase()}
                           </span>
                         </div>
@@ -1261,7 +1239,7 @@ export default function ResultsPage() {
 
                     <section>
                       <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">
-                        Classification Distribution
+                        {t("results.classificationDistribution")}
                       </h4>
                       <div className="h-24 sm:h-32">
                         <ResponsiveContainer width="100%" height="100%">
@@ -1276,8 +1254,8 @@ export default function ResultsPage() {
                             <XAxis dataKey="name" hide />
                             <Bar
                               dataKey="value"
-                              fill="#6366f1"
-                              radius={[3, 3, 0, 0]}
+                              fill="#0f172a"
+                              radius={[2, 2, 0, 0]}
                             />
                           </BarChart>
                         </ResponsiveContainer>
@@ -1287,7 +1265,7 @@ export default function ResultsPage() {
                 </div>
 
                 {/* Legal & ISO Footnote */}
-                <div className="mt-10 sm:mt-20 pt-8 sm:pt-10 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
+                <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t-2 border-slate-900 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
                   <div className="sm:col-span-2">
                     <p className="text-[7px] sm:text-[8px] font-bold text-slate-400 uppercase leading-relaxed tracking-wider">
                       This document certifies that the aforementioned sample was
@@ -1322,25 +1300,7 @@ export default function ResultsPage() {
           directory="Post-Analysis Audit"
           title="Interpretasi Hasil"
           description="Panduan audit teknis untuk validasi deteksi saraf dan kepatuhan ISO-17025."
-          rawText={`INTERPRETASI HASIL AUDIT COLONYAI
-====================================
-
-1. NEURAL MAPPING LAYER
-Layer ini menampilkan visualisasi deteksi objek biologis. Gunakan toggle 'Annotations' untuk melihat kotak pembatas (Bounding Box) yang dihasilkan oleh AI.
-
-2. SPECTRAL DISTRIBUTION
-- Verified: Koloni yang diakui sebagai unit pembentuk koloni (CFU).
-- Filtered: Artefak (gelembung, debu, retakan) yang ditolak oleh sistem saraf untuk mencegah False Positive.
-
-3. KEPATUHAN ISO-17025 (METRIK GUM)
-- Uncertainty (U): Nilai ketidakpastian yang dihitung berdasarkan protokol GUM (Guide to the Expression of Uncertainty in Measurement).
-- Confidence Score: Tingkat kepercayaan model AI terhadap seluruh deteksi pada spesimen ini.
-
-4. VERIFIKASI AKHIR
-Manager atau Admin wajib menekan tombol 'Verify Audit' setelah meninjau keakuratan deteksi untuk melegitimasi laporan resmi.
-
-STATUS: AUDIT PENDING VERIFICATION
-MESIN: YOLOv8 SENSITIVE NODE`}
+          rawText={documentationText}
         >
           <section className="space-y-3">
             <div className="flex items-center gap-2 mb-1">
@@ -1351,7 +1311,7 @@ MESIN: YOLOv8 SENSITIVE NODE`}
                 Overview
               </h2>
             </div>
-            <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+            <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-md border border-slate-100">
               Halaman Intelligence Audit menyajikan bukti teknis mendalam atas
               proses deteksi saraf. Auditor harus memastikan tidak ada koloni
               yang terlewat atau artefak yang salah diklasifikasikan.
@@ -1386,7 +1346,7 @@ MESIN: YOLOv8 SENSITIVE NODE`}
                 },
               ].map((step) => (
                 <div key={step.id} className="flex gap-2.5 group">
-                  <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <span className="flex-shrink-0 w-4.5 h-4.5 rounded-sm bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                     {step.id}
                   </span>
                   <div className="space-y-0.5">

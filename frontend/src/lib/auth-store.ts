@@ -17,11 +17,15 @@ interface AuthState {
   isLoading: boolean
   error: string | null
   isAuthenticated: boolean
+  tempEmail: string | null
+  loginStep: 'credentials' | 'mfa'
+  setLoginStep: (step: 'credentials' | 'mfa') => void
 
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<any>
   register: (email: string, password: string, fullName: string, role?: string) => Promise<void>
   logout: () => Promise<void>
   refreshAccessToken: () => Promise<void>
+  verifyMfa: (code: string, trustDevice: boolean) => Promise<void>
   clearError: () => void
 }
 
@@ -34,21 +38,39 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
       isAuthenticated: false,
+      tempEmail: null,
+      loginStep: 'credentials',
+      setLoginStep: (step) => set({ loginStep: step }),
 
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null })
         
         try {
-          const data = await authApi.login({ email, password })
+          // Get or generate Device ID
+          let deviceId = localStorage.getItem('colony_device_id')
+          if (!deviceId) {
+            deviceId = crypto.randomUUID()
+            localStorage.setItem('colony_device_id', deviceId)
+          }
+
+          const data = await authApi.login({ email, password, device_id: deviceId })
+          console.log("Raw Backend Login Data:", data);
+
+          if (data.mfa_required) {
+            console.log("MFA is required according to backend");
+            set({ isLoading: false, error: null, tempEmail: email, loginStep: 'mfa' })
+            return { mfa_required: true }
+          }
 
           set({
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
-            user: data.user || null,
+            user: data.user ? { ...data.user, role: data.user.role.toLowerCase() } : null,
             isLoading: false,
             isAuthenticated: true,
             error: null,
           })
+          return { mfa_required: false }
         } catch (error: any) {
           const errorMsg = error.response?.data?.detail || error.message || 'Access Denied'
           toast.error(errorMsg)
@@ -56,6 +78,48 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: errorMsg,
             isAuthenticated: false,
+          })
+          throw error
+        }
+      },
+
+      verifyMfa: async (code: string, trustDevice: boolean) => {
+        set({ isLoading: true, error: null })
+        const { tempEmail } = get()
+        
+        if (!tempEmail) {
+          set({ isLoading: false, error: 'Session expired' })
+          throw new Error('Session expired')
+        }
+
+        try {
+          const deviceId = localStorage.getItem('colony_device_id') || ""
+          const data = await authApi.verifyMfa({
+            email: tempEmail,
+            code,
+            device_id: deviceId,
+            trust_device: trustDevice
+          })
+
+          set({
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+            user: data.user ? { ...data.user, role: data.user.role.toLowerCase() } : null,
+            isLoading: false,
+            isAuthenticated: true,
+            tempEmail: null,
+            error: null,
+          })
+          
+          if (trustDevice) {
+            toast.success('Device registered as trusted for 30 days')
+          }
+        } catch (error: any) {
+          const errorMsg = error.response?.data?.detail || error.message || 'Verification Failed'
+          toast.error(errorMsg)
+          set({
+            isLoading: false,
+            error: errorMsg
           })
           throw error
         }
@@ -156,6 +220,3 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 )
-
-
-

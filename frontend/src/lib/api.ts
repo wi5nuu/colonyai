@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
 // Simple API client that mimics axios interface
 class ApiClient {
@@ -24,6 +24,7 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<{ data: T }> {
     const url = `${this.baseUrl}${endpoint}`
+    console.log(`[ColonyAI API] Calling: ${url}`);
     
     // Get auth token if available
     let authToken: string | null = null

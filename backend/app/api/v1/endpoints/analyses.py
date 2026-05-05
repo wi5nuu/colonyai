@@ -228,18 +228,26 @@ def _save_upload(file: UploadFile, upload_dir: str) -> str:
 
 
 def _get_file_url(file_path: str) -> str:
-    """Generate URL for a locally stored file"""
+    """Generate URL for a locally stored file (Robust Windows support)"""
     if not file_path:
         return ""
-    # Use resolved absolute paths to ensure correct relative computation on Windows
-    abs_file = Path(file_path).resolve()
-    abs_upload = Path(settings.UPLOAD_DIR).resolve()
+    
     try:
-        rel_path = abs_file.relative_to(abs_upload)
-        return f"{settings.BACKEND_URL}/uploads/{rel_path.as_posix()}"
-    except ValueError:
-        # Fallback: just use filename
-        return f"{settings.BACKEND_URL}/uploads/{Path(file_path).name}"
+        # Normalize paths for Windows/Unix compatibility
+        norm_file = os.path.normpath(file_path)
+        norm_upload = os.path.normpath(settings.UPLOAD_DIR)
+        
+        # Get relative path using os.path.relpath which handles Windows drive letters better than Path.relative_to
+        rel_path = os.path.relpath(norm_file, norm_upload)
+        
+        # Ensure we use forward slashes for the URL
+        url_path = rel_path.replace(os.path.sep, '/')
+        
+        return f"/uploads/{url_path}"
+    except Exception as e:
+        # Fallback: just use the filename
+        filename = os.path.basename(file_path)
+        return f"/uploads/{filename}"
 
 
 # ============================================================

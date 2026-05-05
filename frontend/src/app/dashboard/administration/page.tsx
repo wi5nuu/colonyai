@@ -121,7 +121,7 @@ export default function AdministrationPage() {
     };
 
     fetchData();
-  }, []);
+  }, [currentUser?.email]);
 
   useEffect(() => {
     const interval = setInterval(() => {

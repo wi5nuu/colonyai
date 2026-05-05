@@ -287,7 +287,7 @@ export default function AnalyticsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [dateRange, mediaType, customDateFrom, customDateTo]);
+  }, [dateRange, mediaType, customDateFrom, customDateTo, t]);
 
   useEffect(() => {
     fetchData();

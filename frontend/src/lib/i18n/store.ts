@@ -8,7 +8,7 @@ type Language = "en" | "id";
 interface TranslationStore {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 const dictionaries = { en, id };
@@ -23,14 +23,25 @@ const getNestedValue = (obj: any, path: string): string | undefined => {
 // Build a t() function bound to a specific language
 const buildTranslator =
   (lang: Language) =>
-  (key: string): string => {
+  (key: string, params?: Record<string, string | number>): string => {
     const dict = dictionaries[lang];
-    const value = getNestedValue(dict, key);
+    let value = getNestedValue(dict, key);
+    
     // Fallback to English if key is missing in Indonesian
     if (value === undefined && lang !== "en") {
-      return getNestedValue(dictionaries.en, key) ?? key;
+      value = getNestedValue(dictionaries.en, key);
     }
-    return value ?? key;
+
+    if (value === undefined) return key;
+
+    // Handle interpolation if params are provided
+    if (params) {
+      Object.entries(params).forEach(([paramKey, paramValue]) => {
+        value = (value as string).replace(new RegExp(`{${paramKey}}`, 'g'), String(paramValue));
+      });
+    }
+
+    return value;
   };
 
 export const useTranslationStore = create<TranslationStore>()(

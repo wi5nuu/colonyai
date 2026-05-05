@@ -99,11 +99,11 @@ export default function TroubleshootPage() {
   const [learnMoreTopic, setLearnMoreTopic] = useState<string | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  const sections = [
+  const sections = React.useMemo(() => [
     { id: "create", title: t("troubleshoot.createTitle") },
     { id: "forgot", title: t("troubleshoot.forgotTitle") },
     { id: "authenticator", title: t("troubleshoot.mfaTitle") },
-  ];
+  ], [t]);
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -119,7 +119,7 @@ export default function TroubleshootPage() {
       if (el) observerRef.current?.observe(el);
     });
     return () => observerRef.current?.disconnect();
-  }, []);
+  }, [sections]);
 
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);

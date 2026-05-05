@@ -31,20 +31,20 @@ export function SmartAssistant() {
   const [activeCycleIndex, setActiveCycleIndex] = useState(0)
   const [userName, setUserName] = useState<string | null>(null)
 
-  const QUICK_QUESTIONS = [
+  const QUICK_QUESTIONS = useMemo(() => [
     { id: 'system_walkthrough', text: t('assistant.quickWalkthrough'), icon: Info },
     { id: 'iso_standards', text: t('assistant.quickISO'), icon: ShieldCheck },
     { id: 'field_explanation', text: t('assistant.quickFields'), icon: BookOpen },
     { id: 'tntc_meaning', text: t('assistant.quickTNTC'), icon: FlaskConical },
-  ]
+  ], [t])
 
-  const CYCLING_MESSAGES = [
+  const CYCLING_MESSAGES = useMemo(() => [
     t('assistant.cycleMsg1'),
     t('assistant.cycleMsg2'),
     t('assistant.cycleMsg3'),
     t('assistant.cycleMsg4'),
     t('assistant.cycleMsg5')
-  ]
+  ], [t])
 
   useEffect(() => {
     if (messages.length === 0) {
@@ -71,7 +71,7 @@ export function SmartAssistant() {
       clearTimeout(initialDelay)
       clearInterval(interval)
     }
-  }, [])
+  }, [CYCLING_MESSAGES])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -94,23 +94,24 @@ export function SmartAssistant() {
     setMessages(prev => [...prev, userMsg])
     
     if (!userName && messages.length < 3) {
-      setUserName(inputValue)
+      const name = inputValue
+      setUserName(name)
       setInputValue('')
-      processResponse('identify')
+      processResponse('identify', name)
     } else {
       setInputValue('')
       processResponse('manual')
     }
   }
 
-  const processResponse = (id: string) => {
+  const processResponse = (id: string, nameOverride?: string) => {
     setIsTyping(true)
     setTimeout(() => {
       let response = ''
       const input = inputValue.toLowerCase()
 
       if (id === 'identify') {
-        response = t('assistant.identification', { name: userName || 'Analyst' })
+        response = t('assistant.identification', { name: nameOverride || userName || 'Analyst' })
       } else if (id === 'manual') {
         response = t('assistant.manualResponse')
       } else {

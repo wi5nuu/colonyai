@@ -43,6 +43,23 @@ export default function ReportsPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showDocs, setShowDocs] = useState(true);
 
+  const setPreset = (preset: "daily" | "monthly" | "yearly") => {
+    const today = new Date();
+    if (preset === "daily") {
+      const dateStr = today.toISOString().split("T")[0];
+      setDateFrom(dateStr);
+      setDateTo(dateStr);
+    } else if (preset === "monthly") {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      setDateFrom(firstDay.toISOString().split("T")[0]);
+      setDateTo(today.toISOString().split("T")[0]);
+    } else if (preset === "yearly") {
+      const firstDay = new Date(today.getFullYear(), 0, 1);
+      setDateFrom(firstDay.toISOString().split("T")[0]);
+      setDateTo(today.toISOString().split("T")[0]);
+    }
+  };
+
   useEffect(() => {
     const loadAnalyses = async () => {
       setIsLoadingAnalyses(true);
@@ -58,7 +75,7 @@ export default function ReportsPage() {
       }
     };
     loadAnalyses();
-  }, []);
+  }, [t]);
 
   const filteredAnalyses = analyses.filter((a) => {
     if (mediaType !== "all" && a.media_type !== mediaType) return false;
@@ -256,6 +273,35 @@ export default function ReportsPage() {
                   </p>
                 </div>
               </div>
+              
+              {/* Quick Presets */}
+              <div className="flex flex-wrap gap-3 mb-6">
+                <button 
+                  onClick={() => setPreset("daily")}
+                  className="px-4 py-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-700 transition-all active:scale-95"
+                >
+                  {t("reports.presetDaily") || "Laporan Harian"}
+                </button>
+                <button 
+                  onClick={() => setPreset("monthly")}
+                  className="px-4 py-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-700 transition-all active:scale-95"
+                >
+                  {t("reports.presetMonthly") || "Laporan Bulanan"}
+                </button>
+                <button 
+                  onClick={() => setPreset("yearly")}
+                  className="px-4 py-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-700 transition-all active:scale-95"
+                >
+                  {t("reports.presetYearly") || "Laporan Tahunan"}
+                </button>
+                <button 
+                  onClick={() => { setDateFrom(""); setDateTo(""); }}
+                  className="px-4 py-2 bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all active:scale-95"
+                >
+                  {t("reports.clearFilters") || "Clear All"}
+                </button>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">

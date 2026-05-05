@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   User,
   Bell,
@@ -79,7 +79,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showDocs, setShowDocs] = useState(true);
 
-  const loadPreferences = async () => {
+  const loadPreferences = useCallback(async () => {
     try {
       setIsLoading(true);
       const prefs = await settingsApi.getPreferences();
@@ -89,11 +89,11 @@ export default function SettingsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     loadPreferences();
-  }, []);
+  }, [loadPreferences]);
 
   const { user } = useAuthStore();
   const filteredTabs = TABS.filter((tab) =>
@@ -890,7 +890,7 @@ function SystemStatusSettings() {
           </h4>
         </div>
         <p className="text-[10px] text-slate-500 leading-relaxed font-bold uppercase">
-          {t("settings.sysInfraText").replace("{node}", infra.node)}
+          {t("settings.sysInfraText", { node: infra.node })}
         </p>
       </div>
     </div>

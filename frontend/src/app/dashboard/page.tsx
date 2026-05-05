@@ -186,7 +186,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Summary Cards Row */}
+              {/* Summary Cards Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4">
               {[
                 {
@@ -220,41 +220,41 @@ export default function DashboardPage() {
               ].map((card, i) => (
                 <div
                   key={i}
-                  className="bg-white border border-slate-200/60 p-2.5 sm:p-6 rounded-xl sm:rounded-2xl shadow-sm group hover:border-primary/40 hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden"
+                  className="bg-white border border-slate-200/60 p-2 sm:p-4 rounded-sm shadow-sm group hover:border-primary/40 hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden"
                 >
-                  <div className="flex justify-between items-start mb-2 sm:mb-4">
-                    <div className="p-1.5 sm:p-2 bg-slate-50 group-hover:bg-primary/5 rounded-lg sm:rounded-xl transition-colors">
-                      <card.icon className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 group-hover:text-primary" />
+                  <div className="flex justify-between items-start mb-1 sm:mb-2">
+                    <div className="p-1 sm:p-1.5 bg-slate-50 group-hover:bg-primary/5 rounded-sm transition-colors">
+                      <card.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 group-hover:text-primary" />
                     </div>
                     <span
-                      className={`text-[8px] sm:text-[10px] font-bold ${card.trend.includes("+") ? "text-emerald-500" : "text-slate-400"} uppercase tracking-widest`}
+                      className={`text-[7px] sm:text-[9px] font-bold ${card.trend.includes("+") ? "text-emerald-500" : "text-slate-400"} uppercase tracking-widest`}
                     >
                       {card.trend}
                     </span>
                   </div>
                   <div>
-                    <p className="text-slate-400 text-[7px] sm:text-[9px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-1">
+                    <p className="text-slate-400 text-[6px] sm:text-[8px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-0.5">
                       {card.label}
                     </p>
-                    <p className="text-base sm:text-3xl font-bold text-slate-900 tabular-nums tracking-tighter">
+                    <p className="text-sm sm:text-2xl font-bold text-slate-900 tabular-nums tracking-tighter">
                       {card.value}
                     </p>
                   </div>
-                  <div className="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
-                    <card.icon className="w-10 h-10 sm:w-16 sm:h-16" />
+                  <div className="absolute -right-2 -bottom-2 opacity-[0.02] group-hover:opacity-[0.04] transition-opacity">
+                    <card.icon className="w-8 h-8 sm:w-12 sm:h-12" />
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4">
               {/* Left Column - 8/12 */}
-              <div className="lg:col-span-8 space-y-3 sm:space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-8">
+              <div className="lg:col-span-8 space-y-3 sm:space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   {/* Job Applied / Specimen Trend Chart */}
-                  <div className="dashboard-card col-span-1 rounded-lg">
-                    <div className="flex items-center justify-between mb-8">
+                  <div className="dashboard-card col-span-1 rounded-sm">
+                    <div className="flex items-center justify-between mb-4">
                       <div>
                         <h3 className="font-black text-slate-900 text-xs uppercase tracking-[0.2em]">
                           {t("overview.specimenTrend")}
@@ -270,7 +270,7 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="h-48 sm:h-64 w-full">
+                    <div className="h-40 sm:h-52 w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={chartData}>
                           <defs>
@@ -342,8 +342,8 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Project Overview / Analysis Breakdown */}
-                  <div className="dashboard-card col-span-1 rounded-lg">
-                    <div className="flex items-center justify-between mb-6">
+                  <div className="dashboard-card col-span-1 rounded-sm">
+                    <div className="flex items-center justify-between mb-4">
                       <h3 className="font-bold text-slate-900 text-xs uppercase tracking-[0.2em]">
                         {t("overview.analysisBreakdown")}
                       </h3>
@@ -353,7 +353,7 @@ export default function DashboardPage() {
                         <option>Batch: 2026-02</option>
                       </select>
                     </div>
-                    <div className="text-center mb-4 sm:mb-8">
+                    <div className="text-center mb-3 sm:mb-6">
                       <p className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tighter">
                         {stats?.total_analyses || 0}
                       </p>
@@ -362,7 +362,7 @@ export default function DashboardPage() {
                       </p>
                     </div>
                     {/* Segmented Progress Bar */}
-                    <div className="flex h-1.5 sm:h-2 w-full rounded-full overflow-hidden mb-4 sm:mb-8 bg-slate-100">
+                    <div className="flex h-1.5 sm:h-2 w-full rounded-full overflow-hidden mb-3 sm:mb-6 bg-slate-100">
                       <div
                         className="bg-emerald-500"
                         style={{
@@ -413,7 +413,7 @@ export default function DashboardPage() {
                     {isOperational && (
                       <button
                         onClick={() => router.push("/dashboard/upload")}
-                        className="w-full mt-4 sm:mt-10 py-2.5 sm:py-3 bg-primary rounded-lg text-[9px] sm:text-[10px] font-bold text-slate-900 uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                        className="w-full mt-4 sm:mt-6 py-2 sm:py-2.5 bg-primary rounded-sm text-[9px] sm:text-[10px] font-bold text-slate-900 uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
                       >
                         {t("nav.newAnalysis")}{" "}
                         <ArrowRight className="w-3 h-3" />
@@ -422,7 +422,7 @@ export default function DashboardPage() {
                     {!isOperational && (
                       <button
                         onClick={() => router.push("/dashboard/history")}
-                        className="w-full mt-4 sm:mt-10 py-2.5 sm:py-3 bg-primary rounded-lg text-[9px] sm:text-[10px] font-bold text-slate-900 uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                        className="w-full mt-4 sm:mt-6 py-2 sm:py-2.5 bg-primary rounded-sm text-[9px] sm:text-[10px] font-bold text-slate-900 uppercase tracking-widest hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
                       >
                         {t("overview.goToGlobalArchive")}{" "}
                         <ArrowRight className="w-3 h-3" />
@@ -432,8 +432,8 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Performance Listed / Recent Analyses Table */}
-                <div className="dashboard-card rounded-lg">
-                  <div className="flex items-center justify-between mb-4 sm:mb-8">
+                <div className="dashboard-card rounded-sm">
+                  <div className="flex items-center justify-between mb-3 sm:mb-6">
                     <h3 className="font-black text-slate-900 text-[10px] sm:text-xs uppercase tracking-[0.2em]">
                       {t("overview.neuralOutputRegistry")}
                     </h3>
@@ -443,10 +443,10 @@ export default function DashboardPage() {
                         <input
                           type="text"
                           placeholder={t("common.search")}
-                          className="bg-slate-50 border border-slate-200 rounded-md pl-8 pr-4 py-1.5 text-[10px] font-bold text-slate-900 outline-none focus:ring-1 focus:ring-primary/20 w-48"
+                          className="bg-slate-50 border border-slate-200 rounded-sm pl-8 pr-4 py-1.5 text-[10px] font-bold text-slate-900 outline-none focus:ring-1 focus:ring-primary/20 w-48"
                         />
                       </div>
-                      <button className="p-1.5 sm:p-2 bg-slate-50 rounded-md border border-slate-200">
+                      <button className="p-1.5 sm:p-2 bg-slate-50 rounded-sm border border-slate-200">
                         <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400" />
                       </button>
                     </div>
@@ -454,7 +454,7 @@ export default function DashboardPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead>
-                        <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">
+                        <tr className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">
                           <th className="pb-4 font-black">
                             {t("overview.specimenId")}
                           </th>
@@ -475,7 +475,7 @@ export default function DashboardPage() {
                             key={i}
                             className="group hover:bg-slate-50/50 transition-colors cursor-pointer"
                           >
-                            <td className="py-4">
+                            <td className="py-2">
                               <span className="text-[11px] font-black text-slate-900 font-mono tracking-tight">
                                 {a.sample_id}
                               </span>
@@ -483,12 +483,12 @@ export default function DashboardPage() {
                                 {a.media_type}
                               </p>
                             </td>
-                            <td className="py-4 hidden xs:table-cell">
+                            <td className="py-2 hidden xs:table-cell">
                               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                                 {a.media_type}
                               </span>
                             </td>
-                            <td className="py-4">
+                            <td className="py-2">
                               <span className="text-[11px] font-black text-slate-900">
                                 {a.colony_count}
                               </span>
@@ -496,9 +496,9 @@ export default function DashboardPage() {
                                 {t("overview.cfuUnit")}
                               </span>
                             </td>
-                            <td className="py-4 text-right">
+                            <td className="py-2 text-right">
                               <span
-                                className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border shadow-sm ${
+                                className={`px-2 py-1 rounded-sm text-[8px] font-black uppercase tracking-widest border shadow-sm ${
                                   a.status === "completed"
                                     ? "bg-emerald-50 text-emerald-600 border-emerald-100"
                                     : a.status === "processing"
@@ -518,9 +518,9 @@ export default function DashboardPage() {
               </div>
 
               {/* Right Column - 4/12 */}
-              <div className="lg:col-span-4 space-y-4">
+              <div className="lg:col-span-4 space-y-3">
                 {/* Stats Bar */}
-                <div className="dashboard-card p-3 sm:p-5">
+                <div className="dashboard-card p-3 sm:p-4">
                   <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center divide-x divide-slate-100">
                     <div>
                       <p className="text-slate-400 text-[8px] sm:text-[10px] font-bold uppercase mb-1 sm:mb-2">
@@ -550,14 +550,14 @@ export default function DashboardPage() {
                 </div>
 
                 {/* System Health Terminal */}
-                <div className="dashboard-card rounded-lg p-0 overflow-hidden border-slate-200">
-                  <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <div className="dashboard-card rounded-sm p-0 overflow-hidden border-slate-200">
+                  <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                     <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">
                       {t("overview.neuralNodeStatus")}
                     </h3>
                     <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   </div>
-                  <div className="p-4 space-y-3">
+                  <div className="p-3 space-y-3">
                     {[
                       {
                         id: "NODE-01-A",
@@ -589,9 +589,6 @@ export default function DashboardPage() {
                         className="flex items-center justify-between group"
                       >
                         <div className="flex items-center gap-3">
-                          <div
-                            className={`w-1 h-4 rounded-full ${node.status === "Active" ? "bg-emerald-500" : "bg-slate-200"}`}
-                          />
                           <span className="text-[11px] font-black text-slate-800 font-mono tracking-tighter">
                             {node.id}
                           </span>
@@ -609,7 +606,7 @@ export default function DashboardPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="px-5 py-2 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+                  <div className="px-4 py-1.5 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
                       {t("overview.clusterSecure")}
                     </span>
@@ -622,10 +619,10 @@ export default function DashboardPage() {
                 {/* Today Events */}
                 <Link
                   href="/dashboard/audit"
-                  className="bg-white border border-slate-200 rounded-lg p-4 text-slate-900 flex items-center justify-between group cursor-pointer hover:bg-slate-50 transition-all shadow-sm"
+                  className="bg-white border border-slate-200 rounded-sm p-4 text-slate-900 flex items-center justify-between group cursor-pointer hover:bg-slate-50 transition-all shadow-sm"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-sm bg-primary/10 flex items-center justify-center">
                       <Calendar className="w-4 h-4 text-primary" />
                     </div>
                     <div>
@@ -641,7 +638,7 @@ export default function DashboardPage() {
                 </Link>
 
                 {/* Recent Alerts */}
-                <div className="dashboard-card p-4">
+                <div className="dashboard-card p-3">
                   <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-4">
                     {t("overview.recentSystemAlerts")}
                   </h3>
@@ -692,7 +689,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Bottom Small Chart */}
-                <div className="dashboard-card rounded-lg p-3 sm:p-4">
+                <div className="dashboard-card rounded-sm p-2 sm:p-3">
                   <div className="h-20 sm:h-28 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={chartData}>
@@ -720,8 +717,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Cloudflare-style Intelligence Section at Bottom */}
-            <div className="mt-4 bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-              <div className="px-6 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+            <div className="mt-4 bg-white border border-slate-200 rounded-sm shadow-sm overflow-hidden">
+              <div className="px-5 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
                 <div>
                   <h2 className="text-xs font-bold text-slate-900 uppercase tracking-[0.2em]">
                     {t("overview.neuralIntelligenceLayer")}
@@ -745,7 +742,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Query Overview Dashboard */}
-              <div className="px-6 py-4 space-y-4">
+              <div className="px-5 py-3 space-y-4">
                 <div className="flex border-b border-slate-100 gap-6">
                   {[
                     t("overview.queryOverview"),
@@ -776,10 +773,7 @@ export default function DashboardPage() {
                               className={`w-1.5 h-1.5 rounded-full ${["bg-blue-500", "bg-amber-500", "bg-emerald-500", "bg-rose-500", "bg-purple-500"][i % 5]}`}
                             />
                             <span className="text-[9px] font-bold text-slate-400 truncate uppercase">
-                              {t("overview.matrixData").replace(
-                                "{label}",
-                                label,
-                              )}
+                              {t("overview.matrixData", { label })}
                             </span>
                           </div>
                           <p className="text-base font-bold text-slate-900 tracking-tighter">
@@ -796,7 +790,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Detailed Chart - Compact Height */}
-                <div className="h-[180px] w-full pt-4">
+                <div className="h-[140px] w-full pt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData}>
                       <CartesianGrid
@@ -846,7 +840,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Intelligence Stats - Compact Row */}
-              <div className="px-6 py-6 bg-slate-50/50 border-t border-slate-100">
+              <div className="px-5 py-5 bg-slate-50/50 border-t border-slate-100">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="border-l-2 border-blue-500 pl-4">
                     <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">
@@ -903,7 +897,7 @@ export default function DashboardPage() {
                   {t("overview.docsSection1Title")}
                 </h2>
               </div>
-              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-sm border border-slate-100">
                 {t("overview.docsSection1Text")}
               </p>
             </section>

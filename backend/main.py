@@ -38,7 +38,7 @@ app = FastAPI(
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -56,9 +56,11 @@ app.add_middleware(
 )
 
 # Serve static files from uploads directory
-uploads_path = Path(settings.UPLOAD_DIR)
-if uploads_path.exists():
-    app.mount("/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
+uploads_path = Path(settings.UPLOAD_DIR).resolve()
+# Ensure the directory exists before mounting to avoid errors
+uploads_path.mkdir(parents=True, exist_ok=True)
+print(f"[MOUNT] Serving static files from: {uploads_path}")
+app.mount("/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
 
 # Include routers
 app.include_router(auth_router, prefix=f"{settings.API_V1_PREFIX}/auth", tags=["Authentication"])

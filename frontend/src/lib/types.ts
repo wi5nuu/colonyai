@@ -15,7 +15,7 @@ export interface User {
    * - auditor: Read-only access to records, reports, and audit trails.
    * - admin: Full system management, user administration, and settings.
    */
-  role: 'analyst' | 'manager' | 'auditor' | 'admin';
+  role: "analyst" | "manager" | "auditor" | "admin";
   laboratory_id?: string;
   created_at: string;
   updated_at: string;
@@ -24,20 +24,30 @@ export interface User {
 export interface LoginRequest {
   email: string;
   password: string;
+  device_id?: string;
 }
 
 export interface RegisterRequest {
   email: string;
   password: string;
   full_name: string;
-  role?: 'analyst' | 'viewer';
+  role?: "analyst" | "viewer";
 }
 
 export interface AuthResponse {
-  access_token: string;
-  refresh_token: string;
+  access_token?: string;
+  refresh_token?: string;
   token_type: string;
-  user: User;
+  user?: User;
+  mfa_required?: boolean;
+  message?: string;
+}
+
+export interface MFAVerifyRequest {
+  email: string;
+  code: string;
+  device_id?: string;
+  trust_device?: boolean;
 }
 
 // ============================================================
@@ -45,13 +55,13 @@ export interface AuthResponse {
 // ============================================================
 
 export type MediaType =
-  | 'Plate Count Agar'
-  | 'VRBA'
-  | 'BGBB'
-  | 'R2A'
-  | 'TSA'
-  | 'MacConkey'
-  | 'Other';
+  | "Plate Count Agar"
+  | "VRBA"
+  | "BGBB"
+  | "R2A"
+  | "TSA"
+  | "MacConkey"
+  | "Other";
 
 /**
  * Status CFU/mL hasil kalkulasi.
@@ -59,17 +69,16 @@ export type MediaType =
  * - TNTC : count > 250 — cfu_per_ml = null (FDA BAM: jangan laporkan nilai absolut)
  * - TFTC : count < 25  — cfu_per_ml = null
  */
-export type CFUStatus = 'VALID' | 'TNTC' | 'TFTC';
-export type ReliabilityLevel = 'high' | 'medium' | 'low';
-
+export type CFUStatus = "VALID" | "TNTC" | "TFTC";
+export type ReliabilityLevel = "high" | "medium" | "low";
 
 // 5-class architecture per proposal
 export type DetectionClass =
-  | 'colony_single'
-  | 'colony_merged'
-  | 'bubble'
-  | 'dust_debris'
-  | 'media_crack';
+  | "colony_single"
+  | "colony_merged"
+  | "bubble"
+  | "dust_debris"
+  | "media_crack";
 
 export interface Detection {
   id: string;
@@ -123,7 +132,7 @@ export interface Analysis {
   estimated_cfu_order?: string;
   confidence_score: number;
   reliability: ReliabilityLevel;
-  status: string;  // DB status: PROCESSING | COMPLETED | FAILED
+  status: string; // DB status: PROCESSING | COMPLETED | FAILED
   class_breakdown: Record<DetectionClass, number>;
   detections: Detection[];
   warnings: string[];
@@ -167,13 +176,13 @@ export interface ImageUploadResponse {
 // REPORT TYPES
 // ============================================================
 
-export type ReportType = 'daily' | 'weekly' | 'custom';
+export type ReportType = "daily" | "weekly" | "custom";
 
 export interface ReportRequest {
   report_type: ReportType;
   date_from?: string;
   date_to?: string;
-  format: 'pdf' | 'csv';
+  format: "pdf" | "csv";
 }
 
 export interface ReportResponse {
@@ -191,14 +200,14 @@ export interface DashboardStats {
   avg_time_saved_minutes: number;
   success_rate: number;
   pending_review: number;
-  
+
   // Real Data Fields
   neural_confidence: number;
   system_latency_ms: number;
   verified_count: number;
   failed_count: number;
   matrix_breakdown: Record<string, number>;
-  
+
   weekly_trend: { day: string; analyses: number }[];
   recent_analyses: Analysis[];
 }
@@ -217,9 +226,9 @@ export class ApiClientError extends Error {
   constructor(
     message: string,
     public statusCode: number,
-    public data?: ApiError
+    public data?: ApiError,
   ) {
     super(message);
-    this.name = 'ApiClientError';
+    this.name = "ApiClientError";
   }
 }

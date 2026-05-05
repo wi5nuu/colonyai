@@ -13,6 +13,7 @@ import {
   Loader2,
   Info,
 } from "lucide-react";
+import { toast } from "sonner";
 import { SecurityHeader } from "@/components/SecurityHeader";
 import { SecurityFooter } from "@/components/SecurityFooter";
 
@@ -21,17 +22,19 @@ import { useTranslationStore } from "@/lib/i18n/store";
 
 export default function LoginPage() {
   const { t } = useTranslationStore();
+  const auth = useAuthStore();
+  const loginStep = auth.loginStep;
+  const setLoginStep = auth.setLoginStep;
+
   const [lang, setLang] = useState<"ID" | "EN">("ID");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [loginStep, setLoginStep] = useState<"credentials" | "mfa">(
-    "credentials",
-  );
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     mfaToken: "",
   });
+  const [trustDevice, setTrustDevice] = useState(false);
 
   useEffect(() => {
     // Initial check
@@ -51,10 +54,28 @@ export default function LoginPage() {
   const handleInitialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      setLoginStep("mfa");
+    
+    try {
+      const result = await auth.login(formData.email, formData.password);
+      console.log("Login Result received in UI:", result);
+      
+      if (result?.mfa_required) {
+        console.log("MFA required - global state should be updated");
+        toast.info(t("auth.mfaBadge") || "MFA Required");
+        // Clear password for security while in MFA
+        setFormData(prev => ({ ...prev, password: "" }));
+        setIsLoading(false);
+      } else {
+        console.log("No MFA required - redirecting");
+        toast.success(t("auth.loginSuccess") || "Login Successful");
+        window.location.href = "/dashboard";
+      }
+    } catch (error: any) {
+      console.error("Initial login failed:", error);
+      const msg = error.response?.data?.detail || error.message || "Login failed";
+      toast.error(msg);
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleFinalSubmit = async (e: React.FormEvent) => {
@@ -62,14 +83,11 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Connect to the real backend using the provided credentials
-      // The MFA token is currently a UI simulation, but the core auth needs a real JWT
-      await useAuthStore.getState().login(formData.email, formData.password);
+      await auth.verifyMfa(formData.mfaToken, trustDevice);
       window.location.href = "/dashboard";
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("Verification failed:", error);
       setIsLoading(false);
-      // Error toast is already handled by authStore
     }
   };
 
@@ -163,7 +181,9 @@ export default function LoginPage() {
               <div className="p-8 sm:p-10 lg:p-12">
                 <div className="text-center mb-8 lg:mb-10">
                   <h2 className="text-xl lg:text-2xl font-black text-white uppercase tracking-[0.2em]">
-                    {t("auth.loginTitle")}
+                    {loginStep === "credentials"
+                      ? t("auth.loginTitle")
+                      : t("auth.mfaTitle")}
                   </h2>
                 </div>
 
@@ -274,6 +294,23 @@ export default function LoginPage() {
                             })
                           }
                         />
+                      </div>
+                      
+                      <div className="flex items-center gap-3 px-2">
+                        <div 
+                          onClick={() => setTrustDevice(!trustDevice)}
+                          className={`w-5 h-5 rounded border flex items-center justify-center cursor-pointer transition-all ${
+                            trustDevice ? 'bg-emerald-500 border-emerald-500' : 'bg-white/10 border-white/30'
+                          }`}
+                        >
+                          {trustDevice && <ShieldCheck className="w-3 h-3 text-white" />}
+                        </div>
+                        <span 
+                          onClick={() => setTrustDevice(!trustDevice)}
+                          className="text-[10px] font-bold text-white/70 uppercase tracking-widest cursor-pointer select-none"
+                        >
+                          {t("auth.trustDevice") || "Trust this device for 30 days"}
+                        </span>
                       </div>
                     </div>
                     <div className="flex gap-3 lg:gap-4">

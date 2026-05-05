@@ -97,7 +97,7 @@ export function DocumentationSidebar({
               }
               className="w-6 h-6 rounded border border-slate-200 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
             >
-              <div className="w-2.5 h-[1.2px] bg-slate-600 relative before:absolute before:-top-0.5 before:left-0 before:w-2.5 before:h-[1.2px] before:bg-slate-600 after:absolute after:top-0.5 after:left-0 after:w-2.5 after:h-[1.2px] after:bg-slate-600 scale-75" />
+              <BookOpen className="w-3 h-3 text-slate-600" />
             </button>
           </div>
         </div>

@@ -19,7 +19,10 @@ from app.models import User, UserRole
 from app.utils.audit import write_audit_log
 import uuid
 import time
+import logging
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -62,6 +65,7 @@ def validate_password_complexity(password: str):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+    device_id: Optional[str] = None # Fingerprint dari browser
 
 
 class RegisterRequest(BaseModel):
@@ -73,10 +77,12 @@ class RegisterRequest(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    access_token: str
-    refresh_token: str
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
     token_type: str = "bearer"
     user: Optional[dict] = None
+    mfa_required: bool = False
+    message: Optional[str] = None
 
 
 class ForgotPasswordRequest(BaseModel):
@@ -157,9 +163,38 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
     user.failed_login_attempts = 0
     user.is_locked_out = 'no'
     user.locked_until = None
-    await db.commit()
+    
+    # ── Check Device Trust ──
+    is_trusted = False
+    if request.device_id and user.trusted_devices:
+        if request.device_id in user.trusted_devices:
+            is_trusted = True
+            
+    if not is_trusted:
+        # Generate & Send MFA Code (Simulasi Telegram/Email)
+        import secrets
+        mfa_code = "".join([str(secrets.randbelow(10)) for _ in range(6)])
+        user.mfa_code = mfa_code
+        user.mfa_expires = datetime.utcnow() + timedelta(minutes=5)
+        await db.commit()
+        
+        # SEND REAL MFA EMAIL
+        from app.utils.email import send_mfa_email
+        email_sent = await send_mfa_email(user.email, mfa_code)
+        
+        # LOG SIMULASI PENGIRIMAN (Akan tetap muncul di terminal backend untuk backup)
+        print("\n" + "="*50)
+        print(f"🔐 SECURITY PROTOCOL: MFA CODE FOR {user.email}")
+        print(f"👉 CODE: {mfa_code}")
+        print(f"📡 DISPATCHED VIA: {'Real Email' if email_sent else 'Terminal Simulation'}")
+        print("="*50 + "\n")
+        
+        return {
+            "mfa_required": True,
+            "message": "Security code sent to your registered Email." if email_sent else "Security code generated (Check Terminal for Demo)."
+        }
 
-    # Create tokens
+    # Create tokens (Direct access for trusted device)
     access_token = create_access_token(
         data={"sub": str(user.id), "email": user.email, "role": user.role.value,
               "organization_id": str(user.organization_id) if user.organization_id else None}
@@ -173,11 +208,82 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
     ip = http_request.client.host if http_request else None
     ua = http_request.headers.get("user-agent") if http_request else None
     await write_audit_log(
-        db, str(user.id), "login", "auth", str(user.organization_id) if user.organization_id else None,
-        details={"email": user.email},
+        db, str(user.id), "login_trusted_device", "auth", str(user.organization_id) if user.organization_id else None,
+        details={"email": user.email, "device_id": request.device_id},
         ip_address=ip, user_agent=ua,
     )
 
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "user": {
+            "id": str(user.id),
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role.value,
+        },
+        "mfa_required": False
+    }
+
+class MFAVerifyRequest(BaseModel):
+    email: EmailStr
+    code: str
+    device_id: Optional[str] = None
+    trust_device: bool = False
+
+@router.post("/verify-mfa")
+async def verify_mfa(request: MFAVerifyRequest, http_request: Request = None, db: AsyncSession = Depends(get_db)):
+    """Verify 6-digit code and provide access tokens"""
+    result = await db.execute(select(User).where(User.email == request.email))
+    user = result.scalar_one_or_none()
+    
+    if not user or not user.mfa_code:
+        raise HTTPException(status_code=401, detail="Invalid verification request")
+        
+    if user.mfa_expires < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Verification code expired")
+        
+    if user.mfa_code != request.code:
+        # Note: In production, you'd increment failed attempts here too
+        raise HTTPException(status_code=401, detail="Incorrect security code")
+        
+    # ── Success: Clear Code ──
+    user.mfa_code = None
+    user.mfa_expires = None
+    
+    # ── Register Device if Requested ──
+    if request.trust_device and request.device_id:
+        if not user.trusted_devices:
+            user.trusted_devices = []
+        
+        # Ensure it's a list (SQLAlchemy JSON handling)
+        current_devices = list(user.trusted_devices)
+        if request.device_id not in current_devices:
+            current_devices.append(request.device_id)
+            user.trusted_devices = current_devices
+            
+    await db.commit()
+    
+    # Create tokens
+    access_token = create_access_token(
+        data={"sub": str(user.id), "email": user.email, "role": user.role.value,
+              "organization_id": str(user.organization_id) if user.organization_id else None}
+    )
+    refresh_token = create_refresh_token(
+        data={"sub": str(user.id), "email": user.email, "role": user.role.value,
+              "organization_id": str(user.organization_id) if user.organization_id else None}
+    )
+    
+    # Audit
+    ip = http_request.client.host if http_request else None
+    ua = http_request.headers.get("user-agent") if http_request else None
+    await write_audit_log(
+        db, str(user.id), "mfa_verified", "auth", str(user.organization_id) if user.organization_id else None,
+        details={"email": user.email, "trust_device": request.trust_device},
+        ip_address=ip, user_agent=ua,
+    )
+    
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -383,6 +489,7 @@ async def forgot_password(
 
     ip = http_request.client.host if http_request else "unknown"
     ua = http_request.headers.get("user-agent", "unknown") if http_request else "unknown"
+    email = request.email
 
     result = await db.execute(select(User).where(User.email == request.email))
     user = result.scalar_one_or_none()
@@ -444,9 +551,10 @@ async def forgot_password(
         )
     )
     if existing.scalar_one_or_none():
+        logger.info(f"[FORGOT_PASSWORD] User {email} already has a pending request. Skipping.")
         return GENERIC_RESPONSE  # Silent dedup
 
-
+    logger.info(f"[FORGOT_PASSWORD] Creating new request for {email}")
     # Create the pending request (24h window)
     reset_request = PasswordResetRequest(
         id=uuid.uuid4(),
@@ -507,12 +615,16 @@ async def list_reset_requests(
     from app.models import PasswordResetRequest
 
     # Auto-expire stale requests
+    from sqlalchemy import update
     await db.execute(
-        select(PasswordResetRequest).where(
+        update(PasswordResetRequest)
+        .where(
             PasswordResetRequest.status == "pending",
             PasswordResetRequest.expires_at < datetime.utcnow()
         )
+        .values(status="expired")
     )
+    await db.commit()
 
     user_role = current_user.get("role")
     org_id = current_user.get("organization_id")
@@ -670,145 +782,38 @@ async def reset_password(request: ResetPasswordRequest, db: AsyncSession = Depen
     """
     Reset password using a valid token with Complexity enforcement.
     """
+    from app.models import PasswordResetRequest
+    
+    # ── Verify Token against PasswordResetRequest table ──
     result = await db.execute(
-        select(User).where(
-            User.reset_token == request.token,
-            User.reset_token_expires > datetime.utcnow()
+        select(User, PasswordResetRequest)
+        .join(PasswordResetRequest, User.id == PasswordResetRequest.user_id)
+        .where(
+            PasswordResetRequest.reset_token == request.token,
+            PasswordResetRequest.token_expires_at > datetime.utcnow(),
+            PasswordResetRequest.status == "approved"
         )
     )
-    user = result.scalar_one_or_none()
+    row = result.first()
 
-    if not user:
+    if not row:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired reset token"
         )
+    
+    user, req = row
 
     # ── Enforce Password Complexity ──
     validate_password_complexity(request.new_password)
 
     # Update password
     user.password_hash = get_password_hash(request.new_password)
-    user.reset_token = None
-    user.reset_token_expires = None
     user.updated_at = datetime.utcnow()
-
+    
+    # Mark request as used
+    req.status = "used"
+    req.reset_token = None
+    
     await db.commit()
-
-    return {"message": "Password reset successfully. You can now login."}
-
-
-# ============================================================
-# Password Change & Session Management
-# ============================================================
-
-import re
-from app.models.preferences import UserSession
-from app.core.exceptions import PasswordValidationError
-
-class PasswordChangeRequest(BaseModel):
-    current_password: str
-    new_password: str
-
-
-@router.put("/password")
-async def change_password(
-    request: PasswordChangeRequest,
-    http_request: Request = None,
-    current_user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    Change user password with strict Complexity enforcement.
-    """
-    user_id = uuid.UUID(current_user["user_id"])
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    # Verify current password
-    if not verify_password(request.current_password, user.password_hash):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect")
-
-    # ── Enforce Password Complexity ──
-    validate_password_complexity(request.new_password)
-
-    # Update password
-    user.password_hash = get_password_hash(request.new_password)
-    from datetime import timezone
-    user.updated_at = datetime.now(timezone.utc)
-    await db.commit()
-
-    # Audit log
-    ip = http_request.client.host if http_request else None
-    ua = http_request.headers.get("user-agent") if http_request else None
-    await write_audit_log(
-        db, user_id=str(user_id), action="password_changed",
-        resource_type="auth", resource_id=str(user_id),
-        ip_address=ip, user_agent=ua
-    )
-
-    return {"message": "Password updated successfully"}
-
-
-@router.get("/sessions")
-async def get_active_sessions(
-    current_user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """List all active sessions for current user"""
-    user_id = uuid.UUID(current_user["user_id"])
-
-    result = await db.execute(
-        select(UserSession)
-        .where(UserSession.user_id == user_id, UserSession.is_active == True)
-        .order_by(UserSession.created_at.desc())
-    )
-    sessions = result.scalars().all()
-
-    return {
-        "sessions": [
-            {
-                "id": str(s.id),
-                "device_info": s.device_info or "Unknown Device",
-                "ip_address": s.ip_address,
-                "created_at": s.created_at.isoformat(),
-                "last_accessed": s.last_accessed.isoformat(),
-                "expires_at": s.expires_at.isoformat(),
-                "is_current": True  # TODO: Track current session
-            }
-            for s in sessions
-        ]
-    }
-
-
-@router.delete("/sessions/all")
-async def revoke_all_sessions(
-    http_request: Request = None,
-    current_user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """Logout from all devices by revoking all active sessions"""
-    user_id = uuid.UUID(current_user["user_id"])
-
-    result = await db.execute(
-        select(UserSession).where(UserSession.user_id == user_id, UserSession.is_active == True)
-    )
-    sessions = result.scalars().all()
-
-    for session in sessions:
-        session.is_active = False
-
-    await db.commit()
-
-    # Audit log
-    ip = http_request.client.host if http_request else None
-    await write_audit_log(
-        db, user_id=str(user_id), action="revoke_all_sessions",
-        resource_type="auth", resource_id=str(user_id),
-        ip_address=ip
-    )
-
-    return {"message": "All sessions revoked successfully. Please login again."}
+    return {"message": "Password berhasil diperbarui. Silakan login kembali."}

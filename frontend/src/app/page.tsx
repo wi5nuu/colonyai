@@ -103,7 +103,7 @@ export default function LandingPage() {
     return () => {
       clearInterval(slideInterval);
     };
-  }, []);
+  }, [heroSlides.length]);
 
   const serviceCards = [
     {

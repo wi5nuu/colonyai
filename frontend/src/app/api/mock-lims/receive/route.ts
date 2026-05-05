@@ -1,5 +1,5 @@
+// No external uuid needed, use native crypto.randomUUID()
 import { NextRequest, NextResponse } from "next/server";
-import { v4 as uuidv4 } from "uuid";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     // Simulated processing time
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    const limsRecordId = `LIMS-${uuidv4().split("-")[0].toUpperCase()}`;
+    const limsRecordId = `LIMS-${crypto.randomUUID().split("-")[0].toUpperCase()}`;
     const timestamp = new Date().toISOString();
 
     return NextResponse.json({

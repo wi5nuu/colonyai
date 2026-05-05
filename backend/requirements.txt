@@ -33,6 +33,7 @@ openpyxl==3.1.2
 
 # ── HTTP ──
 httpx==0.26.0
+aiosmtplib==3.0.1
 
 # ── Testing ──
 pytest==7.4.4

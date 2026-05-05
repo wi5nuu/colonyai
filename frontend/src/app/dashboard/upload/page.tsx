@@ -51,6 +51,21 @@ export default function UploadPage() {
     incubatorId: "INC-001",
   });
 
+  const handleFile = useCallback((file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error(t("upload.errorImageFile"));
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(t("upload.errorFileSize"));
+      return;
+    }
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  }, [t]);
+
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -64,25 +79,10 @@ export default function UploadPage() {
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0])
       handleFile(e.dataTransfer.files[0]);
-  }, []);
+  }, [handleFile]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
-  };
-
-  const handleFile = (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error(t("upload.errorImageFile"));
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error(t("upload.errorFileSize"));
-      return;
-    }
-    setSelectedFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => setPreview(reader.result as string);
-    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -139,7 +139,7 @@ export default function UploadPage() {
             {/* Page Header */}
             <div className="flex flex-row items-center justify-between gap-1 pb-1 border-b border-slate-100 mb-2">
               <div className="flex items-center gap-1.5">
-                <div className="w-5 h-5 bg-slate-50 border border-slate-200 rounded-md shadow-sm flex items-center justify-center flex-shrink-0">
+                <div className="w-5 h-5 bg-slate-50 border border-slate-200 rounded-sm shadow-sm flex items-center justify-center flex-shrink-0">
                   <UploadIcon className="w-2.5 h-2.5 text-primary" />
                 </div>
                 <div>
@@ -156,7 +156,7 @@ export default function UploadPage() {
                   showDocs={showDocs}
                   setShowDocs={setShowDocs}
                 />
-                <div className="flex items-center gap-1.5 px-2 py-1 bg-white border border-slate-200 rounded-md shadow-sm">
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-white border border-slate-200 rounded-sm shadow-sm">
                   <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
                   <span className="text-[8px] sm:text-[10px] font-black text-slate-900 uppercase tracking-widest leading-none">
                     Awaiting Input
@@ -167,9 +167,9 @@ export default function UploadPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-8 items-start">
               {/* Left: Image Upload */}
-              <div className="bg-white border border-slate-200/60 flex flex-col p-3 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm">
+              <div className="bg-white border border-slate-200/60 flex flex-col p-3 sm:p-5 rounded-sm sm:rounded-sm shadow-sm">
                 <div className="flex items-center gap-2 sm:gap-4 mb-3">
-                  <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg bg-primary/5 flex items-center justify-center border border-primary/10">
+                  <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-sm bg-primary/5 flex items-center justify-center border border-primary/10">
                     <ImageIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
                   <div>
@@ -183,7 +183,7 @@ export default function UploadPage() {
                 </div>
 
                 <div
-                  className={`flex-1 relative border-2 border-dashed rounded-2xl transition-all duration-300 overflow-hidden min-h-[140px] sm:min-h-[320px] flex items-center justify-center ${
+                  className={`flex-1 relative border-2 border-dashed rounded-sm transition-all duration-300 overflow-hidden min-h-[140px] sm:min-h-[320px] flex items-center justify-center ${
                     dragActive
                       ? "border-primary bg-primary/5 scale-[0.99]"
                       : "border-slate-200 hover:border-primary/50 bg-slate-50/50"
@@ -207,14 +207,14 @@ export default function UploadPage() {
                             setSelectedFile(null);
                             setPreview(null);
                           }}
-                          className="flex items-center gap-3 px-6 py-3 bg-white text-rose-600 text-xs font-black uppercase tracking-widest rounded-xl shadow-2xl hover:scale-105 active:scale-95 transition-all"
+                          className="flex items-center gap-3 px-6 py-3 bg-white text-rose-600 text-xs font-black uppercase tracking-widest rounded-sm shadow-2xl hover:scale-105 active:scale-95 transition-all"
                         >
                           <Trash2 className="h-4 w-4" />{" "}
                           {t("upload.removeImage")}
                         </button>
                       </div>
                       <div className="absolute bottom-6 left-6 right-6">
-                        <div className="bg-white/95 backdrop-blur-md text-slate-900 text-[11px] font-black px-5 py-4 rounded-2xl flex items-center gap-4 shadow-xl border border-white/20 uppercase tracking-widest">
+                        <div className="bg-white/95 backdrop-blur-md text-slate-900 text-[11px] font-black px-5 py-4 rounded-sm flex items-center gap-4 shadow-xl border border-white/20 uppercase tracking-widest">
                           <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0" />
                           <span className="truncate max-w-[150px]">
                             {selectedFile?.name}
@@ -231,7 +231,7 @@ export default function UploadPage() {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center p-5 sm:p-12 text-center group">
-                      <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xl shadow-primary/10 flex items-center justify-center mb-3 sm:mb-6 group-hover:scale-110 transition-transform duration-500 border border-slate-100">
+                      <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-sm bg-white shadow-xl shadow-primary/10 flex items-center justify-center mb-3 sm:mb-6 group-hover:scale-110 transition-transform duration-500 border border-slate-100">
                         <UploadIcon className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
                       </div>
                       <label htmlFor="file-upload" className="cursor-pointer">
@@ -259,8 +259,8 @@ export default function UploadPage() {
                 </div>
 
                 {/* ISO Tip */}
-                <div className="mt-2 sm:mt-8 flex items-start gap-2 sm:gap-4 p-2 sm:p-5 bg-blue-50/50 border border-blue-100 rounded-xl sm:rounded-2xl">
-                  <div className="p-1 sm:p-2 bg-blue-100 rounded-lg sm:rounded-xl flex-shrink-0 border border-blue-200">
+                <div className="mt-2 sm:mt-8 flex items-start gap-2 sm:gap-4 p-2 sm:p-5 bg-blue-50/50 border border-blue-100 rounded-sm sm:rounded-sm">
+                  <div className="p-1 sm:p-2 bg-blue-100 rounded-sm sm:rounded-sm flex-shrink-0 border border-blue-200">
                     <Info className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
                   </div>
                   <p className="text-[8px] sm:text-[9px] text-blue-700 font-bold leading-relaxed uppercase tracking-tight sm:tracking-widest">
@@ -270,9 +270,9 @@ export default function UploadPage() {
               </div>
 
               {/* Middle: Protocol Form */}
-              <div className="bg-white border border-slate-200/60 p-3 sm:p-8 rounded-xl sm:rounded-2xl shadow-sm">
+              <div className="bg-white border border-slate-200/60 p-3 sm:p-8 rounded-sm sm:rounded-sm shadow-sm">
                 <div className="flex items-center gap-2 sm:gap-4 mb-3 sm:mb-8">
-                  <div className="w-7 h-7 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100">
+                  <div className="w-7 h-7 sm:w-12 sm:h-12 rounded-sm sm:rounded-sm bg-slate-50 flex items-center justify-center border border-slate-100">
                     <FlaskConical className="h-4 w-4 sm:h-6 sm:w-6 text-slate-400" />
                   </div>
                   <div>
@@ -301,7 +301,7 @@ export default function UploadPage() {
                       type="text"
                       id="sampleId"
                       required
-                      className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-300 shadow-sm"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-300 shadow-sm"
                       value={formData.sampleId}
                       onChange={(e) =>
                         setFormData({ ...formData, sampleId: e.target.value })
@@ -321,7 +321,7 @@ export default function UploadPage() {
                       <select
                         id="mediaType"
                         required
-                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
                         value={formData.mediaType}
                         onChange={(e) =>
                           setFormData({
@@ -364,7 +364,7 @@ export default function UploadPage() {
                         <select
                           id="dilutionFactor"
                           required
-                          className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
+                          className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
                           value={formData.dilutionFactor}
                           onChange={(e) =>
                             setFormData({
@@ -400,7 +400,7 @@ export default function UploadPage() {
                         required
                         step="0.1"
                         min="0.1"
-                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.platedVolume}
                         onChange={(e) =>
                           setFormData({
@@ -421,7 +421,7 @@ export default function UploadPage() {
                       <input
                         type="number"
                         step="0.1"
-                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.incubationTemp}
                         onChange={(e) =>
                           setFormData({
@@ -437,7 +437,7 @@ export default function UploadPage() {
                       </label>
                       <input
                         type="number"
-                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.incubationTime}
                         onChange={(e) =>
                           setFormData({
@@ -455,7 +455,7 @@ export default function UploadPage() {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                       value={formData.methodStandard}
                       onChange={(e) =>
                         setFormData({
@@ -475,7 +475,7 @@ export default function UploadPage() {
                       <input
                         type="text"
                         placeholder="e.g., LOT-2026-X"
-                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.mediaBatchNumber}
                         onChange={(e) =>
                           setFormData({
@@ -492,7 +492,7 @@ export default function UploadPage() {
                       <input
                         type="text"
                         placeholder="e.g., INC-01"
-                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.incubatorId}
                         onChange={(e) =>
                           setFormData({
@@ -509,7 +509,7 @@ export default function UploadPage() {
                     <button
                       type="submit"
                       disabled={!selectedFile || isSubmitting}
-                      className="w-auto sm:w-full min-w-[150px] sm:min-w-0 bg-primary text-slate-900 px-3 py-1.5 sm:py-2.5 text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] flex items-center justify-center gap-1.5 sm:gap-3 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group mx-auto"
+                      className="w-auto sm:w-full min-w-[150px] sm:min-w-0 bg-primary text-slate-900 px-3 py-1.5 sm:py-2.5 text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] flex items-center justify-center gap-1.5 sm:gap-3 rounded-sm shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group mx-auto"
                     >
                       {isSubmitting ? (
                         <>
@@ -586,7 +586,7 @@ PRESISI: 99.8% pada PCA Standard.`}
                   Overview: Intelligence Intake
                 </h2>
               </div>
-              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-sm border border-slate-100">
                 Sistem Intelligence Intake adalah gerbang utama pemrosesan
                 spesimen biologis menggunakan mesin saraf ColonyAI. Protokol ini
                 dirancang untuk memenuhi standar akurasi tinggi yang
@@ -661,10 +661,10 @@ PRESISI: 99.8% pada PCA Standard.`}
                         <ul className="mt-1 space-y-1 border-l border-slate-100 pl-2.5 py-0.5">
                           {step.list.map((item, idx) => (
                             <li
-                              key={idx}
-                              className="text-[8px] text-slate-400 font-medium list-none"
+                               key={idx}
+                               className="text-[8px] text-slate-400 font-medium list-none"
                             >
-                              • {item}
+                               • {item}
                             </li>
                           ))}
                         </ul>
@@ -753,7 +753,7 @@ PRESISI: 99.8% pada PCA Standard.`}
             </section>
 
             <div className="space-y-3 pt-4">
-              <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl flex gap-3 shadow-sm">
+              <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-sm flex gap-3 shadow-sm">
                 <div className="w-4 h-4 flex-shrink-0 mt-0.5">
                   <div className="w-full h-full rounded-full bg-emerald-600 flex items-center justify-center">
                     <TrendingUp className="w-2.5 h-2.5 text-white" />
@@ -770,7 +770,7 @@ PRESISI: 99.8% pada PCA Standard.`}
                 </div>
               </div>
 
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex gap-3 shadow-sm">
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-sm flex gap-3 shadow-sm">
                 <div className="w-4 h-4 flex-shrink-0 mt-0.5">
                   <div className="w-full h-full rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
                     <Lock className="w-2.5 h-2.5 text-primary" />

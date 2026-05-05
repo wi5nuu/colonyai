@@ -148,3 +148,9 @@ mlartifacts/
 # Secret Data
 nexus_vault_secrets/
 
+# Temporary Root Scripts and Junk Files
+/*.py
+/2
+/200)
+/uploads/
+/*_backup.md

@@ -114,6 +114,12 @@ class User(Base):
     last_failed_login = Column(DateTime, nullable=True)
     is_locked_out = Column(SAEnum(enum.Enum('LockoutStatus', ['yes', 'no']), name='lockout_status'), nullable=False, default='no')
     is_active = Column(Boolean, default=True)
+    
+    # ── MFA & DEVICE TRUST (SUPER-TIGHT SECURITY) ──
+    mfa_code = Column(String(6), nullable=True) # Current active 6-digit code
+    mfa_expires = Column(DateTime, nullable=True) # Code validity (5 mins)
+    trusted_devices = Column(JSON, nullable=True, default=list) # List of trusted Device IDs
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -153,6 +159,7 @@ class Analysis(Base):
     error_message = Column(Text, nullable=True)
     warnings = Column(JSON, nullable=True)  # List of warning messages
     class_breakdown = Column(JSON, nullable=True)  # {class_name: count}
+    detections = relationship("ColonyDetection", back_populates="analysis", cascade="all, delete-orphan")
 
     # ISO 17025 Additional Metadata
     cfu_status = Column(String(50), nullable=True)  # valid, TNTC, TFTC
@@ -173,7 +180,6 @@ class Analysis(Base):
 
     organization = relationship("Organization")
     user = relationship("User", back_populates="analyses")
-    detections = relationship("ColonyDetection", back_populates="analysis", cascade="all, delete-orphan")
 
 
 class ColonyDetection(Base):
