@@ -40,7 +40,8 @@ class Settings(BaseSettings):
     AWS_S3_URL_EXPIRY: int = 3600
 
     # Local file storage (fallback when S3 not configured)
-    UPLOAD_DIR: str = "./uploads"
+    # Use absolute path to ensure consistent file serving regardless of working directory
+    UPLOAD_DIR: str = str(Path(__file__).parent.parent.parent / "uploads")
     BACKEND_URL: str = "http://localhost:8000"
 
     # Initial Admin Seed

@@ -65,19 +65,19 @@ class Organization(Base):
     name = Column(String(255), nullable=False)
     slug = Column(String(100), unique=True, nullable=False, index=True)
     location = Column(String(255), nullable=True)
-    
+
     # Licensing & Compliance
     license_key = Column(String(100), nullable=True)
     license_expires_at = Column(DateTime, nullable=True)
     is_active = Column(SAEnum(enum.Enum('OrgStatus', ['active', 'suspended', 'trial']), name='org_status'), default='active')
-    
+
     # Institution Profile
     institution_type = Column(String(100), nullable=True, default="Clinical Laboratory")
     compliance_standard = Column(String(100), nullable=True, default="ISO-17025")
-    
+
     # Infrastructure Config (Stored as JSON for flexibility)
     infra_config = Column(JSON, nullable=True)
-    
+
     # Metadata
     max_users = Column(Integer, default=10)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -103,7 +103,7 @@ class User(Base):
     full_name = Column(String(255), nullable=False)
     role = Column(SAEnum(UserRole), nullable=False, default=UserRole.ANALYST)
     laboratory_id = Column(GUID(), nullable=True)
-    
+
     # Forgot Password flow
     reset_token = Column(String(255), nullable=True, index=True)
     reset_token_expires = Column(DateTime, nullable=True)
@@ -129,7 +129,7 @@ class Analysis(Base):
     __tablename__ = "analyses"
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    organization_id = Column(GUID(), ForeignKey("organizations.id"), nullable=False, index=True)
+    organization_id = Column(GUID(), ForeignKey("organizations.id"), nullable=True, index=True)
     version_id = Column(Integer, nullable=False, default=1)
 
     __mapper_args__ = {
@@ -159,12 +159,12 @@ class Analysis(Base):
     cfu_message = Column(Text, nullable=True)
     uncertainty_u = Column(Float, nullable=True)
     merged_estimation_method = Column(String(100), nullable=True)
-    
+
     # New Compliance Fields
     incubation_temp = Column(Float, nullable=True) # e.g. 35.0 C
     incubation_time_hours = Column(Integer, nullable=True) # e.g. 48 hours
     method_standard = Column(String(255), nullable=True, default="ISO 4833-1:2013")
-    
+
     media_batch_number = Column(String(100), nullable=True)
     incubator_id = Column(String(100), nullable=True)
 
@@ -321,4 +321,3 @@ class PasswordResetRequest(Base):
 
 # Import new models to register them with SQLAlchemy
 from app.models.preferences import UserPreference, UserSession
-

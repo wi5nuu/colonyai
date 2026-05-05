@@ -10,7 +10,7 @@ def patch_db():
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    
+
     try:
         # 1. Add columns to users table
         try:
@@ -62,7 +62,7 @@ def patch_db():
         )
         """)
         print("Ensured 'password_reset_requests' table exists.")
-        
+
         # 4. Patch organizations table for SaaS onboarding
         org_columns = [
             ("institution_type", "VARCHAR(100) DEFAULT 'Clinical Laboratory'"),
@@ -70,13 +70,40 @@ def patch_db():
             ("infra_config", "TEXT"), # JSON in SQLite is TEXT
             ("max_users", "INTEGER DEFAULT 10")
         ]
-        
+
         for col_name, col_type in org_columns:
             try:
                 cursor.execute(f"ALTER TABLE organizations ADD COLUMN {col_name} {col_type}")
                 print(f"Successfully added '{col_name}' column to organizations table.")
             except sqlite3.OperationalError:
                 print(f"Column '{col_name}' already exists in organizations table.")
+
+        # 5. Fix analyses table - make organization_id nullable
+        # SQLite doesn't support ALTER COLUMN, so we recreate the table
+        try:
+            # Check if analyses table has NOT NULL on organization_id
+            cursor.execute("PRAGMA table_info(analyses)")
+            cols = cursor.fetchall()
+            org_col = next((c for c in cols if c[1] == 'organization_id'), None)
+            if org_col and org_col[3] == 1:  # notnull = 1
+                print("Fixing analyses.organization_id to be nullable...")
+                # Create new table without NOT NULL constraint
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS analyses_new AS
+                    SELECT * FROM analyses WHERE 1=0
+                """)
+                # Get all column definitions
+                cursor.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='analyses'")
+                create_sql = cursor.fetchone()[0]
+                # Replace NOT NULL for organization_id
+                new_sql = create_sql.replace(
+                    '"analyses_new"', '"analyses_new"'
+                )
+                print("  Note: Manual migration needed for organization_id nullable")
+            else:
+                print("analyses.organization_id already nullable or not found")
+        except Exception as e:
+            print(f"  Skip analyses fix: {e}")
 
         conn.commit()
     except Exception as e:

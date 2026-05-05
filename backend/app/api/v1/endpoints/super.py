@@ -110,7 +110,7 @@ async def get_all_organizations(
             "name": org.name,
             "slug": org.slug,
             "location": org.location,
-            "status": org.is_active.value if hasattr(org.is_active, 'value') else org.is_active,
+            "status": "active" if org.is_active in [1, True, "active", "1"] else ("suspended" if org.is_active in [0, False, "suspended", "0"] else str(org.is_active)),
             "license_tier": org.license_key or "Standard",
             "license_expiry": org.license_expires_at,
             "users_count": users_count,
@@ -259,4 +259,32 @@ async def toggle_org_status(
         "status": new_status
     }
 
+class OrgPersonnelResponse(BaseModel):
+    id: str
+    full_name: str
+    email: str
+    role: str
+    recovery_password: Optional[str] = None
 
+@router.get("/organizations/{org_id}/personnel")
+async def get_org_personnel(
+    org_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role("super_admin"))
+):
+    """[SUPER ADMIN] Get all personnel (all 4 roles) for a specific organization."""
+    result = await db.execute(
+        select(User).where(User.organization_id == org_id).order_by(User.role)
+    )
+    users = result.scalars().all()
+
+    return [
+        {
+            "id": str(u.id),
+            "full_name": u.full_name,
+            "email": u.email,
+            "role": u.role.value if hasattr(u.role, "value") else str(u.role),
+            "recovery_password": u.recovery_password,
+        }
+        for u in users
+    ]
