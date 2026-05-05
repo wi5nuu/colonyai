@@ -32,8 +32,21 @@ def get_s3_client():
 
 
 def s3_is_configured() -> bool:
-    """Check whether S3 storage is available (credentials set and boto3 installed)."""
-    return BOTO3_AVAILABLE and bool(settings.AWS_ACCESS_KEY_ID)
+    """Check whether S3 storage is available (credentials set and boto3 installed).
+
+    Ignores placeholder/test credentials like 'your-aws-access-key' that may be
+    set as system environment variables.
+    """
+    if not BOTO3_AVAILABLE:
+        return False
+    key = settings.AWS_ACCESS_KEY_ID.strip() if settings.AWS_ACCESS_KEY_ID else ""
+    if not key:
+        return False
+    # Ignore placeholder/test credentials
+    placeholder_prefixes = ("your-", "test-", "example-", "dummy-", "placeholder-")
+    if any(key.lower().startswith(p) for p in placeholder_prefixes):
+        return False
+    return True
 
 
 def upload_to_s3(file_bytes: bytes, s3_key: str, content_type: str = "application/octet-stream") -> Optional[str]:

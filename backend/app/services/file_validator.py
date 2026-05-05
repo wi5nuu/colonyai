@@ -166,16 +166,34 @@ def _strip_exif(content: bytes, mime_type: str) -> bytes:
     - EXIF injection exploit (command injection via EXIF fields)
 
     Hanya berlaku untuk JPEG — PNG & WEBP tidak memiliki EXIF.
+
+    piexif.remove() membutuhkan file path, bukan bytes.
+    Simpan ke temp file sementara, lalu baca kembali hasilnya.
     """
     if mime_type != "image/jpeg":
         return content
 
     try:
         import piexif
+        import tempfile
+        import os
 
-        cleaned = piexif.remove(content)
-        logger.debug("EXIF metadata berhasil di-strip.")
-        return cleaned
+        # piexif.remove() membutuhkan path file, bukan bytes
+        # Simpan ke temp file, strip EXIF, lalu baca kembali
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_in:
+            tmp_in.write(content)
+            tmp_path = tmp_in.name
+
+        try:
+            piexif.remove(tmp_path)
+            with open(tmp_path, "rb") as f:
+                cleaned = f.read()
+            logger.debug("EXIF metadata berhasil di-strip.")
+            return cleaned
+        finally:
+            # Pastikan temp file selalu dihapus
+            os.unlink(tmp_path)
+
     except ImportError:
         logger.warning(
             "piexif tidak tersedia — EXIF tidak di-strip. "

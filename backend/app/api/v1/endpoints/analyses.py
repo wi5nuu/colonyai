@@ -408,11 +408,42 @@ async def create_analysis(
         analysis_status = AnalysisStatus.COMPLETED  # TNTC dan TFTC tetap COMPLETED
 
         # ── Step 7: Simpan gambar teranotasi ──
+        # PASS original image (bukan processed_image) agar bounding box
+        # di-render di gambar resolusi penuh, bukan di 512x512 crop.
+        # Koordinat detections perlu di-scale dari 512x512 ke ukuran original.
         annotated_dir = os.path.join(settings.UPLOAD_DIR, "annotated")
         Path(annotated_dir).mkdir(parents=True, exist_ok=True)
         annotated_filename = f"{analysis_id}.jpg"
         annotated_path = os.path.join(annotated_dir, annotated_filename)
-        image_processor.save_annotated_image(processed_image, detections, annotated_path)
+
+        # Load original image untuk annotation
+        import cv2 as _cv2
+        original_img_bgr = _cv2.imread(original_path)
+        if original_img_bgr is None:
+            # Fallback: gunakan processed image jika original gagal di-load
+            logger.warning("Gagal load original image, fallback ke processed image untuk annotation")
+            image_processor.save_annotated_image(processed_image, detections, annotated_path)
+        else:
+            # Scale bounding box coordinates dari processed (512x512) ke original size
+            orig_h, orig_w = original_img_bgr.shape[:2]
+            proc_size = settings.MODEL_IMG_SIZE  # 512
+            scale_x = orig_w / proc_size
+            scale_y = orig_h / proc_size
+
+            scaled_detections = []
+            for det in detections:
+                scaled_det = det.copy()
+                scaled_det['bbox'] = {
+                    'x': int(det['bbox']['x'] * scale_x),
+                    'y': int(det['bbox']['y'] * scale_y),
+                    'width': int(det['bbox']['width'] * scale_x),
+                    'height': int(det['bbox']['height'] * scale_y),
+                }
+                scaled_detections.append(scaled_det)
+
+            # Convert BGR original ke RGB untuk save_annotated_image
+            original_img_rgb = _cv2.cvtColor(original_img_bgr, _cv2.COLOR_BGR2RGB)
+            image_processor.save_annotated_image(original_img_rgb, scaled_detections, annotated_path)
 
         if s3_is_configured():
             s3_key = f"{settings.AWS_S3_ANNOTATED_PREFIX}{annotated_filename}"
