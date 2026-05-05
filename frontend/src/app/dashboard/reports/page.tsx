@@ -424,7 +424,7 @@ export default function ReportsPage() {
                           </span>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                             {new Date(report.generatedAt).toLocaleTimeString()}{" "}
-                            // {report.format.toUpperCase()} Protocol
+                            {"//"} {report.format.toUpperCase()} Protocol
                           </p>
                         </div>
                       </div>

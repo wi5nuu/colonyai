@@ -872,7 +872,7 @@ function SystemStatusSettings() {
           <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg w-fit">
             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
             <span className="text-[9px] font-black uppercase tracking-widest">
-              {infra.status} // 24ms {t("settings.sysLatency")}
+              {infra.status} {"//"} 24ms {t("settings.sysLatency")}
             </span>
           </div>
           <p className="text-[9px] font-bold text-slate-400 uppercase mt-4">
