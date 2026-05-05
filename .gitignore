@@ -144,3 +144,7 @@ test_result*.png
 mlruns/
 mlartifacts/
 .qwen/  
+
+# Secret Data
+nexus_vault_secrets/
+
