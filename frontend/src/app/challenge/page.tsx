@@ -27,7 +27,7 @@ const PRIMARY_GRADIENT =
   "bg-gradient-to-r from-[#00f2ff] via-[#0055ff] to-[#ff00ff]";
 const ACCENT_BLUE = "text-[#0055ff]";
 
-export default function ProfilPage() {
+export default function ChallengePage() {
   const { t } = useTranslationStore();
 
   return (
@@ -46,17 +46,17 @@ export default function ProfilPage() {
             <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-xl backdrop-blur-md">
               <div className={`w-1.5 h-1.5 rounded-full ${PRIMARY_GRADIENT}`} />
               <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/70">
-                {t("profil.badge")}
+                {t("challenge.badge")}
               </span>
             </div>
 
             <h1 className="text-3xl lg:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#00f2ff] to-[#ff00ff]">
-              {t("profil.heroTitle")}
+              {t("challenge.heroTitle")}
             </h1>
 
             <p
               className="text-base lg:text-lg text-white/50 font-medium leading-relaxed max-w-2xl border-l-2 border-[#0055ff] pl-6 italic"
-              dangerouslySetInnerHTML={{ __html: t("profil.heroDesc") }}
+              dangerouslySetInnerHTML={{ __html: t("challenge.heroDesc") }}
             ></p>
           </div>
         </div>
@@ -71,12 +71,12 @@ export default function ProfilPage() {
               <div className="bg-white rounded-xl p-8 lg:p-12 shadow-2xl border border-slate-100 space-y-10">
                 <div className="space-y-4">
                   <h2 className="text-xl lg:text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#00f2ff] to-[#ff00ff]">
-                    {t("profil.problemTitle")}
+                    {t("challenge.problemTitle")}
                   </h2>
                   <p
                     className="text-sm text-slate-600 leading-relaxed font-medium"
                     dangerouslySetInnerHTML={{
-                      __html: t("profil.problemDesc"),
+                      __html: t("challenge.problemDesc"),
                     }}
                   ></p>
                 </div>
@@ -84,20 +84,20 @@ export default function ProfilPage() {
                 <div className="grid md:grid-cols-2 gap-6">
                   {[
                     {
-                      title: t("profil.issue1Title"),
-                      desc: t("profil.issue1Desc"),
+                      title: t("challenge.issue1Title"),
+                      desc: t("challenge.issue1Desc"),
                     },
                     {
-                      title: t("profil.issue2Title"),
-                      desc: t("profil.issue2Desc"),
+                      title: t("challenge.issue2Title"),
+                      desc: t("challenge.issue2Desc"),
                     },
                     {
-                      title: t("profil.issue3Title"),
-                      desc: t("profil.issue3Desc"),
+                      title: t("challenge.issue3Title"),
+                      desc: t("challenge.issue3Desc"),
                     },
                     {
-                      title: t("profil.issue4Title"),
-                      desc: t("profil.issue4Desc"),
+                      title: t("challenge.issue4Title"),
+                      desc: t("challenge.issue4Desc"),
                     },
                   ].map((item, i) => (
                     <div
@@ -119,14 +119,14 @@ export default function ProfilPage() {
 
                 <div className="pt-8 border-t border-slate-100">
                   <h3 className="text-lg lg:text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#00f2ff] to-[#ff00ff] mb-6">
-                    {t("profil.innovationTitle")}
+                    {t("challenge.innovationTitle")}
                   </h3>
                   <div className="space-y-4">
                     {[
-                      t("profil.innovation1"),
-                      t("profil.innovation2"),
-                      t("profil.innovation3"),
-                      t("profil.innovation4"),
+                      t("challenge.innovation1"),
+                      t("challenge.innovation2"),
+                      t("challenge.innovation3"),
+                      t("challenge.innovation4"),
                     ].map((item, i) => (
                       <div
                         key={i}
@@ -150,37 +150,37 @@ export default function ProfilPage() {
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 blur-3xl rounded-full -mr-16 -mt-16" />
                 <h3 className="text-lg font-black uppercase tracking-widest mb-6 border-b border-white/20 pb-2">
-                  {t("profil.summaryTitle")}
+                  {t("challenge.summaryTitle")}
                 </h3>
                 <div className="space-y-6">
                   <div className="space-y-1">
                     <p className="text-[9px] font-bold text-white/60 uppercase">
-                      {t("profil.categoryLabel")}
+                      {t("challenge.categoryLabel")}
                     </p>
                     <p className="text-sm font-black uppercase tracking-widest">
-                      {t("profil.categoryValue")}
+                      {t("challenge.categoryValue")}
                     </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[9px] font-bold text-white/60 uppercase">
-                      {t("profil.providerLabel")}
+                      {t("challenge.providerLabel")}
                     </p>
                     <p className="text-sm font-black uppercase tracking-widest">
-                      {t("profil.providerValue")}
+                      {t("challenge.providerValue")}
                     </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[9px] font-bold text-white/60 uppercase">
-                      {t("profil.yearLabel")}
+                      {t("challenge.yearLabel")}
                     </p>
                     <p className="text-sm font-black uppercase tracking-widest">
-                      {t("profil.yearValue")}
+                      {t("challenge.yearValue")}
                     </p>
                   </div>
                   <div className="pt-4">
                     <div className="bg-white/20 backdrop-blur-md p-4 rounded-xl border border-white/20">
                       <p className="text-[10px] font-bold leading-relaxed uppercase tracking-widest">
-                        {t("profil.summaryQuote")}
+                        {t("challenge.summaryQuote")}
                       </p>
                     </div>
                   </div>
@@ -189,7 +189,7 @@ export default function ProfilPage() {
 
               <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-xl space-y-6 text-center">
                 <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">
-                  {t("profil.partnersTitle")}
+                  {t("challenge.partnersTitle")}
                 </h4>
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col items-center gap-2 p-4 border border-slate-100 rounded-xl">
@@ -199,7 +199,7 @@ export default function ProfilPage() {
                       alt="TUV"
                     />
                     <span className="text-[8px] font-black uppercase tracking-tighter text-slate-300">
-                      {t("profil.mainProvider")}
+                      {t("challenge.mainProvider")}
                     </span>
                   </div>
                   <div className="flex flex-col items-center gap-2 p-4 border border-slate-100 rounded-xl">
@@ -207,7 +207,7 @@ export default function ProfilPage() {
                       PRESUNIV
                     </div>
                     <span className="text-[8px] font-black uppercase tracking-tighter text-slate-300">
-                      {t("profil.academicOrganizer")}
+                      {t("challenge.academicOrganizer")}
                     </span>
                   </div>
                 </div>

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter, Outfit, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/Providers'
+import { ConditionalNavbar } from '@/components/ConditionalNavbar'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -33,8 +34,6 @@ export const viewport = {
   themeColor: '#6366f1',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 }
 
 export default function RootLayout({
@@ -46,7 +45,10 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${outfit.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans antialiased">
         <Providers>
-          {children}
+          <ConditionalNavbar />
+          <main id="main-content">
+            {children}
+          </main>
         </Providers>
       </body>
     </html>

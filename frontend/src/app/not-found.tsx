@@ -1,17 +1,23 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { FlaskConical, ArrowLeft, Search } from 'lucide-react'
-import { useState } from 'react'
+import Link from "next/link";
+import { FlaskConical, ArrowLeft, Search } from "lucide-react";
+import { useState } from "react";
+import { useTranslationStore } from "@/lib/i18n/store";
 
 export default function NotFound() {
-  const [searchQuery, setSearchQuery] = useState('')
+  const { t } = useTranslationStore();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const quickLinks = [
-    { label: 'Dashboard', href: '/dashboard', icon: FlaskConical },
-    { label: 'New Analysis', href: '/dashboard/upload', icon: Search },
-    { label: 'History', href: '/dashboard/history', icon: Search },
-  ]
+    { label: t("notFound.dashboard"), href: "/dashboard", icon: FlaskConical },
+    {
+      label: t("notFound.newAnalysis"),
+      href: "/dashboard/upload",
+      icon: Search,
+    },
+    { label: t("notFound.history"), href: "/dashboard/history", icon: Search },
+  ];
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -32,17 +38,17 @@ export default function NotFound() {
         </div>
 
         {/* Message */}
-        <h1 className="text-2xl font-bold text-foreground mb-3">Page Not Found</h1>
-        <p className="text-muted-foreground mb-8">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
+        <h1 className="text-2xl font-bold text-foreground mb-3">
+          {t("notFound.title")}
+        </h1>
+        <p className="text-muted-foreground mb-8">{t("notFound.desc")}</p>
 
         {/* Search */}
         <div className="relative max-w-sm mx-auto mb-8">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search pages..."
+            placeholder={t("notFound.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full border border-border rounded-xl pl-10 pr-4 py-3 bg-card focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -58,7 +64,9 @@ export default function NotFound() {
               className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-all"
             >
               <link.icon className="h-5 w-5 text-muted-foreground" />
-              <span className="text-xs font-medium text-foreground">{link.label}</span>
+              <span className="text-xs font-medium text-foreground">
+                {link.label}
+              </span>
             </Link>
           ))}
         </div>
@@ -69,9 +77,9 @@ export default function NotFound() {
           className="btn-primary inline-flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
+          {t("notFound.backToDashboard")}
         </Link>
       </div>
     </div>
-  )
+  );
 }
