@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/auth-store'
+import api from '@/lib/api'
 
 interface ResetRequest {
   id: string
@@ -52,12 +53,8 @@ export function ResetRequestsPanel() {
   const fetchRequests = async () => {
     try {
       setIsLoading(true)
-      const res = await fetch('/api/v1/auth/reset-requests', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      })
-      if (!res.ok) throw new Error('Failed to fetch')
-      const data = await res.json()
-      setRequests(data.reset_requests)
+      const res = await api.get<{ reset_requests: ResetRequest[] }>('/api/v1/auth/reset-requests')
+      setRequests(res.data.reset_requests)
       setSelectedIds(new Set())
     } catch {
       toast.error('Gagal memuat daftar permintaan reset')
@@ -98,12 +95,7 @@ export function ResetRequestsPanel() {
   const handleApprove = async (id: string) => {
     setProcessingId(id)
     try {
-      const res = await fetch(`/api/v1/auth/reset-requests/${id}/approve`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${accessToken}` }
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.detail)
+      await api.post(`/api/v1/auth/reset-requests/${id}/approve`)
       toast.success('✅ Disetujui! Token telah dibuat.')
       fetchRequests()
     } catch (e: any) {
@@ -116,12 +108,7 @@ export function ResetRequestsPanel() {
   const handleReject = async (id: string) => {
     setProcessingId(id)
     try {
-      const res = await fetch(`/api/v1/auth/reset-requests/${id}/reject`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${accessToken}` }
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.detail)
+      await api.post(`/api/v1/auth/reset-requests/${id}/reject`)
       toast.success('Ditolak. Pengguna telah diberitahu.')
       fetchRequests()
     } catch (e: any) {
@@ -138,11 +125,8 @@ export function ResetRequestsPanel() {
     const idsArray = Array.from(selectedIds)
     for (const id of idsArray) {
       try {
-        const res = await fetch(`/api/v1/auth/reset-requests/${id}/approve`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${accessToken}` }
-        })
-        if (res.ok) success++; else failed++
+        await api.post(`/api/v1/auth/reset-requests/${id}/approve`)
+        success++
       } catch { failed++ }
     }
     toast.success(`✅ Bulk Approve: ${success} berhasil${failed > 0 ? `, ${failed} gagal` : ''}`)
@@ -157,10 +141,7 @@ export function ResetRequestsPanel() {
     const idsArray = Array.from(selectedIds)
     for (const id of idsArray) {
       try {
-        await fetch(`/api/v1/auth/reset-requests/${id}/reject`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${accessToken}` }
-        })
+        await api.post(`/api/v1/auth/reset-requests/${id}/reject`)
         success++
       } catch {}
     }

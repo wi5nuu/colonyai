@@ -134,14 +134,18 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             </div>
           </div>
         </div>
-        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white">
-          <X className="w-5 h-5" />
+        <button 
+          onClick={onClose} 
+          className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
+          aria-label="Close Chatbot"
+        >
+          <X className="w-5 h-5" aria-hidden="true" />
         </button>
       </div>
 
       {/* Messages Area */}
       <div className="flex-1 overflow-hidden flex flex-col bg-slate-50">
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar scrollbar-hide">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar scrollbar-hide" role="log" aria-live="polite">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[85%] p-3 rounded-2xl text-[10px] lg:text-[11px] font-bold leading-relaxed shadow-sm ${
@@ -156,7 +160,7 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
           {isTyping && (
             <div className="flex justify-start">
               <div className="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm flex items-center gap-1.5">
-                <div className="flex gap-1">
+                <div className="flex gap-1" aria-label="Bot is typing">
                   <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
                   <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                   <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div>
@@ -172,14 +176,16 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             <div className="flex items-center justify-between px-1">
               <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Pertanyaan Cepat</p>
               <div className="relative flex items-center group">
+                 <label htmlFor="quick-q-search" className="sr-only">Cari Pertanyaan</label>
                  <input 
+                    id="quick-q-search"
                     type="text" 
                     value={qSearch}
                     onChange={(e) => setQSearch(e.target.value)}
                     placeholder="Cari..." 
                     className="w-16 bg-transparent border-b border-slate-300 text-[8px] font-bold text-slate-600 focus:outline-none focus:border-[#0055ff] transition-all px-1"
                  />
-                 <Search className="w-2.5 h-2.5 text-slate-400 absolute right-0 pointer-events-none" />
+                 <Search className="w-2.5 h-2.5 text-slate-400 absolute right-0 pointer-events-none" aria-hidden="true" />
               </div>
             </div>
             
@@ -192,7 +198,7 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                     className="flex-none w-full snap-center bg-white border border-slate-200 p-2 lg:p-2.5 rounded-lg text-[9px] font-bold text-slate-700 hover:border-[#0055ff] hover:text-[#0055ff] transition-all flex items-center justify-between group shadow-sm"
                   >
                     <span className="truncate pr-3">{item.q}</span>
-                    <ChevronRight className="w-3 h-3 text-[#0055ff] flex-shrink-0" />
+                    <ChevronRight className="w-3 h-3 text-[#0055ff] flex-shrink-0" aria-hidden="true" />
                   </button>
                 ))
               ) : (
@@ -206,7 +212,9 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       {/* Input */}
       <div className="p-4 border-t border-slate-100 bg-white shrink-0">
         <div className="flex gap-2">
+          <label htmlFor="chat-input" className="sr-only">Ketik pertanyaan</label>
           <input 
+            id="chat-input"
             type="text" 
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -219,8 +227,9 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             onClick={() => handleSend(input)}
             disabled={isTyping}
             className={`w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center transition-all ${isTyping ? "opacity-50 cursor-not-allowed" : "hover:bg-[#0055ff]"}`}
+            aria-label="Kirim Pesan"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
         <p className="text-[8px] text-center text-slate-400 mt-3 uppercase tracking-widest font-bold">
