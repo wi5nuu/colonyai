@@ -319,5 +319,26 @@ class PasswordResetRequest(Base):
     reviewer = relationship("User", foreign_keys=[reviewed_by])
 
 
+class LimsLog(Base):
+    """
+    Log of data sent to external Laboratory Information Management Systems (LIMS).
+    """
+    __tablename__ = "lims_logs"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    organization_id = Column(GUID(), ForeignKey("organizations.id"), nullable=True, index=True)
+    user_id = Column(GUID(), ForeignKey("users.id"), nullable=False)
+    analysis_id = Column(GUID(), ForeignKey("analyses.id"), nullable=False)
+    
+    lims_record_id = Column(String(255), nullable=True)
+    status = Column(String(50), nullable=False)  # success, failed
+    response_payload = Column(JSON, nullable=True)
+    
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User")
+    analysis = relationship("Analysis")
+
+
 # Import new models to register them with SQLAlchemy
 from app.models.preferences import UserPreference, UserSession

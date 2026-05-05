@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { 
   Bot, 
   X, 
@@ -13,37 +13,47 @@ import {
   ChevronRight,
   Info
 } from 'lucide-react'
+import { useTranslationStore } from '@/lib/i18n/store'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
 }
 
-const QUICK_QUESTIONS = [
-  { id: 'system_walkthrough', text: 'System Walkthrough', icon: Info },
-  { id: 'iso_standards', text: 'ISO 17025 Compliance', icon: ShieldCheck },
-  { id: 'field_explanation', text: 'Explain form fields', icon: BookOpen },
-  { id: 'tntc_meaning', text: 'What are TNTC/TFTC?', icon: FlaskConical },
-]
+
 
 export function SmartAssistant() {
+  const { t, language } = useTranslationStore()
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'AUTHENTICATION INITIALIZED. I am the ColonyAI Neural Intelligence Protocol. To establish a secure communication channel, please identify yourself. May I know who I am speaking with and your current clearance level?' }
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [isTyping, setIsTyping] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [activeCycleIndex, setActiveCycleIndex] = useState(0)
   const [userName, setUserName] = useState<string | null>(null)
-  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const QUICK_QUESTIONS = [
+    { id: 'system_walkthrough', text: t('assistant.quickWalkthrough'), icon: Info },
+    { id: 'iso_standards', text: t('assistant.quickISO'), icon: ShieldCheck },
+    { id: 'field_explanation', text: t('assistant.quickFields'), icon: BookOpen },
+    { id: 'tntc_meaning', text: t('assistant.quickTNTC'), icon: FlaskConical },
+  ]
 
   const CYCLING_MESSAGES = [
-    "NEURAL ARCHITECTURE: SA-001 clusters verified. Current specimen queue integrity at 100% across all 12 distributed nodes.",
-    "PROTOCOL OPTIMIZATION: Spectral detection thresholds adjusted for PCA Matrix. Yield efficiency improved by +12.4%.",
-    "COMPLIANCE ALERT: ISO-17025 audit ledger is active. Neural signatures verified for 1,248 historical specimen records.",
-    "INTAKE STATUS: Neural intake streams are balanced. Multi-protocol analysis (VRBA, TSA, R2A) verified for current session.",
-    "SYSTEM INTEGRITY: Global neural sync completed. All cryptographic audit logs mirrored to secondary intelligence sink."
+    t('assistant.cycleMsg1'),
+    t('assistant.cycleMsg2'),
+    t('assistant.cycleMsg3'),
+    t('assistant.cycleMsg4'),
+    t('assistant.cycleMsg5')
   ]
+
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([{ role: 'assistant', content: t('assistant.greeting') }])
+    }
+  }, [language, t, messages.length])
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+
 
   const [isVisible, setIsVisible] = useState(false)
 
@@ -100,42 +110,22 @@ export function SmartAssistant() {
       const input = inputValue.toLowerCase()
 
       if (id === 'identify') {
-        response = `IDENTITY VERIFIED. Welcome, ${userName || 'Analyst'}. Your session has been committed to the secure audit ledger. I am now ready to guide you through our neural laboratory protocols. Would you like to start with a 'System Walkthrough' to understand our operating procedures?`
+        response = t('assistant.identification', { name: userName || 'Analyst' })
       } else if (id === 'manual') {
-        if (input.includes('how are you') || input.includes('status')) {
-          response = "SYSTEM STATUS: OPERATIONAL. All neural clusters are synchronized at peak frequency. My current knowledge matrix is aligned with ISO-17025:2017 and ISO-4833 laboratory standards. I am ready to process diagnostic queries."
-        } else if (input.includes('accurate') || input.includes('reliable') || input.includes('trust')) {
-          response = "RELIABILITY PROTOCOL: The SA-001 Neural Algorithm currently maintains a 94.2% precision rate in colony detection. Every diagnostic result is timestamped and committed to an immutable audit ledger to ensure full laboratory traceability. For high-risk specimens, multi-factor analyst verification is always recommended."
-        } else if (input.includes('data') || input.includes('statistics') || input.includes('total')) {
-          response = "INTEL SUMMARY: I am currently managing 1,248 verified specimen analyses across 4 protocol classes. Cumulative throughput efficiency is at +12.4% above baseline. Would you like a filtered neural report for a specific media protocol (PCA, VRBA, R2A)?"
-        } else if (input.includes('hello') || input.includes('hi') || input.includes('greet')) {
-          response = "AUTHENTICATION VERIFIED. Greetings, Lead Analyst. I am the ColonyAI Neural Assistant. My protocols are active and ready to assist with specimen intake, ISO compliance mapping, or diagnostic results interpretation."
-        } else if (input.includes('help') || input.includes('what can you do')) {
-          response = "AVAILABLE CAPABILITIES:\n\n1. SPECIMEN INTAKE: Guidance on ISO-compliant form fields.\n2. ISO-17025: Compliance mapping and audit trail explanations.\n3. PROTOCOL MATRIX: Deep-dives into PCA, VRBA, and MacConkey detection thresholds.\n4. TNTC/TFTC: Automated boundary flagging protocols.\n\nWhich protocol shall we initialize?"
-        } else if (input.includes('pca') || input.includes('plate count')) {
-          response = "PCA PROTOCOL: Plate Count Agar detection uses a 30-300 colony threshold (ISO 4833). My SA-001 algorithm identifies aerobic mesophilic organisms with high spectral contrast. Ensure your dilution factor (10^-x) is correctly entered for accurate CFU/ml derivation."
-        } else {
-          response = "QUERY ANALYSIS: No direct SOP match found for your request. However, I have indexed 1,248 laboratory artifacts that may be relevant. Shall I redirect you to the ISO-17025 Compliance Guide or provide an Intake Form walkthrough?"
-        }
+        response = t('assistant.manualResponse')
       } else {
         switch(id) {
           case 'system_walkthrough':
-            response = `SYSTEM OPERATING PROCEDURES (SOP):\n\n1. INTAKE (New Analysis): Upload high-resolution specimen imagery. Enter metadata (Dilution, Media) according to ISO-4833 protocols.\n\n2. NEURAL DETECTION: The SA-001 algorithm performs real-time colony mapping and CFU calculation.\n\n3. VERIFICATION: Review neural results. If integrity is verified, commit the record to the Intelligence Ledger.\n\n4. ANALYTICS & AUDIT: Monitor throughput via 'Analytics' and ensure traceability via 'Audit Ledger'.\n\n5. EXPORT: Generate ISO-17025 compliant reports from the 'Reports' module.\n\nShall we initialize a 'New Analysis' protocol?`
-            break
-          case 'field_explanation':
-            response = `INTAKE FIELD PROTOCOLS:\n\n- SPECIMEN ID: Critical for ISO 17025 traceability. Use unique alphanumeric identifiers.\n- MEDIA PROTOCOL: Directs the neural engine to use specific detection matrices (e.g., VRBA for coliforms).\n- DILUTION FACTOR: Scientific notation (10⁻ˣ). The primary variable for CFU/ml calculation.\n- PLATED VOLUME: Default 1.0ml. Impacts final concentration metrics.\n- OPTICAL INPUT: High-resolution top-down imaging required for neural colony mapping.`
-            break
-          case 'example_input':
-            response = `LABORATORY SAMPLE ENTRY:\n\nID: LAB-2026-PCA-088\nPROTOCOL: Plate Count Agar\nDILUTION: 10⁻³\nVOLUME: 1.0 ml\nEXPECTED YIELD: 30-300 CFU`
+            response = t('assistant.walkthrough')
             break
           case 'iso_standards':
-            response = `ISO-17025 COMPLIANCE MATRIX:\n\n1. DATA INTEGRITY: Every detection is hashed and stored in the Intelligence Ledger.\n2. ALGORITHM VALIDATION: SA-001 undergoes bi-weekly spectral calibration.\n3. TRACEABILITY: Automated tracking of Sample ID -> Analyst -> Timestamp -> Results.\n4. QUALITY CONTROL: Automated flagging of TNTC (>300) and TFTC (<25) artifacts.`
+            response = t('assistant.isoStandards')
             break
           case 'tntc_meaning':
-            response = `MATHEMATICAL BOUNDARIES (ISO 4833-1):\n\n- TNTC: "Too Numerous To Count" (>300 colonies). Indicates need for higher dilution.\n- TFTC: "Too Few To Count" (<25 colonies). Statistically unreliable for final concentration reporting.`
+            response = t('assistant.tntcMeaning')
             break
           default:
-            response = "SIGNAL RECEIVED. Please specify a protocol or refer to the Laboratory Manual."
+            response = t('chatbot.noResults')
         }
       }
       setMessages(prev => [...prev, { role: 'assistant', content: response }])
@@ -173,8 +163,8 @@ export function SmartAssistant() {
                   <img src="/android-chrome-512x512.png" alt="AI Logo" className="w-full h-full object-contain" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm tracking-tight uppercase tracking-widest">Neural Assistant</h3>
-                  <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" /><span className="text-[10px] font-bold uppercase tracking-widest text-purple-200">System Broadcast Mode</span></div>
+                  <h3 className="font-bold text-sm tracking-tight uppercase tracking-widest">{t('chatbot.title')}</h3>
+                  <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" /><span className="text-[10px] font-bold uppercase tracking-widest text-purple-200">{t('chatbot.online')}</span></div>
                 </div>
               </div>
               <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/10 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
@@ -193,7 +183,7 @@ export function SmartAssistant() {
               <div className="flex justify-start">
                 <div className="bg-white border border-slate-200 p-4 rounded-2xl rounded-bl-none shadow-sm flex items-center gap-2">
                   <div className="flex gap-1"><span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.3s]" /><span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.15s]" /><span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" /></div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Synthesizing Laboratory Protocols...</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">{t('chatbot.isTyping')}</span>
                 </div>
               </div>
             )}
@@ -212,10 +202,10 @@ export function SmartAssistant() {
 
           <div className="p-4 bg-white border-t border-slate-100">
             <form onSubmit={handleSend} className="relative">
-              <input type="text" placeholder="Ask your lab assistant..." className="w-full pl-4 pr-12 py-3 bg-slate-100 border-none rounded-2xl text-sm focus:ring-2 focus:ring-purple-500 outline-none transition-all" value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
+              <input type="text" placeholder={t('chatbot.placeholder')} className="w-full pl-4 pr-12 py-3 bg-slate-100 border-none rounded-2xl text-sm focus:ring-2 focus:ring-purple-500 outline-none transition-all" value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
               <button type="submit" disabled={!inputValue.trim() || isTyping} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900 text-white rounded-xl hover:bg-purple-600 disabled:bg-slate-300 transition-colors"><Send className="w-4 h-4" /></button>
             </form>
-            <p className="text-[9px] text-center text-slate-400 font-medium mt-3 uppercase tracking-tighter">ColonyAI Knowledge System — Secure Lab Protocol</p>
+            <p className="text-[9px] text-center text-slate-400 font-medium mt-3 uppercase tracking-tighter">{t('chatbot.verifiedFor')}</p>
           </div>
         </div>
       )}

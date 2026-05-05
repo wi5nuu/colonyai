@@ -72,4 +72,14 @@ export const analysesApi = {
   delete: async (id: string): Promise<void> => {
     await api.delete(`/api/v1/analyses/${id}`);
   },
+
+  syncToLims: async (id: string): Promise<any> => {
+    const response = await api.post(`/api/v1/lims/sync/${id}`);
+    return response.data;
+  },
+
+  getLimsLogs: async (limit: number = 50): Promise<any[]> => {
+    const response = await api.get('/api/v1/lims/logs', { params: { limit } });
+    return response.data;
+  },
 };

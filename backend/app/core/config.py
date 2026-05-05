@@ -77,6 +77,10 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = "./logs/colonyai.log"
 
+    # LIMS Integration
+    LIMS_MODE: str = os.getenv("LIMS_MODE", "simulated")
+    LIMS_WEBHOOK_URL: str = os.getenv("LIMS_WEBHOOK_URL", "")
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

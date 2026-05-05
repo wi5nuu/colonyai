@@ -20,6 +20,7 @@ import {
   PieChart as PieIcon,
   BarChart3,
   FlaskConical,
+  Database,
 } from "lucide-react";
 import {
   PieChart,
@@ -146,6 +147,12 @@ export default function ResultsPage() {
   const [viewMode, setViewMode] = useState<"audit" | "certificate">("audit");
   const [showDocs, setShowDocs] = useState(true);
   const [imgError, setImgError] = useState(false);
+  const [limsLoading, setLimsLoading] = useState(false);
+  const [limsResult, setLimsResult] = useState<{
+    lims_record_id: string;
+    timestamp: string;
+    next_action: string;
+  } | null>(null);
 
   useEffect(() => {
     const loadAnalysis = async () => {
@@ -186,6 +193,20 @@ export default function ResultsPage() {
       toast.success("PDF Report generated");
     } catch (error: any) {
       toast.error(error.response?.data?.detail || "Failed to export PDF");
+    }
+  };
+
+  const handleSendToLims = async () => {
+    if (!analysis) return;
+    setLimsLoading(true);
+    try {
+      const result = await analysesApi.syncToLims(analysis.id);
+      setLimsResult(result);
+      toast.success(t("results.limsSuccess") || "Sent to LIMS successfully");
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || "LIMS Communication Error");
+    } finally {
+      setLimsLoading(false);
     }
   };
 
@@ -295,6 +316,22 @@ export default function ResultsPage() {
                   <Download className="h-4 w-4" />
                   {t("results.exportProtocol")}
                 </button>
+                <button
+                  onClick={handleSendToLims}
+                  disabled={limsLoading || !!limsResult}
+                  className={`px-5 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 shadow-sm ${
+                    limsResult
+                      ? "bg-indigo-50 text-indigo-500 border-indigo-100 cursor-not-allowed"
+                      : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {limsLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Database className="h-4 w-4" />
+                  )}
+                  {limsResult ? t("results.transmittedToLims") : t("results.sendToLims")}
+                </button>
                 {analysis.status === "completed" && canApprove && (
                   <button
                     onClick={handleApprove}
@@ -338,6 +375,54 @@ export default function ResultsPage() {
                   </div>
                 </div>
               )}
+
+            {/* LIMS Success Card */}
+            {limsResult && (
+              <div className="bg-indigo-50/50 border-2 border-indigo-100 p-5 rounded-xl flex items-start gap-5 mb-8 animate-in slide-in-from-top duration-500">
+                <div className="p-3 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-200 flex-shrink-0">
+                  <Database className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                      {t("results.transmittedToLims")}
+                    </p>
+                    <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[8px] font-black rounded uppercase">
+                      {t("results.sampleManager")}
+                    </span>
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-black rounded uppercase">
+                      {t("results.simulatedDemo")}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div>
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                        {t("results.limsRecordId")}
+                      </p>
+                      <p className="text-xs font-black text-slate-900 font-mono">
+                        {limsResult.lims_record_id}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                        {t("results.transmissionTime")}
+                      </p>
+                      <p className="text-xs font-bold text-slate-700">
+                        {new Date(limsResult.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                        {t("results.nextLimsAction")}
+                      </p>
+                      <p className="text-xs font-bold text-slate-700">
+                        {limsResult.next_action}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {viewMode === "audit" ? (
               <>

@@ -9,10 +9,10 @@ from app.services.colony_detector import VALID_COLONY_CLASSES
 
 class ImageProcessor:
     """Image preprocessing pipeline for agar plate images"""
-    
+
     def __init__(self, target_size: Tuple[int, int] = (512, 512)):
         self.target_size = target_size
-    
+
     def preprocess(self, image_path: str) -> np.ndarray:
         """
         Complete preprocessing pipeline:
@@ -79,23 +79,48 @@ class ImageProcessor:
 
         return resized
 
-    
+
     def _normalize_brightness(self, image: np.ndarray) -> np.ndarray:
-        """Normalize brightness and contrast using CLAHE"""
+        """Normalize brightness and contrast using CLAHE with auto-exposure correction.
+
+        Handles:
+        - Underexposed (dark) images: standard CLAHE
+        - Overexposed (bright) images: gamma correction + CLAHE
+        - Normal images: standard CLAHE
+        """
         # Convert to LAB color space
         lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
         l, a, b = cv2.split(lab)
-        
+
+        # Auto-detect exposure level from luminance channel
+        mean_luminance = l.mean()
+
+        if mean_luminance > 200:
+            # OVEREXPOSED: Apply gamma correction to darken first
+            # Gamma < 1 darkens the image
+            gamma = 0.5 + (255 - mean_luminance) / 510  # Adaptive gamma: 0.5-0.8
+            l_float = l.astype(np.float32) / 255.0
+            l_corrected = np.power(l_float, gamma) * 255.0
+            l = l_corrected.astype(np.uint8)
+        elif mean_luminance < 80:
+            # UNDEREXPOSED: Apply gamma correction to brighten
+            gamma = 1.5 + (80 - mean_luminance) / 160  # Adaptive gamma: 1.5-2.0
+            l_float = l.astype(np.float32) / 255.0
+            l_corrected = np.power(l_float, gamma) * 255.0
+            l = np.clip(l_corrected, 0, 255).astype(np.uint8)
+
         # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization)
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        # Use higher clipLimit for overexposed images
+        clip_limit = 3.0 if mean_luminance > 200 or mean_luminance < 80 else 2.0
+        clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=(8, 8))
         cl = clahe.apply(l)
-        
+
         # Merge back
         limg = cv2.merge((cl, a, b))
         final = cv2.cvtColor(limg, cv2.COLOR_LAB2RGB)
-        
+
         return final
-    
+
     def _detect_plate_boundary(self, image: np.ndarray) -> Tuple[np.ndarray, dict | None]:
         """
         Detect circular agar plate boundary using Hough Circle Transform
@@ -195,7 +220,7 @@ class ImageProcessor:
         except cv2.error:
             # If homography fails, return original image
             return image
-    
+
     def _extract_roi(self, image: np.ndarray, mask: np.ndarray) -> np.ndarray:
         """Extract region of interest using the plate mask.
         Jika ROI yang diekstrak terlalu kecil (< 10% dari image asli),
@@ -233,7 +258,7 @@ class ImageProcessor:
 
         return roi
 
-    
+
     def save_annotated_image(
         self,
         image: np.ndarray,
@@ -337,4 +362,3 @@ class ImageProcessor:
 
         # ── Simpan dalam format BGR (OpenCV default) ──
         cv2.imwrite(output_path, annotated_bgr)
-

@@ -70,11 +70,11 @@ MEDIA_CONFIDENCE_THRESHOLDS: dict[str, dict[str, float]] = {
         "media_crack":   0.20,
     },
     "DEFAULT": {
-        "colony_single": 0.35,
-        "colony_merged": 0.35,
-        "bubble":        0.30,
-        "dust_debris":   0.30,
-        "media_crack":   0.30,
+        "colony_single": 0.15,
+        "colony_merged": 0.15,
+        "bubble":        0.15,
+        "dust_debris":   0.15,
+        "media_crack":   0.15,
     },
 }
 
@@ -132,7 +132,7 @@ MAX_MERGED_PER_BBOX: int = 50   # Cap estimasi SA-001 per bounding box
 def _resolve_media_key(media_type: str) -> str:
     """
     Resolve nama media type (dari frontend atau raw input) ke kunci internal.
-    
+
     Prioritas:
     1. Exact match (uppercase, strip)
     2. Alias lookup (lowercase)
