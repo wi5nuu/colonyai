@@ -18,12 +18,15 @@ import {
   BarChart3,
   Search,
   Plus,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import api, { API_URL } from "@/lib/api";
 import { DocumentationSidebar, DocumentationToggle } from "@/components/DocumentationSidebar";
 import { useTranslationStore } from "@/lib/i18n/store";
+import { useAuthStore } from "@/lib/auth-store";
 import { ResetRequestsPanel } from "@/components/ResetRequestsPanel";
 
 interface Analyst {
@@ -34,12 +37,19 @@ interface Analyst {
   status: string;
   lastActive: string;
   clearance: string;
+  organizationName?: string;
 }
 
 
 
 export default function AdministrationPage() {
   const { t } = useTranslationStore();
+  const currentUser = useAuthStore((s) => s.user);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterRole, setFilterRole] = useState("");
+  const [filterCompany, setFilterCompany] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 5;
   const [analysts, setAnalysts] = useState<Analyst[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,11 +61,12 @@ export default function AdministrationPage() {
   const [showDocs, setShowDocs] = useState(true);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [downloadingXls, setDownloadingXls] = useState(false);
-  
+
   // Password Reset Modal State
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [targetUser, setTargetUser] = useState<Analyst | null>(null);
   const [newPassword, setNewPassword] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   // Add User Modal State
@@ -93,8 +104,9 @@ export default function AdministrationPage() {
               email: u.email,
               role: roleStr,
               status: "active",
-              lastActive: "Online",
+              lastActive: u.email === currentUser?.email ? "Online" : "Offline",
               clearance: clearanceLevel,
+              organizationName: u.organization_name || undefined,
             };
           });
 
@@ -202,13 +214,20 @@ export default function AdministrationPage() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsCreating(true);
+    // Password complexity check
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{12,}$/;
+    if (!passwordRegex.test(newUserData.password)) {
+      toast.error("Password must be at least 12 characters and contain uppercase, lowercase, number, and special character.");
+      setIsCreating(false);
+      return;
+    }
+
     try {
       await api.post("/api/v1/auth/register", newUserData);
       toast.success(`User ${newUserData.full_name} has been provisioned.`);
       setAddUserModalOpen(false);
       setNewUserData({ email: "", password: "", full_name: "", role: "analyst" });
-      
+
       // Refresh list
       const usersRes = await api.get<any[]>("/api/v1/users/");
       const mappedUsers = usersRes.data.map((u) => {
@@ -239,8 +258,15 @@ export default function AdministrationPage() {
 
   const handleResetPassword = async () => {
     if (!targetUser || !newPassword) return;
-    
-    setIsResetting(true);
+
+    // Password complexity check
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{12,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      toast.error("Password must be at least 12 characters and contain uppercase, lowercase, number, and special character.");
+      setIsResetting(false);
+      return;
+    }
+
     try {
       await api.post("/api/v1/users/admin-reset-password", {
         user_id: targetUser.id,
@@ -249,6 +275,7 @@ export default function AdministrationPage() {
       toast.success(`Password for ${targetUser.name} reset successfully.`);
       setResetModalOpen(false);
       setNewPassword("");
+      setShowResetPassword(false);
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "Gagal mereset password.");
     } finally {
@@ -282,25 +309,25 @@ export default function AdministrationPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="px-4 py-2 bg-white border border-slate-200 rounded-xl flex items-center gap-3 shadow-sm">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-xs font-black text-slate-600 uppercase tracking-widest">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg flex items-center gap-2 shadow-sm">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
                       Master Node: Operational
                     </span>
                   </div>
                   <DocumentationToggle showDocs={showDocs} setShowDocs={setShowDocs} text="SOP Kontrol" />
-                  <button 
+                  <button
                     onClick={() => setAddUserModalOpen(true)}
-                    className="flex items-center gap-2 px-6 py-3 bg-primary text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/10"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-primary text-slate-900 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-primary/90 transition-all shadow-md shadow-primary/10"
                   >
-                    <Plus className="w-4 h-4" /> Provision New Staff
+                    <Plus className="w-3.5 h-3.5" /> Provision New Staff
                   </button>
                 </div>
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
                   {
                     label: "Active Clusters",
@@ -333,7 +360,7 @@ export default function AdministrationPage() {
                 ].map((s, i) => (
                   <div
                     key={i}
-                    className="bg-white border border-slate-200/60 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all group border-b-4"
+                    className="bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm hover:shadow-md transition-all group border-b-4"
                     style={{
                       borderBottomColor:
                         s.color === "emerald"
@@ -345,26 +372,26 @@ export default function AdministrationPage() {
                               : "#3b82f6",
                     }}
                   >
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-3">
                       <div
-                        className={`w-10 h-10 rounded-xl bg-${s.color}-50 flex items-center justify-center`}
+                        className={`w-8 h-8 rounded-lg bg-${s.color}-50 flex items-center justify-center`}
                       >
                         <s.icon
-                          className={`w-5 h-5 text-${s.color === "primary" ? "primary" : s.color + "-500"}`}
+                          className={`w-4 h-4 text-${s.color === "primary" ? "primary" : s.color + "-500"}`}
                         />
                       </div>
-                      <span className="text-xs font-black text-slate-300 uppercase tracking-widest">
+                      <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
                         ID-0{i + 1}
                       </span>
                     </div>
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
                       {s.label}
                     </p>
-                    <div className="flex items-end gap-2">
-                      <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                    <div className="flex items-end gap-1.5">
+                      <h3 className="text-base font-black text-slate-900 tracking-tight">
                         {s.value}
                       </h3>
-                      <span className="text-xs font-bold text-primary mb-1">
+                      <span className="text-[10px] font-bold text-primary mb-0.5">
                         {s.sub}
                       </span>
                     </div>
@@ -375,23 +402,54 @@ export default function AdministrationPage() {
               {/* Personnel Registry */}
               <div className="lg:col-span-12">
                 <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border-slate-200/60 shadow-sm bg-white">
-                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">
-                        Authorized Personnel Registry
-                      </h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                        Verified Laboratory Analysts & Administrators
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                        <input
-                          type="text"
-                          placeholder="Search Node ID..."
-                          className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-primary/10 outline-none w-48"
-                        />
+                  <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">
+                          Authorized Personnel Registry
+                        </h3>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                          Verified Laboratory Analysts &amp; Administrators
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* Search */}
+                        <div className="relative">
+                          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                            placeholder="Cari nama / email..."
+                            className="pl-7 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/10 outline-none w-44"
+                          />
+                        </div>
+                        {/* Role filter */}
+                        <select
+                          value={filterRole}
+                          onChange={(e) => { setFilterRole(e.target.value); setCurrentPage(1); }}
+                          className="py-1.5 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:ring-2 focus:ring-primary/10 outline-none"
+                        >
+                          <option value="">Semua Role</option>
+                          <option value="super_admin">Super Admin</option>
+                          <option value="admin">Admin</option>
+                          <option value="manager">Manager</option>
+                          <option value="auditor">Auditor</option>
+                          <option value="analyst">Analyst</option>
+                        </select>
+                        {/* Company filter */}
+                        <select
+                          value={filterCompany}
+                          onChange={(e) => { setFilterCompany(e.target.value); setCurrentPage(1); }}
+                          className="py-1.5 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:ring-2 focus:ring-primary/10 outline-none max-w-[180px]"
+                        >
+                          <option value="">Semua Company</option>
+                          {Array.from(new Set(analysts.map(a => a.organizationName).filter(Boolean)))
+                            .sort()
+                            .map(org => (
+                              <option key={org} value={org!}>{org}</option>
+                            ))}
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -400,102 +458,177 @@ export default function AdministrationPage() {
                     <table className="w-full text-left">
                       <thead className="bg-slate-50/50 border-b border-slate-100">
                         <tr>
-                          <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             Analyst Node
                           </th>
-                          <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            Company
+                          </th>
+                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             Clearance
                           </th>
-                          <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             Status
                           </th>
-                          <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             Last Pulse
                           </th>
-                          <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
                             Actions
                           </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {analysts.map((a) => (
-                          <tr
-                            key={a.id}
-                            className="hover:bg-slate-50 transition-colors group"
-                          >
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-black text-slate-500 border border-slate-200">
-                                  {a.name.charAt(0)}
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2 mb-0.5">
-                                    <p className="text-xs font-bold text-slate-900">
-                                      {a.name}
-                                    </p>
-                                    <span
-                                      className={`px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest rounded ${
-                                        a.role === "admin"
-                                          ? "bg-primary/10 text-primary"
-                                          : a.role === "manager"
-                                            ? "bg-amber-100 text-amber-700"
-                                            : a.role === "auditor"
-                                              ? "bg-purple-100 text-purple-700"
+                        {(() => {
+                          const filtered = analysts.filter((a) => {
+                            const q = searchQuery.toLowerCase();
+                            const matchSearch = !q ||
+                              a.name.toLowerCase().includes(q) ||
+                              a.email.toLowerCase().includes(q) ||
+                              a.role.toLowerCase().includes(q);
+                            const matchRole = !filterRole || a.role === filterRole;
+                            const matchCompany = !filterCompany || a.organizationName === filterCompany;
+                            return matchSearch && matchRole && matchCompany;
+                          });
+                          const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+                          const safePage = Math.min(currentPage, totalPages);
+                          const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+                          return (
+                            <>
+                              {paginated.length === 0 ? (
+                                <tr>
+                                  <td colSpan={6} className="px-5 py-8 text-center text-xs text-slate-400">
+                                    Tidak ada data yang cocok dengan filter.
+                                  </td>
+                                </tr>
+                              ) : (
+                                paginated.map((a) => (
+                                  <tr key={a.id} className="hover:bg-slate-50 transition-colors group">
+                                    <td className="px-5 py-2.5">
+                                      <div className="flex items-center gap-2.5">
+                                        <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border border-slate-200 shrink-0">
+                                          {a.name.charAt(0)}
+                                        </div>
+                                        <div>
+                                          <div className="flex items-center gap-1.5 mb-0.5">
+                                            <p className="text-[11px] font-bold text-slate-900">{a.name}</p>
+                                            <span className={`px-1 py-0.5 text-[8px] font-black uppercase tracking-widest rounded ${
+                                              a.role === "super_admin" ? "bg-rose-100 text-rose-600"
+                                              : a.role === "admin" ? "bg-primary/10 text-primary"
+                                              : a.role === "manager" ? "bg-amber-100 text-amber-700"
+                                              : a.role === "auditor" ? "bg-purple-100 text-purple-700"
                                               : "bg-slate-100 text-slate-600"
-                                      }`}
-                                    >
-                                      {a.role}
+                                            }`}>{a.role}</span>
+                                          </div>
+                                          <p className="text-[10px] text-slate-400 font-medium">{a.email}</p>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="px-5 py-2.5">
+                                      <span className="text-[10px] font-medium text-slate-500">
+                                        {a.organizationName || <span className="text-slate-300 italic">—</span>}
+                                      </span>
+                                    </td>
+                                    <td className="px-5 py-2.5">
+                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-600 border border-slate-200 uppercase">
+                                        {a.clearance}
+                                      </span>
+                                    </td>
+                                    <td className="px-5 py-2.5">
+                                      <div className="flex items-center gap-1.5">
+                                        <div className={`w-1.5 h-1.5 rounded-full ${a.status === "active" ? "bg-emerald-500" : "bg-rose-500"}`} />
+                                        <span className={`text-[10px] font-black uppercase tracking-widest ${a.status === "active" ? "text-emerald-600" : "text-rose-600"}`}>
+                                          {a.status}
+                                        </span>
+                                      </div>
+                                    </td>
+                                    <td className="px-5 py-2.5">
+                                      <span className={`text-[10px] font-bold uppercase tracking-tighter ${
+                                        a.lastActive === "Online" ? "text-emerald-600" : "text-slate-400"
+                                      }`}>
+                                        {a.lastActive}
+                                      </span>
+                                    </td>
+                                    <td className="px-5 py-2.5 text-right">
+                                      <div className="flex items-center justify-end gap-1">
+                                        <button
+                                          onClick={() => { setTargetUser(a); setResetModalOpen(true); }}
+                                          className="p-1.5 text-slate-300 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
+                                          title="Reset Password"
+                                        >
+                                          <Key className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                          onClick={() => handleToggleStatus(a.id)}
+                                          className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                          title="Suspend Node"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))
+                              )}
+                              {/* Pagination Footer */}
+                              <tr>
+                                <td colSpan={6}>
+                                  <div className="px-5 py-3 flex items-center justify-between border-t border-slate-100">
+                                    <span className="text-[10px] text-slate-400 font-medium">
+                                      {filtered.length === 0 ? "0" : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)}`} dari {filtered.length} personel
                                     </span>
+                                    <div className="flex items-center gap-1">
+                                      <button
+                                        disabled={safePage <= 1}
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        className="px-3 py-1 text-[10px] font-black uppercase rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                      >
+                                        ← Prev
+                                      </button>
+                                      {(() => {
+                                        const pages: (number | string)[] = [];
+                                        if (totalPages <= 5) {
+                                          for (let i = 1; i <= totalPages; i++) pages.push(i);
+                                        } else {
+                                          pages.push(1);
+                                          if (safePage > 3) pages.push("...");
+                                          for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++) pages.push(i);
+                                          if (safePage < totalPages - 2) pages.push("...");
+                                          pages.push(totalPages);
+                                        }
+                                        return pages.map((p, idx) =>
+                                          p === "..." ? (
+                                            <span key={`e-${idx}`} className="w-7 h-7 flex items-center justify-center text-[10px] text-slate-300">…</span>
+                                          ) : (
+                                            <button
+                                              key={p}
+                                              onClick={() => setCurrentPage(p as number)}
+                                              className={`w-7 h-7 text-[10px] font-black rounded-lg transition-all ${
+                                                p === safePage
+                                                  ? "bg-slate-900 text-white"
+                                                  : "border border-slate-200 text-slate-500 hover:bg-slate-50"
+                                              }`}
+                                            >
+                                              {p}
+                                            </button>
+                                          )
+                                        );
+                                      })()}
+                                      <button
+                                        disabled={safePage >= totalPages}
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        className="px-3 py-1 text-[10px] font-black uppercase rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                      >
+                                        Next →
+                                      </button>
+                                    </div>
                                   </div>
-                                  <p className="text-[11px] text-slate-400 font-medium">
-                                    {a.email}
-                                  </p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="px-2 py-1 rounded-lg bg-slate-100 text-xs font-bold text-slate-600 border border-slate-200 uppercase">
-                                {a.clearance}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className={`w-1.5 h-1.5 rounded-full ${a.status === "active" ? "bg-emerald-500" : "bg-rose-500"}`}
-                                />
-                                <span
-                                  className={`text-xs font-black uppercase tracking-widest ${a.status === "active" ? "text-emerald-600" : "text-rose-600"}`}
-                                >
-                                  {a.status}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-tighter">
-                              {a.lastActive}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                <button
-                                  onClick={() => {
-                                    setTargetUser(a);
-                                    setResetModalOpen(true);
-                                  }}
-                                  className="p-2 text-slate-300 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
-                                  title="Reset Password"
-                                >
-                                  <Key className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleToggleStatus(a.id)}
-                                  className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-                                  title="Suspend Node"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                                </td>
+                              </tr>
+                            </>
+                          );
+                        })()}
                       </tbody>
                     </table>
                   </div>
@@ -514,16 +647,16 @@ export default function AdministrationPage() {
               {/* Export Hub */}
               <div className="lg:col-span-12">
                 <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border-slate-200/60 shadow-lg group bg-white">
-                  <div className="px-6 py-6 border-b border-slate-100 bg-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                        <BarChart3 className="w-6 h-6 text-primary" />
+                  <div className="px-5 py-4 border-b border-slate-100 bg-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                        <BarChart3 className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-black text-white uppercase tracking-[0.2em]">
+                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">
                           Pusat Ekspor Data Administrator
                         </h3>
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
                           Protokol Ekstraksi Data Resmi Laboratorium
                         </p>
                       </div>
@@ -531,30 +664,30 @@ export default function AdministrationPage() {
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg">
                         <ShieldAlert className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                           ISO-17025 Compliant
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30">
+                  <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/30">
                     {/* PDF Export */}
-                    <div className="bg-white border border-slate-200/60 rounded-2xl p-6 flex flex-col gap-4 hover:border-red-200 hover:shadow-xl transition-all group/pdf relative overflow-hidden">
-                      <div className="flex items-center gap-4 relative z-10">
-                        <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center group-hover/pdf:scale-110 transition-transform">
-                          <FileText className="w-7 h-7 text-red-500" />
+                    <div className="bg-white border border-slate-200/60 rounded-2xl p-5 flex flex-col gap-3 hover:border-red-200 hover:shadow-xl transition-all group/pdf relative overflow-hidden">
+                      <div className="flex items-center gap-3 relative z-10">
+                        <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center group-hover/pdf:scale-110 transition-transform">
+                          <FileText className="w-5 h-5 text-red-500" />
                         </div>
                         <div>
-                          <h4 className="text-base font-black text-slate-900 tracking-tight">
+                          <h4 className="text-sm font-black text-slate-900 tracking-tight">
                             Buku Besar Tata Kelola Master
                           </h4>
-                          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                             Dokumen PDF Komprehensif
                           </p>
                         </div>
                       </div>
-                      <p className="text-[13px] text-slate-500 leading-relaxed font-medium relative z-10">
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium relative z-10">
                         Laporan resmi untuk keperluan audit eksternal. Berisi
                         seluruh rekam jejak spesimen, breakdown performa analis,
                         dan tren kepatuhan laboratorium.
@@ -578,34 +711,34 @@ export default function AdministrationPage() {
                       <button
                         onClick={handleDownloadPdf}
                         disabled={downloadingPdf}
-                        className="w-full flex items-center justify-center gap-3 py-4 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-red-500/20 relative z-10"
+                        className="w-fit self-start px-5 flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-red-500/20 relative z-10 mt-1"
                       >
                         {downloadingPdf ? (
                           "Building Ledger..."
                         ) : (
                           <>
-                            <Download className="w-4 h-4" /> Download Master PDF
+                            <Download className="w-3.5 h-3.5" /> Download Master PDF
                           </>
                         )}
                       </button>
                     </div>
 
                     {/* Excel Export */}
-                    <div className="bg-white border border-slate-200/60 rounded-2xl p-6 flex flex-col gap-4 hover:border-emerald-200 hover:shadow-xl transition-all group/excel relative overflow-hidden">
-                      <div className="flex items-center gap-4 relative z-10">
-                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center group-hover/excel:scale-110 transition-transform">
-                          <FileSpreadsheet className="w-7 h-7 text-emerald-600" />
+                    <div className="bg-white border border-slate-200/60 rounded-2xl p-5 flex flex-col gap-3 hover:border-emerald-200 hover:shadow-xl transition-all group/excel relative overflow-hidden">
+                      <div className="flex items-center gap-3 relative z-10">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center group-hover/excel:scale-110 transition-transform">
+                          <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
                         </div>
                         <div>
-                          <h4 className="text-base font-black text-slate-900 tracking-tight">
+                          <h4 className="text-sm font-black text-slate-900 tracking-tight">
                             Dataset Analitik Mentah
                           </h4>
-                          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                             Multi-Sheet Excel Export
                           </p>
                         </div>
                       </div>
-                      <p className="text-[13px] text-slate-500 leading-relaxed font-medium relative z-10">
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium relative z-10">
                         Dataset mentah untuk sinkronisasi sistem informasi laboratorium.
                         Mencakup distribusi data CFU, riwayat audit,
                         dan metrik performa analis.
@@ -627,13 +760,13 @@ export default function AdministrationPage() {
                       <button
                         onClick={handleDownloadExcel}
                         disabled={downloadingXls}
-                        className="w-full flex items-center justify-center gap-3 py-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 relative z-10"
+                        className="w-fit self-start px-5 flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 relative z-10 mt-1"
                       >
                         {downloadingXls ? (
                           "Building Matrix..."
                         ) : (
                           <>
-                            <Download className="w-4 h-4" /> Download Analytics
+                            <Download className="w-3.5 h-3.5" /> Download Analytics
                             Excel
                           </>
                         )}
@@ -646,21 +779,21 @@ export default function AdministrationPage() {
               {/* Recent Audit Trail - MOVED BELOW */}
               <div className="lg:col-span-12">
                 <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border-slate-200/60 shadow-xl bg-white">
-                  <div className="px-6 py-5 border-b border-slate-100 bg-slate-900 flex items-center justify-between">
+                  <div className="px-5 py-4 border-b border-slate-100 bg-slate-900 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
                       <div>
-                        <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">
+                        <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">
                           Recent System Audit Trail
                         </h3>
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
                           Real-time Immutable Ledger Snapshot
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => window.location.href = '/dashboard/audit'}
-                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border border-white/5"
+                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all border border-white/5"
                     >
                       Lihat Lengkap
                     </button>
@@ -669,20 +802,20 @@ export default function AdministrationPage() {
                     {auditLogs.slice(0, 10).map((log) => (
                       <div
                         key={log.id}
-                        className="px-6 py-5 flex items-center justify-between hover:bg-slate-50 transition-all group"
+                        className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-all group"
                       >
-                        <div className="flex items-center gap-8">
+                        <div className="flex items-center gap-6">
                           <div className="flex flex-col items-center">
-                            <span className="text-xs font-black text-slate-300 font-mono group-hover:text-primary transition-colors">
+                            <span className="text-[10px] font-black text-slate-300 font-mono group-hover:text-primary transition-colors">
                               #{log.id.substring(0, 8)}
                             </span>
-                            <div className="w-[1px] h-4 bg-slate-100 my-1" />
+                            <div className="w-[1px] h-3 bg-slate-100 my-1" />
                           </div>
                           <div>
-                            <p className="text-[14px] font-black text-slate-900 tracking-tight">
+                            <p className="text-xs font-black text-slate-900 tracking-tight">
                               {log.action}
                             </p>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                               <span className="text-slate-500 font-black">
                                 EXECUTOR:
                               </span>{" "}
@@ -695,12 +828,12 @@ export default function AdministrationPage() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-10">
+                        <div className="flex items-center gap-6">
                           <div className="text-right hidden md:block">
-                            <p className="text-xs font-black text-slate-900 uppercase tracking-widest">
+                            <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
                               {new Date(log.timestamp).toLocaleDateString()}
                             </p>
-                            <p className="text-xs font-bold text-slate-300 mt-1 font-mono tracking-tighter">
+                            <p className="text-[10px] font-bold text-slate-300 mt-0.5 font-mono tracking-tighter">
                               {new Date(log.timestamp).toLocaleTimeString([], {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -708,8 +841,8 @@ export default function AdministrationPage() {
                               })}
                             </p>
                           </div>
-                          <div className="w-24 text-right">
-                            <span className={`inline-block text-xs font-black px-3 py-1.5 rounded-xl border uppercase tracking-widest shadow-sm ${
+                          <div className="w-20 text-right">
+                            <span className={`inline-block text-[9px] font-black px-2.5 py-1 rounded-lg border uppercase tracking-widest shadow-sm ${
                               log.status === 'SUCCESS' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                               log.status === 'FAILED' ? 'bg-rose-50 text-rose-700 border-rose-200' :
                               'bg-slate-50 text-slate-700 border-slate-200'
@@ -813,27 +946,36 @@ AUTORITAS: MASTER ROOT`}
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">New Professional Password</label>
-                  <input 
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300"
-                    autoFocus
-                  />
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight italic">Minimum 8 characters with Uppercase, Number, and Special Char.</p>
+                  <div className="relative">
+                    <input
+                      type={showResetPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••••••"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 pr-12"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowResetPassword(!showResetPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showResetPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight italic">Minimum 12 characters with Uppercase, Lowercase, Number, and Special Char.</p>
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <button 
+                <button
                   onClick={() => setResetModalOpen(false)}
                   disabled={isResetting}
                   className="flex-1 py-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all border border-slate-100"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={handleResetPassword}
                   disabled={isResetting || !newPassword}
                   className="flex-[2] py-4 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50"
@@ -866,7 +1008,7 @@ AUTORITAS: MASTER ROOT`}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Legal Name</label>
-                    <input 
+                    <input
                       required
                       type="text"
                       value={newUserData.full_name}
@@ -877,7 +1019,7 @@ AUTORITAS: MASTER ROOT`}
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Assigned Role</label>
-                    <select 
+                    <select
                       value={newUserData.role}
                       onChange={(e) => setNewUserData({...newUserData, role: e.target.value})}
                       className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300"
@@ -892,7 +1034,7 @@ AUTORITAS: MASTER ROOT`}
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Identifier</label>
-                  <input 
+                  <input
                     required
                     type="email"
                     value={newUserData.email}
@@ -904,19 +1046,20 @@ AUTORITAS: MASTER ROOT`}
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Temporary Password</label>
-                  <input 
+                  <input
                     required
                     type="password"
                     value={newUserData.password}
                     onChange={(e) => setNewUserData({...newUserData, password: e.target.value})}
-                    placeholder="••••••••"
+                    placeholder="••••••••••••"
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300"
                   />
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight italic">Minimum 12 characters with Uppercase, Lowercase, Number, and Special Char.</p>
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <button 
+                <button
                   type="button"
                   onClick={() => setAddUserModalOpen(false)}
                   disabled={isCreating}
@@ -924,7 +1067,7 @@ AUTORITAS: MASTER ROOT`}
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={isCreating}
                   className="flex-[2] py-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-900/20 hover:bg-primary transition-all disabled:opacity-50"

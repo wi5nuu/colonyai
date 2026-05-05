@@ -40,6 +40,7 @@ import {
   DocumentationSidebar, 
   DocumentationToggle 
 } from "@/components/DocumentationSidebar";
+import { GlobalPersonnelPanel } from "@/components/GlobalPersonnelPanel";
 
 interface OrgAdmin {
   id: string;
@@ -578,6 +579,11 @@ export default function SuperAdminRealTimeDashboard() {
                 <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.3em]">
                   Master Access Only // ColonyAI Global Nexus v2.0
                 </p>
+              </div>
+
+              {/* Global Personnel Command */}
+              <div className="mt-2">
+                <GlobalPersonnelPanel />
               </div>
             </div>
           </div>

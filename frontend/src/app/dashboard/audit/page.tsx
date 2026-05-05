@@ -88,11 +88,16 @@ export default function AuditPage() {
                   <ShieldCheck className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-white uppercase tracking-widest">Event Integrity Details</h3>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Immutable Sequence #{selectedLog.id.slice(0,12)}</p>
+                  <h3 className="text-sm font-black text-white uppercase tracking-widest">
+                    {t("audit.overlayTitle")}
+                  </h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                    {t("audit.overlaySequenceId")} #
+                    {selectedLog.id.slice(0, 12)}
+                  </p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedLog(null)}
                 className="w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all"
               >
@@ -102,42 +107,59 @@ export default function AuditPage() {
             <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto no-scrollbar">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Protocol Action</p>
-                  <p className="text-sm font-bold text-slate-200">{selectedLog.action}</p>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                    {t("audit.overlayProtocolAction")}
+                  </p>
+                  <p className="text-sm font-bold text-slate-200">
+                    {selectedLog.action}
+                  </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Analyst Node</p>
-                  <p className="text-sm font-bold text-slate-200">{selectedLog.user_name}</p>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                    {t("audit.overlayAnalystNode")}
+                  </p>
+                  <p className="text-sm font-bold text-slate-200">
+                    {selectedLog.user_name}
+                  </p>
                 </div>
               </div>
-              
+
               <div className="space-y-3">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Neural Metadata (Raw JSON)</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  {t("audit.overlayNeuralMetadata")}
+                </p>
                 <div className="bg-slate-950 rounded-2xl p-6 border border-slate-800/50 font-mono text-[11px] text-emerald-500/80 leading-relaxed overflow-x-auto shadow-inner">
                   <pre>{JSON.stringify(selectedLog.details, null, 2)}</pre>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Security Hashes</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  {t("audit.overlaySecurityHashes")}
+                </p>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
                     <Lock className="w-3.5 h-3.5 text-primary opacity-50" />
-                    <span className="text-[9px] font-mono text-slate-400 break-all uppercase">CURRENT: {selectedLog.current_hash}</span>
+                    <span className="text-[9px] font-mono text-slate-400 break-all uppercase">
+                      {t("audit.overlayCurrent")}: {selectedLog.current_hash}
+                    </span>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
                     <History className="w-3.5 h-3.5 text-slate-600 opacity-50" />
-                    <span className="text-[9px] font-mono text-slate-600 break-all uppercase">PREVIOUS: {selectedLog.previous_hash || 'CHAIN_START'}</span>
+                    <span className="text-[9px] font-mono text-slate-600 break-all uppercase">
+                      {t("audit.overlayPrevious")}:{" "}
+                      {selectedLog.previous_hash || t("audit.chainStart")}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
             <div className="px-8 py-6 bg-slate-950/50 border-t border-slate-800 flex justify-end">
-              <button 
+              <button
                 onClick={() => setSelectedLog(null)}
                 className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
               >
-                Close Stream
+                {t("audit.closeStream")}
               </button>
             </div>
           </div>
@@ -215,7 +237,7 @@ export default function AuditPage() {
                     <div className="flex flex-col items-center justify-center py-20 gap-4">
                       <Loader2 className="w-8 h-8 text-primary animate-spin" />
                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">
-                        Syncing Audit Stream...
+                        {t("audit.syncingAudit")}
                       </p>
                     </div>
                   )}
@@ -235,7 +257,7 @@ export default function AuditPage() {
                     <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
                       <History className="w-10 h-10 text-slate-700" />
                       <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                        No audit events recorded yet
+                        {t("audit.noEvents")}
                       </p>
                     </div>
                   )}
@@ -244,7 +266,11 @@ export default function AuditPage() {
                   {!isLoading && filteredLogs.length > 0 && (
                     <div className="block sm:hidden divide-y divide-slate-800">
                       {filteredLogs.map((log) => (
-                        <div key={log.id} className="p-4 space-y-3 cursor-pointer hover:bg-slate-800/30 transition-colors" onClick={() => setSelectedLog(log)}>
+                        <div
+                          key={log.id}
+                          className="p-4 space-y-3 cursor-pointer hover:bg-slate-800/30 transition-colors"
+                          onClick={() => setSelectedLog(log)}
+                        >
                           <div className="flex justify-between items-center">
                             <span className="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-widest">
                               {log.id.slice(0, 8)}
@@ -281,7 +307,8 @@ export default function AuditPage() {
                           </div>
                           <div className="pt-2 border-t border-slate-800/50">
                             <span className="text-[7px] font-mono text-emerald-500 opacity-40 uppercase tracking-tighter block">
-                              Hash: {log.current_hash?.substring(0, 24) || "N/A"}...
+                              Hash:{" "}
+                              {log.current_hash?.substring(0, 24) || "N/A"}...
                             </span>
                           </div>
                         </div>
@@ -301,7 +328,7 @@ export default function AuditPage() {
                               t("audit.colSourceAnalyst"),
                               t("audit.colTimestamp"),
                               t("audit.colLayer"),
-                              "Integrity Chain",
+                              t("audit.integrityChain"),
                             ].map((h) => (
                               <th
                                 key={h}
@@ -369,7 +396,8 @@ export default function AuditPage() {
                                 <div className="flex flex-col gap-1">
                                   <span className="text-[7px] font-mono text-emerald-500 opacity-50 uppercase tracking-tighter">
                                     Current:{" "}
-                                    {log.current_hash?.substring(0, 16) || "N/A"}
+                                    {log.current_hash?.substring(0, 16) ||
+                                      "N/A"}
                                     ...
                                   </span>
                                   <span className="text-[7px] font-mono text-slate-600 uppercase tracking-tighter">
@@ -392,23 +420,25 @@ export default function AuditPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   {[
                     {
-                      title: "Security Violations",
-                      value: logs.filter(
-                        (l) =>
-                          l.resource_type === "security" ||
-                          l.resource_type === "auth",
-                      ).length.toString(),
+                      title: t("audit.summarySecurityViolations"),
+                      value: logs
+                        .filter(
+                          (l) =>
+                            l.resource_type === "security" ||
+                            l.resource_type === "auth",
+                        )
+                        .length.toString(),
                       icon: AlertCircle,
                       color: "emerald",
                     },
                     {
-                      title: "Data Transactions",
+                      title: t("audit.summaryDataTransactions"),
                       value: logs.length.toString(),
                       icon: History,
                       color: "primary",
                     },
                     {
-                      title: "Protocol Uptime",
+                      title: t("audit.summaryProtocolUptime"),
                       value: "99.99%",
                       icon: Clock,
                       color: "purple",
@@ -447,69 +477,50 @@ export default function AuditPage() {
           <DocumentationSidebar
             showDocs={showDocs}
             setShowDocs={setShowDocs}
-            directory="Compliance Logs"
-            title="Log Keamanan & Audit"
-            description="Rekam jejak immutable seluruh aktivitas sistem sesuai standar ISO-17025."
-            rawText={`LOG KEAMANAN & AUDIT COLONYAI - ISO-17025
-============================================
-
-1. OVERVIEW: SECURITY LEDGER
-Security Ledger menyimpan seluruh rekam jejak aktivitas (Audit Trail) yang terjadi di dalam sistem ColonyAI secara immutable (tidak dapat diubah).
-
-2. AUDIT PROTOCOL
-A. TRACEABILITY: Setiap entri memuat Sequence ID unik, protokol aksi (Action Protocol), dan Source Analyst.
-B. LAYER TRACKING: Kategorisasi log ke dalam Security (otorisasi), System (konfigurasi), dan Data (proses spesimen).
-C. INTEGRITY CHAIN: Verifikasi integritas data menggunakan hash kriptografis yang menghubungkan setiap log dengan log sebelumnya.
-
-3. SEARCH & EXPORT
-- Filter Pencarian: Melacak anomali atau Security Violations secara instan.
-- Download: Ekspor log terenkripsi untuk keperluan audit eksternal.
-
-STATUS: SECURE CHAIN ACTIVE
-INTEGRITAS: 100% IMMUTABLE`}
+            directory={t("audit.sidebarDirectory")}
+            title={t("audit.sidebarTitle")}
+            description={t("audit.sidebarDescription")}
+            rawText={t("audit.sidebarRawText")}
           >
             <section className="space-y-3">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
-                  01
+                  {t("audit.sidebarOverviewLabel")}
                 </span>
                 <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
-                  Overview
+                  {t("audit.sidebarOverviewTitle")}
                 </h2>
               </div>
               <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
-                Security Ledger menyimpan seluruh rekam jejak aktivitas (Audit
-                Trail) yang terjadi di dalam sistem ColonyAI. Log ini bersifat
-                immutable (tidak dapat diubah) dan merupakan syarat wajib
-                kelulusan sertifikasi ISO-17025.
+                {t("audit.sidebarOverviewText")}
               </p>
             </section>
 
             <section className="space-y-3">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
-                  02
+                  {t("audit.sidebarProtocolLabel")}
                 </span>
                 <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
-                  Audit Protocol
+                  {t("audit.sidebarProtocolTitle")}
                 </h2>
               </div>
               <div className="space-y-3 ml-0.5">
                 {[
                   {
                     id: "1",
-                    title: "Traceability",
-                    desc: "Setiap entri memuat Sequence ID unik, protokol aksi (Action Protocol), dan Source Analyst yang melakukan tindakan.",
+                    title: t("audit.sidebarTraceabilityTitle"),
+                    desc: t("audit.sidebarTraceabilityDesc"),
                   },
                   {
                     id: "2",
-                    title: "Layer Tracking",
-                    desc: "Sistem mengkategorikan log ke dalam lapisan (Layer) seperti Security (otorisasi), System (perubahan config), dan Data (proses spesimen).",
+                    title: t("audit.sidebarLayerTrackingTitle"),
+                    desc: t("audit.sidebarLayerTrackingDesc"),
                   },
                   {
                     id: "3",
-                    title: "Search & Export",
-                    desc: "Gunakan filter pencarian untuk melacak anomali (Security Violations). Tombol Download memungkinkan ekspor log dalam format terenkripsi.",
+                    title: t("audit.sidebarSearchExportTitle"),
+                    desc: t("audit.sidebarSearchExportDesc"),
                   },
                 ].map((step) => (
                   <div key={step.id} className="flex gap-2.5 group">

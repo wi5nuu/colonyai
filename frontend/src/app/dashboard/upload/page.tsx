@@ -144,15 +144,18 @@ export default function UploadPage() {
                 </div>
                 <div>
                   <h1 className="text-[10px] sm:text-lg font-bold text-slate-900 tracking-tight uppercase leading-none">
-                    Pemasukan Data Kecerdasan
+                    {t("upload.title")}
                   </h1>
                   <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-0.5 hidden sm:block">
-                    Pemrosesan Saraf Spesimen Baru // Kepatuhan ISO-17025
+                    {t("upload.subtitle")}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-1 sm:gap-2">
-                <DocumentationToggle showDocs={showDocs} setShowDocs={setShowDocs} />
+                <DocumentationToggle
+                  showDocs={showDocs}
+                  setShowDocs={setShowDocs}
+                />
                 <div className="flex items-center gap-1.5 px-2 py-1 bg-white border border-slate-200 rounded-md shadow-sm">
                   <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
                   <span className="text-[8px] sm:text-[10px] font-black text-slate-900 uppercase tracking-widest leading-none">
@@ -171,10 +174,10 @@ export default function UploadPage() {
                   </div>
                   <div>
                     <h2 className="text-[9px] sm:text-[11px] font-black text-slate-900 uppercase tracking-widest">
-                      Gambar Cawan
+                      {t("upload.plateImage")}
                     </h2>
                     <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 sm:mt-1">
-                      PNG, JPG maksimal 10MB
+                      {t("upload.imageRules")}
                     </p>
                   </div>
                 </div>
@@ -213,7 +216,9 @@ export default function UploadPage() {
                       <div className="absolute bottom-6 left-6 right-6">
                         <div className="bg-white/95 backdrop-blur-md text-slate-900 text-[11px] font-black px-5 py-4 rounded-2xl flex items-center gap-4 shadow-xl border border-white/20 uppercase tracking-widest">
                           <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0" />
-                          <span className="truncate max-w-[150px]">{selectedFile?.name}</span>
+                          <span className="truncate max-w-[150px]">
+                            {selectedFile?.name}
+                          </span>
                           <span className="ml-auto flex-shrink-0 text-slate-400 font-mono">
                             {(selectedFile
                               ? selectedFile.size / 1024 / 1024
@@ -231,11 +236,11 @@ export default function UploadPage() {
                       </div>
                       <label htmlFor="file-upload" className="cursor-pointer">
                         <span className="text-[9px] sm:text-[11px] font-black text-primary hover:text-primary/80 transition-colors uppercase tracking-widest">
-                          Klik untuk mengunggah
+                          {t("upload.clickToUpload")}
                         </span>
                         <span className="text-[9px] sm:text-[11px] text-slate-400 font-black uppercase tracking-widest">
                           {" "}
-                          atau seret dan lepas
+                          {t("upload.dragAndDrop")}
                         </span>
                         <input
                           id="file-upload"
@@ -247,7 +252,7 @@ export default function UploadPage() {
                         />
                       </label>
                       <p className="text-[8px] text-slate-400 mt-2 font-black uppercase tracking-[0.2em]">
-                        Diutamakan gambar sesuai ISO
+                        {t("upload.isoPreferred")}
                       </p>
                     </div>
                   )}
@@ -259,7 +264,7 @@ export default function UploadPage() {
                     <Info className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
                   </div>
                   <p className="text-[8px] sm:text-[9px] text-blue-700 font-bold leading-relaxed uppercase tracking-tight sm:tracking-widest">
-                    SARAN ISO 17025: Ambil gambar cawan dengan pencahayaan LED merata pada sudut 45° untuk deteksi saraf optimal.
+                    {t("upload.isoAdvisory")}
                   </p>
                 </div>
               </div>
@@ -272,22 +277,25 @@ export default function UploadPage() {
                   </div>
                   <div>
                     <h2 className="text-[9px] sm:text-[11px] font-black text-slate-900 uppercase tracking-widest">
-                      Protokol Biologis
+                      {t("upload.biologicalProtocol")}
                     </h2>
                     <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 sm:mt-1">
-                      Konfigurasi Parameter
+                      {t("upload.parametersConfig")}
                     </p>
                   </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-4">
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-2 sm:space-y-4"
+                >
                   {/* Sample ID */}
                   <div className="space-y-1">
                     <label
                       htmlFor="sampleId"
                       className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
                     >
-                      Pengidentifikasi Spesimen *
+                      {t("upload.specimenIdentifier")} *
                     </label>
                     <input
                       type="text"
@@ -307,7 +315,7 @@ export default function UploadPage() {
                       htmlFor="mediaType"
                       className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
                     >
-                      Matriks Media Agar *
+                      {t("upload.agarMediaMatrix")} *
                     </label>
                     <div className="relative">
                       <select
@@ -350,7 +358,7 @@ export default function UploadPage() {
                         htmlFor="dilutionFactor"
                         className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
                       >
-                        Pengenceran (10⁻ˣ) *
+                        {t("upload.dilutionFactor")} *
                       </label>
                       <div className="relative">
                         <select
@@ -384,7 +392,7 @@ export default function UploadPage() {
                         htmlFor="platedVolume"
                         className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
                       >
-                        Volume (ml) *
+                        {t("upload.volume")} *
                       </label>
                       <input
                         type="number"
@@ -407,9 +415,7 @@ export default function UploadPage() {
                   {/* ISO Compliance: Incubation & Method */}
                   <div className="grid grid-cols-2 gap-2 sm:gap-6 pt-2">
                     <div className="space-y-1">
-                      <label
-                        className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
-                      >
+                      <label className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                         Incubation Temp (°C)
                       </label>
                       <input
@@ -426,9 +432,7 @@ export default function UploadPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label
-                        className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
-                      >
+                      <label className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                         Time (Hours)
                       </label>
                       <input
@@ -446,9 +450,7 @@ export default function UploadPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <label
-                      className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
-                    >
+                    <label className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                       Method Standard (ISO)
                     </label>
                     <input
@@ -467,9 +469,7 @@ export default function UploadPage() {
                   {/* Traceability: Batch & Incubator */}
                   <div className="grid grid-cols-2 gap-2 sm:gap-6 pt-2">
                     <div className="space-y-2">
-                      <label
-                        className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
-                      >
+                      <label className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                         Media Batch/Lot #
                       </label>
                       <input
@@ -486,9 +486,7 @@ export default function UploadPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label
-                        className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
-                      >
+                      <label className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                         Incubator ID
                       </label>
                       <input
@@ -516,12 +514,12 @@ export default function UploadPage() {
                       {isSubmitting ? (
                         <>
                           <Loader2 className="h-3 w-3 sm:h-5 sm:w-5 animate-spin" />
-                          Menganalisis Spesimen...
+                          {t("upload.analyzingSpecimen")}
                         </>
                       ) : (
                         <>
                           <TrendingUp className="h-3 w-3 sm:h-5 sm:w-5 text-slate-900 transition-colors" />
-                          Inisialisasi Audit AI
+                          {t("upload.initializeAiAudit")}
                         </>
                       )}
                     </button>
@@ -537,9 +535,9 @@ export default function UploadPage() {
           <DocumentationSidebar
             showDocs={showDocs}
             setShowDocs={setShowDocs}
-            directory="Neural Protocol"
-            title="Protokol Saraf ColonyAI"
-            description="Prosedur Operasional Standar (SOP) untuk penerimaan spesimen laboratorium dan urutan audit saraf."
+            directory={t("upload.docsToggle")}
+            title={t("upload.docsTitle")}
+            description={t("upload.docsDescription")}
             rawText={`PROTOKOL SARAF COLONYAI - SOP ISO-17025
 ==========================================
 
@@ -554,14 +552,14 @@ Gerbang utama pemrosesan spesimen biologis menggunakan mesin saraf ColonyAI. Dir
 
 3. KONFIGURASI PARAMETER (PROTOKOL BIOLOGIS)
 A. PENGIDENTIFIKASI SPESIMEN: Kunci utama pelacakan (Traceability). Masukkan kode unik laboratorium (e.g., ISO-PCA-B2026-001).
-B. MATRIKS MEDIA AGAR: Menentukan target mikroba. 
+B. MATRIKS MEDIA AGAR: Menentukan target mikroba.
    - PCA: Total mikroba umum.
    - VRBA/BGBB: Kelompok Coliform.
    - R2A: Bakteri air/stres.
    - TSA/MAC: Pertumbuhan umum/Gram-negatif.
 C. FAKTOR PENGENCERAN: 10^-1 sampai 10^-6. Menjamin jumlah koloni 30-300 CFU untuk validitas statistik.
 D. VOLUME (ML): Volume sampel yang diplating.
-E. PARAMETER INKUBASI: 
+E. PARAMETER INKUBASI:
    - Incubation Temp: Suhu ideal pertumbuhan mikroba (misal: 35°C). Cara isi: Masukkan angka suhu operasional inkubator.
    - Time (Hours): Durasi inkubasi (misal: 48 jam). Cara isi: Hitung total waktu sejak spesimen masuk hingga pembacaan.
 F. KEPATUHAN & TRACEABILITY:
@@ -726,12 +724,18 @@ PRESISI: 99.8% pada PCA Standard.`}
                     desc: "Koloni standar dengan batas jelas.",
                   },
                   { name: "Yeast (Ragi)", desc: "Koloni cembung dan opak." },
-                  { name: "Mold (Kapang)", desc: "Koloni berfilamen menyebar." },
+                  {
+                    name: "Mold (Kapang)",
+                    desc: "Koloni berfilamen menyebar.",
+                  },
                   {
                     name: "Spreader Colonies",
                     desc: "Pertumbuhan mikroba meluas.",
                   },
-                  { name: "Artifacts", desc: "Partikel non-biologis diabaikan." },
+                  {
+                    name: "Artifacts",
+                    desc: "Partikel non-biologis diabaikan.",
+                  },
                 ].map((cls, i) => (
                   <div key={i} className="group">
                     <div className="flex items-center gap-1.5 mb-0.5">

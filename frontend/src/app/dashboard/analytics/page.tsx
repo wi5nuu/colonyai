@@ -68,20 +68,20 @@ interface MonthlySummary {
 }
 
 const MEDIA_TYPES = [
-  { value: "all", label: "All Media Types" },
-  { value: "Plate Count Agar", label: "PCA" },
-  { value: "VRBA", label: "VRBA" },
-  { value: "BGBB", label: "BGBB" },
-  { value: "MacConkey", label: "MacConkey" },
-  { value: "R2A", label: "R2A" },
-  { value: "TSA", label: "TSA" },
-  { value: "Other", label: "Other" },
+  { value: "all", labelKey: "analytics.mediaAll" as const },
+  { value: "Plate Count Agar", labelKey: "analytics.mediaPCA" as const },
+  { value: "VRBA", labelKey: "analytics.mediaVRBA" as const },
+  { value: "BGBB", labelKey: "analytics.mediaBGBB" as const },
+  { value: "MacConkey", labelKey: "analytics.mediaMacConkey" as const },
+  { value: "R2A", labelKey: "analytics.mediaR2A" as const },
+  { value: "TSA", labelKey: "analytics.mediaTSA" as const },
+  { value: "Other", labelKey: "analytics.mediaOther" as const },
 ];
 const DATE_RANGE_OPTIONS = [
-  { value: "7d", label: "Last 7 days" },
-  { value: "30d", label: "Last 30 days" },
-  { value: "90d", label: "Last 90 days" },
-  { value: "custom", label: "Custom" },
+  { value: "7d", labelKey: "analytics.last7Days" as const },
+  { value: "30d", labelKey: "analytics.last30Days" as const },
+  { value: "90d", labelKey: "analytics.last90Days" as const },
+  { value: "custom", labelKey: "analytics.customDate" as const },
 ];
 
 function getDateRange(range: DateRange) {
@@ -149,9 +149,7 @@ function groupByDate(
         tftcCount,
         status,
         analysts: Array.from(
-          new Set(
-            items.map((a) => a.user?.full_name || a.user?.email || "Unknown"),
-          ),
+          new Set(items.map((a) => a.user?.full_name || a.user?.email || "")),
         ),
       };
     });
@@ -185,9 +183,7 @@ function groupByMonth(analyses: Analysis[]): MonthlySummary[] {
         avgCfu: Math.round(avgCfu * 10) / 10,
         passRate: Math.round((valid.length / items.length) * 1000) / 10,
         analysts: Array.from(
-          new Set(
-            items.map((a) => a.user?.full_name || a.user?.email || "Unknown"),
-          ),
+          new Set(items.map((a) => a.user?.full_name || a.user?.email || "")),
         ).join(", "),
       };
     });
@@ -241,7 +237,6 @@ function ChartTooltip({ active, payload, label }: any) {
   );
 }
 
-
 export default function AnalyticsPage() {
   const { t } = useTranslationStore();
   const [dateRange, setDateRange] = useState<DateRange>("30d");
@@ -260,32 +255,30 @@ export default function AnalyticsPage() {
     setIsLoading(true);
     setError(null);
     try {
-        const range = getDateRange(dateRange);
-        let collected: Analysis[] = [],
-          page = 1,
-          totalPages = 1;
-        while (page <= totalPages) {
-          const r: AnalysisListResponse = await analysesApi.list({
-            page,
-            page_size: 200,
-            media_type:
-              mediaType !== "all" ? (mediaType as MediaType) : undefined,
-            date_from:
-              range?.date_from ??
-              (dateRange === "custom" && customDateFrom
-                ? customDateFrom
-                : undefined),
-            date_to:
-              range?.date_to ??
-              (dateRange === "custom" && customDateTo
-                ? customDateTo
-                : undefined),
-          });
-          collected = collected.concat(r.analyses);
-          totalPages = r.total_pages;
-          page++;
-        }
-        setAllAnalyses(collected);
+      const range = getDateRange(dateRange);
+      let collected: Analysis[] = [],
+        page = 1,
+        totalPages = 1;
+      while (page <= totalPages) {
+        const r: AnalysisListResponse = await analysesApi.list({
+          page,
+          page_size: 200,
+          media_type:
+            mediaType !== "all" ? (mediaType as MediaType) : undefined,
+          date_from:
+            range?.date_from ??
+            (dateRange === "custom" && customDateFrom
+              ? customDateFrom
+              : undefined),
+          date_to:
+            range?.date_to ??
+            (dateRange === "custom" && customDateTo ? customDateTo : undefined),
+        });
+        collected = collected.concat(r.analyses);
+        totalPages = r.total_pages;
+        page++;
+      }
+      setAllAnalyses(collected);
     } catch (e: any) {
       const msg =
         e?.response?.data?.detail || e?.message || t("analytics.errorLoad");
@@ -299,7 +292,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     fetchData();
     const interval = setInterval(() => {
-      if (document.visibilityState === 'visible') fetchData();
+      if (document.visibilityState === "visible") fetchData();
     }, 30000); // 30s polling
     return () => clearInterval(interval);
   }, [fetchData]);
@@ -319,9 +312,7 @@ export default function AnalyticsPage() {
     () =>
       Array.from(
         new Set(
-          allAnalyses.map(
-            (a) => a.user?.full_name || a.user?.email || "Unknown",
-          ),
+          allAnalyses.map((a) => a.user?.full_name || a.user?.email || ""),
         ),
       ).sort(),
     [allAnalyses],
@@ -334,7 +325,14 @@ export default function AnalyticsPage() {
   const stats = useMemo(() => {
     const total = filtered.length;
     if (total === 0)
-      return { total: 0, avgCfu: 0, passRate: 0, tntc: 0, tftc: 0, breakdown: {} };
+      return {
+        total: 0,
+        avgCfu: 0,
+        passRate: 0,
+        tntc: 0,
+        tftc: 0,
+        breakdown: {},
+      };
     const valid = filtered.filter((a) => a.status === "valid").length;
     const cfuItems = filtered.filter((a) => a.cfu_per_ml != null);
     const avgCfu =
@@ -342,10 +340,13 @@ export default function AnalyticsPage() {
         ? cfuItems.reduce((s, a) => s + (a.cfu_per_ml || 0), 0) /
           cfuItems.length
         : 0;
-    const matrixBreakdown = filtered.reduce((acc, a) => {
-      acc[a.media_type] = (acc[a.media_type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const matrixBreakdown = filtered.reduce(
+      (acc, a) => {
+        acc[a.media_type] = (acc[a.media_type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     return {
       total,
@@ -353,7 +354,7 @@ export default function AnalyticsPage() {
       passRate: Math.round((valid / total) * 1000) / 10,
       tntc: filtered.filter((a) => a.status === "TNTC").length,
       tftc: filtered.filter((a) => a.status === "TFTC").length,
-      breakdown: matrixBreakdown
+      breakdown: matrixBreakdown,
     };
   }, [filtered]);
 
@@ -450,8 +451,8 @@ export default function AnalyticsPage() {
                   {t("analytics.neuralQueriesHeader")}
                 </h2>
                 <div className="flex items-center gap-4">
-                  <button 
-                    onClick={() => toast.info("Generating high-resolution report...")}
+                  <button
+                    onClick={() => toast.info(t("analytics.generatingReport"))}
                     className="flex items-center gap-2 text-blue-600 text-[10px] font-bold uppercase tracking-widest hover:underline"
                   >
                     {t("analytics.printReport")}
@@ -482,13 +483,7 @@ export default function AnalyticsPage() {
                     >
                       {DATE_RANGE_OPTIONS.map((o) => (
                         <option key={o.value} value={o.value}>
-                          {o.value === "7d"
-                            ? t("analytics.last7Days")
-                            : o.value === "30d"
-                              ? t("analytics.last30Days")
-                              : o.value === "90d"
-                                ? t("analytics.last90Days")
-                                : t("analytics.customDate")}
+                          {t(o.labelKey)}
                         </option>
                       ))}
                     </select>
@@ -522,20 +517,41 @@ export default function AnalyticsPage() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 py-4">
                   {[
-                    { label: "PCA Matrix", key: "Plate Count Agar", color: "bg-blue-500" },
-                    { label: "VRBA Matrix", key: "VRBA", color: "bg-amber-500" },
-                    { label: "BGBB Protocol", key: "BGBB", color: "bg-emerald-500" },
-                    { label: "R2A Analytics", key: "R2A", color: "bg-rose-500" },
-                    { label: "Integrity", key: "Integrity", color: "bg-emerald-400" },
+                    {
+                      labelKey: "analytics.cardPcaMatrix" as const,
+                      key: "Plate Count Agar",
+                      color: "bg-blue-500",
+                    },
+                    {
+                      labelKey: "analytics.cardVrbaMatrix" as const,
+                      key: "VRBA",
+                      color: "bg-amber-500",
+                    },
+                    {
+                      labelKey: "analytics.cardBgbbProtocol" as const,
+                      key: "BGBB",
+                      color: "bg-emerald-500",
+                    },
+                    {
+                      labelKey: "analytics.cardR2aAnalytics" as const,
+                      key: "R2A",
+                      color: "bg-rose-500",
+                    },
+                    {
+                      labelKey: "analytics.cardIntegrity" as const,
+                      key: "Integrity",
+                      color: "bg-emerald-400",
+                    },
                   ].map((s, i) => {
                     let val: string | number = 0;
                     if (s.key === "Integrity") {
                       val = `${stats.passRate}%`;
                     } else {
                       const count = stats.breakdown[s.key] || 0;
-                      val = count > 1000 ? `${(count / 1000).toFixed(1)}k` : count;
+                      val =
+                        count > 1000 ? `${(count / 1000).toFixed(1)}k` : count;
                     }
-                    
+
                     return (
                       <div
                         key={i}
@@ -546,7 +562,7 @@ export default function AnalyticsPage() {
                             className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${s.color}`}
                           />
                           <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 truncate">
-                            {s.label}
+                            {t(s.labelKey)}
                           </span>
                         </div>
                         <p className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
@@ -702,7 +718,7 @@ export default function AnalyticsPage() {
                           </td>
                           <td className="px-8 py-6">
                             <span className="text-[11px] font-bold text-blue-600">
-                              {formatCFU(row.avgCfu)} CFU/ML
+                              {formatCFU(row.avgCfu)} {t("analytics.cfuMlUnit")}
                             </span>
                           </td>
                           <td className="px-8 py-6">
@@ -736,9 +752,9 @@ export default function AnalyticsPage() {
           <DocumentationSidebar
             showDocs={showDocs}
             setShowDocs={setShowDocs}
-            directory="Neural Analytics"
-            title="Matriks Analitik"
-            description="Prosedur Operasional Standar (SOP) untuk menafsirkan kueri deteksi saraf dan tren kepatuhan historis."
+            directory={t("analytics.docsDirectory")}
+            title={t("analytics.docsTitle")}
+            description={t("analytics.docsDescription")}
             rawText={`MATRIKS ANALITIK COLONYAI - SOP ISO-17025
 ==========================================
 
@@ -765,14 +781,11 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
                   01
                 </span>
                 <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
-                  Overview
+                  {t("analytics.docsSectionOverviewTitle")}
                 </h2>
               </div>
               <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
-                Modul Analytics berfungsi sebagai pusat intelijen data ColonyAI.
-                Ini menyajikan visualisasi dinamis atas performa laboratorium,
-                tingkat kepatuhan ISO, dan efisiensi throughput saraf (neural
-                throughput) secara real-time.
+                {t("analytics.docsSectionOverviewText")}
               </p>
             </section>
 
@@ -782,30 +795,32 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
                   02
                 </span>
                 <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
-                  Komponen Utama
+                  {t("analytics.docsSectionComponentsTitle")}
                 </h2>
               </div>
               <div className="space-y-3 ml-0.5">
                 {[
                   {
                     id: "1",
-                    title: "Query Overview",
-                    desc: "Distribusi spesimen berdasarkan protokol media spesifik (PCA, VRBA, BGBB) yang menunjukkan volume pengujian laboratorium.",
+                    titleKey:
+                      "analytics.docsComponentQueryOverviewTitle" as const,
+                    descKey:
+                      "analytics.docsComponentQueryOverviewDesc" as const,
                   },
                   {
                     id: "2",
-                    title: "Time-Series Chart",
-                    desc: "Visualisasi interaktif fluktuasi Average CFU (kepadatan koloni), Total Tests (volume), dan Pass Rate (kepatuhan standar) harian.",
+                    titleKey: "analytics.docsComponentTimeSeriesTitle" as const,
+                    descKey: "analytics.docsComponentTimeSeriesDesc" as const,
                   },
                   {
                     id: "3",
-                    title: "Query Statistics",
-                    desc: "Indikator performa sistem komputasi ColonyAI. Menampilkan Average Queries Per Second (QPS) dan Processing Time.",
+                    titleKey: "analytics.docsComponentQueryStatsTitle" as const,
+                    descKey: "analytics.docsComponentQueryStatsDesc" as const,
                   },
                   {
                     id: "4",
-                    title: "Intelligence Ledger",
-                    desc: "Agregasi data historis secara bulanan (Siklus Diagnostik) yang mencatat Median Densitas dan Integritas Kepatuhan (%) analis.",
+                    titleKey: "analytics.docsComponentLedgerTitle" as const,
+                    descKey: "analytics.docsComponentLedgerDesc" as const,
                   },
                 ].map((step) => (
                   <div key={step.id} className="flex gap-2.5 group">
@@ -814,10 +829,10 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
                     </span>
                     <div className="space-y-0.5">
                       <h4 className="text-[10px] font-bold text-slate-900">
-                        {step.title}
+                        {t(step.titleKey)}
                       </h4>
                       <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
-                        {step.desc}
+                        {t(step.descKey)}
                       </p>
                     </div>
                   </div>
@@ -831,22 +846,22 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
                   03
                 </span>
                 <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
-                  Export Protocol
+                  {t("analytics.docsSectionExportTitle")}
                 </h2>
               </div>
               <div className="space-y-2">
                 {[
                   {
-                    label: "Format Ekspor",
-                    val: "CSV Matrix (Comma Separated Values).",
+                    labelKey: "analytics.docsExportFormatLabel" as const,
+                    valKey: "analytics.docsExportFormatVal" as const,
                   },
                   {
-                    label: "Validitas Data",
-                    val: "Diakui untuk Audit ISO-17025.",
+                    labelKey: "analytics.docsExportValidityLabel" as const,
+                    valKey: "analytics.docsExportValidityVal" as const,
                   },
                   {
-                    label: "Keamanan",
-                    val: "Audit Trail di-hash secara kriptografis.",
+                    labelKey: "analytics.docsExportSecurityLabel" as const,
+                    valKey: "analytics.docsExportSecurityVal" as const,
                   },
                 ].map((item, i) => (
                   <div
@@ -854,10 +869,10 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
                     className="flex flex-col gap-0.5 pb-2 border-b border-slate-50 last:border-0"
                   >
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                      {item.label}
+                      {t(item.labelKey)}
                     </span>
                     <span className="text-[9px] font-bold text-slate-700">
-                      {item.val}
+                      {t(item.valKey)}
                     </span>
                   </div>
                 ))}
@@ -873,11 +888,10 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
                 </div>
                 <div className="space-y-0.5">
                   <p className="text-[10px] font-black text-blue-900 uppercase tracking-widest">
-                    Analytics Ready
+                    {t("analytics.docsStatusReadyTitle")}
                   </p>
                   <p className="text-[9px] text-blue-700 leading-relaxed font-semibold">
-                    Sistem pelaporan ini dapat disinkronisasi ke berbagai
-                    platform Business Intelligence (BI) eksternal.
+                    {t("analytics.docsStatusReadyText")}
                   </p>
                 </div>
               </div>
@@ -890,11 +904,10 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
                 </div>
                 <div className="space-y-0.5">
                   <p className="text-[10px] font-black text-white uppercase tracking-widest">
-                    ColonyAI Vault
+                    {t("analytics.docsVaultTitle")}
                   </p>
                   <p className="text-[9px] text-slate-400 leading-relaxed font-medium">
-                    Seluruh data dienkripsi dan disimpan untuk kepatuhan data
-                    jangka panjang sesuai ISO-17025.
+                    {t("analytics.docsVaultText")}
                   </p>
                 </div>
               </div>
