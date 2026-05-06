@@ -40,14 +40,14 @@ export default function UploadPage() {
   const [showDocs, setShowDocs] = useState(true);
 
   const [formData, setFormData] = useState({
-    sampleId: "",
+    sampleId: "ISO-PCA-B2026-001",
     mediaType: "Plate Count Agar" as MediaType,
     dilutionFactor: 0.001,
     platedVolume: 1.0,
     incubationTemp: 35.0,
     incubationTime: 48,
     methodStandard: "ISO 4833-1:2013",
-    mediaBatchNumber: "",
+    mediaBatchNumber: "LOT-2026-X",
     incubatorId: "INC-001",
   });
 
@@ -297,6 +297,9 @@ export default function UploadPage() {
                     >
                       {t("upload.specimenIdentifier")} *
                     </label>
+                    <p className="text-[9px] text-slate-500 font-medium ml-1 mb-1.5 leading-snug">
+                      <span className="font-bold text-slate-700">{t("upload.purposeLabel")}</span> {t("upload.descSampleIdPurpose")} <span className="font-bold text-slate-700">{t("upload.inputLabel")}</span> {t("upload.descSampleIdInput")} <span className="font-bold text-slate-700">{t("upload.resultLabel")}</span> {t("upload.descSampleIdResult")}
+                    </p>
                     <input
                       type="text"
                       id="sampleId"
@@ -317,6 +320,9 @@ export default function UploadPage() {
                     >
                       {t("upload.agarMediaMatrix")} *
                     </label>
+                    <p className="text-[9px] text-slate-500 font-medium ml-1 mb-1.5 leading-snug">
+                      <span className="font-bold text-slate-700">{t("upload.purposeLabel")}</span> {t("upload.descMediaPurpose")} <span className="font-bold text-slate-700">{t("upload.inputLabel")}</span> {t("upload.descMediaInput")} <span className="font-bold text-slate-700">{t("upload.resultLabel")}</span> {t("upload.descMediaResult")}
+                    </p>
                     <div className="relative">
                       <select
                         id="mediaType"
@@ -360,6 +366,9 @@ export default function UploadPage() {
                       >
                         {t("upload.dilutionFactor")} *
                       </label>
+                      <p className="text-[9px] text-slate-500 font-medium ml-1 mb-1.5 leading-snug">
+                        <span className="font-bold text-slate-700">{t("upload.purposeLabel")}</span> {t("upload.descDilutionPurpose")} <span className="font-bold text-slate-700">{t("upload.inputLabel")}</span> {t("upload.descDilutionInput")} <span className="font-bold text-slate-700">{t("upload.resultLabel")}</span> {t("upload.descDilutionResult")}
+                      </p>
                       <div className="relative">
                         <select
                           id="dilutionFactor"
@@ -394,6 +403,9 @@ export default function UploadPage() {
                       >
                         {t("upload.volume")} *
                       </label>
+                      <p className="text-[9px] text-slate-500 font-medium ml-1 mb-1.5 leading-snug">
+                        <span className="font-bold text-slate-700">{t("upload.purposeLabel")}</span> {t("upload.descVolumePurpose")} <span className="font-bold text-slate-700">{t("upload.inputLabel")}</span> {t("upload.descVolumeInput")} <span className="font-bold text-slate-700">{t("upload.resultLabel")}</span> {t("upload.descVolumeResult")}
+                      </p>
                       <input
                         type="number"
                         id="platedVolume"
@@ -418,6 +430,9 @@ export default function UploadPage() {
                       <label className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                         Incubation Temp (°C)
                       </label>
+                      <p className="text-[9px] text-slate-500 font-medium ml-1 mb-1.5 leading-snug">
+                        <span className="font-bold text-slate-700">{t("upload.purposeLabel")}</span> {t("upload.descTempPurpose")} <span className="font-bold text-slate-700">{t("upload.inputLabel")}</span> {t("upload.descTempInput")} <span className="font-bold text-slate-700">{t("upload.resultLabel")}</span> {t("upload.descTempResult")}
+                      </p>
                       <input
                         type="number"
                         step="0.1"
@@ -435,6 +450,9 @@ export default function UploadPage() {
                       <label className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                         Time (Hours)
                       </label>
+                      <p className="text-[9px] text-slate-500 font-medium ml-1 mb-1.5 leading-snug">
+                        <span className="font-bold text-slate-700">{t("upload.purposeLabel")}</span> {t("upload.descTimePurpose")} <span className="font-bold text-slate-700">{t("upload.inputLabel")}</span> {t("upload.descTimeInput")} <span className="font-bold text-slate-700">{t("upload.resultLabel")}</span> {t("upload.descTimeResult")}
+                      </p>
                       <input
                         type="number"
                         className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
@@ -453,6 +471,9 @@ export default function UploadPage() {
                     <label className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                       Method Standard (ISO)
                     </label>
+                    <p className="text-[9px] text-slate-500 font-medium ml-1 mb-1.5 leading-snug">
+                      <span className="font-bold text-slate-700">{t("upload.purposeLabel")}</span> {t("upload.descMethodPurpose")} <span className="font-bold text-slate-700">{t("upload.inputLabel")}</span> {t("upload.descMethodInput")} <span className="font-bold text-slate-700">{t("upload.resultLabel")}</span> {t("upload.descMethodResult")}
+                    </p>
                     <input
                       type="text"
                       className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
@@ -472,6 +493,9 @@ export default function UploadPage() {
                       <label className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                         Media Batch/Lot #
                       </label>
+                      <p className="text-[9px] text-slate-500 font-medium ml-1 mb-1.5 leading-snug">
+                        <span className="font-bold text-slate-700">{t("upload.purposeLabel")}</span> {t("upload.descBatchPurpose")} <span className="font-bold text-slate-700">{t("upload.inputLabel")}</span> {t("upload.descBatchInput")} <span className="font-bold text-slate-700">{t("upload.resultLabel")}</span> {t("upload.descBatchResult")}
+                      </p>
                       <input
                         type="text"
                         placeholder="e.g., LOT-2026-X"
@@ -489,6 +513,9 @@ export default function UploadPage() {
                       <label className="text-[8px] font-black text-slate-900 uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                         Incubator ID
                       </label>
+                      <p className="text-[9px] text-slate-500 font-medium ml-1 mb-1.5 leading-snug">
+                        <span className="font-bold text-slate-700">{t("upload.purposeLabel")}</span> {t("upload.descIncubatorPurpose")} <span className="font-bold text-slate-700">{t("upload.inputLabel")}</span> {t("upload.descIncubatorInput")} <span className="font-bold text-slate-700">{t("upload.resultLabel")}</span> {t("upload.descIncubatorResult")}
+                      </p>
                       <input
                         type="text"
                         placeholder="e.g., INC-01"

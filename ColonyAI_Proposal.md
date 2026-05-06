@@ -412,6 +412,43 @@ _(198 words)_
 
 ---
 
+## Agile Scrum Development Plan
+
+### 1. Team Roles
+
+| #   | Name                   | Scrum Role          | Responsibilities                                                                                                                                                                                                                               |
+| --- | ---------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Wisnu Alfian Nur Ashar | Product Owner       | Defines product vision and roadmap; owns and prioritizes the Product Backlog; writes and validates User Stories; accepts or rejects completed features; liaises with stakeholders (labs, BPOM, LIMS vendors).                                  |
+| 2   | Muhammad Faras         | Scrum Master        | Facilitates all Scrum ceremonies (Daily Standup, Sprint Planning, Sprint Review, Retrospective); removes team impediments; enforces Definition of Done; tracks sprint velocity and burndown. Also handles Business Analysis & Documentation.   |
+| 3   | Suci                   | Developer (UI/UX)   | Designs and implements the Next.js dashboard interface; creates wireframes and Figma mockups; implements color-coded bounding box display for all 5 detection classes; ensures mobile-responsive layout.                                       |
+| 4   | Steven                 | Developer (QA/Data) | Writes and executes test cases for all 5 detection classes; performs cross-browser and cross-device testing; maintains technical documentation; prepares sprint reports and final proposal documentation. Also handles AI/Backend development. |
+
+### 2. Product Backlog
+
+| ID    | Priority  | User Story                                                                                                                                                                                                                   | Acceptance Criteria                                                                                                                                                                                                                                                                                                 | Category    | Points |
+| ----- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------ |
+| PB-01 | 🔴 MUST   | As an analyst, I want to upload a plate image and have the AI automatically identify the plate boundary so that only the agar area is analyzed.                                                                              | Given a plate photo, when uploaded, then Hough Circle Transform detects boundary within ±5px; non-plate area is masked and excluded from inference.                                                                                                                                                                 | Feature     | 8      |
+| PB-02 | 🔴 MUST   | As an analyst, I want the AI model to classify every detected object into exactly one of 5 classes (colony_single, colony_merged, bubble, dust_debris, media_crack) so that valid colonies are distinguished from artifacts. | Given a standardized plate image, when inference runs, then all detections have exactly one class label from the 5-class taxonomy; no undefined or null class labels exist; per-class confidence scores are returned.                                                                                               | Feature     | 13     |
+| PB-03 | 🔴 MUST   | As an analyst, I want the system to automatically calculate CFU/ml from the colony count and dilution factor I entered so that I receive a standardized result without manual arithmetic.                                    | Given colony_single and colony_merged counts and analyst-entered dilution factor + plated volume, when calculation runs, then CFU/ml = Σ(valid colonies) ÷ (volume × dilution factor) with ±0.1% arithmetic precision; TNTC/TFTC flags display when count is outside 25–250 CFU range.                              | Feature     | 5      |
+| PB-04 | 🔴 MUST   | As a laboratory manager, I want the dashboard to display annotated plate images with color-coded bounding boxes for all 5 classes so that analysts can visually verify AI detections at a glance.                            | Given inference results, when the result page loads, then bounding boxes are rendered with distinct colors per class (e.g., green = colony_single, yellow = colony_merged, red = bubble, orange = dust_debris, purple = media_crack); class label and confidence percentage shown on hover.                         | Feature     | 8      |
+| PB-05 | 🔴 MUST   | As an analyst, I want to digitally sign off and approve results before submission so that every report in the system has a verified analyst record for ISO 17025 audit compliance.                                           | Given a completed analysis, when the analyst clicks 'Approve', then a timestamped record with analyst name, user ID, and cryptographic hash of the result is written to the append-only audit log in PostgreSQL; the record cannot be deleted or modified.                                                          | Compliance  | 5      |
+| PB-06 | 🟡 SHOULD | As a laboratory administrator, I want to export test results as PDF and CSV reports so that they can be submitted to BPOM regulators or uploaded to our LIMS system.                                                         | Given approved test results, when 'Export PDF' or 'Export CSV' is clicked, then the file includes: sample ID, analyst name, timestamp, all 5-class detection counts, CFU/ml value, confidence summary, and analyst signature field; PDF is A4, Times New Roman 12pt, BPOM-compliant format.                         | Feature     | 5      |
+| PB-07 | 🟡 SHOULD | As an analyst, I want to upload images from my smartphone camera so that I can capture plates directly in the laboratory without needing a dedicated scanner.                                                                | Given a mobile browser session, when the camera icon is tapped, then the device camera API is invoked; captured image is auto-uploaded; the full 5-class inference pipeline runs identically to desktop uploads; result displays correctly on mobile screen.                                                        | Feature     | 5      |
+| PB-08 | 🟡 SHOULD | As a laboratory manager, I want a Simulator module that lets me compare the AI's 5-class detection output against my analysts' manual counts so that I can build institutional trust in the system before full adoption.     | Given a test result, when the Simulator tab is opened, then I can enter manual colony counts; the system displays a side-by-side comparison table showing AI count vs. manual count per class; accuracy percentage and error margin are calculated and displayed.                                                   | Feature     | 8      |
+| PB-09 | 🟢 COULD  | As a laboratory manager, I want a historical analytics dashboard showing CFU/ml trends over time per media type so that I can identify anomalies and generate monthly compliance reports.                                    | Given at least 30 test records, when the Analytics page is opened, then a time-series chart displays CFU/ml over date range; filter by media type and analyst; monthly summary table exportable as CSV.                                                                                                             | Enhancement | 8      |
+| PB-10 | 🟢 COULD  | As a system administrator, I want model version management so that new YOLOv8 models trained on updated 5-class datasets can be deployed with A/B validation without service interruption.                                   | Given a new trained model file, when uploaded via the admin panel, then MLflow logs the model version; A/B test runs for 500 inferences; if new model achieves ≥ 2% mAP improvement across all 5 classes on the validation set, it is automatically promoted to production; otherwise it is rejected with a report. | DevOps      | 13     |
+
+### 3. Sprint Plan (1-Month Intensive — April 2026)
+
+| Sprint | Timeline  | Backlog Items       | Sprint Goal                                                           | Definition of Done                                                                      |
+| ------ | --------- | ------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Week 1 | Apr 1-7   | PB-01, PB-02        | YOLOv8 model classifies 5 classes; core architecture scaffolded.      | Baseline model trained; basic DB/Auth running.                                          |
+| Week 2 | Apr 8-14  | PB-04, PB-07, PB-08 | Next.js dashboard displays annotated images; Simulator module active. | Dashboard renders all 5 classes visually; Manual vs AI comparison working.              |
+| Week 3 | Apr 15-21 | PB-03, PB-05, PB-06 | Integrations, CFU/ml calculator, and reporting (PDF/CSV) finalized.   | PDF export passes BPOM format; automated math checks verified.                          |
+| Week 4 | Apr 22-30 | PB-09, PB-10 + QA   | Full system integration, deployment, and final demo prep.             | All critical backlog items accepted by PO; end-to-end test passes; demo video recorded. |
+
+---
+
 ## Attachment & Reference
 
 ### Attachments
@@ -470,21 +507,45 @@ _(198 words)_
 │  │  🔴 Bubble       │     3    │ [__]  │   --%      │ │
 │  │  🟠 Dust/Debris  │     1    │ [__]  │   --%      │ │
 │  │  🟣 Media Crack  │     0    │ [__]  │   --%      │ │
-│  │  ──────────────────────────────────────────────    │ │
-│  │  Overall Accuracy: --%  │  Error Margin: ±--       │ │
+│  │  Total Valid     │  AI: 99  │ Manual: [__]        │ │
+│  │  Accuracy Match  │  94.2%                         │ │
 │  └────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────┘
 ```
 
-### References
+**UI Wireframe — Analytics Dashboard (Trends)**
 
-1. ASTM F2944 — Standard Test Method for Automated Colony Forming Unit (CFU) Assays. ASTM International, 2024.
-2. FDA Bacteriological Analytical Manual (BAM), Chapter 3: Aerobic Plate Count. U.S. Food and Drug Administration, 2023.
-3. BPOM Indonesia. Annual Report on Food Product Surveillance and Microbiological Non-Conformance. Badan Pengawas Obat dan Makanan Republik Indonesia, 2023.
+```
+┌──────────────────────────────────────────────────────────┐
+│  ColonyAI 🧫  →  Analytics               [Dashboard]     │
+├──────────────────────────────────────────────────────────┤
+│  Date Range: [Last 30 days ▼]  Media: [All ▼]           │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  CFU/ml Trend Over Time (line chart)               │ │
+│  │  ┌─\                                              │ │
+│  │  │  \  /\     /\                                  │ │
+│  │  │   \/  \/\ /  \                                 │ │
+│  │  └──────────────────────▶ Date                    │ │
+│  └────────────────────────────────────────────────────┘ │
+│  Summary Table: [Month, Tests, Avg CFU, Pass%, Analyst] │
+│                                         [📥 Export CSV] │
+└──────────────────────────────────────────────────────────┘
+```
+
+### References (APA 7th Edition)
+
+1. ASTM International. (2023). *Standard Test Method for Automated Colony Forming Unit (CFU) Assays — Image Acquisition and Analysis Method for Enumerating and Characterizing Cells and Colonies in Culture* (ASTM F2944).
+2. Coutinho, C., Durão, L., Figueiredo, J., & Carvalho, Â. (2021). AGAR a microbial colony dataset for deep learning detection. *Scientific Reports, 11*, 16365. https://doi.org/10.1038/s41598-021-99300-z
+3. FDA Bacteriological Analytical Manual (BAM), Chapter 3: Aerobic Plate Count. U.S. Food and Drug Administration, 2023.
 4. ISO 4833-1:2013 — Microbiology of the food chain — Horizontal method for the enumeration of microorganisms — Part 1: Colony count at 30 °C by the pour plate technique.
 5. ISO/IEC Guide 98-3:2008 (GUM) — Guide to the Expression of Uncertainty in Measurement.
 6. ISO 17025:2017 — General requirements for the competence of testing and calibration laboratories.
-7. SNI 2897:2008 — Cara uji cemaran mikroba dalam daging, telur, dan susu, serta hasil olahannya.
-8. Jocher, G., Chaurasia, A., & Qiu, J. (2023). YOLOv8 — Ultralytics. GitHub Repository. https://github.com/ultralytics/ultralytics
-9. Ferrari, A., et al. (2021). AGAR: A dataset of microbial colony images. Scientific Reports, 11, 18312. DOI: 10.1038/s41598-021-99300-z.
+7. Jocher, G., Chaurasia, A., & Qiu, J. (2023). YOLOv8 — Ultralytics. GitHub Repository. https://github.com/ultralytics/ultralytics
+8. SNI 2897:2008 — Cara uji cemaran mikroba dalam daging, telur, dan susu, serta hasil olahannya.
+9. Trevisan, N. M., et al. (2022). Automated bacterial colony counting using deep learning object detection. *Computers and Electronics in Agriculture, 200*, 107226.
 10. UU PDP Indonesia — Undang-Undang Nomor 27 Tahun 2022 tentang Pelindungan Data Pribadi.
+
+---
+**ColonyAI — AI Open Innovation Challenge 2026**
+Team Leader: Wisnu Alfian Nur Ashar | President University | wisnu.ashar@student.president.ac.id
+GitHub: https://github.com/wi5nuu/colonyai
