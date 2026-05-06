@@ -80,8 +80,10 @@ ColonyAI implements a specialized **Tiered Access Model** enforcing strict *Sepa
 
 - **Backend**: Python **FastAPI** utilizing `async/await` patterns for non-blocking AI inference.
 - **Data Integrity**: **Pydantic v2** and **SQLAlchemy 2.0 (Async)** for resilient database transactions.
-- **Frontend**: **Next.js 14** (App Router) delivering a premium "Clean White" aesthetic.
+- **Frontend**: **Next.js 14** (App Router) delivering a premium "Medical-Professional" aesthetic with Tailwind CSS.
 - **AI Processing**: Native **PyTorch** integration with automatic GPU acceleration detection.
+- **Internationalization (i18n)**: Full dual-language support (English / Bahasa Indonesia) ensuring operational accessibility and regulatory clarity for Indonesian laboratories.
+- **Enterprise LIMS Integration**: Seamless transmission simulation to external Laboratory Information Management Systems (e.g., SampleManager 12.4) with supervisor approval workflows.
 
 ---
 
@@ -91,10 +93,10 @@ ColonyAI implements a specialized **Tiered Access Model** enforcing strict *Sepa
 
 | Member | Role |
 | :--- | :--- |
-| **Wisnu Alfian Nur Ashar** | **Product Owner** & Frontend Lead |
-| **Muhammad Faras** | **Scrum Master** & AI Engineer |
-| **Steven** | **Backend Lead** & Security Engineer |
-| **Suci** | **UI/UX Designer** & Frontend Dev |
+| **Wisnu Alfian Nur Ashar** | Product Owner & Software Engineer |
+| **Muhammad Faras** | Scrum Master, AI/CV Integration, Business Analyst & Docs |
+| **Suci** | Developer (UI/UX Designer) |
+| **Steven** | Developer (Data Analyst & QA Engineer) |
 
 ---
 
