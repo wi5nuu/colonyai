@@ -19,7 +19,7 @@ import uuid
 
 from app.core.security import require_role
 from app.core.database import get_db
-from app.models import AuditLog, User
+from app.models import AuditLog, User, Organization
 
 router = APIRouter()
 
@@ -29,6 +29,7 @@ class AuditLogResponse(BaseModel):
     resource_type: str
     resource_id: Optional[str]
     user_name: str
+    organization_name: Optional[str] = None
     timestamp: datetime
     status: str = "SUCCESS"
     previous_hash: Optional[str] = None
@@ -52,10 +53,11 @@ async def list_audit_logs(
     """
     user_role = current_user.get("role")
 
-    # Build base query with user join for name
+    # Build base query with user join for name and organization join
     stmt = (
-        select(AuditLog, User.full_name)
+        select(AuditLog, User.full_name, Organization.name)
         .join(User, AuditLog.user_id == User.id)
+        .outerjoin(Organization, User.organization_id == Organization.id)
         .order_by(desc(AuditLog.timestamp))
         .offset(skip)
         .limit(limit)
@@ -72,13 +74,14 @@ async def list_audit_logs(
 
     result = await db.execute(stmt)
     logs = []
-    for log, full_name in result.all():
+    for log, full_name, org_name in result.all():
         logs.append(AuditLogResponse(
             id=str(log.id),
             action=log.action,
             resource_type=log.resource_type,
             resource_id=str(log.resource_id) if log.resource_id else None,
             user_name=full_name,
+            organization_name=org_name or "ColonyAI Global",
             timestamp=log.timestamp,
             status="SUCCESS",
             previous_hash=log.previous_hash,

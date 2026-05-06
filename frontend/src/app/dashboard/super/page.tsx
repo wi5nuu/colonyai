@@ -310,15 +310,15 @@ export default function SuperAdminRealTimeDashboard() {
             {/* Global Master Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 border border-slate-200 rounded-lg shadow-sm flex items-center justify-center">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm flex items-center justify-center transition-colors">
                   <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <h1 className="text-sm sm:text-xl font-bold text-slate-900 tracking-tight uppercase leading-none">Global Control</h1>
+                    <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">Global Control</h1>
                     <span className="px-1.5 py-0.5 bg-primary/10 border border-primary/20 rounded-full text-[7px] sm:text-[8px] font-bold text-primary uppercase tracking-[0.2em] hidden xs:inline-block">Master</span>
                   </div>
-                  <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">Multi-Tenant Laboratory OS</p>
+                  <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5">Multi-Tenant Laboratory OS</p>
                 </div>
               </div>
 
@@ -332,14 +332,14 @@ export default function SuperAdminRealTimeDashboard() {
                 </div>
                 <button 
                   onClick={fetchData}
-                  className={`p-2 sm:p-2.5 bg-white border border-slate-200 rounded-lg sm:rounded-xl shadow-sm hover:bg-slate-50 transition-all ${isRefreshing ? 'animate-spin' : ''}`}
+                  className={`p-2 sm:p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg sm:rounded-xl shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all ${isRefreshing ? 'animate-spin' : ''}`}
                 >
-                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
+                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 dark:text-slate-500" />
                 </button>
-                <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-slate-200 rounded-lg sm:rounded-xl flex items-center gap-2 sm:gap-3 shadow-sm">
+                <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg sm:rounded-xl flex items-center gap-2 sm:gap-3 shadow-sm transition-colors">
                   <div className="flex flex-col items-end">
-                    <p className="text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest">Throughput</p>
-                    <p className="text-xs sm:text-base font-black text-slate-900 font-mono tracking-tighter">{(stats?.global_throughput || 0).toLocaleString()}</p>
+                    <p className="text-[7px] sm:text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Throughput</p>
+                    <p className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono tracking-tighter">{(stats?.global_throughput || 0).toLocaleString()}</p>
                   </div>
                   <div className="w-6 h-6 sm:w-8 sm:h-8 bg-emerald-500/10 rounded-md sm:rounded-lg flex items-center justify-center border border-emerald-500/20">
                     <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
@@ -357,26 +357,39 @@ export default function SuperAdminRealTimeDashboard() {
             {/* Global Statistics Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
               {[
-                { label: "Total Organizations", value: stats?.total_organizations?.toString() || "0", sub: "Registered Tenants", icon: Building2, trend: "up" },
-                { label: "Active Nodes", value: stats?.active_nodes?.toLocaleString() || "0", sub: "Global Registry", icon: Users, trend: "up" },
-                { label: "System Health", value: stats?.system_health || "99.9%", sub: "Cluster Status", icon: Server, trend: "stable" },
-                { label: "Compliance Score", value: stats?.compliance_score || "A+", sub: "ISO-17025", icon: ShieldCheck, trend: "up" },
+                { label: "Total Organizations", value: stats?.total_organizations?.toString() || "0", sub: "Registered Tenants", icon: Building2, trend: "up", color: "indigo" },
+                { label: "Active Nodes", value: stats?.active_nodes?.toLocaleString() || "0", sub: "Global Registry", icon: Users, trend: "up", color: "blue" },
+                { label: "System Health", value: stats?.system_health || "100%", sub: "Cluster Status", icon: Server, trend: "stable", color: "emerald" },
+                { label: "Compliance Score", value: stats?.compliance_score || "A+", sub: "ISO-17025", icon: ShieldCheck, trend: "up", color: "amber" },
               ].map((stat, i) => (
-                <div key={i} className="bg-white border border-slate-200/60 p-2 sm:p-4 rounded-xl shadow-sm group hover:border-primary/40 transition-all flex flex-col justify-between relative overflow-hidden">
+                <div 
+                  key={i} 
+                  className={`backdrop-blur-sm border p-2 sm:p-4 rounded-xl shadow-sm group hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden ${
+                    stat.color === 'indigo' ? 'bg-indigo-50/40 border-indigo-100/50 dark:bg-indigo-950/20 dark:border-indigo-900/40' :
+                    stat.color === 'blue' ? 'bg-blue-50/40 border-blue-100/50 dark:bg-blue-950/20 dark:border-blue-900/40' :
+                    stat.color === 'emerald' ? 'bg-emerald-50/40 border-emerald-100/50 dark:bg-emerald-950/20 dark:border-emerald-900/40' :
+                    'bg-amber-50/40 border-amber-100/50 dark:bg-amber-950/20 dark:border-amber-900/40'
+                  }`}
+                >
                   <div className="flex justify-between items-start mb-1 sm:mb-2">
-                    <div className="p-1 sm:p-1.5 bg-slate-50 group-hover:bg-primary/5 rounded-md transition-colors z-10">
-                      <stat.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary" />
+                    <div className={`p-1 sm:p-1.5 rounded-md transition-colors z-10 ${
+                      stat.color === 'indigo' ? 'bg-indigo-100/50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400' :
+                      stat.color === 'blue' ? 'bg-blue-100/50 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400' :
+                      stat.color === 'emerald' ? 'bg-emerald-100/50 text-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                      'bg-amber-100/50 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400'
+                    }`}>
+                      <stat.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     </div>
                     <span className={`text-[7px] sm:text-[9px] font-bold z-10 ${stat.trend === 'up' ? 'text-emerald-500' : 'text-slate-400'} uppercase tracking-widest`}>
                       {stat.trend === 'up' ? '+1' : 'OPT'}
                     </span>
                   </div>
                   <div className="z-10">
-                    <p className="text-slate-400 text-[6px] sm:text-[8px] font-bold uppercase tracking-[0.1em] mb-0.5">{stat.label}</p>
-                    <p className="text-base sm:text-xl font-bold text-slate-900 tabular-nums tracking-tighter">{stat.value}</p>
+                    <p className="text-slate-400 dark:text-slate-500 text-[6px] sm:text-[8px] font-bold uppercase tracking-[0.1em] mb-0.5">{stat.label}</p>
+                    <p className="text-base sm:text-xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tighter">{stat.value}</p>
                   </div>
-                  <div className="absolute -right-2 -bottom-2 opacity-[0.02] group-hover:opacity-[0.04]">
-                    <stat.icon className="w-8 h-8 sm:w-12 sm:h-12 text-primary" />
+                  <div className="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
+                    <stat.icon className="w-8 h-8 sm:w-12 sm:h-12" />
                   </div>
                 </div>
               ))}
@@ -387,7 +400,7 @@ export default function SuperAdminRealTimeDashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-1.5 h-1.5 bg-primary rounded-full animate-ping" />
-                  <h2 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-widest">Master Registry</h2>
+                  <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Master Registry</h2>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="relative group/search hidden xs:block">
@@ -395,7 +408,7 @@ export default function SuperAdminRealTimeDashboard() {
                     <input 
                       type="text" 
                       placeholder={`Search ${organizations.length} orgs...`} 
-                      className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-bold w-40 sm:w-48 outline-none focus:border-primary/40 transition-colors shadow-sm"
+                      className="pl-8 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-[10px] font-bold w-40 sm:w-48 outline-none focus:border-primary/40 dark:text-white transition-colors shadow-sm"
                     />
                   </div>
                 </div>
@@ -403,47 +416,49 @@ export default function SuperAdminRealTimeDashboard() {
 
               <div className="space-y-2 sm:space-y-3">
                 {organizations.length === 0 ? (
-                  <div className="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm">
-                    <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center mx-auto border border-slate-100 mb-3">
-                      <Building2 className="w-5 h-5 text-slate-300" />
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center shadow-sm transition-colors">
+                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto border border-slate-100 dark:border-slate-700 mb-3">
+                      <Building2 className="w-5 h-5 text-slate-300 dark:text-slate-600" />
                     </div>
-                    <h3 className="text-xs font-black text-slate-900 uppercase">No Organizations Detected</h3>
-                    <p className="text-[9px] font-bold text-slate-400 mt-1">Use provision button to onboard tenants.</p>
+                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase">No Organizations Detected</h3>
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">Use provision button to onboard tenants.</p>
                   </div>
                 ) : (
                   organizations.map((org) => (
-                    <div key={org.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-all group">
+                    <div 
+                      key={org.id} 
+                      className={`transition-all duration-300 border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 ${expandedOrg === org.id ? 'bg-slate-50/50 dark:bg-slate-800/30' : 'bg-white dark:bg-slate-900'}`}
+                    >
                       <div 
                         className="p-3 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 cursor-pointer"
                         onClick={() => setExpandedOrg(expandedOrg === org.id ? null : org.id)}
                       >
                         <div className="flex items-center gap-3 sm:gap-4">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:border-primary/30 transition-colors shrink-0">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700 transition-colors shrink-0">
                             <Building2 className="w-4 h-4 text-slate-400 group-hover:text-primary transition-colors" />
                           </div>
                           <div>
-                            <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-primary transition-colors">{org.name}</h3>
+                            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{org.name}</h3>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest">{org.location || 'Remote'}</span>
                               <div className="w-0.5 h-0.5 bg-slate-300 rounded-full" />
                               <span className="text-[8px] sm:text-[9px] font-bold text-primary uppercase tracking-widest">{org.license_tier} Tier</span>
                             </div>
                           </div>
-
                         </div>
 
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-6 items-center">
                           <div className="hidden sm:block">
-                            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Analyses</p>
+                            <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Analyses</p>
                             <div className="flex items-center gap-1">
-                              <p className="text-xs sm:text-sm font-bold text-slate-900">{org.analyses_count.toLocaleString()}</p>
+                              <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{org.analyses_count.toLocaleString()}</p>
                               <span className={`text-[8px] font-bold ${org.growth_rate.startsWith('+') ? 'text-emerald-500' : 'text-rose-500'}`}>{org.growth_rate}</span>
                             </div>
                           </div>
 
                           <div>
-                            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Users</p>
-                            <p className="text-xs sm:text-sm font-bold text-slate-900">{org.users_count} Nodes</p>
+                            <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Users</p>
+                            <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{org.users_count} Nodes</p>
                           </div>
 
                           <div>
@@ -462,27 +477,27 @@ export default function SuperAdminRealTimeDashboard() {
 
                       {/* Drill-down Admin Data */}
                       {expandedOrg === org.id && (
-                        <div className="px-3 sm:px-5 pb-4 sm:pb-5 pt-3 border-t border-slate-100 bg-slate-50/50">
+                        <div className="px-3 sm:px-5 pb-4 sm:pb-5 pt-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                             <div className="lg:col-span-2 space-y-3">
                               <div className="flex items-center gap-2 mb-2 sm:mb-3">
                                 <Users className="w-3 h-3 text-primary" />
-                                <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Authorized Personnel</h4>
+                                <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Authorized Personnel</h4>
                               </div>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                                 {org.admins.length > 0 ? org.admins.map((admin, idx) => (
-                                  <div key={idx} className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between group/admin hover:border-primary/30 shadow-sm transition-all">
+                                  <div key={idx} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-between group/admin hover:border-primary/30 shadow-sm transition-all">
                                     <div className="flex items-center gap-2 sm:gap-3">
-                                      <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-[10px] font-black text-primary border border-primary/10">
+                                      <div className="w-8 h-8 rounded-lg bg-primary/5 dark:bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary border border-primary/10 dark:border-primary/20">
                                         {admin.full_name.charAt(0)}
                                       </div>
                                       <div className="flex flex-col">
-                                        <h4 className="text-[10px] font-bold text-slate-900 leading-none">{admin.full_name}</h4>
-                                        <p className="text-[9px] text-slate-400 font-medium mt-0.5">{admin.email}</p>
+                                        <h4 className="text-[10px] font-bold text-slate-900 dark:text-white leading-none">{admin.full_name}</h4>
+                                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">{admin.email}</p>
                                         <div className="flex items-center gap-2 mt-1.5">
-                                          <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded border border-slate-100 group/pass">
-                                             <Lock className="w-2.5 h-2.5 text-slate-300" />
-                                             <span className="text-[9px] font-mono font-bold text-slate-600 tracking-tighter min-w-[60px]">
+                                          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-100 dark:border-slate-800 group/pass">
+                                             <Lock className="w-2.5 h-2.5 text-slate-300 dark:text-slate-600" />
+                                             <span className="text-[9px] font-mono font-bold text-slate-600 dark:text-slate-400 tracking-tighter min-w-[60px]">
                                                {revealedPasswords[admin.id] ? (admin.recovery_password || "No Key Saved") : "••••••••"}
                                              </span>
                                              <button 
@@ -516,31 +531,29 @@ export default function SuperAdminRealTimeDashboard() {
                                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">No admins registered.</p>
                                 )}
                               </div>
-                            </div>
-
-                            {/* Org Settings Summary */}
-                            <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 shadow-sm">
+                                                {/* Org Settings Summary */}
+                            <div className="bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-3 sm:p-4 shadow-sm transition-colors">
                               <div className="flex items-center gap-2 mb-3">
                                 <Activity className="w-3 h-3 text-amber-500" />
-                                <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Compliance</h4>
+                                <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Compliance</h4>
                               </div>
                               <div className="space-y-2.5">
                                 <div className="flex justify-between items-center">
-                                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">License</span>
+                                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">License</span>
                                   <span className="text-[9px] font-black text-emerald-500 uppercase">{org.license_expiry ? new Date(org.license_expiry).toLocaleDateString() : 'Infinite'}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Cluster ID</span>
+                                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Cluster ID</span>
                                   <span className="text-[9px] font-mono text-primary font-bold truncate max-w-[80px]">{org.id}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Locality</span>
-                                  <span className="text-[9px] font-black text-slate-900 uppercase">{org.location || 'Global'}</span>
+                                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Locality</span>
+                                  <span className="text-[9px] font-black text-slate-900 dark:text-white uppercase">{org.location || 'Global'}</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 mt-3">
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); handleRemoteIntervention(org.name); }}
-                                    className="py-2 bg-slate-900 hover:bg-slate-800 text-[8px] font-black text-white uppercase tracking-widest rounded-lg transition-all active:scale-95 shadow-md shadow-slate-900/20"
+                                    className="py-2 bg-slate-900 dark:bg-slate-950 hover:bg-slate-800 dark:hover:bg-slate-900/80 text-[8px] font-black text-white uppercase tracking-widest rounded-lg transition-all active:scale-95 shadow-md shadow-slate-900/20"
                                   >
                                     Remote
                                   </button>
@@ -556,17 +569,15 @@ export default function SuperAdminRealTimeDashboard() {
                                     }}
                                     className={`py-2 border rounded-lg text-[8px] font-black uppercase tracking-widest transition-all active:scale-95 ${
                                       org.status === 'active' 
-                                        ? 'bg-white border-rose-100 hover:bg-rose-50 text-rose-500 shadow-sm' 
+                                        ? 'bg-white dark:bg-slate-900 border-rose-100 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-500 shadow-sm' 
                                         : 'bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600 shadow-emerald-500/20 shadow-lg'
                                     }`}
                                   >
                                     {org.status === 'active' ? 'Suspend' : 'Activate'}
                                   </button>
-
-
                                 </div>
                               </div>
-                            </div>
+                            </div>          </div>
                           </div>
                         </div>
                       )}

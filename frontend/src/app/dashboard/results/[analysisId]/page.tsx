@@ -94,23 +94,23 @@ const STATUS_COLORS: Record<
   { bg: string; text: string; label: string }
 > = {
   completed: {
-    bg: "bg-emerald-100 text-emerald-700",
-    text: "text-emerald-700",
+    bg: "bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400",
+    text: "text-emerald-700 dark:text-emerald-400",
     label: "Completed",
   },
   processing: {
-    bg: "bg-blue-100 text-blue-700",
-    text: "text-blue-700",
+    bg: "bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400",
+    text: "text-blue-700 dark:text-blue-400",
     label: "Processing",
   },
   failed: {
-    bg: "bg-rose-100 text-rose-700",
-    text: "text-rose-700",
+    bg: "bg-rose-100 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400",
+    text: "text-rose-700 dark:text-rose-400",
     label: "Failed",
   },
   pending: {
-    bg: "bg-amber-100 text-amber-700",
-    text: "text-amber-700",
+    bg: "bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400",
+    text: "text-amber-700 dark:text-amber-400",
     label: "Pending",
   },
 };
@@ -267,36 +267,36 @@ MESIN: YOLOv8 SENSITIVE NODE`;
               <div className="flex items-center gap-3">
                 <Link
                   href="/dashboard/history"
-                  className="w-8 h-8 rounded-sm bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-all shadow-sm group"
+                  className="w-8 h-8 rounded-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm group"
                 >
-                  <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:text-primary transition-colors" />
+                  <ArrowLeft className="h-4 w-4 text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors" />
                 </Link>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase leading-none">
+                    <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
                       {t("results.title")}
                     </h1>
                     <span
-                      className={`px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-widest border shadow-sm ${
+                      className={`px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-widest border shadow-sm transition-colors ${
                         analysis.status === "completed"
-                          ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                          : "bg-slate-50 text-slate-500 border-slate-200"
+                          ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50"
+                          : "bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700"
                       }`}
                     >
                       {statusInfo.label}
                     </span>
                   </div>
-                  <div className="text-[9px] text-slate-400 mt-1 font-bold uppercase tracking-wider flex items-center gap-2">
+                  <div className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 font-bold uppercase tracking-wider flex items-center gap-2">
                     <span>
                       {t("results.sample")}:{" "}
-                      <span className="text-slate-900 font-black">
+                      <span className="text-slate-900 dark:text-white font-black">
                         {analysis.sample_id}
                       </span>
                     </span>
-                    <span className="w-1 h-1 rounded-full bg-slate-200" />
+                    <span className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-800" />
                     <span>
                       {t("results.protocol")}:{" "}
-                      <span className="text-slate-900 font-black">
+                      <span className="text-slate-900 dark:text-white font-black">
                         {analysis.media_type}
                       </span>
                     </span>
@@ -312,7 +312,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                     text={t("results.auditProtocol")}
                   />
                 </div>
-                <div className="flex bg-slate-50 p-1 rounded-sm border border-slate-200">
+                <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-sm border border-slate-200 dark:border-slate-700 transition-colors">
                   <button
                     onClick={() => setViewMode("audit")}
                     className={`px-3 py-1.5 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === "audit" ? "bg-slate-900 text-white shadow-md shadow-slate-900/10" : "text-slate-400 hover:text-slate-900"}`}
@@ -328,7 +328,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                 </div>
                 <button
                   onClick={handleExportPdf}
-                  className="px-3 py-2 bg-white border border-slate-200 rounded-sm text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
+                  className="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2 shadow-sm"
                 >
                   <Download className="h-3.5 w-3.5" />
                   {t("results.exportProtocol")}
@@ -338,8 +338,8 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                   disabled={limsLoading || !!limsResult}
                   className={`px-3 py-2 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm ${
                     limsResult
-                      ? "bg-indigo-50 text-indigo-500 border-indigo-100 cursor-not-allowed"
-                      : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                      ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-500 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/50 cursor-not-allowed"
+                      : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                   }`}
                 >
                   {limsLoading ? (
@@ -371,15 +371,15 @@ MESIN: YOLOv8 SENSITIVE NODE`;
             {analysis.warnings &&
               analysis.warnings.length > 0 &&
               viewMode === "audit" && (
-                <div className="bg-rose-50/50 border-2 border-rose-100 p-4 rounded-lg flex items-start gap-4 mb-8">
-                  <div className="p-2.5 bg-rose-500 rounded-sm shadow-lg shadow-rose-200 flex-shrink-0">
+                <div className="bg-rose-50/50 dark:bg-rose-950/20 border-2 border-rose-100 dark:border-rose-900/40 p-4 rounded-lg flex items-start gap-4 mb-8 transition-colors">
+                  <div className="p-2.5 bg-rose-500 rounded-sm shadow-lg shadow-rose-200 dark:shadow-rose-900/40 flex-shrink-0">
                     <AlertTriangle className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1.5">
+                    <p className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-1.5">
                       {t("results.neuralSensitivityAdvisory")}
                     </p>
-                    <ul className="text-xs text-rose-700/80 font-bold space-y-1">
+                    <ul className="text-xs text-rose-700/80 dark:text-rose-300 font-bold space-y-1">
                       {analysis.warnings.map((warning, idx) => (
                         <li
                           key={idx}
@@ -395,44 +395,44 @@ MESIN: YOLOv8 SENSITIVE NODE`;
 
             {/* LIMS Success Card */}
             {limsResult && (
-              <div className="bg-indigo-50/50 border-2 border-indigo-100 p-5 rounded-lg flex items-start gap-5 mb-8 animate-in slide-in-from-top duration-500">
-                <div className="p-3 bg-indigo-600 rounded-sm shadow-lg shadow-indigo-200 flex-shrink-0">
+              <div className="bg-indigo-50/50 dark:bg-indigo-950/20 border-2 border-indigo-100 dark:border-indigo-900/40 p-5 rounded-lg flex items-start gap-5 mb-8 animate-in slide-in-from-top duration-500 transition-colors">
+                <div className="p-3 bg-indigo-600 rounded-sm shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40 flex-shrink-0">
                   <Database className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                    <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
                       {t("results.transmittedToLims")}
                     </p>
-                    <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[8px] font-black rounded-sm uppercase">
+                    <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-[8px] font-black rounded-sm uppercase">
                       {t("results.sampleManager")}
                     </span>
-                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-black rounded-sm uppercase">
+                    <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-[8px] font-black rounded-sm uppercase">
                       {t("results.simulatedDemo")}
                     </span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     <div>
-                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                      <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
                         {t("results.limsRecordId")}
                       </p>
-                      <p className="text-xs font-black text-slate-900 font-mono">
+                      <p className="text-xs font-black text-slate-900 dark:text-white font-mono">
                         {limsResult.lims_record_id}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                      <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
                         {t("results.transmissionTime")}
                       </p>
-                      <p className="text-xs font-bold text-slate-700">
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
                         {new Date(limsResult.timestamp).toLocaleString()}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                      <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
                         {t("results.nextLimsAction")}
                       </p>
-                      <p className="text-xs font-bold text-slate-700">
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
                         {limsResult.next_action}
                       </p>
                     </div>
@@ -477,31 +477,31 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                   ].map((item, i) => (
                     <div
                       key={i}
-                      className="bg-white border border-slate-200/60 p-2 sm:p-2.5 flex flex-col justify-between rounded-sm shadow-sm group hover:shadow-md transition-all"
+                      className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-2 sm:p-2.5 flex flex-col justify-between rounded-sm shadow-sm group hover:shadow-md transition-all"
                     >
                       <div className="flex items-center justify-between mb-1.5">
-                        <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
+                        <p className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                           {item.label}
                         </p>
                         <div
                           className={`w-5 h-5 rounded-sm flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm ${
                             item.color === "primary"
-                              ? "bg-primary/5 text-primary border border-primary/10"
+                              ? "bg-primary/5 dark:bg-primary/10 text-primary border border-primary/10 dark:border-primary/20"
                               : item.color === "indigo"
-                                ? "bg-indigo-50 text-indigo-500 border border-indigo-100"
+                                ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-500 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50"
                                 : item.color === "emerald"
-                                  ? "bg-emerald-50 text-emerald-500 border border-emerald-100"
-                                  : "bg-rose-50 text-rose-500 border border-rose-100"
+                                  ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50"
+                                  : "bg-rose-50 dark:bg-rose-950/30 text-rose-500 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50"
                           }`}
                         >
                           <item.icon className="h-2.5 w-2.5" />
                         </div>
                       </div>
                       <div>
-                        <p className="text-base sm:text-lg font-black text-slate-900 tracking-tight mb-0">
+                        <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight mb-0">
                           {item.value}
                         </p>
-                        <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">
+                        <p className="text-[7px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                           {item.sub}
                         </p>
                       </div>
@@ -511,7 +511,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
 
                 {/* Compliance & Traceability Metadata (Audit Matrix View) */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                  <div className="bg-white border border-slate-200/60 p-3 rounded-sm shadow-sm">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 rounded-sm shadow-sm transition-colors">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {t("results.incubationParameters")}
                     </p>
@@ -520,7 +520,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                         <span className="text-[9px] font-bold text-slate-500 uppercase">
                           {t("results.temp")}
                         </span>
-                        <span className="text-[9px] font-black text-slate-900">
+                        <span className="text-[9px] font-black text-slate-900 dark:text-white">
                           {analysis.incubation_temp ?? "—"} °C
                         </span>
                       </div>
@@ -528,25 +528,25 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                         <span className="text-[9px] font-bold text-slate-500 uppercase">
                           {t("results.time")}
                         </span>
-                        <span className="text-[9px] font-black text-slate-900">
+                        <span className="text-[9px] font-black text-slate-900 dark:text-white">
                           {analysis.incubation_time_hours ?? "—"}{" "}
                           {t("results.hours")}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white border border-slate-200/60 p-3 rounded-sm shadow-sm">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 rounded-sm shadow-sm transition-colors">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {t("results.methodology")}
                     </p>
-                    <p className="text-[10px] font-black text-slate-900">
+                    <p className="text-[10px] font-black text-slate-900 dark:text-white">
                       {analysis.method_standard ?? "ISO 4833-1:2013"}
                     </p>
                     <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                       {t("results.standardReference")}
                     </p>
                   </div>
-                  <div className="bg-white border border-slate-200/60 p-3 rounded-sm shadow-sm">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 rounded-sm shadow-sm transition-colors">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {t("results.traceability")}
                     </p>
@@ -555,7 +555,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                         <span className="text-[9px] font-bold text-slate-500 uppercase">
                           {t("results.batchLot")}
                         </span>
-                        <span className="text-[9px] font-black text-slate-900">
+                        <span className="text-[9px] font-black text-slate-900 dark:text-white">
                           {analysis.media_batch_number || "—"}
                         </span>
                       </div>
@@ -563,13 +563,13 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                         <span className="text-[9px] font-bold text-slate-500 uppercase">
                           {t("results.incubatorId")}
                         </span>
-                        <span className="text-[9px] font-black text-slate-900">
+                        <span className="text-[9px] font-black text-slate-900 dark:text-white">
                           {analysis.incubator_id || "—"}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white border border-slate-200/60 p-3 rounded-sm shadow-sm">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 rounded-sm shadow-sm transition-colors">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {t("results.calculationData")}
                     </p>
@@ -578,7 +578,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                         <span className="text-[9px] font-bold text-slate-500 uppercase">
                           {t("results.dilution")}
                         </span>
-                        <span className="text-[9px] font-black text-slate-900">
+                        <span className="text-[9px] font-black text-slate-900 dark:text-white">
                           1:{1 / analysis.dilution_factor}
                         </span>
                       </div>
@@ -586,7 +586,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                         <span className="text-[9px] font-bold text-slate-500 uppercase">
                           {t("results.volMl")}
                         </span>
-                        <span className="text-[9px] font-black text-slate-900">
+                        <span className="text-[9px] font-black text-slate-900 dark:text-white">
                           {analysis.plated_volume_ml}
                         </span>
                       </div>
@@ -597,7 +597,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                   {/* Left Column - 50% */}
                   <div className="lg:col-span-6 flex flex-col gap-4">
-                    <div className="bg-white border border-slate-200/60 overflow-hidden rounded-sm shadow-sm">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 overflow-hidden rounded-sm shadow-sm transition-colors">
                       <div className="px-3 py-1.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-sm bg-slate-900 flex items-center justify-center">
@@ -608,7 +608,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                           </h3>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1.5 bg-white rounded-sm border border-slate-200 p-0.5 shadow-sm">
+                          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-0.5 shadow-sm transition-colors">
                             <button
                               onClick={() =>
                                 setZoom((z) => Math.max(0.5, z - 0.1))
@@ -634,7 +634,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                             className={`px-2 py-1 rounded-sm text-[8px] font-black uppercase tracking-tighter transition-all flex items-center gap-1.5 border shadow-sm ${
                               showAnnotations
                                 ? "bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/10"
-                                : "bg-white text-slate-400 border-slate-200 hover:text-slate-900"
+                                : "bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white"
                             }`}
                           >
                             {showAnnotations ? (
@@ -650,7 +650,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                       </div>
                       <div className="relative bg-slate-50 h-[360px] lg:h-[510px] flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing group p-0">
                         <div
-                          className="relative transition-all duration-300 ease-out shadow-lg shadow-slate-900/5 overflow-hidden bg-white w-full h-full flex items-center justify-center"
+                          className="relative transition-all duration-300 ease-out shadow-lg shadow-slate-900/5 overflow-hidden bg-white dark:bg-slate-950 w-full h-full flex items-center justify-center transition-colors"
                           style={{
                             transform: `scale(${zoom})`,
                             transformOrigin: "center center",
@@ -805,7 +805,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                     </div>
 
                     {/* Registry List/Table */}
-                    <div className="bg-white border border-slate-200/60 overflow-hidden rounded-sm shadow-sm">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 overflow-hidden rounded-sm shadow-sm transition-colors">
                       <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <div className="w-7 h-7 rounded-md bg-slate-900 flex items-center justify-center" />
@@ -820,7 +820,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
 
                       <div className="overflow-x-auto max-h-[320px] scrollbar-hide">
                         <table className="w-full text-left">
-                          <thead className="bg-white/80 backdrop-blur-md sticky top-0 z-10 border-b border-slate-100">
+                          <thead className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-10 border-b border-slate-100 dark:border-slate-800 transition-colors">
                             <tr>
                               {[
                                 t("results.class"),
@@ -884,7 +884,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
 
                   {/* Right 6 - Sidebar Analysis */}
                   <div className="lg:col-span-6 flex flex-col gap-4">
-                    <div className="bg-white border border-slate-200/60 p-4 rounded-md shadow-sm">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-4 rounded-md shadow-sm transition-colors">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-sm bg-slate-900 flex items-center justify-center">
@@ -996,7 +996,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                     </div>
 
                     {/* ISO Uncertainty */}
-                    <div className="bg-white border border-slate-200/60 p-4 rounded-md shadow-sm">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-4 rounded-md shadow-sm transition-colors">
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-6 h-6 rounded-sm bg-slate-900 flex items-center justify-center">
                           <Shield className="h-3 w-3 text-primary" />
@@ -1006,33 +1006,33 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                         </h3>
                       </div>
                       <div className="space-y-4">
-                        <div className="p-3 bg-slate-50 border border-slate-100 rounded-md">
-                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                        <div className="p-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-md">
+                          <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">
                             {t("results.uncertaintyU")}
                           </p>
-                          <p className="text-sm font-black text-slate-900">
+                          <p className="text-sm font-black text-slate-900 dark:text-white">
                             {analysis.uncertainty_u?.toLocaleString() ||
                               "16,307.57"}{" "}
                             CFU/mL
                           </p>
-                          <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">
+                          <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-1">
                             {t("results.gumProtocol")} (k=2, 95% CI)
                           </p>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                          <div className="p-2 border border-slate-100 rounded-sm">
-                            <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                          <div className="p-2 border border-slate-100 dark:border-slate-800 rounded-sm">
+                            <p className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
                               {t("results.sr")}:
                             </p>
-                            <p className="text-[10px] font-black text-slate-700">
+                            <p className="text-[10px] font-black text-slate-700 dark:text-slate-300">
                               0.012 log₁₀
                             </p>
                           </div>
-                          <div className="p-2 border border-slate-100 rounded-sm">
-                            <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                          <div className="p-2 border border-slate-100 dark:border-slate-800 rounded-sm">
+                            <p className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
                               {t("results.sR")}:
                             </p>
-                            <p className="text-[10px] font-black text-slate-700">
+                            <p className="text-[10px] font-black text-slate-700 dark:text-slate-300">
                               0.145 log₁₀
                             </p>
                           </div>
@@ -1040,8 +1040,8 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                       </div>
                     </div>
 
-                    <div className="bg-white border border-slate-200/60 p-4 rounded-md shadow-sm">
-                      <h3 className="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-4 rounded-md shadow-sm transition-colors">
+                      <h3 className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                         <div className="w-1.5 h-3 bg-primary rounded-sm" />
                         {t("results.neuralLegend")}
                       </h3>
@@ -1049,17 +1049,17 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                         {Object.entries(CLASS_LABELS).map(([key, label]) => (
                           <div
                             key={key}
-                            className="flex items-center justify-between p-1.5 hover:bg-slate-50 rounded-sm transition-colors"
+                            className="flex items-center justify-between p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-sm transition-colors"
                           >
                             <div className="flex items-center gap-2">
                               <div
                                 className={`w-2 h-2 rounded-sm ${CLASS_COLORS[key as DetectionClass]}`}
                               />
-                              <span className="text-[9px] font-bold text-slate-700">
+                              <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300">
                                 {label}
                               </span>
                             </div>
-                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                            <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                               {key.includes("colony")
                                 ? t("results.countedSpecimen")
                                 : t("results.rejectedArtifact")}
@@ -1073,7 +1073,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
               </>
             ) : (
               /* Certificate of Analysis View */
-              <div className="max-w-3xl mx-auto bg-white p-8 sm:p-12 border-2 border-slate-900 rounded-none shadow-xl relative overflow-hidden animate-in zoom-in-95 duration-700 print:shadow-none print:border-none print:p-0 print:max-w-full">
+              <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 border-2 border-slate-900 dark:border-slate-700 rounded-none shadow-xl relative overflow-hidden animate-in zoom-in-95 duration-700 print:shadow-none print:border-none print:p-0 print:max-w-full transition-colors">
                 <button 
                   onClick={() => window.print()}
                   className="absolute top-4 right-4 px-3 py-1.5 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-slate-800 transition-colors print:hidden"
@@ -1083,27 +1083,27 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                 </button>
                 {/* Watermark/Seal */}
                 <div className="absolute top-6 sm:top-10 right-6 sm:right-10 w-20 sm:w-32 h-20 sm:h-32 opacity-[0.03] rotate-12 pointer-events-none">
-                  <Shield className="w-full h-full text-slate-900" />
+                  <Shield className="w-full h-full text-slate-900 dark:text-slate-100" />
                 </div>
 
                 {/* Header */}
-                <div className="border-b-2 border-slate-900 pb-4 sm:pb-6 mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mt-8 sm:mt-0">
+                <div className="border-b-2 border-slate-900 dark:border-slate-700 pb-4 sm:pb-6 mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mt-8 sm:mt-0 transition-colors">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <FlaskConical className="h-5 w-5 sm:h-6 sm:w-6 text-slate-900" />
-                      <h2 className="text-lg sm:text-xl font-black tracking-tighter uppercase text-slate-900">
+                      <FlaskConical className="h-5 w-5 sm:h-6 sm:w-6 text-slate-900 dark:text-white" />
+                      <h2 className="text-lg sm:text-xl font-black tracking-tighter uppercase text-slate-900 dark:text-white">
                         ColonyAI Analytics
                       </h2>
                     </div>
-                    <p className="text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                    <p className="text-[7px] sm:text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
                       Precision Microbiology Diagnostic Suite
                     </p>
                   </div>
-                  <div className="sm:text-right border-t sm:border-t-0 pt-4 sm:pt-0 border-slate-100">
-                    <h3 className="text-lg sm:text-xl font-serif font-bold text-slate-900 uppercase tracking-[0.1em]">
+                  <div className="sm:text-right border-t sm:border-t-0 pt-4 sm:pt-0 border-slate-100 dark:border-slate-800">
+                    <h3 className="text-lg sm:text-xl font-serif font-bold text-slate-900 dark:text-white uppercase tracking-[0.1em]">
                       Certificate of Analysis
                     </h3>
-                    <p className="text-[7px] sm:text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1.5">
+                    <p className="text-[7px] sm:text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1.5">
                       Ref No: {analysis.id.substring(0, 13).toUpperCase()}
                     </p>
                   </div>
@@ -1113,7 +1113,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10 mb-6 sm:mb-10">
                   <div className="space-y-4 sm:space-y-5">
                     <section>
-                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">
+                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
                         {t("results.sampleProvenance")}
                       </h4>
                       <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
@@ -1121,7 +1121,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                           <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
                             {t("results.sample")} ID
                           </span>
-                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase text-right">
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase text-right">
                             {analysis.sample_id}
                           </span>
                         </div>
@@ -1129,15 +1129,15 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                           <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
                             {t("results.protocol")}
                           </span>
-                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase text-right">
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase text-right">
                             {analysis.media_type}
                           </span>
                         </div>
                         <div className="flex justify-between gap-4">
-                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase">
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase">
                             {t("results.timestamp")}
                           </span>
-                          <span className="text-[8px] sm:text-[10px] font-black text-slate-900 uppercase text-right">
+                          <span className="text-[8px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase text-right">
                             {new Date(analysis.created_at).toLocaleString()}
                           </span>
                         </div>
@@ -1145,7 +1145,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                     </section>
 
                     <section>
-                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">
+                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
                         {t("results.isoCompliance")}
                       </h4>
                       <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
@@ -1187,10 +1187,10 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                     </section>
 
                     <section>
-                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">
+                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
                         {t("results.neuralSpectralResult")}
                       </h4>
-                      <div className="p-4 bg-white rounded-none border-2 border-slate-200 flex flex-col items-center justify-center text-center">
+                      <div className="p-4 bg-white dark:bg-slate-950 rounded-none border-2 border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center transition-colors">
                         <p className="text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">
                           Final Quantitative Output
                         </p>
@@ -1206,7 +1206,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
 
                   <div className="space-y-4 sm:space-y-5">
                     <section>
-                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">
+                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
                         {t("results.statisticalIntegrity")}
                       </h4>
                       <div className="space-y-3 sm:space-y-4">
@@ -1238,7 +1238,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                     </section>
 
                     <section>
-                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 pb-2">
+                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
                         {t("results.classificationDistribution")}
                       </h4>
                       <div className="h-24 sm:h-32">
@@ -1307,7 +1307,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
               <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                 01
               </span>
-              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
                 Overview
               </h2>
             </div>
@@ -1323,7 +1323,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
               <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                 02
               </span>
-              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
                 {t("results.auditProtocol")}
               </h2>
             </div>
@@ -1350,7 +1350,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                     {step.id}
                   </span>
                   <div className="space-y-0.5">
-                    <h4 className="text-[10px] font-bold text-slate-900">
+                    <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">
                       {step.title}
                     </h4>
                     <p className="text-[9px] text-slate-500 leading-relaxed font-medium">

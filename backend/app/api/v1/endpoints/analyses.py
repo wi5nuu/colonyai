@@ -209,6 +209,11 @@ def _build_brief_response(analysis: Analysis) -> AnalysisBriefResponse:
         is_valid_for_reporting=is_valid,
         created_at=analysis.created_at,
         updated_at=analysis.updated_at,
+        user=AnalysisUserBrief(
+            full_name=analysis.user.full_name,
+            email=analysis.user.email,
+            organization_name=analysis.user.organization.name if analysis.user and getattr(analysis.user, 'organization', None) else "ColonyAI General",
+        ) if analysis.user else None,
     )
 
 
@@ -635,7 +640,10 @@ async def list_analyses(
 
     # Get paginated results
     offset = (page - 1) * page_size
-    query = select(Analysis).options(selectinload(Analysis.detections), joinedload(Analysis.user))
+    query = select(Analysis).options(
+        selectinload(Analysis.detections), 
+        joinedload(Analysis.user).joinedload(User.organization)
+    )
     if base_conditions:
         query = query.where(and_(*base_conditions))
     query = query.order_by(desc(Analysis.created_at)).offset(offset).limit(page_size)
@@ -765,8 +773,12 @@ async def get_dashboard_stats(
         weekly_trend.append(WeeklyTrendItem(day=day_name, analyses=day_count.scalar() or 0))
 
     # ── 6. Recent Analyses ──
-    from sqlalchemy.orm import selectinload
-    recent_query = select(Analysis).options(selectinload(Analysis.detections)).order_by(desc(Analysis.created_at)).limit(5)
+    from sqlalchemy.orm import selectinload, joinedload
+    from app.models import User
+    recent_query = select(Analysis).options(
+        selectinload(Analysis.detections),
+        joinedload(Analysis.user).joinedload(User.organization)
+    ).order_by(desc(Analysis.created_at)).limit(5)
     recent_result = await db.execute(_apply_conditions(recent_query))
     recent_analyses = recent_result.scalars().unique().all()
 
@@ -817,7 +829,10 @@ async def get_analysis(
     result = await db.execute(
         select(Analysis)
         .where(and_(*query_conditions))
-        .options(selectinload(Analysis.detections), joinedload(Analysis.user))
+        .options(
+            selectinload(Analysis.detections), 
+            joinedload(Analysis.user).joinedload(User.organization)
+        )
     )
     analysis = result.scalars().unique().first()
 

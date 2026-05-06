@@ -12,7 +12,7 @@ from pathlib import Path
 from app.core.security import get_current_user, require_role
 from app.core.config import settings
 from app.core.database import get_db
-from app.models import Analysis, ColonyDetection, AnalysisStatus
+from app.models import Analysis, ColonyDetection, AnalysisStatus, User
 from app.schemas.analyses import ReportResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
@@ -57,17 +57,35 @@ async def generate_pdf_report(
     from reportlab.pdfbase.ttfonts import TTFont
 
     # Query analyses for the date range
-    conditions = [Analysis.user_id == current_user["user_id"]]
+    conditions = []
+    user_role = current_user.get("role")
+    
+    if user_role != "super_admin":
+        org_id = current_user.get("organization_id")
+        if org_id:
+            conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+            
+    if user_role == "analyst":
+        conditions.append(Analysis.user_id == current_user["user_id"])
 
     if request.date_from:
-        conditions.append(Analysis.created_at >= datetime.fromisoformat(request.date_from))
+        dt_from = request.date_from
+        if len(dt_from) == 10:
+            dt_from += "T00:00:00"
+        conditions.append(Analysis.created_at >= datetime.fromisoformat(dt_from))
     if request.date_to:
-        conditions.append(Analysis.created_at <= datetime.fromisoformat(request.date_to))
+        dt_to = request.date_to
+        if len(dt_to) == 10:
+            dt_to += "T23:59:59.999999"
+        conditions.append(Analysis.created_at <= datetime.fromisoformat(dt_to))
 
     result = await db.execute(
         select(Analysis)
         .where(and_(*conditions))
-        .options(joinedload(Analysis.detections))
+        .options(
+            joinedload(Analysis.detections),
+            joinedload(Analysis.user).joinedload(User.organization)
+        )
         .order_by(Analysis.created_at.desc())
     )
     analyses = result.scalars().unique().all()
@@ -180,7 +198,7 @@ async def generate_pdf_report(
         ["Average CFU/ml", f"{avg_cfu:.2e}" if avg_cfu is not None else "N/A"],
     ]
 
-    summary_table = Table(summary_data, colWidths=[6 * cm, 8 * cm])
+    summary_table = Table(summary_data, colWidths=[8 * cm, 8 * cm])
     summary_table.setStyle(TableStyle([
         ("FONTNAME", (0, 0), (-1, -1), base_font_name),
         ("FONTSIZE", (0, 0), (-1, -1), 12),
@@ -216,15 +234,15 @@ async def generate_pdf_report(
 
     executive_data = [
         ["Metric", "Pre-AI (Manual)", "Post-AI (ColonyAI)", "Improvement"],
-        ["Time per Sample", f"{manual_time_per_sample} min", f"{ai_time_per_sample} min", f"{time_saved_per_sample} min saved ({efficiency_gain_pct:.0f}% reduction)"],
-        ["Total Time Invested", f"{total_analyses * manual_time_per_sample} min ({total_analyses * manual_time_per_sample / 60:.1f} hrs)",
-         f"{total_analyses * ai_time_per_sample} min ({total_analyses * ai_time_per_sample / 60:.1f} hrs)",
-         f"{total_time_saved_minutes} min ({total_time_saved_hours:.1f} hrs) saved"],
+        ["Time per Sample", f"{manual_time_per_sample} min", f"{ai_time_per_sample} min", Paragraph(f"{time_saved_per_sample} min saved ({efficiency_gain_pct:.0f}% reduction)", small_style)],
+        ["Total Time Invested", Paragraph(f"{total_analyses * manual_time_per_sample} min ({total_analyses * manual_time_per_sample / 60:.1f} hrs)", small_style),
+         Paragraph(f"{total_analyses * ai_time_per_sample} min ({total_analyses * ai_time_per_sample / 60:.1f} hrs)", small_style),
+         Paragraph(f"{total_time_saved_minutes} min ({total_time_saved_hours:.1f} hrs) saved", small_style)],
         ["Inter-Analyst CV", "22.7%-80%", "<5%", "Consistent results"],
-        ["Throughput", f"{total_analyses} plates", f"{total_analyses} plates (automated)", f"5-8x potential increase"],
+        ["Throughput", f"{total_analyses} plates", f"{total_analyses} plates (automated)", "5-8x potential increase"],
     ]
 
-    executive_table = Table(executive_data, colWidths=[4.5 * cm, 3.5 * cm, 3.5 * cm, 3.5 * cm])
+    executive_table = Table(executive_data, colWidths=[3.5 * cm, 3.5 * cm, 4 * cm, 5 * cm])
     executive_table.setStyle(TableStyle([
         ("FONTNAME", (0, 0), (-1, -1), base_font_name),
         ("FONTSIZE", (0, 0), (-1, -1), 9),
@@ -280,7 +298,7 @@ async def generate_pdf_report(
             f"{avg_cfu:.2e}" if avg_cfu > 0 else "N/A",
         ])
 
-    trend_table = Table(trend_data, colWidths=[3 * cm, 3 * cm, 4 * cm, 5 * cm])
+    trend_table = Table(trend_data, colWidths=[4 * cm, 4 * cm, 4 * cm, 4 * cm])
     trend_table.setStyle(TableStyle([
         ("FONTNAME", (0, 0), (-1, -1), base_font_name),
         ("FONTSIZE", (0, 0), (-1, -1), 10),
@@ -302,6 +320,9 @@ async def generate_pdf_report(
 
     for analysis in analyses:
         status_str = analysis.status.value if hasattr(analysis.status, 'value') else str(analysis.status)
+        analyst_name = analysis.user.full_name if analysis.user else "Unknown Analyst"
+        org_name = analysis.user.organization.name if analysis.user and analysis.user.organization else "ColonyAI General"
+        
         elements.append(Paragraph(
             f"<b>Sample:</b> {analysis.sample_id} &nbsp; | &nbsp; "
             f"<b>Media:</b> {analysis.media_type} &nbsp; | &nbsp; "
@@ -311,16 +332,18 @@ async def generate_pdf_report(
 
         detail_data = [
             ["Parameter", "Value"],
-            ["Dilution Factor", f"{analysis.dilution_factor}"],
-            ["Plated Volume (ml)", f"{analysis.plated_volume_ml}"],
-            ["Colony Count", str(analysis.colony_count or 0)],
-            ["CFU/ml", f"{analysis.cfu_per_ml:.2e}" if analysis.cfu_per_ml else "N/A"],
-            ["Confidence", f"{analysis.confidence_score * 100:.1f}%" if analysis.confidence_score else "N/A"],
-            ["Reliability", (analysis.reliability or "N/A").capitalize()],
-            ["Status", status_str.capitalize()],
+            ["Institution / Company", Paragraph(org_name, body_style)],
+            ["Analyst Name", Paragraph(analyst_name, body_style)],
+            ["Dilution Factor", Paragraph(f"{analysis.dilution_factor}", body_style)],
+            ["Plated Volume (ml)", Paragraph(f"{analysis.plated_volume_ml}", body_style)],
+            ["Colony Count", Paragraph(str(analysis.colony_count or 0), body_style)],
+            ["CFU/ml", Paragraph(f"{analysis.cfu_per_ml:.2e}" if analysis.cfu_per_ml else "N/A", body_style)],
+            ["Confidence", Paragraph(f"{analysis.confidence_score * 100:.1f}%" if analysis.confidence_score else "N/A", body_style)],
+            ["Reliability", Paragraph((analysis.reliability or "N/A").capitalize(), body_style)],
+            ["Status", Paragraph(status_str.capitalize(), body_style)],
         ]
 
-        detail_table = Table(detail_data, colWidths=[5 * cm, 9 * cm])
+        detail_table = Table(detail_data, colWidths=[6 * cm, 10 * cm])
         detail_table.setStyle(TableStyle([
             ("FONTNAME", (0, 0), (-1, -1), base_font_name),
             ("FONTSIZE", (0, 0), (-1, -1), 11),
@@ -343,7 +366,7 @@ async def generate_pdf_report(
             breakdown_rows = [["Class", "Count"]]
             for cls_name, count in class_breakdown.items():
                 breakdown_rows.append([cls_name, str(count)])
-            breakdown_table = Table(breakdown_rows, colWidths=[5 * cm, 9 * cm])
+            breakdown_table = Table(breakdown_rows, colWidths=[6 * cm, 10 * cm])
             breakdown_table.setStyle(TableStyle([
                 ("FONTNAME", (0, 0), (-1, -1), base_font_name),
                 ("FONTSIZE", (0, 0), (-1, -1), 10),
@@ -403,17 +426,35 @@ async def generate_csv_report(
     - Super Admin: all analyses
     """
     # Query analyses for the date range
-    conditions = [Analysis.user_id == current_user["user_id"]]
+    conditions = []
+    user_role = current_user.get("role")
+    
+    if user_role != "super_admin":
+        org_id = current_user.get("organization_id")
+        if org_id:
+            conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+            
+    if user_role == "analyst":
+        conditions.append(Analysis.user_id == current_user["user_id"])
 
     if request.date_from:
-        conditions.append(Analysis.created_at >= datetime.fromisoformat(request.date_from))
+        dt_from = request.date_from
+        if len(dt_from) == 10:
+            dt_from += "T00:00:00"
+        conditions.append(Analysis.created_at >= datetime.fromisoformat(dt_from))
     if request.date_to:
-        conditions.append(Analysis.created_at <= datetime.fromisoformat(request.date_to))
+        dt_to = request.date_to
+        if len(dt_to) == 10:
+            dt_to += "T23:59:59.999999"
+        conditions.append(Analysis.created_at <= datetime.fromisoformat(dt_to))
 
     result = await db.execute(
         select(Analysis)
         .where(and_(*conditions))
-        .options(joinedload(Analysis.detections))
+        .options(
+            joinedload(Analysis.detections),
+            joinedload(Analysis.user).joinedload(User.organization)
+        )
         .order_by(Analysis.created_at.desc())
     )
     analyses = result.scalars().unique().all()
@@ -431,6 +472,8 @@ async def generate_csv_report(
     # Header
     writer.writerow([
         "Analysis ID",
+        "Company / Institution",
+        "Analyst Name",
         "Sample ID",
         "Media Type",
         "Dilution Factor",
@@ -449,11 +492,15 @@ async def generate_csv_report(
     # Data rows (one per detection)
     for analysis in analyses:
         status_str = analysis.status.value if hasattr(analysis.status, 'value') else str(analysis.status)
+        analyst_name = analysis.user.full_name if analysis.user else "Unknown Analyst"
+        org_name = analysis.user.organization.name if analysis.user and analysis.user.organization else "ColonyAI General"
 
         if analysis.detections:
             for detection in analysis.detections:
                 writer.writerow([
                     str(analysis.id),
+                    org_name,
+                    analyst_name,
                     analysis.sample_id,
                     analysis.media_type,
                     analysis.dilution_factor,
@@ -472,6 +519,8 @@ async def generate_csv_report(
             # Summary row only if no detections
             writer.writerow([
                 str(analysis.id),
+                org_name,
+                analyst_name,
                 analysis.sample_id,
                 analysis.media_type,
                 analysis.dilution_factor,

@@ -30,6 +30,7 @@ import { AuthGuard } from "@/lib/auth-guard";
 import { AskAI } from "@/components/AskAI";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslationStore } from "@/lib/i18n/store";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navigation = [
   {
@@ -116,6 +117,11 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const auth = useAuthStore();
+  const { t } = useTranslationStore();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -131,13 +137,73 @@ export default function DashboardLayout({
     }[]
   >([]);
 
+  const playNotificationSound = () => {
+    const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+    audio.volume = 0.5;
+    audio.play().catch(e => console.log("Audio play blocked by browser", e));
+  };
+
   useEffect(() => {
-    // Professional implementation: Fetch notifications from /api/v1/notifications
+    // Simulation: New Request for Approval arrives after 8 seconds
+    const timer = setTimeout(() => {
+      const newNotify = {
+        id: Date.now(),
+        type: "approval",
+        title: "APPROVAL REQUIRED",
+        message: "New Reset Password request from Analyst-04",
+        time: "Just Now",
+        read: false
+      };
+      setNotifications(prev => [newNotify, ...prev]);
+      playNotificationSound();
+      toast.info("New System Signal Detected", {
+        description: "Approval required for security node reset.",
+        action: {
+          label: "View",
+          onClick: () => router.push("/dashboard/administration")
+        }
+      });
+    }, 8000);
+
+    return () => clearTimeout(timer);
+  }, [router]);
+
+  // Calibration Countdown Logic
+  const [timeLeft, setTimeLeft] = useState({
+    days: "05",
+    hours: "02",
+    mins: "15",
+    secs: "00"
+  });
+
+  useEffect(() => {
+    // Target date: 5 days, 2 hours, 15 mins from May 7, 2026 03:49:10
+    const targetDate = new Date("2026-05-12T06:04:10").getTime();
+
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+
+      if (distance < 0) {
+        clearInterval(interval);
+        setTimeLeft({ days: "00", hours: "00", mins: "00", secs: "00" });
+      } else {
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        setTimeLeft({
+          days: days.toString().padStart(2, '0'),
+          hours: hours.toString().padStart(2, '0'),
+          mins: minutes.toString().padStart(2, '0'),
+          secs: seconds.toString().padStart(2, '0')
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, []);
-  const pathname = usePathname();
-  const router = useRouter();
-  const auth = useAuthStore();
-  const { t } = useTranslationStore();
 
   const handleLogout = async () => {
     await auth.logout();
@@ -148,7 +214,7 @@ export default function DashboardLayout({
 
   return (
     <AuthGuard>
-      <div className="h-screen bg-[#f4f7f6] flex font-sans selection:bg-primary/20 selection:text-primary overflow-hidden">
+      <div className="h-screen bg-[#f4f7f6] dark:bg-slate-950 flex font-sans selection:bg-primary/20 selection:text-primary overflow-hidden transition-colors duration-300">
         {/* Mobile backdrop */}
         {sidebarOpen && (
           <div
@@ -159,7 +225,7 @@ export default function DashboardLayout({
 
         {/* Sidebar */}
         <aside
-          className={`fixed inset-y-0 left-0 z-50 ${isCollapsed ? "lg:w-14" : "lg:w-48"} w-48 bg-white border-r border-slate-100 transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} rounded-xl lg:rounded-none lg:mr-0 shadow-2xl lg:shadow-none`}
+          className={`fixed inset-y-0 left-0 z-50 ${isCollapsed ? "lg:w-14" : "lg:w-48"} w-48 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} rounded-xl lg:rounded-none lg:mr-0 shadow-2xl lg:shadow-none`}
         >
           <div className="flex flex-col h-full text-slate-600">
             <div
@@ -177,7 +243,7 @@ export default function DashboardLayout({
                 </div>
                 {!isCollapsed && (
                   <div className="flex flex-col animate-in fade-in duration-300">
-                    <span className="text-base font-bold tracking-tight text-slate-900">
+                    <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
                       ColonyAI
                     </span>
                     {user?.role === "super_admin" && (
@@ -229,22 +295,22 @@ export default function DashboardLayout({
               className={`py-6 mt-auto transition-all duration-300 ${isCollapsed ? "px-0" : "px-6"}`}
             >
               {!isCollapsed && (
-                <div className="bg-slate-50 rounded-xl p-4 relative overflow-hidden group border border-slate-100 animate-in fade-in zoom-in duration-300">
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 relative overflow-hidden group border border-slate-100 dark:border-slate-700/50 animate-in fade-in zoom-in duration-300">
                   <div className="relative z-10">
                     <p className="text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-widest">
                       {t("header.nextCalibration")}
                     </p>
                     <div className="flex gap-2">
                       {[
-                        { val: "05", label: t("header.days") },
-                        { val: "02", label: t("header.hours") },
-                        { val: "15", label: t("header.mins") },
+                        { val: timeLeft.days, label: t("header.days") },
+                        { val: timeLeft.hours, label: t("header.hours") },
+                        { val: timeLeft.mins, label: t("header.mins") },
                       ].map((item, i) => (
                         <div key={i} className="flex flex-col items-center">
-                          <div className="bg-white text-slate-900 border border-slate-200 font-bold rounded-lg w-8 h-8 flex items-center justify-center text-xs shadow-sm">
+                          <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 font-bold rounded-lg w-8 h-8 flex items-center justify-center text-xs shadow-sm">
                             {item.val}
                           </div>
-                          <span className="text-[10px] text-slate-400 mt-1">
+                          <span className="text-[10px] text-slate-400 mt-1 uppercase font-black tracking-tighter">
                             {item.label}
                           </span>
                         </div>
@@ -289,7 +355,7 @@ export default function DashboardLayout({
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Header */}
-          <header className="px-1 py-0.5 sm:px-3 sm:py-0.5 flex items-center justify-between sticky top-0 bg-[#f4f7f6]/80 backdrop-blur-md z-30 h-10">
+          <header className="px-1 py-0.5 sm:px-3 sm:py-0.5 flex items-center justify-between sticky top-0 bg-[#f4f7f6]/80 dark:bg-slate-950/80 backdrop-blur-md z-30 h-10 transition-colors duration-300">
             <div className="flex items-center gap-2 sm:gap-4 flex-1">
               <button
                 onClick={() => {
@@ -303,32 +369,31 @@ export default function DashboardLayout({
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4">
-              <div className="scale-90 sm:scale-100 origin-right">
+              <div className="flex items-center gap-2 sm:gap-3 scale-90 sm:scale-100 origin-right">
+                <ThemeToggle />
                 <LanguageSwitcher />
               </div>
               <div className="relative">
                 <button
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
-                  className="relative p-2 rounded-lg bg-white shadow-sm border border-slate-100 cursor-pointer hover:bg-slate-50 transition-all outline-none"
+                  className="relative p-2 rounded-lg bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all outline-none"
                 >
-                  <Bell className="h-4 w-4 text-slate-600" />
+                  <Bell className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                   {notifications.some((n) => !n.read) && (
                     <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
                   )}
                 </button>
 
                 {notificationsOpen && (
-                  <div className="absolute right-0 mt-3 w-72 sm:w-80 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="px-4 py-3 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-                      <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest">
+                  <div className="absolute right-0 mt-3 w-72 sm:w-80 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-4 py-3 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                      <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">
                         {t("header.notifications")}
                       </h3>
                       <button
                         onClick={() => {
-                          setNotifications((prev) =>
-                            prev.map((n) => ({ ...n, read: true })),
-                          );
-                          toast.success("All notifications cleared");
+                          setNotifications([]);
+                          toast.success("Notification Ledger Cleared");
                         }}
                         className="text-[10px] font-bold text-primary uppercase tracking-tighter hover:underline"
                       >
@@ -347,10 +412,16 @@ export default function DashboardLayout({
                             )}
                             <div className="flex gap-3">
                               <div
-                                className={`p-1.5 rounded-md ${n.type === "alert" ? "bg-rose-100 text-rose-500" : "bg-emerald-100 text-emerald-500"}`}
+                                className={`p-1.5 rounded-md ${
+                                  n.type === "alert" ? "bg-rose-100 text-rose-500" : 
+                                  n.type === "approval" ? "bg-amber-100 text-amber-500" :
+                                  "bg-emerald-100 text-emerald-500"
+                                }`}
                               >
                                 {n.type === "alert" ? (
                                   <AlertCircle className="w-3.5 h-3.5" />
+                                ) : n.type === "approval" ? (
+                                  <Activity className="w-3.5 h-3.5" />
                                 ) : (
                                   <CheckCircle className="w-3.5 h-3.5" />
                                 )}
@@ -359,7 +430,7 @@ export default function DashboardLayout({
                                 <p className="text-xs font-black text-slate-900 leading-tight">
                                   {n.title}
                                 </p>
-                                <p className="text-[11px] text-slate-400 font-medium mt-1 leading-snug">
+                                <p className="text-[11px] text-slate-500 font-medium mt-1 leading-snug">
                                   {n.message}
                                 </p>
                                 <p className="text-[10px] text-slate-300 font-bold mt-1 uppercase tracking-tighter">
@@ -401,9 +472,9 @@ export default function DashboardLayout({
               <div className="flex-1">{children}</div>
 
               {/* Global Dashboard Footer */}
-              <footer className="mt-16 pt-8 pb-12 border-t border-slate-200">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                  <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+              <footer className="mt-8 pt-4 pb-6 border-t border-slate-200">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                     {[
                       { n: t("footer.support"), h: "#" },
                       { n: t("footer.systemStatus"), h: "/dashboard/sentinel" },
@@ -415,24 +486,24 @@ export default function DashboardLayout({
                       <Link
                         key={i}
                         href={link.h}
-                        className="text-xs text-slate-400 hover:text-primary transition-colors font-semibold tracking-tight uppercase"
+                        className="text-[9px] text-slate-400 hover:text-primary transition-colors font-bold uppercase tracking-tight"
                       >
                         {link.n}
                       </Link>
                     ))}
                   </div>
 
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2 py-1.5 px-3 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 py-1 px-2.5 bg-white border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50 transition-all shadow-sm scale-90">
                       <div className="flex">
-                        <div className="w-2.5 h-2.5 rounded-full bg-blue-500 border border-white -mr-1" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-white border border-blue-500" />
+                        <div className="w-2 h-2 rounded-full bg-blue-500 border border-white -mr-1" />
+                        <div className="w-2 h-2 rounded-full bg-white border border-blue-500" />
                       </div>
-                      <span className="text-[11px] text-slate-600 font-bold">
+                      <span className="text-[9px] text-slate-600 font-bold uppercase">
                         {t("footer.cookiePreferences")}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 font-semibold tracking-tight uppercase">
+                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
                       {t("footer.copyright")}
                     </p>
                   </div>
@@ -443,7 +514,7 @@ export default function DashboardLayout({
         </div>
 
         {/* Bottom Navigation for Mobile */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 h-12 bg-white/95 backdrop-blur-lg border-t border-slate-100 flex items-center justify-around px-0.5 z-40 shadow-[0_-2px_12px_rgba(0,0,0,0.04)]">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 h-12 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-100 dark:border-slate-800 flex items-center justify-around px-0.5 z-40 shadow-[0_-2px_12px_rgba(0,0,0,0.04)]">
           {navigation
             .filter((item) => item.roles.includes(user?.role || "analyst"))
             .slice(0, 5)
@@ -487,7 +558,7 @@ export default function DashboardLayout({
             />
           )}
           {!askAIOpen && (
-            <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-white animate-bounce" />
+            <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900 animate-bounce" />
           )}
         </button>
 

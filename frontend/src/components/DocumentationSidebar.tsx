@@ -49,17 +49,17 @@ export function DocumentationSidebar({
   };
 
   return (
-    <div className="w-full sm:w-80 lg:w-[350px] flex flex-col bg-white border-l border-slate-200 shadow-2xl overflow-hidden animate-in slide-in-from-right duration-300 fixed right-0 top-14 sm:top-16 bottom-0 z-[60] sm:z-30">
+    <div className="w-full sm:w-80 lg:w-[350px] flex flex-col bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in slide-in-from-right duration-300 fixed right-0 top-14 sm:top-16 bottom-0 z-[60] sm:z-30 transition-colors duration-300">
       {/* Header Section */}
-      <div className="px-2 py-2 sm:px-3 sm:py-2.5 border-b border-slate-100 flex items-center gap-2 bg-white sticky top-0 z-10">
+      <div className="px-2 py-2 sm:px-3 sm:py-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 bg-white dark:bg-slate-950 sticky top-0 z-10 transition-colors">
         <button
           onClick={() => setShowDocs(false)}
-          className="p-1 sm:p-1.5 hover:bg-slate-50 rounded-lg transition-colors group flex-shrink-0"
+          className="p-1 sm:p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group flex-shrink-0"
         >
-          <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 group-hover:text-slate-900" />
+          <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white" />
         </button>
         <div className="flex flex-col">
-          <h3 className="text-xs sm:text-sm font-black text-slate-900 leading-none uppercase tracking-tighter">
+          <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-none uppercase tracking-tighter">
             {t("overview.docsUiDocumentation")}
           </h3>
           <button
@@ -74,20 +74,20 @@ export function DocumentationSidebar({
       </div>
 
       {/* Docs Body */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide p-3 sm:p-4 space-y-4 bg-white">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+      <div className="flex-1 overflow-y-auto scrollbar-hide p-3 sm:p-4 space-y-4 bg-white dark:bg-slate-900 transition-colors">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 bg-primary rounded flex items-center justify-center">
               <FlaskConical className="w-3 h-3 text-white" />
             </div>
-            <span className="text-[10px] sm:text-xs font-black text-slate-900 tracking-tight uppercase">
+            <span className="text-[10px] sm:text-xs font-black text-slate-900 dark:text-white tracking-tight uppercase">
               {t("overview.docsUiColonyAIDocs")}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className={`p-1 rounded transition-all ${isSearchOpen ? "bg-primary text-white" : "hover:bg-slate-50 text-slate-400"}`}
+              className={`p-1 rounded transition-all ${isSearchOpen ? "bg-primary text-white" : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400"}`}
             >
               <Search className="w-3 h-3 cursor-pointer" />
             </button>
@@ -95,9 +95,9 @@ export function DocumentationSidebar({
               onClick={() =>
                 toast.info(t("overview.docsUiAccessingIndex"), { icon: "📚" })
               }
-              className="w-6 h-6 rounded border border-slate-200 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
+              className="w-6 h-6 rounded border border-slate-200 dark:border-slate-800 flex items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
-              <BookOpen className="w-3 h-3 text-slate-600" />
+              <BookOpen className="w-3 h-3 text-slate-600 dark:text-slate-400" />
             </button>
           </div>
         </div>
@@ -109,7 +109,7 @@ export function DocumentationSidebar({
               <input
                 type="text"
                 placeholder={t("overview.docsUiSearchPlaceholder")}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-8 py-2 text-[10px] font-bold text-black focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-400"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-8 py-2 text-[10px] font-bold text-black dark:text-white focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
@@ -126,16 +126,16 @@ export function DocumentationSidebar({
           </div>
         )}
 
-        <div className="flex items-center gap-1 p-0.5 bg-white rounded border border-slate-200 w-fit shadow-sm">
+        <div className="flex items-center gap-1 p-0.5 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 w-fit shadow-sm">
           <button
             onClick={() =>
               toast.info(t("overview.docsUiReturningRoot"), { icon: "📁" })
             }
-            className="flex items-center gap-1 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-black text-slate-700 bg-slate-50 rounded border border-slate-200 hover:bg-slate-100 transition-colors"
+            className="flex items-center gap-1 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-black text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
           >
             {t("overview.docsUiPage")} <ChevronRight className="w-2 h-2" />
           </button>
-          <span className="text-[8px] sm:text-[9px] font-black text-slate-900 px-1.5 uppercase">
+          <span className="text-[8px] sm:text-[9px] font-black text-slate-900 dark:text-white px-1.5 uppercase">
             {t("overview.systemOverview")}
           </span>
         </div>
@@ -144,14 +144,14 @@ export function DocumentationSidebar({
           <div className="flex items-center gap-1 text-[8px] sm:text-[9px] font-black text-slate-400 uppercase">
             <span>{t("overview.docsUiDir")}</span>
             <ChevronRight className="w-2 h-2" />
-            <span className="text-slate-900 tracking-tighter truncate max-w-[100px]">
+            <span className="text-slate-900 dark:text-slate-100 tracking-tighter truncate max-w-[100px]">
               {directory}
             </span>
           </div>
           <div className="flex items-center">
             <button
               onClick={handleCopyDocs}
-              className="flex items-center gap-1 px-1.5 py-0.5 border border-slate-200 rounded text-[8px] sm:text-[9px] font-black text-slate-600 hover:bg-slate-50 transition-colors shadow-sm uppercase tracking-widest"
+              className="flex items-center gap-1 px-1.5 py-0.5 border border-slate-200 dark:border-slate-700 rounded text-[8px] sm:text-[9px] font-black text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm uppercase tracking-widest"
             >
               <Copy className="w-2 h-2" /> {t("overview.docsUiCopy")}
             </button>
@@ -167,8 +167,8 @@ export function DocumentationSidebar({
               </h4>
               <div className="space-y-2">
                 {rawText?.toLowerCase().includes(searchQuery.toLowerCase()) ? (
-                  <div className="p-2.5 bg-white border border-primary/20 rounded-md shadow-sm border-l-4 border-l-primary">
-                    <p className="text-[9px] text-slate-700 font-bold leading-relaxed">
+                  <div className="p-2.5 bg-white dark:bg-slate-900 border border-primary/20 dark:border-primary/40 rounded-md shadow-sm border-l-4 border-l-primary">
+                    <p className="text-[9px] text-slate-700 dark:text-slate-200 font-bold leading-relaxed">
                       "
                       {rawText.substring(
                         Math.max(
@@ -191,8 +191,8 @@ export function DocumentationSidebar({
                     </p>
                   </div>
                 ) : (
-                  <div className="p-2.5 bg-white/50 border border-slate-100 rounded-md">
-                    <p className="text-[9px] text-slate-400 font-bold italic">
+                  <div className="p-2.5 bg-white/50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-md">
+                    <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold italic">
                       {t("overview.docsUiNoMatch")}
                     </p>
                   </div>
@@ -203,7 +203,7 @@ export function DocumentationSidebar({
 
           {/* Title Section */}
           <div className="pb-2">
-            <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight mb-1 uppercase">
+            <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight mb-1 uppercase">
               {title}
             </h1>
             <p className="text-[10px] sm:text-[11px] text-slate-500 leading-relaxed font-bold italic">
@@ -232,7 +232,7 @@ export function DocumentationToggle({
   return (
     <button
       onClick={() => setShowDocs(true)}
-      className="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] border border-slate-200 hover:bg-slate-50 transition-all shadow-sm active:scale-95 group"
+      className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-95 group"
     >
       <div className="w-5 h-5 bg-primary/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
         <BookOpen className="w-3 h-3 text-primary" />

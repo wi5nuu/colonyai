@@ -66,9 +66,9 @@ const TABS = [
 ];
 
 const INPUT_CLS =
-  "w-full px-3 py-2 text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-300 shadow-sm";
+  "w-full px-3 py-2 text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-sm";
 const LABEL_CLS =
-  "text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1 mb-1 block";
+  "text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 mb-1 block";
 const BTN_PRIMARY =
   "bg-primary hover:bg-primary/90 text-slate-900 py-2.5 px-4 flex items-center justify-center gap-2 rounded-lg text-[10px] font-bold uppercase tracking-[0.2em] transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50";
 
@@ -101,24 +101,32 @@ export default function SettingsPage() {
   );
   const ActiveIcon = filteredTabs.find((t) => t.id === activeTab)?.icon || User;
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden">
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden bg-[#f4f7f6] dark:bg-slate-950 transition-colors duration-300">
       <div className="flex relative min-h-[calc(100vh-200px)]">
         <div
           className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
         >
           <div className="max-w-[1500px] mx-auto px-4 py-0 pt-0 sm:px-8 sm:py-0 sm:pt-0">
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-2 pb-2 border-b border-slate-100 mb-4">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800 mb-4">
               <div>
                 <div className="flex items-center gap-3 mb-1">
-                  <div className="w-9 h-9 bg-slate-50 border border-slate-200 rounded-lg shadow-sm flex items-center justify-center">
+                  <div className="w-9 h-9 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm flex items-center justify-center">
                     <Settings2 className="w-4 h-4 text-primary" />
                   </div>
-                  <h1 className="text-xl font-bold text-slate-900 tracking-tight uppercase leading-none">
+                  <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
                     {t("settings.title")}
                   </h1>
                 </div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] ml-1">
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] ml-1">
                   {t("settings.subtitle")}
                 </p>
               </div>
@@ -130,8 +138,8 @@ export default function SettingsPage() {
                     text={t("settings.docsToggleLabel")}
                   />
                 </div>
-                <div className="bg-white border border-slate-200/60 p-2 rounded-xl shadow-sm">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 px-2">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-2 rounded-xl shadow-sm">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2 px-2">
                     <Shield className="w-3.5 h-3.5" />
                     {t("settings.authEncryption")}
                   </span>
@@ -141,7 +149,7 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               <div className="lg:col-span-3">
-                <nav className="bg-white border border-slate-200/60 p-2 space-y-1 sticky top-20 rounded-xl shadow-sm">
+                <nav className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-2 space-y-1 sticky top-20 rounded-xl shadow-sm">
                   {filteredTabs.map((tab) => (
                     <button
                       key={tab.id}
@@ -149,7 +157,7 @@ export default function SettingsPage() {
                       className={`w-full flex items-center gap-3 px-4 py-3 text-[11px] font-bold uppercase tracking-widest rounded-lg transition-all duration-200 ${
                         activeTab === tab.id
                           ? "bg-primary/10 text-primary border border-primary/20 shadow-sm"
-                          : "text-slate-400 hover:bg-slate-50 hover:text-slate-900"
+                          : "text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
                       <tab.icon
@@ -162,20 +170,20 @@ export default function SettingsPage() {
               </div>
 
               <div className="lg:col-span-9">
-                <div className="bg-white border border-slate-200/60 overflow-hidden rounded-xl shadow-sm">
-                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 overflow-hidden rounded-xl shadow-sm">
+                  <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center shadow-sm">
                       <ActiveIcon className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h2 className="text-[11px] font-bold text-slate-900 uppercase tracking-[0.2em]">
+                      <h2 className="text-[11px] font-bold text-slate-900 dark:text-white uppercase tracking-[0.2em]">
                         {t(
                           TABS.find((t) => t.id === activeTab)?.nameKey ||
                             "settings.tabProfile",
                         )}{" "}
                         {t("settings.configuration")}
                       </h2>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
                         {t("settings.globalNodeEnv")}
                       </p>
                     </div>
@@ -184,10 +192,10 @@ export default function SettingsPage() {
                   <div className="p-4 sm:p-5">
                     {isLoading ? (
                       <div className="flex flex-col items-center justify-center py-32 gap-6">
-                        <div className="w-24 h-24 rounded-[2.5rem] bg-slate-50 flex items-center justify-center border border-slate-100">
+                        <div className="w-24 h-24 rounded-[2.5rem] bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700">
                           <Loader2 className="h-10 w-10 animate-spin text-primary" />
                         </div>
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                        <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                           {t("settings.syncingPrefs")}
                         </p>
                       </div>
@@ -235,11 +243,11 @@ export default function SettingsPage() {
               <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                 {t("settings.docsOverviewLabel")}
               </span>
-              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
                 {t("settings.docsOverviewTitle")}
               </h2>
             </div>
-            <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+            <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
               {t("settings.docsOverviewText")}
             </p>
           </section>
@@ -249,7 +257,7 @@ export default function SettingsPage() {
               <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                 {t("settings.docsAccessControlLabel")}
               </span>
-              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
                 {t("settings.docsAccessControlTitle")}
               </h2>
             </div>
@@ -272,14 +280,14 @@ export default function SettingsPage() {
                 },
               ].map((step) => (
                 <div key={step.id} className="flex gap-2.5 group">
-                  <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 dark:bg-slate-950 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                     {step.id}
                   </span>
                   <div className="space-y-0.5">
-                    <h4 className="text-[10px] font-bold text-slate-900">
+                    <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">
                       {step.title}
                     </h4>
-                    <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
+                    <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
                       {step.desc}
                     </p>
                   </div>
@@ -340,11 +348,11 @@ function ProfileSettings() {
           <label className={LABEL_CLS}>{t("settings.profileEmail")}</label>
           <input
             type="email"
-            className={`${INPUT_CLS} !bg-slate-50 !border-slate-200 !text-slate-400 cursor-not-allowed`}
+            className={`${INPUT_CLS} !bg-slate-50 dark:!bg-slate-950 !border-slate-200 dark:!border-slate-800 !text-slate-400 dark:!text-slate-600 cursor-not-allowed`}
             value={user?.email || ""}
             disabled
           />
-          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-2 ml-1">
+          <p className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest mt-2 ml-1">
             {t("settings.profileEmailImmutable")}
           </p>
         </div>
@@ -352,16 +360,16 @@ function ProfileSettings() {
           <label className={LABEL_CLS}>{t("settings.profileNodeRole")}</label>
           <input
             type="text"
-            className={`${INPUT_CLS} !bg-slate-50 !border-slate-200 !text-slate-400 capitalize cursor-not-allowed`}
+            className={`${INPUT_CLS} !bg-slate-50 dark:!bg-slate-950 !border-slate-200 dark:!border-slate-800 !text-slate-400 dark:!text-slate-600 capitalize cursor-not-allowed`}
             value={user?.role || ""}
             disabled
           />
-          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-2 ml-1">
+          <p className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest mt-2 ml-1">
             {t("settings.profileProvisioned")}
           </p>
         </div>
       </div>
-      <div className="pt-8 border-t border-slate-50">
+      <div className="pt-8 border-t border-slate-50 dark:border-slate-800">
         <button type="submit" disabled={isSaving} className={BTN_PRIMARY}>
           {isSaving ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -435,22 +443,22 @@ function NotificationSettings({
       {ITEMS.map((item) => (
         <div
           key={item.key}
-          className="flex items-center justify-between p-6 bg-slate-50/50 border border-slate-200/60 rounded-2xl hover:bg-white hover:shadow-md transition-all group"
+          className="flex items-center justify-between p-6 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 rounded-2xl hover:bg-white dark:hover:bg-slate-800 hover:shadow-md transition-all group"
         >
           <div className="flex items-center gap-5">
-            <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 group-hover:text-primary group-hover:scale-110 transition-all shadow-sm">
+            <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 group-hover:text-primary group-hover:scale-110 transition-all shadow-sm">
               <item.icon className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[12px] font-black text-slate-900 uppercase tracking-widest">
+              <p className="text-[12px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
                 {t(item.titleKey)}
               </p>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
                 {t(item.descKey)}
               </p>
             </div>
           </div>
-          <div className="relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-all duration-300 ease-in-out bg-slate-200 overflow-hidden">
+          <div className="relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-all duration-300 ease-in-out bg-slate-200 dark:bg-slate-700 overflow-hidden">
             <input
               type="checkbox"
               checked={settings[item.key as keyof typeof settings]}
@@ -460,12 +468,12 @@ function NotificationSettings({
               className="peer absolute h-full w-full opacity-0 z-10 cursor-pointer"
             />
             <span
-              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-xl ring-0 transition-all duration-300 ease-in-out mt-0.5 ml-0.5 ${settings[item.key as keyof typeof settings] ? "translate-x-6 !bg-primary" : "translate-x-0"}`}
+              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white dark:bg-slate-100 shadow-xl ring-0 transition-all duration-300 ease-in-out mt-0.5 ml-0.5 ${settings[item.key as keyof typeof settings] ? "translate-x-6 !bg-primary" : "translate-x-0"}`}
             />
           </div>
         </div>
       ))}
-      <div className="pt-8 border-t border-slate-50">
+      <div className="pt-8 border-t border-slate-50 dark:border-slate-800">
         <button
           onClick={handleSave}
           disabled={isSaving}
@@ -585,27 +593,27 @@ function SecuritySettings() {
         </div>
       </form>
 
-      <div className="pt-10 border-t border-slate-100">
-        <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em] mb-6">
+      <div className="pt-10 border-t border-slate-100 dark:border-slate-800">
+        <h3 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-6">
           {t("settings.secSessionMatrix")}
         </h3>
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between p-8 bg-rose-50/30 border border-rose-100 rounded-2xl gap-8">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between p-8 bg-rose-50/30 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 rounded-2xl gap-8">
           <div className="flex items-center gap-6">
-            <div className="w-16 h-16 rounded-2xl bg-rose-500 flex items-center justify-center text-white shadow-2xl shadow-rose-500/20">
+            <div className="w-16 h-16 rounded-2xl bg-rose-500 dark:bg-rose-600 flex items-center justify-center text-white shadow-2xl shadow-rose-500/20">
               <LogOut className="w-7 h-7" />
             </div>
             <div>
-              <p className="text-[14px] font-black text-rose-900 uppercase tracking-tight">
+              <p className="text-[14px] font-black text-rose-900 dark:text-rose-100 uppercase tracking-tight">
                 {t("settings.secTerminateNodes")}
               </p>
-              <p className="text-[10px] text-rose-700/60 font-black uppercase tracking-widest mt-1">
+              <p className="text-[10px] text-rose-700/60 dark:text-rose-400/60 font-black uppercase tracking-widest mt-1">
                 {t("settings.secTerminateDesc")}
               </p>
             </div>
           </div>
           <button
             onClick={handleRevokeAllSessions}
-            className="px-8 py-4 bg-rose-500 hover:bg-rose-600 text-slate-900 text-[11px] font-bold uppercase tracking-[0.2em] rounded-xl transition-all shadow-lg shadow-rose-500/20 active:scale-95 flex-shrink-0"
+            className="px-8 py-4 bg-rose-500 dark:bg-rose-600 hover:bg-rose-600 dark:hover:bg-rose-700 text-slate-900 dark:text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-xl transition-all shadow-lg shadow-rose-500/20 active:scale-95 flex-shrink-0"
           >
             {t("settings.secRevokeAuth")}
           </button>
@@ -697,12 +705,12 @@ function LaboratorySettings({
               })
             }
           />
-          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-3 ml-1">
+          <p className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest mt-3 ml-1">
             {t("settings.labIsoCalibrated")}
           </p>
         </div>
       </div>
-      <div className="pt-8 border-t border-slate-50">
+      <div className="pt-8 border-t border-slate-50 dark:border-slate-800">
         <button type="submit" disabled={isSaving} className={BTN_PRIMARY}>
           {isSaving ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -792,7 +800,7 @@ function AppearanceSettings({
           </div>
         </div>
       </div>
-      <div className="pt-8 border-t border-slate-50">
+      <div className="pt-8 border-t border-slate-50 dark:border-slate-800">
         <button
           onClick={handleSave}
           disabled={isSaving}
@@ -826,70 +834,70 @@ function SystemStatusSettings() {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+        <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-primary shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-primary shadow-sm">
               <Database className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 {t("settings.sysS3Storage")}
               </p>
-              <p className="text-sm font-black text-slate-900 uppercase">
+              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">
                 {t("settings.sysQuota")}: {infra.storage_quota}
               </p>
             </div>
           </div>
           <div className="space-y-2">
-            <div className="flex justify-between text-[9px] font-black uppercase text-slate-500">
+            <div className="flex justify-between text-[9px] font-black uppercase text-slate-500 dark:text-slate-400">
               <span>{t("settings.sysUsageBaseline")}</span>
               <span>1.2%</span>
             </div>
-            <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
               <div className="h-full bg-primary w-[1.2%] shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" />
             </div>
-            <p className="text-[9px] font-bold text-slate-400 uppercase mt-2">
+            <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-2">
               {t("settings.sysDataRetention")}: {infra.retention}{" "}
               {t("settings.sysPolicy")}
             </p>
           </div>
         </div>
 
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+        <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-emerald-500 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-emerald-500 shadow-sm">
               <Zap className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 {t("settings.sysNodeStatus")}
               </p>
-              <p className="text-sm font-black text-slate-900 uppercase">
+              <p className="text-sm font-black text-slate-900 dark:text-white uppercase">
                 {infra.node}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg w-fit">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 rounded-lg w-fit">
             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
             <span className="text-[9px] font-black uppercase tracking-widest">
               {infra.status} {"//"} 24ms {t("settings.sysLatency")}
             </span>
           </div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase mt-4">
+          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-4">
             {t("settings.sysSecurityProtocol")}: {infra.compliance}{" "}
             {t("settings.sysCompliant")}
           </p>
         </div>
       </div>
 
-      <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900">
+      <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white">
         <div className="flex items-center gap-3 mb-4">
           <Shield className="w-5 h-5 text-primary" />
           <h4 className="text-[11px] font-bold uppercase tracking-widest">
             {t("settings.sysInfraTransparency")}
           </h4>
         </div>
-        <p className="text-[10px] text-slate-500 leading-relaxed font-bold uppercase">
+        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-bold uppercase">
           {t("settings.sysInfraText", { node: infra.node })}
         </p>
       </div>

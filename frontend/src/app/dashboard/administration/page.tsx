@@ -283,8 +283,16 @@ export default function AdministrationPage() {
     }
   };
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden pb-12">
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden pb-12 bg-[#f4f7f6] dark:bg-slate-950 transition-colors duration-300">
       <div className="flex relative min-h-[calc(100vh-200px)]">
         <div
           className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
@@ -292,14 +300,14 @@ export default function AdministrationPage() {
           <div className="max-w-[1500px] mx-auto px-6 py-0 pt-0">
             <div className="space-y-6">
               {/* Header Administration */}
-              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-4 border-b border-slate-100">
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div className="space-y-1">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-50 border border-slate-200 rounded-xl shadow-sm flex items-center justify-center">
+                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm flex items-center justify-center">
                       <Lock className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase">
+                      <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
                         System Control
                       </h1>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
@@ -310,16 +318,16 @@ export default function AdministrationPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg flex items-center gap-2 shadow-sm">
+                  <div className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg flex items-center gap-2 shadow-sm">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                    <span className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest">
                       Master Node: Operational
                     </span>
                   </div>
                   <DocumentationToggle showDocs={showDocs} setShowDocs={setShowDocs} text="SOP Kontrol" />
                   <button
                     onClick={() => setAddUserModalOpen(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-primary text-slate-900 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-primary/90 transition-all shadow-md shadow-primary/10"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-primary text-slate-900 dark:text-slate-950 font-bold rounded-lg text-[10px] uppercase tracking-widest hover:bg-primary/90 transition-all shadow-md shadow-primary/10"
                   >
                     <Plus className="w-3.5 h-3.5" /> Provision New Staff
                   </button>
@@ -360,40 +368,43 @@ export default function AdministrationPage() {
                 ].map((s, i) => (
                   <div
                     key={i}
-                    className="bg-white border border-slate-200/60 p-4 rounded-xl shadow-sm hover:shadow-md transition-all group border-b-4"
-                    style={{
-                      borderBottomColor:
-                        s.color === "emerald"
-                          ? "#10b981"
-                          : s.color === "primary"
-                            ? "#6366f1"
-                            : s.color === "purple"
-                              ? "#a855f7"
-                              : "#3b82f6",
-                    }}
+                    className={`backdrop-blur-sm border p-2 sm:p-4 rounded-xl shadow-sm hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden group ${
+                      s.color === "emerald" ? "bg-emerald-50/40 border-emerald-100/50 dark:bg-emerald-950/20 dark:border-emerald-900/40" :
+                      s.color === "primary" ? "bg-indigo-50/40 border-indigo-100/50 dark:bg-indigo-950/20 dark:border-indigo-900/40" :
+                      s.color === "purple" ? "bg-purple-50/40 border-purple-100/50 dark:bg-purple-950/20 dark:border-purple-900/40" :
+                      "bg-blue-50/40 border-blue-100/50 dark:bg-blue-950/20 dark:border-blue-900/40"
+                    }`}
                   >
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex justify-between items-start mb-1 sm:mb-2">
                       <div
-                        className={`w-8 h-8 rounded-lg bg-${s.color}-50 flex items-center justify-center`}
+                        className={`p-1 sm:p-1.5 rounded-sm transition-colors ${
+                          s.color === "emerald" ? "bg-emerald-50 text-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                          s.color === "primary" ? "bg-indigo-50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400" :
+                          s.color === "purple" ? "bg-purple-50 text-purple-500 dark:bg-purple-900/30 dark:text-purple-400" :
+                          "bg-blue-50 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400"
+                        }`}
                       >
-                        <s.icon
-                          className={`w-4 h-4 text-${s.color === "primary" ? "primary" : s.color + "-500"}`}
-                        />
+                        <s.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </div>
-                      <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
+                      <span className="text-[7px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                         ID-0{i + 1}
                       </span>
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                      {s.label}
-                    </p>
-                    <div className="flex items-end gap-1.5">
-                      <h3 className="text-base font-black text-slate-900 tracking-tight">
-                        {s.value}
-                      </h3>
-                      <span className="text-[10px] font-bold text-primary mb-0.5">
-                        {s.sub}
-                      </span>
+                    <div className="z-10">
+                      <p className="text-slate-400 dark:text-slate-500 text-[6px] sm:text-[8px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-0.5">
+                        {s.label}
+                      </p>
+                      <div className="flex items-baseline gap-1.5">
+                         <h3 className="text-sm sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tighter tabular-nums">
+                            {s.value}
+                         </h3>
+                         <span className="text-[8px] sm:text-[10px] font-bold text-primary opacity-80">
+                            {s.sub}
+                         </span>
+                      </div>
+                    </div>
+                    <div className="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
+                       <s.icon className="w-8 h-8 sm:w-12 sm:h-12" />
                     </div>
                   </div>
                 ))}
@@ -401,14 +412,14 @@ export default function AdministrationPage() {
 
               {/* Personnel Registry */}
               <div className="lg:col-span-12">
-                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border-slate-200/60 shadow-sm bg-white">
-                  <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50">
+                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 transition-colors">
+                  <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
-                        <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">
+                        <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
                           Authorized Personnel Registry
                         </h3>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
                           Verified Laboratory Analysts &amp; Administrators
                         </p>
                       </div>
@@ -421,14 +432,14 @@ export default function AdministrationPage() {
                             value={searchQuery}
                             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                             placeholder="Cari nama / email..."
-                            className="pl-7 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/10 outline-none w-44"
+                            className="pl-7 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-primary/10 outline-none w-44"
                           />
                         </div>
                         {/* Role filter */}
                         <select
                           value={filterRole}
                           onChange={(e) => { setFilterRole(e.target.value); setCurrentPage(1); }}
-                          className="py-1.5 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:ring-2 focus:ring-primary/10 outline-none"
+                          className="py-1.5 px-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/10 outline-none"
                         >
                           <option value="">Semua Role</option>
                           <option value="super_admin">Super Admin</option>
@@ -441,7 +452,7 @@ export default function AdministrationPage() {
                         <select
                           value={filterCompany}
                           onChange={(e) => { setFilterCompany(e.target.value); setCurrentPage(1); }}
-                          className="py-1.5 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:ring-2 focus:ring-primary/10 outline-none max-w-[180px]"
+                          className="py-1.5 px-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/10 outline-none max-w-[180px]"
                         >
                           <option value="">Semua Company</option>
                           {Array.from(new Set(analysts.map(a => a.organizationName).filter(Boolean)))
@@ -456,29 +467,29 @@ export default function AdministrationPage() {
 
                   <div className="overflow-x-auto scrollbar-hide">
                     <table className="w-full text-left">
-                      <thead className="bg-slate-50/50 border-b border-slate-100">
+                      <thead className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
                         <tr>
-                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                             Analyst Node
                           </th>
-                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                             Company
                           </th>
-                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                             Clearance
                           </th>
-                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                             Status
                           </th>
-                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                             Last Pulse
                           </th>
-                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">
                             Actions
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {(() => {
                           const filtered = analysts.filter((a) => {
                             const q = searchQuery.toLowerCase();
@@ -498,40 +509,40 @@ export default function AdministrationPage() {
                             <>
                               {paginated.length === 0 ? (
                                 <tr>
-                                  <td colSpan={6} className="px-5 py-8 text-center text-xs text-slate-400">
+                                  <td colSpan={6} className="px-5 py-8 text-center text-xs text-slate-400 dark:text-slate-600">
                                     Tidak ada data yang cocok dengan filter.
                                   </td>
                                 </tr>
                               ) : (
                                 paginated.map((a) => (
-                                  <tr key={a.id} className="hover:bg-slate-50 transition-colors group">
+                                  <tr key={a.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group border-b border-slate-100 dark:border-slate-800 last:border-0">
                                     <td className="px-5 py-2.5">
                                       <div className="flex items-center gap-2.5">
-                                        <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border border-slate-200 shrink-0">
+                                        <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0">
                                           {a.name.charAt(0)}
                                         </div>
                                         <div>
                                           <div className="flex items-center gap-1.5 mb-0.5">
-                                            <p className="text-[11px] font-bold text-slate-900">{a.name}</p>
+                                            <p className="text-[11px] font-bold text-slate-900 dark:text-white">{a.name}</p>
                                             <span className={`px-1 py-0.5 text-[8px] font-black uppercase tracking-widest rounded ${
                                               a.role === "super_admin" ? "bg-rose-100 text-rose-600"
                                               : a.role === "admin" ? "bg-primary/10 text-primary"
                                               : a.role === "manager" ? "bg-amber-100 text-amber-700"
                                               : a.role === "auditor" ? "bg-purple-100 text-purple-700"
-                                              : "bg-slate-100 text-slate-600"
+                                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                                             }`}>{a.role}</span>
                                           </div>
-                                          <p className="text-[10px] text-slate-400 font-medium">{a.email}</p>
+                                          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{a.email}</p>
                                         </div>
                                       </div>
                                     </td>
                                     <td className="px-5 py-2.5">
-                                      <span className="text-[10px] font-medium text-slate-500">
-                                        {a.organizationName || <span className="text-slate-300 italic">—</span>}
+                                      <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                                        {a.organizationName || <span className="text-slate-300 dark:text-slate-700 italic">—</span>}
                                       </span>
                                     </td>
                                     <td className="px-5 py-2.5">
-                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-600 border border-slate-200 uppercase">
+                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 uppercase">
                                         {a.clearance}
                                       </span>
                                     </td>
@@ -545,7 +556,7 @@ export default function AdministrationPage() {
                                     </td>
                                     <td className="px-5 py-2.5">
                                       <span className={`text-[10px] font-bold uppercase tracking-tighter ${
-                                        a.lastActive === "Online" ? "text-emerald-600" : "text-slate-400"
+                                        a.lastActive === "Online" ? "text-emerald-600" : "text-slate-400 dark:text-slate-600"
                                       }`}>
                                         {a.lastActive}
                                       </span>
@@ -554,14 +565,14 @@ export default function AdministrationPage() {
                                       <div className="flex items-center justify-end gap-1">
                                         <button
                                           onClick={() => { setTargetUser(a); setResetModalOpen(true); }}
-                                          className="p-1.5 text-slate-300 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
+                                          className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
                                           title="Reset Password"
                                         >
                                           <Key className="w-3.5 h-3.5" />
                                         </button>
                                         <button
                                           onClick={() => handleToggleStatus(a.id)}
-                                          className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                          className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
                                           title="Suspend Node"
                                         >
                                           <Trash2 className="w-3.5 h-3.5" />
@@ -574,15 +585,15 @@ export default function AdministrationPage() {
                               {/* Pagination Footer */}
                               <tr>
                                 <td colSpan={6}>
-                                  <div className="px-5 py-3 flex items-center justify-between border-t border-slate-100">
-                                    <span className="text-[10px] text-slate-400 font-medium">
+                                  <div className="px-5 py-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/30">
+                                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
                                       {filtered.length === 0 ? "0" : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)}`} dari {filtered.length} personel
                                     </span>
                                     <div className="flex items-center gap-1">
                                       <button
                                         disabled={safePage <= 1}
                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                        className="px-3 py-1 text-[10px] font-black uppercase rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                        className="px-3 py-1 text-[10px] font-black uppercase rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                                       >
                                         ← Prev
                                       </button>
@@ -606,8 +617,8 @@ export default function AdministrationPage() {
                                               onClick={() => setCurrentPage(p as number)}
                                               className={`w-7 h-7 text-[10px] font-black rounded-lg transition-all ${
                                                 p === safePage
-                                                  ? "bg-slate-900 text-white"
-                                                  : "border border-slate-200 text-slate-500 hover:bg-slate-50"
+                                                  ? "bg-slate-900 dark:bg-primary text-white"
+                                                  : "border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                                               }`}
                                             >
                                               {p}
@@ -618,7 +629,7 @@ export default function AdministrationPage() {
                                       <button
                                         disabled={safePage >= totalPages}
                                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                        className="px-3 py-1 text-[10px] font-black uppercase rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                        className="px-3 py-1 text-[10px] font-black uppercase rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                                       >
                                         Next →
                                       </button>
@@ -637,8 +648,8 @@ export default function AdministrationPage() {
 
               {/* Password Reset Requests */}
               <div className="lg:col-span-12">
-                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border-slate-200/60 shadow-sm bg-white">
-                  <div className="px-6 py-6 border-b border-slate-100 bg-slate-50/50">
+                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 transition-colors">
+                  <div className="px-6 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
                     <ResetRequestsPanel />
                   </div>
                 </div>
@@ -646,8 +657,8 @@ export default function AdministrationPage() {
 
               {/* Export Hub */}
               <div className="lg:col-span-12">
-                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border-slate-200/60 shadow-lg group bg-white">
-                  <div className="px-5 py-4 border-b border-slate-100 bg-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-lg group bg-white dark:bg-slate-900 transition-colors">
+                  <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-900 dark:bg-slate-950 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
                         <BarChart3 className="w-5 h-5 text-primary" />
@@ -671,15 +682,15 @@ export default function AdministrationPage() {
                     </div>
                   </div>
 
-                  <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/30">
+                  <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/30 dark:bg-slate-800/30">
                     {/* PDF Export */}
-                    <div className="bg-white border border-slate-200/60 rounded-2xl p-5 flex flex-col gap-3 hover:border-red-200 hover:shadow-xl transition-all group/pdf relative overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 flex flex-col gap-3 hover:border-red-200 dark:hover:border-red-900/40 hover:shadow-xl transition-all group/pdf relative overflow-hidden">
                       <div className="flex items-center gap-3 relative z-10">
                         <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center group-hover/pdf:scale-110 transition-transform">
                           <FileText className="w-5 h-5 text-red-500" />
                         </div>
                         <div>
-                          <h4 className="text-sm font-black text-slate-900 tracking-tight">
+                          <h4 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
                             Buku Besar Tata Kelola Master
                           </h4>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
@@ -701,7 +712,7 @@ export default function AdministrationPage() {
                         ].map((tag) => (
                           <span
                             key={tag}
-                            className="px-2 py-1 bg-slate-100 text-[10px] font-black text-slate-500 rounded-md uppercase tracking-widest"
+                            className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500 dark:text-slate-400 rounded-md uppercase tracking-widest"
                           >
                             {tag}
                           </span>
@@ -724,13 +735,13 @@ export default function AdministrationPage() {
                     </div>
 
                     {/* Excel Export */}
-                    <div className="bg-white border border-slate-200/60 rounded-2xl p-5 flex flex-col gap-3 hover:border-emerald-200 hover:shadow-xl transition-all group/excel relative overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 flex flex-col gap-3 hover:border-emerald-200 dark:hover:border-emerald-900/40 hover:shadow-xl transition-all group/excel relative overflow-hidden">
                       <div className="flex items-center gap-3 relative z-10">
                         <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center group-hover/excel:scale-110 transition-transform">
                           <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
                         </div>
                         <div>
-                          <h4 className="text-sm font-black text-slate-900 tracking-tight">
+                          <h4 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
                             Dataset Analitik Mentah
                           </h4>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
@@ -749,7 +760,7 @@ export default function AdministrationPage() {
                           (tag) => (
                             <span
                               key={tag}
-                              className="px-2 py-1 bg-slate-100 text-[10px] font-black text-slate-500 rounded-md uppercase tracking-widest"
+                              className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500 dark:text-slate-400 rounded-md uppercase tracking-widest"
                             >
                               {tag}
                             </span>
@@ -778,8 +789,8 @@ export default function AdministrationPage() {
 
               {/* Recent Audit Trail - MOVED BELOW */}
               <div className="lg:col-span-12">
-                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border-slate-200/60 shadow-xl bg-white">
-                  <div className="px-5 py-4 border-b border-slate-100 bg-slate-900 flex items-center justify-between">
+                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900 transition-colors">
+                  <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-900 dark:bg-slate-950 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
                       <div>
@@ -798,11 +809,11 @@ export default function AdministrationPage() {
                       Lihat Lengkap
                     </button>
                   </div>
-                  <div className="divide-y divide-slate-100 bg-white">
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
                     {auditLogs.slice(0, 10).map((log) => (
                       <div
                         key={log.id}
-                        className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-all group"
+                        className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group"
                       >
                         <div className="flex items-center gap-6">
                           <div className="flex flex-col items-center">
@@ -812,7 +823,7 @@ export default function AdministrationPage() {
                             <div className="w-[1px] h-3 bg-slate-100 my-1" />
                           </div>
                           <div>
-                            <p className="text-xs font-black text-slate-900 tracking-tight">
+                            <p className="text-xs font-black text-slate-900 dark:text-white tracking-tight">
                               {log.action}
                             </p>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
@@ -830,7 +841,7 @@ export default function AdministrationPage() {
                         </div>
                         <div className="flex items-center gap-6">
                           <div className="text-right hidden md:block">
-                            <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
+                            <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
                               {new Date(log.timestamp).toLocaleDateString()}
                             </p>
                             <p className="text-[10px] font-bold text-slate-300 mt-0.5 font-mono tracking-tighter">
@@ -843,9 +854,9 @@ export default function AdministrationPage() {
                           </div>
                           <div className="w-20 text-right">
                             <span className={`inline-block text-[9px] font-black px-2.5 py-1 rounded-lg border uppercase tracking-widest shadow-sm ${
-                              log.status === 'SUCCESS' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                              log.status === 'FAILED' ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                              'bg-slate-50 text-slate-700 border-slate-200'
+                              log.status === 'SUCCESS' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' :
+                              log.status === 'FAILED' ? 'bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800' :
+                              'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-800'
                             }`}>
                               {log.status}
                             </span>
@@ -888,9 +899,9 @@ AUTORITAS: MASTER ROOT`}
           <section className="space-y-3">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">01</span>
-              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Overview</h2>
+              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">Overview</h2>
             </div>
-            <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+            <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
               Modul Node Governance dirancang secara khusus untuk Administrator sebagai pusat komando otorisasi staf dan pemantauan kesehatan operasional server.
             </p>
           </section>
@@ -898,7 +909,7 @@ AUTORITAS: MASTER ROOT`}
           <section className="space-y-3 pt-2">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">02</span>
-              <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Governance Protocol</h2>
+              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">Governance Protocol</h2>
             </div>
             <div className="space-y-3 ml-0.5">
               {[
@@ -907,12 +918,12 @@ AUTORITAS: MASTER ROOT`}
                 { id: "3", title: "Master Export Center", desc: "Gunakan fitur ekspor PDF/Excel untuk menghasilkan laporan tata kelola resmi standar ISO-17025." },
               ].map((step) => (
                 <div key={step.id} className="flex gap-2.5 group">
-                  <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 dark:bg-slate-950 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                     {step.id}
                   </span>
                   <div className="space-y-0.5">
-                    <h4 className="text-[10px] font-bold text-slate-900">{step.title}</h4>
-                    <p className="text-[9px] text-slate-500 leading-relaxed font-medium">{step.desc}</p>
+                    <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">{step.title}</h4>
+                    <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{step.desc}</p>
                   </div>
                 </div>
               ))}
@@ -924,24 +935,24 @@ AUTORITAS: MASTER ROOT`}
       {/* Professional Password Reset Modal */}
       {resetModalOpen && targetUser && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => !isResetting && setResetModalOpen(false)} />
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
+          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => !isResetting && setResetModalOpen(false)} />
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
             <div className="p-8 space-y-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
                   <Key className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Reset Authority</h3>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Protocol-09 Security Recovery</p>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Reset Authority</h3>
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Protocol-09 Security Recovery</p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Target Analyst</p>
-                  <p className="text-sm font-bold text-slate-900">{targetUser.name}</p>
-                  <p className="text-xs text-slate-500">{targetUser.email}</p>
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Target Analyst</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{targetUser.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{targetUser.email}</p>
                 </div>
 
                 <div className="space-y-2">
@@ -952,7 +963,7 @@ AUTORITAS: MASTER ROOT`}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••••••••••"
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 pr-12"
+                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 pr-12"
                       autoFocus
                     />
                     <button
@@ -991,16 +1002,16 @@ AUTORITAS: MASTER ROOT`}
       {/* Provision New Staff Modal */}
       {addUserModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => !isCreating && setAddUserModalOpen(false)} />
-          <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
+          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => !isCreating && setAddUserModalOpen(false)} />
+          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
             <form onSubmit={handleCreateUser} className="p-8 space-y-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/20">
                   <UserPlus className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Provision Staff</h3>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Authorized Personnel Onboarding</p>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Provision Staff</h3>
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Authorized Personnel Onboarding</p>
                 </div>
               </div>
 
@@ -1014,15 +1025,15 @@ AUTORITAS: MASTER ROOT`}
                       value={newUserData.full_name}
                       onChange={(e) => setNewUserData({...newUserData, full_name: e.target.value})}
                       placeholder="e.g. John Doe"
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300"
+                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Assigned Role</label>
+                    <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Assigned Role</label>
                     <select
                       value={newUserData.role}
                       onChange={(e) => setNewUserData({...newUserData, role: e.target.value})}
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300"
+                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                     >
                       <option value="analyst">Analyst (Level-01)</option>
                       <option value="auditor">Auditor (Level-02)</option>
@@ -1040,7 +1051,7 @@ AUTORITAS: MASTER ROOT`}
                     value={newUserData.email}
                     onChange={(e) => setNewUserData({...newUserData, email: e.target.value})}
                     placeholder="staff@laboratory.diag"
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300"
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                   />
                 </div>
 
@@ -1052,7 +1063,7 @@ AUTORITAS: MASTER ROOT`}
                     value={newUserData.password}
                     onChange={(e) => setNewUserData({...newUserData, password: e.target.value})}
                     placeholder="••••••••••••"
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300"
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                   />
                   <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight italic">Minimum 12 characters with Uppercase, Lowercase, Number, and Special Char.</p>
                 </div>

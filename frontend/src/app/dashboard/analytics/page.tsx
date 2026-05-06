@@ -46,6 +46,7 @@ import {
   DocumentationToggle,
 } from "@/components/DocumentationSidebar";
 import { useTranslationStore } from "@/lib/i18n/store";
+import { useThemeStore } from "@/lib/theme-store";
 
 type DateRange = "7d" | "30d" | "90d" | "custom";
 interface TimeSeriesPoint {
@@ -239,6 +240,12 @@ function ChartTooltip({ active, payload, label }: any) {
 
 export default function AnalyticsPage() {
   const { t } = useTranslationStore();
+  const { theme } = useThemeStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [dateRange, setDateRange] = useState<DateRange>("30d");
   const [mediaType, setMediaType] = useState<MediaType | "all">("all");
   const [analystFilter, setAnalystFilter] = useState("all");
@@ -385,7 +392,7 @@ export default function AnalyticsPage() {
   if (isLoading && allAnalyses.length === 0)
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-5">
-        <div className="w-16 h-16 rounded-xl bg-slate-50 flex items-center justify-center shadow-inner">
+        <div className="w-16 h-16 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center shadow-inner">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">
@@ -415,8 +422,10 @@ export default function AnalyticsPage() {
       </div>
     );
 
+  if (!mounted) return null;
+
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden">
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden bg-[#f4f7f6] dark:bg-slate-950 transition-colors duration-300">
       {/* Container for Main Content and Docs */}
       <div className="flex relative min-h-[calc(100vh-200px)]">
         {/* Main Workspace Area */}
@@ -429,11 +438,11 @@ export default function AnalyticsPage() {
               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                 {t("analytics.supertitle")}
               </p>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                {t("analytics.title")}
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                {t("overview.neuralIntelligenceLayer")}
               </h1>
-              <p className="text-[11px] text-slate-500 font-medium">
-                {t("analytics.subtitle")}
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                {t("overview.realTimeSpectral")}
               </p>
               <div className="hidden lg:block">
                 <DocumentationToggle
@@ -445,30 +454,30 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Main Analytics Container */}
-            <div className="bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden">
-              <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md shadow-sm overflow-hidden transition-colors">
+              <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                   {t("analytics.neuralQueriesHeader")}
                 </h2>
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => toast.info(t("analytics.generatingReport"))}
-                    className="flex items-center gap-2 text-blue-600 text-[10px] font-bold uppercase tracking-widest hover:underline"
+                    className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-widest hover:underline"
                   >
-                    {t("analytics.printReport")}
+                    {t("overview.downloadDataset")}
                   </button>
                   <button
                     onClick={handleExport}
-                    className="flex items-center gap-1 text-blue-600 text-[10px] font-bold uppercase tracking-widest hover:underline"
+                    className="flex items-center gap-1 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-widest hover:underline"
                   >
-                    {t("analytics.downloadData")}{" "}
+                    {t("overview.activeSink")}{" "}
                     <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
               </div>
 
-              <div className="px-6 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4 bg-slate-50/30">
-                <button className="flex items-center gap-2 px-3 py-1.5 bg-white border border-blue-200 text-blue-600 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 transition-all">
+              <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-slate-50/30 dark:bg-slate-800/30">
+                <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
                   <Filter className="w-3 h-3" /> {t("analytics.addFilter")}
                 </button>
 
@@ -479,7 +488,7 @@ export default function AnalyticsPage() {
                       onChange={(e) =>
                         setDateRange(e.target.value as DateRange)
                       }
-                      className="bg-white border border-slate-200 rounded-md px-3 py-1.5 text-[10px] font-black text-slate-700 outline-none hover:border-slate-300 transition-all appearance-none pr-8"
+                      className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-1.5 text-[10px] font-black text-slate-700 dark:text-slate-200 outline-none hover:border-slate-300 dark:hover:border-slate-600 transition-all appearance-none pr-8"
                     >
                       {DATE_RANGE_OPTIONS.map((o) => (
                         <option key={o.value} value={o.value}>
@@ -494,53 +503,58 @@ export default function AnalyticsPage() {
 
               {/* Query Overview Pills */}
               <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-4">
-                <div className="flex items-center gap-2 text-[10px] sm:text-[11px] font-bold text-slate-900">
+                <div className="flex items-center gap-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white">
                   {t("analytics.queryOverview")}{" "}
-                  <Clock className="w-3 h-3 text-slate-400" />
+                  <Clock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                 </div>
-                <div className="flex border-b border-slate-100 gap-4 sm:gap-6 overflow-x-auto no-scrollbar">
+                 <div className="flex border-b border-slate-100 dark:border-slate-800 gap-4 sm:gap-6 overflow-x-auto no-scrollbar">
                   {[
-                    t("analytics.tabQueryName"),
-                    t("analytics.tabQueryType"),
-                    t("analytics.tabResponseCode"),
+                    t("overview.queryOverview"),
+                    t("overview.throughput"),
+                    t("overview.successRate"),
                     t("analytics.tabDataCenter"),
                   ].map((tab, i) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(i)}
-                      className={`pb-2 text-[9px] sm:text-[11px] font-bold transition-all whitespace-nowrap ${activeTab === i ? "text-blue-600 border-b-2 border-blue-600" : "text-slate-400 hover:text-slate-600"}`}
+                      className={`pb-2 text-[9px] sm:text-[11px] font-bold transition-all whitespace-nowrap ${activeTab === i ? "text-blue-600 border-b-2 border-blue-600" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"}`}
                     >
                       {tab}
                     </button>
                   ))}
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 py-4">
+                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 py-4">
                   {[
                     {
                       labelKey: "analytics.cardPcaMatrix" as const,
                       key: "Plate Count Agar",
-                      color: "bg-blue-500",
+                      trend: "+14%",
+                      color: "indigo",
                     },
                     {
                       labelKey: "analytics.cardVrbaMatrix" as const,
                       key: "VRBA",
-                      color: "bg-amber-500",
+                      trend: "+2.1%",
+                      color: "amber",
                     },
                     {
                       labelKey: "analytics.cardBgbbProtocol" as const,
                       key: "BGBB",
-                      color: "bg-emerald-500",
+                      trend: "OPTIMAL",
+                      color: "emerald",
                     },
                     {
                       labelKey: "analytics.cardR2aAnalytics" as const,
                       key: "R2A",
-                      color: "bg-rose-500",
+                      trend: "+5.4%",
+                      color: "rose",
                     },
                     {
                       labelKey: "analytics.cardIntegrity" as const,
                       key: "Integrity",
-                      color: "bg-emerald-400",
+                      trend: "99.9%",
+                      color: "blue",
                     },
                   ].map((s, i) => {
                     let val: string | number = 0;
@@ -555,49 +569,69 @@ export default function AnalyticsPage() {
                     return (
                       <div
                         key={i}
-                        className="space-y-1 sm:space-y-2 border-r border-slate-100 last:border-0 pr-2 sm:pr-4"
+                        className={`backdrop-blur-sm border p-2 sm:p-4 rounded-xl shadow-sm group hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden ${
+                          s.color === 'indigo' ? 'bg-indigo-50/40 border-indigo-100/50 hover:bg-indigo-50/60 dark:bg-indigo-950/20 dark:border-indigo-900/40' :
+                          s.color === 'amber' ? 'bg-amber-50/40 border-amber-100/50 hover:bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-900/40' :
+                          s.color === 'emerald' ? 'bg-emerald-50/40 border-emerald-100/50 hover:bg-emerald-50/60 dark:bg-emerald-950/20 dark:border-emerald-900/40' :
+                          s.color === 'rose' ? 'bg-rose-50/40 border-rose-100/50 hover:bg-rose-50/60 dark:bg-rose-950/20 dark:border-rose-900/40' :
+                          'bg-blue-50/40 border-blue-100/50 hover:bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-900/40'
+                        }`}
                       >
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                          <div
-                            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${s.color}`}
-                          />
-                          <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 truncate">
-                            {t(s.labelKey)}
-                          </span>
+                        <div className="flex justify-between items-start mb-1 sm:mb-2">
+                           <div className={`p-1 sm:p-1.5 rounded-sm transition-colors ${
+                              s.color === 'indigo' ? 'bg-indigo-50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400' :
+                              s.color === 'amber' ? 'bg-amber-50 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400' :
+                              s.color === 'emerald' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                              s.color === 'rose' ? 'bg-rose-50 text-rose-500 dark:bg-rose-900/30 dark:text-rose-400' :
+                              'bg-blue-50 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400'
+                           }`}>
+                              <FlaskConical className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                           </div>
+                           <span className={`text-[7px] sm:text-[9px] font-bold ${s.color === 'emerald' ? 'text-emerald-500' : 'text-slate-400'} uppercase tracking-widest z-10`}>
+                              {s.trend}
+                           </span>
                         </div>
-                        <p className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                          {val}
-                        </p>
+                        <div className="z-10">
+                          <p className="text-slate-400 dark:text-slate-500 text-[6px] sm:text-[8px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-0.5">
+                            {t(s.labelKey)}
+                          </p>
+                          <p className="text-sm sm:text-2xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tighter">
+                            {val}
+                          </p>
+                        </div>
+                        <div className="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
+                           <FlaskConical className="w-8 h-8 sm:w-12 sm:h-12" />
+                        </div>
                       </div>
                     );
                   })}
                 </div>
 
-                {/* Chart Container */}
-                <div className="h-[300px] w-full mt-8 border-t border-slate-50 pt-8">
+                 {/* Chart Container */}
+                <div className="h-[300px] w-full mt-8 border-t border-slate-100 dark:border-slate-800 pt-8">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={timeSeriesData}>
                       <CartesianGrid
                         strokeDasharray="0"
                         vertical={false}
-                        stroke="#f1f5f9"
+                        stroke={theme === 'dark' ? "#1e293b" : "#f1f5f9"}
                       />
                       <XAxis
                         dataKey="label"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 9, fill: "#94a3b8", fontWeight: 700 }}
+                        tick={{ fontSize: 9, fill: theme === 'dark' ? "#64748b" : "#94a3b8", fontWeight: 700 }}
                         dy={10}
                       />
                       <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 9, fill: "#94a3b8", fontWeight: 700 }}
+                        tick={{ fontSize: 9, fill: theme === 'dark' ? "#64748b" : "#94a3b8", fontWeight: 700 }}
                         dx={-10}
                       />
                       <Tooltip
                         content={<ChartTooltip />}
-                        cursor={{ stroke: "#f1f5f9", strokeWidth: 1 }}
+                        cursor={{ stroke: theme === 'dark' ? "#334155" : "#f1f5f9", strokeWidth: 1 }}
                       />
                       <Line
                         type="monotone"
@@ -624,41 +658,41 @@ export default function AnalyticsPage() {
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-                <p className="text-[9px] text-center text-slate-400 font-bold uppercase tracking-widest mt-4">
-                  {t("analytics.timeGmt")}
+                 <p className="text-[9px] text-center text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-4">
+                  {t("overview.queryTimeFrame")}
                 </p>
               </div>
 
               {/* Query Statistics Section */}
-              <div className="px-4 sm:px-6 py-6 sm:py-8 bg-slate-50/50 border-t border-slate-100">
-                <h3 className="text-[10px] sm:text-xs font-bold text-slate-900 mb-4 sm:mb-6 uppercase tracking-widest">
+              <div className="px-4 sm:px-6 py-6 sm:py-8 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800">
+                <h3 className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-white mb-4 sm:mb-6 uppercase tracking-widest">
                   {t("analytics.queryStats")}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
-                  <div className="space-y-1 sm:space-y-2 border-l-2 border-slate-200 pl-4 sm:pl-6">
-                    <p className="text-[9px] sm:text-[10px] font-bold text-slate-500">
-                      {t("analytics.totalQueries")}
+                  <div className="space-y-1 sm:space-y-2 border-l-2 border-slate-200 dark:border-slate-700 pl-4 sm:pl-6">
+                     <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                      {t("overview.totalNeuralQueries")}
                     </p>
-                    <p className="text-xl sm:text-2xl font-bold text-slate-900">
+                    <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
                       {stats.total > 1000
                         ? `${(stats.total / 1000).toFixed(2)}k`
                         : stats.total}
                     </p>
                   </div>
-                  <div className="space-y-1 sm:space-y-2 border-l-2 border-slate-200 pl-4 sm:pl-6">
-                    <p className="text-[9px] sm:text-[10px] font-bold text-slate-500">
-                      {t("analytics.avgQueriesSec")}
+                  <div className="space-y-1 sm:space-y-2 border-l-2 border-slate-200 dark:border-slate-700 pl-4 sm:pl-6">
+                     <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                      {t("overview.avgQps")}
                     </p>
-                    <p className="text-xl sm:text-2xl font-bold text-slate-900">
+                    <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
                       0.035
                     </p>
                   </div>
-                  <div className="space-y-1 sm:space-y-2 border-l-2 border-slate-200 pl-4 sm:pl-6 col-span-2 md:col-span-1">
-                    <p className="text-[9px] sm:text-[10px] font-bold text-slate-500">
-                      {t("analytics.avgProcessingTime")}
+                  <div className="space-y-1 sm:space-y-2 border-l-2 border-slate-200 dark:border-slate-700 pl-4 sm:pl-6 col-span-2 md:col-span-1">
+                    <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                      {t("overview.processingTime")}
                     </p>
-                    <p className="text-xl sm:text-2xl font-bold text-slate-900">
-                      2.44s
+                    <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+                      42ms
                     </p>
                   </div>
                 </div>
@@ -666,12 +700,12 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Monthly Summary Table */}
-            <div className="bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden mt-10">
-              <div className="px-6 py-6 border-b border-slate-100 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-slate-900">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md shadow-sm overflow-hidden mt-10 transition-colors">
+              <div className="px-6 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                   {t("analytics.intelligenceLedger")}
                 </h2>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                   {monthlySummaries.length} {t("analytics.cyclesLogged")}
                 </span>
               </div>
@@ -687,7 +721,7 @@ export default function AnalyticsPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left whitespace-nowrap">
                     <thead>
-                      <tr className="bg-slate-50/50 border-b border-slate-100">
+                      <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                         {[
                           t("analytics.colDiagnosticCycle"),
                           t("analytics.colTotalSequences"),
@@ -697,23 +731,23 @@ export default function AnalyticsPage() {
                         ].map((h) => (
                           <th
                             key={h}
-                            className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                            className="px-8 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest"
                           >
                             {h}
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                       {monthlySummaries.map((row) => (
                         <tr
                           key={row.month}
-                          className="hover:bg-slate-50/50 transition-colors"
+                          className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
                         >
-                          <td className="px-8 py-6 text-sm font-bold text-slate-900">
+                          <td className="px-8 py-6 text-sm font-bold text-slate-900 dark:text-white">
                             {row.month}
                           </td>
-                          <td className="px-8 py-6 text-sm font-bold text-slate-700">
+                          <td className="px-8 py-6 text-sm font-bold text-slate-700 dark:text-slate-300">
                             {row.tests}
                           </td>
                           <td className="px-8 py-6">
@@ -729,12 +763,12 @@ export default function AnalyticsPage() {
                                   style={{ width: `${row.passRate}%` }}
                                 />
                               </div>
-                              <span className="text-[10px] font-bold text-slate-700">
+                              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
                                 {row.passRate}%
                               </span>
                             </div>
                           </td>
-                          <td className="px-8 py-6 text-[10px] font-bold text-slate-400 uppercase">
+                          <td className="px-8 py-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">
                             {row.analysts}
                           </td>
                         </tr>
@@ -780,11 +814,11 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
                 <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   01
                 </span>
-                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
                   {t("analytics.docsSectionOverviewTitle")}
                 </h2>
               </div>
-              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+              <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700/50">
                 {t("analytics.docsSectionOverviewText")}
               </p>
             </section>
@@ -794,7 +828,7 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
                 <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   02
                 </span>
-                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
                   {t("analytics.docsSectionComponentsTitle")}
                 </h2>
               </div>
@@ -828,10 +862,10 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
                       {step.id}
                     </span>
                     <div className="space-y-0.5">
-                      <h4 className="text-[10px] font-bold text-slate-900">
+                      <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">
                         {t(step.titleKey)}
                       </h4>
-                      <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
                         {t(step.descKey)}
                       </p>
                     </div>
@@ -840,12 +874,12 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
               </div>
             </section>
 
-            <section className="space-y-2 pt-3 border-t border-slate-100">
+            <section className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   03
                 </span>
-                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
                   {t("analytics.docsSectionExportTitle")}
                 </h2>
               </div>
@@ -866,12 +900,12 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
                 ].map((item, i) => (
                   <div
                     key={i}
-                    className="flex flex-col gap-0.5 pb-2 border-b border-slate-50 last:border-0"
+                    className="flex flex-col gap-0.5 pb-2 border-b border-slate-100 dark:border-slate-800 last:border-0"
                   >
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                    <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                       {t(item.labelKey)}
                     </span>
-                    <span className="text-[9px] font-bold text-slate-700">
+                    <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300">
                       {t(item.valKey)}
                     </span>
                   </div>
@@ -880,17 +914,17 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
             </section>
 
             <div className="space-y-3 pt-4">
-              <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl flex gap-3 shadow-sm">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-xl flex gap-3 shadow-sm">
                 <div className="w-4 h-4 flex-shrink-0 mt-0.5">
                   <div className="w-full h-full rounded-full bg-blue-600 flex items-center justify-center">
                     <BarChart3 className="w-2.5 h-2.5 text-white" />
                   </div>
                 </div>
                 <div className="space-y-0.5">
-                  <p className="text-[10px] font-black text-blue-900 uppercase tracking-widest">
+                  <p className="text-[10px] font-black text-blue-900 dark:text-blue-300 uppercase tracking-widest">
                     {t("analytics.docsStatusReadyTitle")}
                   </p>
-                  <p className="text-[9px] text-blue-700 leading-relaxed font-semibold">
+                  <p className="text-[9px] text-blue-700 dark:text-blue-400 leading-relaxed font-semibold">
                     {t("analytics.docsStatusReadyText")}
                   </p>
                 </div>

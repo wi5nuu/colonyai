@@ -34,7 +34,12 @@ export default function HistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [showDocs, setShowDocs] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const pageSize = 10;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -129,23 +134,25 @@ export default function HistoryPage() {
     );
   }
 
+  if (!mounted) return null;
+
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative bg-[#f4f7f6] dark:bg-slate-950 transition-colors duration-300">
       <div className="flex relative min-h-[calc(100vh-200px)]">
         <div
           className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
         >
           <div className="max-w-[1500px] mx-auto px-4 py-0 sm:px-8">
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-2 pb-2 border-b border-slate-100 mb-2">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800 mb-2">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-slate-50 border border-slate-200 rounded-lg shadow-sm flex items-center justify-center">
+                <div className="w-8 h-8 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm flex items-center justify-center">
                   <History className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-slate-900 tracking-tight uppercase leading-none">
+                  <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
                     {t("history.title")}
                   </h1>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-0.5">
+                  <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] mt-0.5">
                     {t("history.subtitle")}
                   </p>
                 </div>
@@ -158,23 +165,23 @@ export default function HistoryPage() {
                 />
                 <button
                   onClick={handleExportCsv}
-                  className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm"
                 >
-                  <Download className="h-3 w-3 text-slate-400" />
+                  <Download className="h-3 w-3 text-slate-400 dark:text-slate-500" />
                   <span>{t("history.exportCsv")}</span>
                 </button>
               </div>
             </div>
 
             {/* Filters & Search */}
-            <div className="bg-white border border-slate-200/60 p-3 mb-4 rounded-xl shadow-sm">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 mb-4 rounded-xl shadow-sm transition-colors">
               <div className="flex flex-col sm:flex-row gap-2">
                 <div className="flex-1 relative group">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                   <input
                     type="text"
                     placeholder={t("history.searchPlaceholder")}
-                    className="w-full pl-9 pr-3 py-2 text-[11px] font-bold text-slate-900 bg-slate-50 border border-slate-100 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-300"
+                    className="w-full pl-9 pr-3 py-2 text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                     value={searchTerm}
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
@@ -184,7 +191,7 @@ export default function HistoryPage() {
                 </div>
                 <div className="flex gap-2">
                   <select
-                    className="px-3 py-2 text-[10px] font-black text-slate-900 bg-slate-50 border border-slate-100 rounded-lg outline-none cursor-pointer uppercase tracking-wider"
+                    className="px-3 py-2 text-[10px] font-black text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg outline-none cursor-pointer uppercase tracking-wider transition-colors"
                     value={mediaFilter}
                     onChange={(e) => {
                       setMediaFilter(e.target.value);
@@ -204,7 +211,7 @@ export default function HistoryPage() {
                     </option>
                   </select>
                   <select
-                    className="px-3 py-2 text-[10px] font-black text-slate-900 bg-slate-50 border border-slate-100 rounded-lg outline-none cursor-pointer uppercase tracking-wider"
+                    className="px-3 py-2 text-[10px] font-black text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg outline-none cursor-pointer uppercase tracking-wider transition-colors"
                     value={statusFilter}
                     onChange={(e) => {
                       setStatusFilter(e.target.value);
@@ -221,13 +228,13 @@ export default function HistoryPage() {
             </div>
 
             {/* Results Table */}
-            <div className="bg-white border border-slate-200/60 overflow-hidden rounded-xl shadow-sm">
-              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 overflow-hidden rounded-xl shadow-sm transition-colors">
+              <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50 transition-colors">
                 <div>
-                  <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
+                  <h2 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
                     {t("history.archives")}
                   </h2>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                  <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                     {total} {t("history.recordsFound")}
                   </p>
                 </div>
@@ -236,10 +243,10 @@ export default function HistoryPage() {
               {/* Empty State */}
               {!isLoading && analyses.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
-                    <History className="h-6 w-6 text-slate-300" />
+                  <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-4 border border-slate-100 dark:border-slate-700">
+                    <History className="h-6 w-6 text-slate-300 dark:text-slate-600" />
                   </div>
-                  <p className="text-sm font-bold text-slate-900">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
                     {t("history.noRecords")}
                   </p>
                   <button
@@ -260,7 +267,7 @@ export default function HistoryPage() {
                 <div className="overflow-x-auto w-full">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="bg-slate-50 border-b border-slate-100">
+                      <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                         {[
                           t("history.tableSpecimenId"),
                           t("history.tableProtocol"),
@@ -273,48 +280,53 @@ export default function HistoryPage() {
                         ].map((h) => (
                           <th
                             key={h}
-                            className="px-4 py-3 text-[9px] font-black text-slate-700 uppercase tracking-widest"
+                            className="px-3 py-2 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest"
                           >
                             {h}
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                       {analyses.map((analysis: any) => (
                         <tr
                           key={analysis.id}
-                          className="hover:bg-slate-50 cursor-pointer text-[11px]"
+                          className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer text-[10px]"
                           onClick={() => handleViewAnalysis(analysis.id)}
                         >
-                          <td className="px-4 py-3 font-bold text-slate-900">
-                            {analysis.sample_id}
+                          <td className="px-3 py-1.5">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-900 dark:text-white">{analysis.sample_id}</span>
+                              <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter mt-0.5">
+                                {analysis.user?.organization_name || "ColonyAI Global"} • {analysis.user?.full_name || "Unknown"}
+                              </span>
+                            </div>
                           </td>
-                          <td className="px-4 py-3 font-bold text-slate-700">
+                          <td className="px-3 py-1.5 font-bold text-slate-700 dark:text-slate-300">
                             {analysis.media_type}
                           </td>
-                          <td className="px-4 py-3 font-mono text-slate-700">
+                          <td className="px-3 py-1.5 font-mono text-slate-700 dark:text-slate-300">
                             {analysis.colony_count}
                           </td>
-                          <td className="px-4 py-3 font-black tabular-nums text-slate-900">
+                          <td className="px-3 py-1.5 font-black tabular-nums text-slate-900 dark:text-white">
                             {formatCFU(analysis.cfu_per_ml, analysis.warnings)}
                           </td>
-                          <td className="px-4 py-3 text-slate-600 font-medium">
+                          <td className="px-3 py-1.5 text-slate-600 dark:text-slate-400 font-medium">
                             {(analysis.confidence_score * 100).toFixed(0)}%
                           </td>
-                          <td className="px-4 py-3 text-slate-500 font-medium">
+                          <td className="px-3 py-1.5 text-slate-500 dark:text-slate-500 font-medium">
                             {new Date(analysis.created_at).toLocaleDateString()}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-3 py-1.5">
                             <span
-                              className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${analysis.is_valid_for_reporting ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}
+                              className={`px-1.5 py-0.5 rounded-[2px] text-[8px] font-black uppercase ${analysis.is_valid_for_reporting ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800" : "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800"}`}
                             >
                               {analysis.is_valid_for_reporting
                                 ? t("history.verified")
                                 : t("history.reviewRequired")}
                             </span>
                           </td>
-                          <td className="px-4 py-3 flex gap-2">
+                          <td className="px-3 py-1.5 flex gap-2">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -334,8 +346,8 @@ export default function HistoryPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50/30">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase">
+                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30">
+                  <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">
                     {t("history.showing")} {total} {t("history.of")}{" "}
                     {t("history.specimens")}
                   </p>
@@ -343,14 +355,14 @@ export default function HistoryPage() {
                     <button
                       disabled={page <= 1}
                       onClick={() => setPage(page - 1)}
-                      className="p-1 rounded bg-white border border-slate-200"
+                      className="p-1 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30"
                     >
                       <ChevronLeft className="h-3 w-3" />
                     </button>
                     <button
                       disabled={page >= totalPages}
                       onClick={() => setPage(page + 1)}
-                      className="p-1 rounded bg-white border border-slate-200"
+                      className="p-1 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30"
                     >
                       <ChevronRight className="h-3 w-3" />
                     </button>
@@ -375,11 +387,11 @@ export default function HistoryPage() {
                 <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   01
                 </span>
-                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
                   {t("history.docsTitle")}
                 </h2>
               </div>
-              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+              <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
                 {t("history.docsDescription")}
               </p>
             </section>
@@ -389,7 +401,7 @@ export default function HistoryPage() {
                 <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   02
                 </span>
-                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
                   {t("history.docsToggle")}
                 </h2>
               </div>
@@ -421,10 +433,10 @@ export default function HistoryPage() {
                       {step.id}
                     </span>
                     <div className="space-y-0.5">
-                      <h4 className="text-[10px] font-bold text-slate-900">
+                      <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">
                         {step.title}
                       </h4>
-                      <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
                         {step.desc}
                       </p>
                     </div>

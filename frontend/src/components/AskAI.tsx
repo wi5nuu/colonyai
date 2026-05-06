@@ -61,7 +61,7 @@ function parseBold(text: string) {
   const parts = text.split(/(\*\*.*?\*\*)/g);
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={i} className="font-black text-slate-900">{part.slice(2, -2)}</strong>;
+      return <strong key={i} className="font-black text-slate-900 dark:text-white">{part.slice(2, -2)}</strong>;
     }
     return part;
   });
@@ -341,10 +341,10 @@ export function AskAI({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
   return (
     <div className="fixed bottom-24 right-4 sm:right-6 z-[120] w-[92vw] sm:w-[400px] h-[560px] animate-in slide-in-from-bottom-10 fade-in duration-500 ease-out">
-      <div className="w-full h-full bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.25)] flex flex-col overflow-hidden border border-slate-100">
+      <div className="w-full h-full bg-white dark:bg-slate-900 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.25)] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800">
 
         {/* Header */}
-        <div className="px-4 py-3 bg-slate-900 flex items-center justify-between flex-shrink-0">
+        <div className="px-4 py-3 bg-slate-900 dark:bg-slate-950 border-b border-slate-800 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <img src="/android-chrome-512x512.png" className="w-9 h-9 object-contain drop-shadow-lg flex-shrink-0" alt="ColonyAI" />
             <div>
@@ -364,13 +364,13 @@ export function AskAI({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
         </div>
 
         {/* Messages */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/30">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/30 dark:bg-slate-950/30">
           {messages.map((msg, i) => (
             <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"} animate-in fade-in slide-in-from-bottom-2`}>
               <div className={`max-w-[90%] p-3 rounded-2xl shadow-sm ${
                 msg.role === "user"
-                  ? "bg-slate-900 text-white rounded-tr-none"
-                  : "bg-white text-slate-700 border border-slate-100 rounded-tl-none"
+                  ? "bg-slate-900 dark:bg-primary text-white rounded-tr-none"
+                  : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 rounded-tl-none"
               }`}>
                 {msg.role === "ai" && msg.isNew ? (
                   <TypewriterContent content={msg.content} onComplete={() => {
@@ -381,20 +381,20 @@ export function AskAI({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                   <FormattedMessage content={msg.content} />
                 )}
                 {msg.role === "ai" && !msg.isNew && (
-                  <div className="mt-3 pt-2 border-t border-slate-50 flex items-center gap-3">
-                    <button className="text-slate-300 hover:text-primary transition-colors"><ThumbsUp className="w-3.5 h-3.5" /></button>
-                    <button className="text-slate-300 hover:text-rose-500 transition-colors"><ThumbsDown className="w-3.5 h-3.5" /></button>
+                  <div className="mt-3 pt-2 border-t border-slate-50 dark:border-slate-700 flex items-center gap-3">
+                    <button className="text-slate-300 dark:text-slate-500 hover:text-primary transition-colors"><ThumbsUp className="w-3.5 h-3.5" /></button>
+                    <button className="text-slate-300 dark:text-slate-500 hover:text-rose-500 transition-colors"><ThumbsDown className="w-3.5 h-3.5" /></button>
                   </div>
                 )}
               </div>
 
               {msg.role === "ai" && !msg.isNew && msg.quickActions && (
                 <div className="mt-2.5 w-full">
-                  <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest mb-1.5 flex items-center gap-1"><Sparkles className="w-2.5 h-2.5 text-amber-500" /> {t('chatbot.followUp')}</p>
+                  <p className="text-[7px] font-black text-slate-300 dark:text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1"><Sparkles className="w-2.5 h-2.5 text-amber-500" /> {t('chatbot.followUp')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {msg.quickActions.map((action, j) => (
                       <button key={j} onClick={() => handleSendMessage(action)}
-                        className="px-2 py-1 bg-white hover:bg-slate-900 hover:text-white text-slate-600 text-[9px] sm:text-[10px] font-bold rounded-lg transition-all border border-slate-200 shadow-sm">
+                        className="px-2 py-1 bg-white dark:bg-slate-800 hover:bg-slate-900 dark:hover:bg-primary hover:text-white text-slate-600 dark:text-slate-300 text-[9px] sm:text-[10px] font-bold rounded-lg transition-all border border-slate-200 dark:border-slate-700 shadow-sm">
                         {action}
                       </button>
                     ))}
@@ -411,12 +411,12 @@ export function AskAI({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                 { step: 2, label: t('chatbot.loadingStep2') },
                 { step: 3, label: t('chatbot.loadingStep3') },
               ].map(({ step, label }) => (
-                <div key={step} className={`flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-100 rounded-full shadow-sm transition-all duration-500 ${loadingStep >= step ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
+                <div key={step} className={`flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-full shadow-sm transition-all duration-500 ${loadingStep >= step ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
                   {loadingStep > step
                     ? <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                     : <Loader2 className="w-2.5 h-2.5 text-primary animate-spin" />
                   }
-                  <span className={`text-[9px] font-bold ${loadingStep > step ? "text-emerald-600" : "text-slate-400"}`}>{label}</span>
+                  <span className={`text-[9px] font-bold ${loadingStep > step ? "text-emerald-600" : "text-slate-400 dark:text-slate-500"}`}>{label}</span>
                 </div>
               ))}
             </div>
@@ -424,12 +424,12 @@ export function AskAI({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
         </div>
 
         {/* Input */}
-        <div className="p-4 bg-white border-t border-slate-100 flex-shrink-0">
+        <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex-shrink-0">
           <div className="relative">
             <input
               type="text"
               placeholder={t('chatbot.askAIPrompt')}
-              className="w-full h-10 bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-12 text-[11px] sm:text-[12px] font-bold text-slate-900 outline-none focus:border-primary/40 focus:bg-white transition-all placeholder:text-slate-300"
+              className="w-full h-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-3 pr-12 text-[11px] sm:text-[12px] font-bold text-slate-900 dark:text-white outline-none focus:border-primary/40 dark:focus:border-primary/60 focus:bg-white dark:focus:bg-slate-800 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
               value={query}
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleSendMessage()}
@@ -438,7 +438,7 @@ export function AskAI({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
             <button
               onClick={() => handleSendMessage()}
               disabled={isTyping || !query.trim()}
-              className="absolute right-1.5 top-1 w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center hover:bg-primary transition-all disabled:opacity-40"
+              className="absolute right-1.5 top-1 w-8 h-8 bg-slate-900 dark:bg-primary text-white rounded-lg flex items-center justify-center hover:bg-primary dark:hover:bg-primary/80 transition-all disabled:opacity-40"
             >
               <Send className="w-3.5 h-3.5" />
             </button>

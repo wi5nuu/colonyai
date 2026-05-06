@@ -36,6 +36,7 @@ class DetectionResponse(BaseModel):
 class AnalysisUserBrief(BaseModel):
     full_name: str
     email: str
+    organization_name: Optional[str] = None
 
 
 class AnalysisResponse(BaseModel):
@@ -102,6 +103,7 @@ class AnalysisBriefResponse(BaseModel):
     is_valid_for_reporting: Optional[bool] = True
     created_at: datetime
     updated_at: datetime
+    user: Optional[AnalysisUserBrief] = None
 
     class Config:
         from_attributes = True

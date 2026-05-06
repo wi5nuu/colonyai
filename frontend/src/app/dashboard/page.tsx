@@ -47,6 +47,7 @@ import { DashboardSkeleton } from "@/components/skeleton";
 import { useAuthStore } from "@/lib/auth-store";
 import { toast } from "sonner";
 import { useTranslationStore } from "@/lib/i18n/store";
+import { useThemeStore } from "@/lib/theme-store";
 
 import {
   DocumentationSidebar,
@@ -57,7 +58,13 @@ const POLLING_INTERVAL = 30000;
 
 export default function DashboardPage() {
   const { t } = useTranslationStore();
+  const { theme } = useThemeStore();
+  const [mounted, setMounted] = useState(false);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -150,6 +157,8 @@ export default function DashboardPage() {
 
   const [showDocs, setShowDocs] = useState(true);
 
+  if (!mounted) return null;
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -159,7 +168,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative bg-[#f4f7f6] dark:bg-slate-950 transition-colors duration-300">
       <div className="flex relative min-h-[calc(100vh-200px)]">
         {/* Main Content Area */}
         <div
@@ -169,11 +178,11 @@ export default function DashboardPage() {
             {/* Greeting Section */}
             <div className="mb-2 sm:mb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
                   {t("overview.greeting")}{" "}
                   {user?.full_name?.split(" ")[0] || "Lead"} !
                 </h1>
-                <p className="text-slate-400 mt-1.5 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em]">
+                <p className="text-slate-400 dark:text-slate-500 mt-1.5 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em]">
                   {t("overview.subtitle")}
                 </p>
               </div>
@@ -186,7 +195,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-              {/* Summary Cards Row */}
+            {/* Summary Cards Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4">
               {[
                 {
@@ -220,27 +229,51 @@ export default function DashboardPage() {
               ].map((card, i) => (
                 <div
                   key={i}
-                  className="bg-white border border-slate-200/60 p-2 sm:p-4 rounded-sm shadow-sm group hover:border-primary/40 hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden"
+                  className={`backdrop-blur-sm border p-2 sm:p-4 rounded-xl shadow-sm group hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden ${
+                    card.color === "indigo"
+                      ? "bg-indigo-50/40 border-indigo-100/50 hover:bg-indigo-50/60 dark:bg-indigo-950/20 dark:border-indigo-900/40"
+                      : card.color === "emerald"
+                        ? "bg-emerald-50/40 border-emerald-100/50 hover:bg-emerald-50/60 dark:bg-emerald-950/20 dark:border-emerald-900/40"
+                        : card.color === "amber"
+                          ? "bg-amber-50/40 border-amber-100/50 hover:bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-900/40"
+                          : "bg-blue-50/40 border-blue-100/50 hover:bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-900/40"
+                  }`}
                 >
                   <div className="flex justify-between items-start mb-1 sm:mb-2">
-                    <div className="p-1 sm:p-1.5 bg-slate-50 group-hover:bg-primary/5 rounded-sm transition-colors">
-                      <card.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 group-hover:text-primary" />
+                    <div
+                      className={`p-1 sm:p-1.5 rounded-sm transition-colors ${
+                        card.color === "indigo"
+                          ? "bg-indigo-50 text-indigo-500 dark:bg-indigo-900/30"
+                          : card.color === "emerald"
+                            ? "bg-emerald-50 text-emerald-500 dark:bg-emerald-900/30"
+                            : card.color === "amber"
+                              ? "bg-amber-50 text-amber-500 dark:bg-amber-900/30"
+                              : "bg-blue-50 text-blue-500 dark:bg-blue-900/30"
+                      }`}
+                    >
+                      <card.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     </div>
                     <span
-                      className={`text-[7px] sm:text-[9px] font-bold ${card.trend.includes("+") ? "text-emerald-500" : "text-slate-400"} uppercase tracking-widest`}
+                      className={`text-[7px] sm:text-[9px] font-bold ${
+                        card.trend.includes("+")
+                          ? "text-emerald-500"
+                          : card.trend.includes("-")
+                            ? "text-rose-500"
+                            : "text-slate-400"
+                      } uppercase tracking-widest`}
                     >
                       {card.trend}
                     </span>
                   </div>
                   <div>
-                    <p className="text-slate-400 text-[6px] sm:text-[8px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-0.5">
+                    <p className="text-slate-400 dark:text-slate-500 text-[6px] sm:text-[8px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-0.5">
                       {card.label}
                     </p>
-                    <p className="text-sm sm:text-2xl font-bold text-slate-900 tabular-nums tracking-tighter">
+                    <p className="text-sm sm:text-2xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tighter">
                       {card.value}
                     </p>
                   </div>
-                  <div className="absolute -right-2 -bottom-2 opacity-[0.02] group-hover:opacity-[0.04] transition-opacity">
+                  <div className="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
                     <card.icon className="w-8 h-8 sm:w-12 sm:h-12" />
                   </div>
                 </div>
@@ -256,10 +289,10 @@ export default function DashboardPage() {
                   <div className="dashboard-card col-span-1 rounded-sm">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h3 className="font-black text-slate-900 text-xs uppercase tracking-[0.2em]">
+                        <h3 className="font-black text-slate-900 dark:text-white text-xs uppercase tracking-[0.2em]">
                           {t("overview.specimenTrend")}
                         </h3>
-                        <p className="text-[10px] text-slate-400 font-bold mt-0.5">
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-0.5">
                           {t("overview.rolling7day")}
                         </p>
                       </div>
@@ -296,14 +329,14 @@ export default function DashboardPage() {
                           <CartesianGrid
                             strokeDasharray="3 3"
                             vertical={false}
-                            stroke="#f1f5f9"
+                            stroke={theme === "dark" ? "#1e293b" : "#f1f5f9"}
                           />
                           <XAxis
                             dataKey="name"
                             axisLine={false}
                             tickLine={false}
                             tick={{
-                              fill: "#94a3b8",
+                              fill: theme === "dark" ? "#64748b" : "#94a3b8",
                               fontSize: 9,
                               fontWeight: 700,
                             }}
@@ -313,7 +346,7 @@ export default function DashboardPage() {
                             axisLine={false}
                             tickLine={false}
                             tick={{
-                              fill: "#94a3b8",
+                              fill: theme === "dark" ? "#64748b" : "#94a3b8",
                               fontSize: 9,
                               fontWeight: 700,
                             }}
@@ -322,11 +355,14 @@ export default function DashboardPage() {
                           <Tooltip
                             contentStyle={{
                               borderRadius: "8px",
-                              border: "1px solid #e2e8f0",
-                              boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                              border: "none",
+                              boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.5)",
                               fontSize: "10px",
                               fontWeight: "bold",
+                              backgroundColor: "rgba(15, 23, 42, 0.95)",
+                              color: "#fff",
                             }}
+                            itemStyle={{ color: "#fff" }}
                           />
                           <Area
                             type="stepAfter"
@@ -344,25 +380,25 @@ export default function DashboardPage() {
                   {/* Project Overview / Analysis Breakdown */}
                   <div className="dashboard-card col-span-1 rounded-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-slate-900 text-xs uppercase tracking-[0.2em]">
+                      <h3 className="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-[0.2em]">
                         {t("overview.analysisBreakdown")}
                       </h3>
-                      <select className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[10px] font-bold text-slate-500 uppercase outline-none cursor-pointer hover:border-primary/30 transition-colors appearance-none pr-6 relative">
+                      <select className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase outline-none cursor-pointer hover:border-primary/30 transition-colors appearance-none pr-6 relative">
                         <option>Batch: 2026-04</option>
                         <option>Batch: 2026-03</option>
                         <option>Batch: 2026-02</option>
                       </select>
                     </div>
                     <div className="text-center mb-3 sm:mb-6">
-                      <p className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tighter">
+                      <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tighter">
                         {stats?.total_analyses || 0}
                       </p>
-                      <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold mt-0.5 sm:mt-1 uppercase tracking-[0.2em]">
+                      <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-0.5 sm:mt-1 uppercase tracking-[0.2em]">
                         {t("overview.analyzedSpecimens")}
                       </p>
                     </div>
                     {/* Segmented Progress Bar */}
-                    <div className="flex h-1.5 sm:h-2 w-full rounded-full overflow-hidden mb-3 sm:mb-6 bg-slate-100">
+                    <div className="flex h-1.5 sm:h-2 w-full rounded-full overflow-hidden mb-3 sm:mb-6 bg-slate-100 dark:bg-slate-800 transition-colors">
                       <div
                         className="bg-emerald-500"
                         style={{
@@ -443,10 +479,10 @@ export default function DashboardPage() {
                         <input
                           type="text"
                           placeholder={t("common.search")}
-                          className="bg-slate-50 border border-slate-200 rounded-sm pl-8 pr-4 py-1.5 text-[10px] font-bold text-slate-900 outline-none focus:ring-1 focus:ring-primary/20 w-48"
+                          className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm pl-8 pr-4 py-1.5 text-[10px] font-bold text-slate-900 dark:text-white outline-none focus:ring-1 focus:ring-primary/20 w-48 transition-colors"
                         />
                       </div>
-                      <button className="p-1.5 sm:p-2 bg-slate-50 rounded-sm border border-slate-200">
+                      <button className="p-1.5 sm:p-2 bg-slate-50 dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 transition-colors">
                         <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400" />
                       </button>
                     </div>
@@ -454,7 +490,7 @@ export default function DashboardPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead>
-                        <tr className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">
+                        <tr className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] border-b border-slate-100 dark:border-slate-800">
                           <th className="pb-4 font-black">
                             {t("overview.specimenId")}
                           </th>
@@ -469,7 +505,7 @@ export default function DashboardPage() {
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-50">
+                      <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                         {stats?.recent_analyses.map((a, i) => (
                           <tr
                             key={i}
@@ -479,7 +515,14 @@ export default function DashboardPage() {
                               <span className="text-[11px] font-black text-slate-900 font-mono tracking-tight">
                                 {a.sample_id}
                               </span>
-                              <p className="xs:hidden text-[7px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5">
+                              <p className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5 flex items-center gap-1">
+                                {a.user?.organization_name || "ColonyAI Global"}{" "}
+                                <span className="text-slate-300 dark:text-slate-700">
+                                  •
+                                </span>{" "}
+                                {a.user?.full_name || "Unknown"}
+                              </p>
+                              <p className="xs:hidden text-[7px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter mt-0.5">
                                 {a.media_type}
                               </p>
                             </td>
@@ -489,7 +532,7 @@ export default function DashboardPage() {
                               </span>
                             </td>
                             <td className="py-2">
-                              <span className="text-[11px] font-black text-slate-900">
+                              <span className="text-[11px] font-black text-slate-900 dark:text-white">
                                 {a.colony_count}
                               </span>
                               <span className="text-[9px] text-slate-400 ml-1 font-bold uppercase tracking-tighter">
@@ -526,7 +569,7 @@ export default function DashboardPage() {
                       <p className="text-slate-400 text-[8px] sm:text-[10px] font-bold uppercase mb-1 sm:mb-2">
                         {t("common.verified")}
                       </p>
-                      <p className="text-sm sm:text-xl font-bold text-slate-900">
+                      <p className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white">
                         {stats?.verified_count || 0}
                       </p>
                     </div>
@@ -534,7 +577,7 @@ export default function DashboardPage() {
                       <p className="text-slate-400 text-[8px] sm:text-[10px] font-bold uppercase mb-1 sm:mb-2">
                         {t("common.review")}
                       </p>
-                      <p className="text-sm sm:text-xl font-bold text-slate-900">
+                      <p className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white">
                         {stats?.pending_review || 0}
                       </p>
                     </div>
@@ -542,7 +585,7 @@ export default function DashboardPage() {
                       <p className="text-slate-400 text-[8px] sm:text-[10px] font-bold uppercase mb-1 sm:mb-2">
                         {t("common.failed")}
                       </p>
-                      <p className="text-sm sm:text-xl font-bold text-slate-900">
+                      <p className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white">
                         {stats?.failed_count || 0}
                       </p>
                     </div>
@@ -550,9 +593,9 @@ export default function DashboardPage() {
                 </div>
 
                 {/* System Health Terminal */}
-                <div className="dashboard-card rounded-sm p-0 overflow-hidden border-slate-200">
-                  <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                    <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">
+                <div className="dashboard-card rounded-sm p-0 overflow-hidden border-slate-200 dark:border-slate-800">
+                  <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
+                    <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
                       {t("overview.neuralNodeStatus")}
                     </h3>
                     <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -589,7 +632,7 @@ export default function DashboardPage() {
                         className="flex items-center justify-between group"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-[11px] font-black text-slate-800 font-mono tracking-tighter">
+                          <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 font-mono tracking-tighter">
                             {node.id}
                           </span>
                         </div>
@@ -606,35 +649,34 @@ export default function DashboardPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="px-4 py-1.5 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                  <div className="px-4 py-1.5 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                    <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                       {t("overview.clusterSecure")}
                     </span>
-                    <span className="text-[9px] font-bold text-slate-900">
+                    <span className="text-[9px] font-bold text-slate-900 dark:text-white">
                       {t("overview.online")}
                     </span>
                   </div>
                 </div>
-
                 {/* Today Events */}
                 <Link
                   href="/dashboard/audit"
-                  className="bg-white border border-slate-200 rounded-sm p-4 text-slate-900 flex items-center justify-between group cursor-pointer hover:bg-slate-50 transition-all shadow-sm"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-4 text-slate-900 dark:text-white flex items-center justify-between group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-8 h-8 rounded-sm bg-primary/10 flex items-center justify-center">
                       <Calendar className="w-4 h-4 text-primary" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
                         {t("overview.todayEvents")}
                       </p>
-                      <p className="text-sm font-bold">
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">
                         {t("overview.batchAudit")}
                       </p>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-300 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-1 transition-transform" />
                 </Link>
 
                 {/* Recent Alerts */}
@@ -715,26 +757,25 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-
             {/* Cloudflare-style Intelligence Section at Bottom */}
-            <div className="mt-4 bg-white border border-slate-200 rounded-sm shadow-sm overflow-hidden">
-              <div className="px-5 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+            <div className="mt-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm overflow-hidden">
+              <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/30 dark:bg-slate-950/50">
                 <div>
-                  <h2 className="text-xs font-bold text-slate-900 uppercase tracking-[0.2em]">
+                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-[0.2em]">
                     {t("overview.neuralIntelligenceLayer")}
                   </h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
                     {t("overview.realTimeSpectral")}
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <button className="text-[9px] font-bold text-blue-600 uppercase tracking-widest hover:underline">
+                  <button className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest hover:underline">
                     {t("overview.downloadDataset")}
                   </button>
-                  <div className="h-3 w-[1px] bg-slate-200" />
+                  <div className="h-3 w-[1px] bg-slate-200 dark:bg-slate-700" />
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">
+                    <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
                       {t("overview.activeSink")}
                     </span>
                   </div>
@@ -743,7 +784,7 @@ export default function DashboardPage() {
 
               {/* Query Overview Dashboard */}
               <div className="px-5 py-3 space-y-4">
-                <div className="flex border-b border-slate-100 gap-6">
+                <div className="flex border-b border-slate-100 dark:border-slate-800 gap-6">
                   {[
                     t("overview.queryOverview"),
                     t("overview.throughput"),
@@ -752,7 +793,7 @@ export default function DashboardPage() {
                     <button
                       key={tab}
                       onClick={() => setActiveIntelTab(i)}
-                      className={`pb-2 text-[10px] font-bold uppercase tracking-widest transition-all ${activeIntelTab === i ? "text-blue-600 border-b-2 border-blue-600" : "text-slate-400 hover:text-slate-600"}`}
+                      className={`pb-2 text-[10px] font-bold uppercase tracking-widest transition-all ${activeIntelTab === i ? "text-blue-600 border-b-2 border-blue-600" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"}`}
                     >
                       {tab}
                     </button>
@@ -766,17 +807,17 @@ export default function DashboardPage() {
                       .map(([label, val], i) => (
                         <div
                           key={i}
-                          className="border-r border-slate-50 last:border-0 pr-4"
+                          className="border-r border-slate-50 dark:border-slate-800 last:border-0 pr-4"
                         >
                           <div className="flex items-center gap-2 mb-1">
                             <div
                               className={`w-1.5 h-1.5 rounded-full ${["bg-blue-500", "bg-amber-500", "bg-emerald-500", "bg-rose-500", "bg-purple-500"][i % 5]}`}
                             />
-                            <span className="text-[9px] font-bold text-slate-400 truncate uppercase">
+                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 truncate uppercase">
                               {t("overview.matrixData", { label })}
                             </span>
                           </div>
-                          <p className="text-base font-bold text-slate-900 tracking-tighter">
+                          <p className="text-base font-bold text-slate-900 dark:text-white tracking-tighter">
                             {val}
                           </p>
                         </div>
@@ -796,19 +837,27 @@ export default function DashboardPage() {
                       <CartesianGrid
                         strokeDasharray="0"
                         vertical={false}
-                        stroke="#f1f5f9"
+                        stroke={theme === "dark" ? "#1e293b" : "#f1f5f9"}
                       />
                       <XAxis
                         dataKey="name"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 8, fill: "#cbd5e1", fontWeight: 900 }}
+                        tick={{
+                          fontSize: 8,
+                          fill: theme === "dark" ? "#64748b" : "#cbd5e1",
+                          fontWeight: 900,
+                        }}
                         dy={10}
                       />
                       <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 8, fill: "#cbd5e1", fontWeight: 700 }}
+                        tick={{
+                          fontSize: 8,
+                          fill: theme === "dark" ? "#64748b" : "#cbd5e1",
+                          fontWeight: 700,
+                        }}
                         dx={-10}
                       />
                       <Tooltip
@@ -851,23 +900,23 @@ export default function DashboardPage() {
                       {stats?.total_analyses || 0}
                     </p>
                   </div>
-                  <div className="border-l-2 border-slate-200 pl-4">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">
+                  <div className="border-l-2 border-slate-200 dark:border-slate-800 pl-4">
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-1">
                       {t("overview.avgQps")}{" "}
                       <Info className="w-2.5 h-2.5 inline ml-1 opacity-30" />
                     </p>
-                    <p className="text-base font-bold text-slate-900 tracking-tighter">
+                    <p className="text-base font-bold text-slate-900 dark:text-white tracking-tighter">
                       0.035
                     </p>
                   </div>
-                  <div className="border-l-2 border-slate-200 pl-4">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">
+                  <div className="border-l-2 border-slate-200 dark:border-slate-800 pl-4">
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-1">
                       {t("overview.processingTime")}{" "}
                       <Info className="w-2.5 h-2.5 inline ml-1 opacity-30" />
                     </p>
-                    <p className="text-base font-bold text-slate-900 tracking-tighter">
+                    <p className="text-base font-bold text-slate-900 dark:text-white tracking-tighter">
                       {stats?.system_latency_ms || 0}
-                      <span className="text-[10px] ml-0.5 text-slate-400 font-bold uppercase">
+                      <span className="text-[10px] ml-0.5 text-slate-400 dark:text-slate-500 font-bold uppercase">
                         ms
                       </span>
                     </p>
@@ -893,11 +942,11 @@ export default function DashboardPage() {
                 <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   01
                 </span>
-                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
                   {t("overview.docsSection1Title")}
                 </h2>
               </div>
-              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-sm border border-slate-100">
+              <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-3 rounded-sm border border-slate-100 dark:border-slate-800">
                 {t("overview.docsSection1Text")}
               </p>
             </section>
@@ -907,7 +956,7 @@ export default function DashboardPage() {
                 <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   02
                 </span>
-                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
                   {t("overview.docsSection2Title")}
                 </h2>
               </div>
@@ -934,7 +983,7 @@ export default function DashboardPage() {
                       {item.id}
                     </span>
                     <div className="space-y-0.5">
-                      <h4 className="text-[10px] font-bold text-slate-900">
+                      <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">
                         {item.title}
                       </h4>
                       <p className="text-[9px] text-slate-500 leading-relaxed font-medium">

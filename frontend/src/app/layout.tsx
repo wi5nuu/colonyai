@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { ConditionalNavbar } from "@/components/ConditionalNavbar";
 import { LanguageSync } from "./language-script";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -50,8 +51,10 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <LanguageSync />
         <Providers>
-          <ConditionalNavbar />
-          <main id="main-content">{children}</main>
+          <ThemeProvider>
+            <ConditionalNavbar />
+            <main id="main-content">{children}</main>
+          </ThemeProvider>
         </Providers>
       </body>
     </html>

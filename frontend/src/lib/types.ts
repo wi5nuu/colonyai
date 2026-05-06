@@ -152,6 +152,7 @@ export interface Analysis {
   user?: {
     full_name: string;
     email: string;
+    organization_name?: string;
   };
 }
 

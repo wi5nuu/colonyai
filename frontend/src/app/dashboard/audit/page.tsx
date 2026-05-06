@@ -30,6 +30,7 @@ interface AuditLog {
   resource_type: string;
   resource_id?: string;
   user_name: string;
+  organization_name?: string;
   timestamp: string;
   status: string;
   previous_hash?: string;
@@ -76,8 +77,16 @@ export default function AuditPage() {
       l.user_name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative bg-[#f4f7f6] dark:bg-slate-950 transition-colors duration-300">
       {/* Detail Overlay */}
       {selectedLog && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
@@ -119,7 +128,7 @@ export default function AuditPage() {
                     {t("audit.overlayAnalystNode")}
                   </p>
                   <p className="text-sm font-bold text-slate-200">
-                    {selectedLog.user_name}
+                    {selectedLog.organization_name || "ColonyAI Global"} • {selectedLog.user_name}
                   </p>
                 </div>
               </div>
@@ -179,7 +188,7 @@ export default function AuditPage() {
                     <div className="w-8 h-8 bg-slate-50 border border-slate-200 rounded-lg shadow-sm flex items-center justify-center">
                       <ShieldCheck className="w-3.5 h-3.5 text-primary" />
                     </div>
-                    <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight uppercase">
+                    <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase">
                       {t("audit.title")}
                     </h1>
                   </div>
@@ -203,10 +212,10 @@ export default function AuditPage() {
                       placeholder={t("audit.searchPlaceholder")}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2.5 bg-white border border-slate-100 rounded-lg text-[10px] sm:text-[11px] font-bold outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all w-full sm:w-72 shadow-sm"
+                      className="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all w-full sm:w-72 shadow-sm"
                     />
                   </div>
-                  <button className="w-10 h-10 bg-white border border-slate-100 rounded-lg flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/20 transition-all shadow-sm">
+                  <button className="w-10 h-10 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/20 transition-all shadow-sm">
                     <Download className="w-4 h-4" />
                   </button>
                 </div>
@@ -292,7 +301,7 @@ export default function AuditPage() {
                             <div className="flex items-center gap-2">
                               <User className="w-3 h-3 text-slate-600" />
                               <span className="text-[10px] font-bold text-slate-300 truncate max-w-[120px]">
-                                {log.user_name}
+                                {log.organization_name || "ColonyAI Global"} <span className="text-slate-600">•</span> {log.user_name}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -372,7 +381,7 @@ export default function AuditPage() {
                                 <div className="flex items-center gap-2">
                                   <User className="w-3 h-3 text-slate-600" />
                                   <span className="text-[11px] font-bold text-slate-300">
-                                    {log.user_name}
+                                    {log.organization_name || "ColonyAI Global"} <span className="text-slate-600">•</span> {log.user_name}
                                   </span>
                                 </div>
                               </td>
@@ -446,7 +455,7 @@ export default function AuditPage() {
                   ].map((s, i) => (
                     <div
                       key={i}
-                      className="dashboard-card p-6 group hover:scale-[1.02] transition-all rounded-xl"
+                      className="dashboard-card p-6 group hover:scale-[1.02] transition-all rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 shadow-sm"
                     >
                       <div className="flex items-center gap-4">
                         <div
@@ -460,7 +469,7 @@ export default function AuditPage() {
                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.15em] mb-0.5">
                             {s.title}
                           </p>
-                          <p className="text-xl font-bold text-slate-900 tracking-tight">
+                          <p className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
                             {s.value}
                           </p>
                         </div>
@@ -487,11 +496,11 @@ export default function AuditPage() {
                 <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   {t("audit.sidebarOverviewLabel")}
                 </span>
-                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
                   {t("audit.sidebarOverviewTitle")}
                 </h2>
               </div>
-              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+              <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
                 {t("audit.sidebarOverviewText")}
               </p>
             </section>
@@ -501,7 +510,7 @@ export default function AuditPage() {
                 <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
                   {t("audit.sidebarProtocolLabel")}
                 </span>
-                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
+                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
                   {t("audit.sidebarProtocolTitle")}
                 </h2>
               </div>
@@ -528,10 +537,10 @@ export default function AuditPage() {
                       {step.id}
                     </span>
                     <div className="space-y-0.5">
-                      <h4 className="text-[10px] font-bold text-slate-900">
+                      <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">
                         {step.title}
                       </h4>
-                      <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
                         {step.desc}
                       </p>
                     </div>
