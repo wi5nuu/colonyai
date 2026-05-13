@@ -27,6 +27,72 @@ class ReportRequest(BaseModel):
     date_to: Optional[str] = None
     format: str = "pdf"  # pdf, csv
 
+class SendMessengerRequest(BaseModel):
+    platform: str  # "whatsapp" or "telegram"
+    target_id: str # Phone number or chat ID
+    date_from: Optional[str] = None
+    date_to: Optional[str] = None
+
+@router.post("/send-messenger")
+async def send_messenger_report(
+    request: SendMessengerRequest,
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Send an automated summary report via WhatsApp or Telegram.
+    """
+    from app.services.messenger_service import messenger_service
+
+    # Build query
+    conditions = []
+    user_role = current_user.get("role")
+    
+    if user_role != "super_admin":
+        org_id = current_user.get("organization_id")
+        if org_id:
+            conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+            
+    if request.date_from:
+        dt_from = request.date_from
+        if len(dt_from) == 10:
+            dt_from += "T00:00:00"
+        conditions.append(Analysis.created_at >= datetime.fromisoformat(dt_from))
+    if request.date_to:
+        dt_to = request.date_to
+        if len(dt_to) == 10:
+            dt_to += "T23:59:59.999999"
+        conditions.append(Analysis.created_at <= datetime.fromisoformat(dt_to))
+
+    query = select(Analysis).where(and_(*conditions)) if conditions else select(Analysis)
+    result = await db.execute(query)
+    analyses = result.scalars().all()
+
+    # Aggregate Data
+    total = len(analyses)
+    completed = sum(1 for a in analyses if str(getattr(a.status, 'value', a.status)) == "completed")
+    colonies = sum(a.colony_count or 0 for a in analyses)
+    cfus = [a.cfu_per_ml for a in analyses if a.cfu_per_ml]
+    avg_cfu = f"{sum(cfus)/len(cfus):.2e}" if cfus else "N/A"
+
+    report_data = {
+        "total": total,
+        "completed": completed,
+        "colonies": colonies,
+        "avg_cfu": avg_cfu
+    }
+
+    user_name = current_user.get("full_name", "Unknown Analyst")
+
+    if request.platform == "whatsapp":
+        await messenger_service.send_whatsapp_report(request.target_id, report_data, user_name)
+    elif request.platform == "telegram":
+        await messenger_service.send_telegram_report(request.target_id, report_data, user_name)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid platform specified. Use 'whatsapp' or 'telegram'.")
+
+    return {"message": f"Report successfully dispatched via {request.platform.capitalize()}."}
+
 
 @router.post("/pdf", response_model=ReportResponse)
 async def generate_pdf_report(

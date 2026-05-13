@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request, Query
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request, Query, BackgroundTasks
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Dict, Any
@@ -67,23 +67,30 @@ async def simulate_analysis(
     processor = ImageProcessor()
     detector = ColonyDetector()
 
-    processed_img = processor.preprocess_from_bytes(contents)
+    processed_img, roi_info = processor.preprocess_from_bytes(contents)
+    
+    # Use the lower global threshold (0.25) to catch small dots
     detections = detector.detect(processed_img)
 
     # 3. Build a transient response (not saved to DB)
     temp_id = uuid.uuid4()
+    now = datetime.utcnow()
 
     return {
         "id": str(temp_id),
+        "user_id": current_user["user_id"],
         "sample_id": "SIMULATION-" + file.filename,
         "media_type": "SIMULATED",
+        "dilution_factor": 1.0,
+        "plated_volume_ml": 1.0,
         "status": "completed",
-        "colony_count": sum(1 for d in detections if d['is_valid_colony']),
-        "cfu_per_ml": 0.0, # Placeholder
+        "colony_count": sum(1 for d in detections if d.get('is_valid_colony', True)),
+        "cfu_per_ml": 0.0,
         "confidence_score": detector.get_average_confidence(detections),
         "reliability": detector.get_reliability_indicator(detections),
         "class_breakdown": detector.get_detection_summary(detections),
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": now.isoformat(),
+        "updated_at": now.isoformat(),
         "is_valid_for_reporting": False,
         "detections": [
             {
@@ -94,7 +101,11 @@ async def simulate_analysis(
                 "bbox": d['bbox']
             } for d in detections
         ],
-        "warnings": ["INI ADALAH MODE SIMULASI. Data tidak disimpan ke Audit Ledger."]
+        "warnings": ["INI ADALAH MODE SIMULASI. Data tidak disimpan ke Audit Ledger."],
+        "user": {
+            "full_name": current_user.get("full_name", "Unknown Analyst"),
+            "email": current_user.get("email", "unknown@colonyai.com")
+        }
     }
 
 
@@ -280,6 +291,7 @@ async def create_analysis(
     media_batch_number: Optional[str] = Form(None),
     incubator_id: Optional[str] = Form(None),
     request: Request = None,
+    background_tasks: BackgroundTasks = None,
     current_user: dict = Depends(require_role("analyst", "manager", "admin")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -369,15 +381,12 @@ async def create_analysis(
 
         # ── Step 3: Preprocessing gambar ──
         image_processor = ImageProcessor()
-        processed_image = image_processor.preprocess(original_path)
+        processed_image, roi_info = image_processor.preprocess(original_path)
 
         # ── Step 4: YOLOv8 inference ──
-        # BUG-007: Gunakan per-media threshold (bukan global 0.60)
         media_thresholds = get_all_thresholds(media_type)
         colony_detector = ColonyDetector()
 
-        # Inference dengan minimum threshold agar semua kelas bisa masuk
-        # dan baru di-filter spesifik per kelas di tahap 2
         min_threshold = min(media_thresholds.values()) if media_thresholds else 0.40
 
         start_time = time.time()
@@ -390,10 +399,33 @@ async def create_analysis(
         # Filter lebih lanjut dengan threshold per-kelas
         detections = [
             d for d in detections
-            if d["confidence"] >= media_thresholds.get(d["class_name"], 0.60)
+            if d["confidence"] >= media_thresholds.get(d["class_name"], 0.20)
         ]
 
-        logger.info(f"YOLOv8 Inference complete: {len(detections)} detections in {inference_time_ms:.1f}ms (min_thresh={min_threshold})")
+        # ── Cross-class NMS: Hapus deteksi ganda di lokasi yang sama ──
+        # Jika dua kelas berbeda mendeteksi objek yang sama (IoU > 0.30),
+        # hanya simpan yang confidence-nya paling tinggi.
+        def _iou(b1: dict, b2: dict) -> float:
+            x1 = max(b1["x"], b2["x"])
+            y1 = max(b1["y"], b2["y"])
+            x2 = min(b1["x"] + b1["width"],  b2["x"] + b2["width"])
+            y2 = min(b1["y"] + b1["height"], b2["y"] + b2["height"])
+            inter = max(0, x2 - x1) * max(0, y2 - y1)
+            if inter == 0:
+                return 0.0
+            a1 = b1["width"] * b1["height"]
+            a2 = b2["width"] * b2["height"]
+            return inter / (a1 + a2 - inter)
+
+        detections_sorted = sorted(detections, key=lambda d: d["confidence"], reverse=True)
+        kept = []
+        for det in detections_sorted:
+            overlap = any(_iou(det["bbox"], k["bbox"]) > 0.30 for k in kept)
+            if not overlap:
+                kept.append(det)
+        detections = kept
+
+        logger.info(f"YOLOv8 Inference complete: {len(detections)} detections (after NMS) in {inference_time_ms:.1f}ms")
 
         # ── Step 5: Hitung statistik deteksi ──
         class_breakdown = colony_detector.get_detection_summary(detections)
@@ -437,18 +469,23 @@ async def create_analysis(
             logger.warning("Gagal load original image, fallback ke processed image untuk annotation")
             image_processor.save_annotated_image(processed_image, detections, annotated_path)
         else:
-            # Scale bounding box coordinates dari processed (512x512) ke original size
+            # Scale bounding box coordinates dari ROI (640x640) ke original size dengan offset
             orig_h, orig_w = original_img_bgr.shape[:2]
-            proc_size = settings.MODEL_IMG_SIZE  # 512
-            scale_x = orig_w / proc_size
-            scale_y = orig_h / proc_size
+            
+            roi_x, roi_y = roi_info['x_offset'], roi_info['y_offset']
+            roi_w, roi_h = roi_info['roi_w'], roi_info['roi_h']
+            proc_size = settings.MODEL_IMG_SIZE # Default 640
+            
+            scale_x = roi_w / proc_size
+            scale_y = roi_h / proc_size
 
             scaled_detections = []
             for det in detections:
                 scaled_det = det.copy()
+                # Rumus: (Coord_di_ROI * Scale) + Offset_ROI
                 scaled_det['bbox'] = {
-                    'x': int(det['bbox']['x'] * scale_x),
-                    'y': int(det['bbox']['y'] * scale_y),
+                    'x': int(det['bbox']['x'] * scale_x + roi_x),
+                    'y': int(det['bbox']['y'] * scale_y + roi_y),
                     'width': int(det['bbox']['width'] * scale_x),
                     'height': int(det['bbox']['height'] * scale_y),
                 }
@@ -539,6 +576,30 @@ async def create_analysis(
             },
             ip_address=ip, user_agent=ua,
         )
+
+        # Queue Instant Alert to Telegram (as demo'ed for "Wow Factor")
+        from app.services.messenger_service import messenger_service
+        
+        # Build payload for alert
+        alert_payload = {
+            "sample_id": analysis.sample_id,
+            "media_type": analysis.media_type,
+            "colony_count": analysis.colony_count,
+            "cfu_per_ml": analysis.cfu_per_ml,
+            "confidence_score": analysis.confidence_score,
+            "status": analysis.status.value if hasattr(analysis.status, 'value') else analysis.status
+        }
+        
+        # Assume user has configured their preferences to receive alerts (hardcoded target for demo)
+        if background_tasks:
+            # You can change the target ID or make it dynamic from user preferences in production
+            background_tasks.add_task(
+                messenger_service.send_instant_analysis_alert,
+                platform="telegram",
+                target_id="@ColonyAILabAlerts",
+                analysis_data=alert_payload,
+                image_url=analysis.annotated_image_url
+            )
 
         return _build_analysis_response(analysis)
 

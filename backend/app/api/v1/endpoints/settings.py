@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime
 import uuid
+from pydantic import BaseModel
 
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -17,6 +18,20 @@ from app.models.preferences import UserPreference
 from app.core.exceptions import ResourceNotFoundError
 
 router = APIRouter()
+
+class NotificationsUpdate(BaseModel):
+    analysis_complete: bool
+    boundary_alerts: bool
+    weekly_summary: bool
+
+class LaboratoryUpdate(BaseModel):
+    lab_name: str
+    default_media: str
+    default_volume: float
+
+class AppearanceUpdate(BaseModel):
+    theme: str
+    language: str
 
 
 @router.get("/preferences")
@@ -58,9 +73,7 @@ async def get_preferences(
 
 @router.put("/notifications")
 async def update_notification_preferences(
-    analysis_complete: bool,
-    boundary_alerts: bool,
-    weekly_summary: bool,
+    data: NotificationsUpdate,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -74,9 +87,9 @@ async def update_notification_preferences(
         prefs = UserPreference(user_id=user_id)
         db.add(prefs)
     
-    prefs.notify_analysis_complete = analysis_complete
-    prefs.notify_boundary_alerts = boundary_alerts
-    prefs.notify_weekly_summary = weekly_summary
+    prefs.notify_analysis_complete = data.analysis_complete
+    prefs.notify_boundary_alerts = data.boundary_alerts
+    prefs.notify_weekly_summary = data.weekly_summary
     prefs.updated_at = datetime.utcnow()
     
     await db.commit()
@@ -94,14 +107,12 @@ async def update_notification_preferences(
 
 @router.put("/laboratory")
 async def update_laboratory_defaults(
-    lab_name: str,
-    default_media: str,
-    default_volume: float,
+    data: LaboratoryUpdate,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Update laboratory default configuration"""
-    if default_volume <= 0:
+    if data.default_volume <= 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Volume must be positive")
     
     user_id = uuid.UUID(current_user["user_id"])
@@ -113,9 +124,9 @@ async def update_laboratory_defaults(
         prefs = UserPreference(user_id=user_id)
         db.add(prefs)
     
-    prefs.default_lab_name = lab_name
-    prefs.default_media_type = default_media
-    prefs.default_volume_ml = default_volume
+    prefs.default_lab_name = data.lab_name
+    prefs.default_media_type = data.default_media
+    prefs.default_volume_ml = data.default_volume
     prefs.updated_at = datetime.utcnow()
     
     await db.commit()
@@ -133,14 +144,13 @@ async def update_laboratory_defaults(
 
 @router.put("/appearance")
 async def update_appearance_preferences(
-    theme: str,
-    language: str,
+    data: AppearanceUpdate,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Update appearance and language preferences"""
     valid_themes = ["light", "dark", "system"]
-    if theme not in valid_themes:
+    if data.theme not in valid_themes:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid theme. Must be one of: {valid_themes}"
@@ -155,8 +165,8 @@ async def update_appearance_preferences(
         prefs = UserPreference(user_id=user_id)
         db.add(prefs)
     
-    prefs.theme_preference = theme
-    prefs.language_preference = language
+    prefs.theme_preference = data.theme
+    prefs.language_preference = data.language
     prefs.updated_at = datetime.utcnow()
     
     await db.commit()

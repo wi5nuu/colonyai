@@ -10,74 +10,59 @@ from app.services.colony_detector import VALID_COLONY_CLASSES
 class ImageProcessor:
     """Image preprocessing pipeline for agar plate images"""
 
-    def __init__(self, target_size: Tuple[int, int] = (512, 512)):
+    def __init__(self, target_size: Tuple[int, int] = (640, 640)):
         self.target_size = target_size
 
-    def preprocess(self, image_path: str) -> np.ndarray:
+    def preprocess(self, image_path: str) -> Tuple[np.ndarray, dict]:
         """
-        Complete preprocessing pipeline:
-        1. Load and convert to RGB
-        2. Normalize brightness/contrast (CLAHE)
-        3. Detect plate boundary (Hough Circle)
-        4. Perspective correction (homography transform)
-        5. Extract ROI
-        6. Resize to target
+        FIX: Simplified pipeline - normalize brightness then direct resize.
+        NO perspective correction or ROI crop. This makes coordinate mapping
+        trivially accurate: final_coord = det_coord * (orig_size / 640).
+        Returns: (processed_image, roi_info)
         """
-        # Load image
         image = cv2.imread(image_path)
         if image is None:
             raise ValueError(f"Could not load image from {image_path}")
 
-        # Convert BGR to RGB
+        orig_h, orig_w = image.shape[:2]
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-        # Normalize brightness and contrast
         normalized = self._normalize_brightness(image_rgb)
+        resized = cv2.resize(normalized, self.target_size, interpolation=cv2.INTER_AREA)
 
-        # Detect plate boundary and extract ROI
-        plate_mask, plate_circle = self._detect_plate_boundary(normalized)
-        corrected = self._correct_perspective(normalized, plate_circle)
+        # roi_info: full image, no offset
+        roi_info = {
+            'x_offset': 0,
+            'y_offset': 0,
+            'roi_w': orig_w,
+            'roi_h': orig_h,
+            'orig_w': orig_w,
+            'orig_h': orig_h
+        }
+        return resized, roi_info
 
-        # Re-detect boundary on corrected image and extract ROI
-        corrected_mask = self._detect_plate_boundary(corrected)[0]
-        roi = self._extract_roi(corrected, corrected_mask)
-
-        # Resize to target size
-        resized = cv2.resize(roi, self.target_size, interpolation=cv2.INTER_AREA)
-
-        return resized
-
-    def preprocess_from_bytes(self, image_bytes: bytes) -> np.ndarray:
-        """Preprocess image from bytes (for uploaded files)"""
+    def preprocess_from_bytes(self, image_bytes: bytes) -> Tuple[np.ndarray, dict]:
+        """
+        FIX: Simplified pipeline - normalize brightness then direct resize.
+        Returns: (processed_image, roi_info)
+        """
         image = Image.open(io.BytesIO(image_bytes))
-
-        # ── Normalize mode: convert semua ke RGB ──
-        if image.mode == 'RGBA':
-            image = image.convert('RGB')
-        elif image.mode == 'L':          # Grayscale
-            image = image.convert('RGB')
-        elif image.mode == 'P':          # Palette
-            image = image.convert('RGB')
-        elif image.mode != 'RGB':
+        if image.mode != 'RGB':
             image = image.convert('RGB')
 
         image_rgb = np.array(image)
-
-        # Normalize brightness and contrast
+        orig_h, orig_w = image_rgb.shape[:2]
         normalized = self._normalize_brightness(image_rgb)
+        resized = cv2.resize(normalized, self.target_size, interpolation=cv2.INTER_AREA)
 
-        # Detect plate boundary and extract ROI
-        plate_mask, plate_circle = self._detect_plate_boundary(normalized)
-        corrected = self._correct_perspective(normalized, plate_circle)
-
-        # Re-detect boundary on corrected image
-        corrected_mask = self._detect_plate_boundary(corrected)[0]
-        roi = self._extract_roi(corrected, corrected_mask)
-
-        # Resize to target size
-        resized = cv2.resize(roi, self.target_size, interpolation=cv2.INTER_AREA)
-
-        return resized
+        roi_info = {
+            'x_offset': 0,
+            'y_offset': 0,
+            'roi_w': orig_w,
+            'roi_h': orig_h,
+            'orig_w': orig_w,
+            'orig_h': orig_h
+        }
+        return resized, roi_info
 
 
     def _normalize_brightness(self, image: np.ndarray) -> np.ndarray:
@@ -110,8 +95,8 @@ class ImageProcessor:
             l = np.clip(l_corrected, 0, 255).astype(np.uint8)
 
         # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization)
-        # Use higher clipLimit for overexposed images
-        clip_limit = 3.0 if mean_luminance > 200 or mean_luminance < 80 else 2.0
+        # Use higher clipLimit for better contrast on small dots
+        clip_limit = 4.0 if mean_luminance > 200 or mean_luminance < 80 else 3.0
         clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=(8, 8))
         cl = clahe.apply(l)
 
@@ -132,15 +117,16 @@ class ImageProcessor:
         blurred = cv2.GaussianBlur(gray, (9, 9), 2)
 
         # Detect circles using Hough Circle Transform
+        # FIX: Lower param2 (30 -> 25) to be more lenient with petri dish edges
         circles = cv2.HoughCircles(
             blurred,
             cv2.HOUGH_GRADIENT,
             dp=1.2,
-            minDist=image.shape[0] // 4,  # Minimum distance between circles
-            param1=50,  # Canny edge detector high threshold
-            param2=30,  # Accumulator threshold for circle detection
-            minRadius=int(min(image.shape[:2]) * 0.3),  # Minimum circle radius
-            maxRadius=int(min(image.shape[:2]) * 0.5)   # Maximum circle radius
+            minDist=image.shape[0] // 4,
+            param1=50,
+            param2=25,
+            minRadius=int(min(image.shape[:2]) * 0.35),
+            maxRadius=int(min(image.shape[:2]) * 0.52)
         )
 
         # Create mask
@@ -221,42 +207,34 @@ class ImageProcessor:
             # If homography fails, return original image
             return image
 
-    def _extract_roi(self, image: np.ndarray, mask: np.ndarray) -> np.ndarray:
-        """Extract region of interest using the plate mask.
-        Jika ROI yang diekstrak terlalu kecil (< 10% dari image asli),
-        fallback ke full image untuk mencegah distorsi parah."""
-        # Find contours of the mask
+    def _extract_roi_with_coords(self, image: np.ndarray, mask: np.ndarray) -> Tuple[np.ndarray, Tuple[int, int, int, int]]:
+        """Extract ROI and return (roi_image, (x, y, w, h))"""
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         if not contours:
-            return image
+            return image, (0, 0, image.shape[1], image.shape[0])
 
-        # Get bounding rectangle of largest contour
         largest_contour = max(contours, key=cv2.contourArea)
         x, y, w, h = cv2.boundingRect(largest_contour)
 
-        # ── Minimum ROI size guard (BUG-C fix) ──
-        # Jika ROI lebih kecil dari 10% dimensi image, kembalikan full image
-        # untuk mencegah resize distortion parah
-        min_width  = max(50, int(image.shape[1] * 0.10))
-        min_height = max(50, int(image.shape[0] * 0.10))
+        min_width  = int(image.shape[1] * 0.50)
+        min_height = int(image.shape[0] * 0.50)
+        
         if w < min_width or h < min_height:
-            return image  # Fallback: full image lebih aman
+            return image, (0, 0, image.shape[1], image.shape[0])
 
-        # Extract ROI with some padding
-        padding = 10
+        padding = int(w * 0.15)
         x_start = max(0, x - padding)
         y_start = max(0, y - padding)
         x_end   = min(image.shape[1], x + w + padding)
         y_end   = min(image.shape[0], y + h + padding)
 
         roi = image[y_start:y_end, x_start:x_end]
-
-        # Safety check: jika roi kosong, fallback
+        
         if roi.size == 0:
-            return image
+            return image, (0, 0, image.shape[1], image.shape[0])
 
-        return roi
+        return roi, (x_start, y_start, x_end - x_start, y_end - y_start)
 
 
     def save_annotated_image(

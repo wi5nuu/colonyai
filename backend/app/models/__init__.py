@@ -71,6 +71,9 @@ class Organization(Base):
     license_expires_at = Column(DateTime, nullable=True)
     is_active = Column(SAEnum(enum.Enum('OrgStatus', ['active', 'suspended', 'trial']), name='org_status'), default='active')
 
+    # LIMS Integration
+    lims_webhook_url = Column(String(512), nullable=True)
+
     # Institution Profile
     institution_type = Column(String(100), nullable=True, default="Clinical Laboratory")
     compliance_standard = Column(String(100), nullable=True, default="ISO-17025")

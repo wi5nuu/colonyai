@@ -230,7 +230,7 @@ def train_model(use_mlflow=True):
 
     # Load pretrained model or resume from last
     # Robust search for latest checkpoint
-    detect_runs_dir = os.path.join(SCRIPT_DIR, "runs", "detect", "runs", "detect")
+    detect_runs_dir = os.path.join(SCRIPT_DIR, "runs", "detect")
     latest_v = 0
     LAST_MODEL = None
 
@@ -625,7 +625,7 @@ if __name__ == "__main__":
     if args.mode in ("train", "full"):
         train_results = train_model(use_mlflow=not args.no_mlflow)
 
-    model_file = args.model or "runs/detect/colony_detection_5class/weights/best.pt"
+    model_file = args.model or "runs/detect/colony_detection_full_v8/weights/best.pt"
 
     if args.mode in ("validate", "full"):
         if os.path.exists(model_file):

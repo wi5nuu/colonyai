@@ -5,7 +5,7 @@ import pandas as pd
 from pathlib import Path
 
 # Paths
-MODEL_PATH = "runs/detect/runs/detect/colony_detection_full/weights/best.pt"
+MODEL_PATH = "runs/detect/colony_detection_full/weights/best.pt"
 DATASET_PATH = "datasets/colony_dataset"
 TEST_LABELS = os.path.join(DATASET_PATH, "test/labels")
 TEST_IMAGES = os.path.join(DATASET_PATH, "test/images")

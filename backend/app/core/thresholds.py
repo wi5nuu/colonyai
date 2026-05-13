@@ -21,60 +21,60 @@ ColonyClassName = Literal[
 # Setiap media type memiliki threshold per kelas karena karakteristik visual berbeda.
 MEDIA_CONFIDENCE_THRESHOLDS: dict[str, dict[str, float]] = {
     "PCA": {
-        "colony_single": 0.35,
-        "colony_merged": 0.35,
-        "bubble":        0.30,
-        "dust_debris":   0.30,
-        "media_crack":   0.30,
-    },
-    "VRBA": {
-        "colony_single": 0.30,
-        "colony_merged": 0.30,
-        "bubble":        0.25,
-        "dust_debris":   0.25,
-        "media_crack":   0.25,
-    },
-    "BGBB": {
-        "colony_single": 0.35,
-        "colony_merged": 0.35,
-        "bubble":        0.30,
-        "dust_debris":   0.30,
-        "media_crack":   0.30,
-    },
-    "TGEA": {
-        "colony_single": 0.35,
-        "colony_merged": 0.35,
-        "bubble":        0.30,
-        "dust_debris":   0.30,
-        "media_crack":   0.30,
-    },
-    "TSA": {
-        "colony_single": 0.35,
-        "colony_merged": 0.35,
-        "bubble":        0.30,
-        "dust_debris":   0.30,
-        "media_crack":   0.30,
-    },
-    "MACCONKEY": {
-        "colony_single": 0.30,
-        "colony_merged": 0.30,
-        "bubble":        0.25,
-        "dust_debris":   0.25,
-        "media_crack":   0.25,
-    },
-    "R2A": {
-        "colony_single": 0.25,
-        "colony_merged": 0.25,
+        "colony_single": 0.20,
+        "colony_merged": 0.20,
         "bubble":        0.20,
         "dust_debris":   0.20,
         "media_crack":   0.20,
     },
-    "DEFAULT": {
-        "colony_single": 0.15,
-        "colony_merged": 0.15,
+    "VRBA": {
+        "colony_single": 0.20,
+        "colony_merged": 0.20,
         "bubble":        0.15,
         "dust_debris":   0.15,
         "media_crack":   0.15,
+    },
+    "BGBB": {
+        "colony_single": 0.20,
+        "colony_merged": 0.20,
+        "bubble":        0.20,
+        "dust_debris":   0.20,
+        "media_crack":   0.20,
+    },
+    "TGEA": {
+        "colony_single": 0.20,
+        "colony_merged": 0.20,
+        "bubble":        0.20,
+        "dust_debris":   0.20,
+        "media_crack":   0.20,
+    },
+    "TSA": {
+        "colony_single": 0.20,
+        "colony_merged": 0.20,
+        "bubble":        0.20,
+        "dust_debris":   0.20,
+        "media_crack":   0.20,
+    },
+    "MACCONKEY": {
+        "colony_single": 0.20,
+        "colony_merged": 0.20,
+        "bubble":        0.15,
+        "dust_debris":   0.15,
+        "media_crack":   0.15,
+    },
+    "R2A": {
+        "colony_single": 0.20,
+        "colony_merged": 0.20,
+        "bubble":        0.15,
+        "dust_debris":   0.15,
+        "media_crack":   0.15,
+    },
+    "DEFAULT": {
+        "colony_single": 0.15,
+        "colony_merged": 0.15,
+        "bubble":        0.10,
+        "dust_debris":   0.10,
+        "media_crack":   0.10,
     },
 }
 
@@ -168,7 +168,7 @@ def get_threshold(media_type: str, class_name: str) -> float:
     """
     key = _resolve_media_key(media_type)
     thresholds = MEDIA_CONFIDENCE_THRESHOLDS.get(key, MEDIA_CONFIDENCE_THRESHOLDS["DEFAULT"])
-    return thresholds.get(class_name, 0.60)
+    return thresholds.get(class_name, 0.20)
 
 
 def get_all_thresholds(media_type: str) -> dict[str, float]:

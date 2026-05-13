@@ -76,7 +76,7 @@ class Settings(BaseSettings):
 
     # LIMS Integration
     LIMS_MODE: str = os.getenv("LIMS_MODE", "simulated")
-    LIMS_WEBHOOK_URL: str = os.getenv("LIMS_WEBHOOK_URL", "")
+    LIMS_WEBHOOK_URL: str = os.getenv("LIMS_WEBHOOK_URL", "http://localhost:3000/api/mock-lims/receive")
 
     # SMTP Settings (Phase II MFA)
     SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")

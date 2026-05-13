@@ -34,6 +34,8 @@ class AuditLogResponse(BaseModel):
     status: str = "SUCCESS"
     previous_hash: Optional[str] = None
     current_hash: Optional[str] = None
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -85,7 +87,9 @@ async def list_audit_logs(
             timestamp=log.timestamp,
             status="SUCCESS",
             previous_hash=log.previous_hash,
-            current_hash=log.current_hash
+            current_hash=log.current_hash,
+            ip_address=log.ip_address,
+            user_agent=log.user_agent
         ))
 
     return logs

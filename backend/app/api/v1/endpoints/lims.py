@@ -37,9 +37,12 @@ async def sync_to_lims(
     Sync analysis results to external LIMS system.
     Demonstrates production-ready integration architecture.
     """
-    # 1. Fetch Analysis
+    # 1. Fetch Analysis with Organization
+    from sqlalchemy.orm import selectinload
     result = await db.execute(
-        select(Analysis).where(Analysis.id == uuid.UUID(analysis_id))
+        select(Analysis)
+        .options(selectinload(Analysis.organization))
+        .where(Analysis.id == uuid.UUID(analysis_id))
     )
     analysis = result.scalars().first()
     if not analysis:
@@ -73,9 +76,12 @@ async def sync_to_lims(
         "audit_hash": "SHA256:" + str(uuid.uuid4())[:16] # Simulated for demo
     }
 
-    # 4. Handle Simulation or Real Webhook
+    # 4. Determine LIMS Mode and URL (Priority: Org Config -> Global Settings)
+    lims_mode = settings.LIMS_MODE
+    lims_url = analysis.organization.lims_webhook_url if analysis.organization and analysis.organization.lims_webhook_url else settings.LIMS_WEBHOOK_URL
+    
     lims_record_id = f"LIMS-{str(uuid.uuid4())[:8].upper()}"
-    message = "Sample result accepted by SampleManager. Record created."
+    message = "Sample result accepted by SampleManager. Record created. (Simulated)"
     next_action = "Awaiting supervisor approval in LIMS queue."
     status_val = "success"
     response_payload = {
@@ -86,17 +92,17 @@ async def sync_to_lims(
         "next_action": next_action
     }
 
-    if settings.LIMS_MODE == "live" and settings.LIMS_WEBHOOK_URL:
+    if lims_mode == "live" and lims_url:
         try:
             async with httpx.AsyncClient() as client:
-                res = await client.post(settings.LIMS_WEBHOOK_URL, json=payload, timeout=10.0)
+                res = await client.post(lims_url, json=payload, timeout=10.0)
                 res.raise_for_status()
                 response_payload = res.json()
                 lims_record_id = response_payload.get("lims_record_id", lims_record_id)
                 message = response_payload.get("message", message)
         except Exception as e:
             status_val = "failed"
-            message = f"LIMS Communication Error: {str(e)}"
+            message = f"LIMS Communication Error ({lims_url}): {str(e)}"
             response_payload = {"error": str(e)}
 
     # 5. Log to LimsLog

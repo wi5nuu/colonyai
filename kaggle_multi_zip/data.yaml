@@ -1,0 +1,18 @@
+# ColonyAI Dataset Configuration - Kaggle Optimized
+path: .
+
+# Train/Val/Test Splits
+train: train/images
+val: valid/images
+test: test/images
+
+# Number of classes
+nc: 5
+
+# Class names
+names:
+  0: colony_single
+  1: colony_merged
+  2: bubble
+  3: dust_debris
+  4: media_crack

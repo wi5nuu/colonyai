@@ -23,6 +23,7 @@ class ProvisionOrgRequest(BaseModel):
     license_tier: str = "Standard"
     institution_type: Optional[str] = "Clinical Laboratory"
     compliance_standard: Optional[str] = "ISO-17025"
+    lims_webhook_url: Optional[str] = None
     infra_config: Optional[dict] = None
 
 class OrgAdminInfo(BaseModel):
@@ -40,6 +41,7 @@ class OrganizationDetail(BaseModel):
     status: str
     license_tier: str
     license_expiry: Optional[datetime]
+    lims_webhook_url: Optional[str]
     users_count: int
     analyses_count: int
     growth_rate: str
@@ -113,6 +115,7 @@ async def get_all_organizations(
             "status": "active" if org.is_active in [1, True, "active", "1"] else ("suspended" if org.is_active in [0, False, "suspended", "0"] else str(org.is_active)),
             "license_tier": org.license_key or "Standard",
             "license_expiry": org.license_expires_at,
+            "lims_webhook_url": org.lims_webhook_url,
             "users_count": users_count,
             "analyses_count": analyses_count,
             "growth_rate": "+0%",
@@ -156,6 +159,7 @@ async def provision_new_organization(
         is_active='active',
         institution_type=request.institution_type,
         compliance_standard=request.compliance_standard,
+        lims_webhook_url=request.lims_webhook_url,
         infra_config=request.infra_config
     )
     db.add(new_org)
