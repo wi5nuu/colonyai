@@ -116,7 +116,7 @@ export default function DashboardPage() {
                   {isId ? "Pusat Komando Strategis" : "Strategic Command Center"}
                 </h1>
                 <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
-                  Welcome Back, <span className="text-primary font-black">{user?.full_name?.split(" ")[0]}!</span> // {isId ? "Status Operasional: Aktif" : "Operational Status: Active"}
+                  Welcome Back, <span className="text-primary font-black">{user?.full_name?.split(" ")[0]}!</span> {"//"} {isId ? "Status Operasional: Aktif" : "Operational Status: Active"}
                 </p>
               </div>
             </div>

@@ -187,7 +187,7 @@ export default function DashboardLayout({
     }, 8000);
 
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [router, isId]);
 
   // Calibration Countdown Logic
   const [timeLeft, setTimeLeft] = useState({

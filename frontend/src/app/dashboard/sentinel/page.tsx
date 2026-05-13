@@ -264,7 +264,7 @@ export default function SentinelPage() {
               {isId ? "Sentinel Sistem" : "Systems Sentinel"}
             </h1>
             <div className="flex items-center gap-4">
-              <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.3em]">{isId ? "Pemantauan Infrastruktur Neural" : "Neural Infrastructure Monitoring"} // V3.2.0-STABLE</p>
+              <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.3em]">{isId ? "Pemantauan Infrastruktur Neural" : "Neural Infrastructure Monitoring"} {"//"} V3.2.0-STABLE</p>
               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 text-emerald-500 rounded-full text-[8px] font-black uppercase tracking-widest border border-emerald-500/20">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 {isId ? "Sistem Normal" : "System Nominal"}
