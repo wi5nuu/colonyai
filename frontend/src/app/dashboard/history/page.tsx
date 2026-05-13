@@ -13,6 +13,10 @@ import {
   History,
   ChevronLeft,
   ChevronRight,
+  Database,
+  ShieldCheck,
+  Activity,
+  FileSpreadsheet,
 } from "lucide-react";
 import { analysesApi } from "@/lib/analyses-api";
 import { reportsApi } from "@/lib/reports-api";
@@ -33,9 +37,9 @@ export default function HistoryPage() {
   const [data, setData] = useState<AnalysisListResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [showDocs, setShowDocs] = useState(true);
+  const [showDocs, setShowDocs] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const pageSize = 10;
+  const pageSize = 12;
 
   useEffect(() => {
     setMounted(true);
@@ -121,331 +125,245 @@ export default function HistoryPage() {
   const totalPages = data?.total_pages || 1;
   const total = data?.total || 0;
 
-  if (isLoading && !data) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
-          <p className="mt-4 text-sm font-bold text-slate-500 uppercase tracking-widest">
-            {t("history.scanningArchives")}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative bg-[#f4f7f6] dark:bg-slate-950 transition-colors duration-300">
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden bg-[#f4f7f6] dark:bg-slate-950 transition-colors duration-300">
       <div className="flex relative min-h-[calc(100vh-200px)]">
         <div
           className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
         >
-          <div className="max-w-[1500px] mx-auto px-4 py-0 sm:px-8">
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800 mb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm flex items-center justify-center">
-                  <History className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
-                    {t("history.title")}
-                  </h1>
-                  <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] mt-0.5">
-                    {t("history.subtitle")}
-                  </p>
-                </div>
+          <div className="max-w-[1500px] mx-auto px-6 py-0 pt-0 sm:px-6 sm:py-0 sm:pt-0 space-y-6">
+        
+        {/* HEADER */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-none bg-slate-900 flex items-center justify-center">
+                <History className="h-4 w-4 text-primary" />
               </div>
-              <div className="flex items-center gap-3">
-                <DocumentationToggle
-                  showDocs={showDocs}
-                  setShowDocs={setShowDocs}
-                  text={t("history.docsToggle")}
-                />
-                <button
-                  onClick={handleExportCsv}
-                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm"
-                >
-                  <Download className="h-3 w-3 text-slate-400 dark:text-slate-500" />
-                  <span>{t("history.exportCsv")}</span>
-                </button>
+              <div>
+                <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">
+                  {t("history.title")}
+                </h1>
+                <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
+                  Validated Analytical Repository // Neural Ledger
+                </p>
               </div>
             </div>
+          </div>
 
-            {/* Filters & Search */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 mb-4 rounded-xl shadow-sm transition-colors">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 relative group">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder={t("history.searchPlaceholder")}
-                    className="w-full pl-9 pr-3 py-2 text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setPage(1);
-                    }}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <select
-                    className="px-3 py-2 text-[10px] font-black text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg outline-none cursor-pointer uppercase tracking-wider transition-colors"
-                    value={mediaFilter}
-                    onChange={(e) => {
-                      setMediaFilter(e.target.value);
-                      setPage(1);
-                    }}
-                  >
-                    <option value="all">{t("history.allMedia")}</option>
-                    <option value="Plate Count Agar">
-                      {t("history.pcaProtocol")}
-                    </option>
-                    <option value="VRBA">{t("history.vrbaProtocol")}</option>
-                    <option value="BGBB">{t("history.bgbbProtocol")}</option>
-                    <option value="R2A">{t("history.r2aProtocol")}</option>
-                    <option value="TSA">{t("history.tsaProtocol")}</option>
-                    <option value="MacConkey">
-                      {t("history.macProtocol")}
-                    </option>
-                  </select>
-                  <select
-                    className="px-3 py-2 text-[10px] font-black text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg outline-none cursor-pointer uppercase tracking-wider transition-colors"
-                    value={statusFilter}
-                    onChange={(e) => {
-                      setStatusFilter(e.target.value);
-                      setPage(1);
-                    }}
-                  >
-                    <option value="all">{t("history.allStatuses")}</option>
-                    <option value="valid">{t("history.verifiedOnly")}</option>
-                    <option value="TNTC">{t("history.tntcCritical")}</option>
-                    <option value="TFTC">{t("history.traceTFTC")}</option>
-                  </select>
-                </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="bg-slate-900 dark:bg-black p-3 rounded-none shadow-xl text-white border border-white/5 flex items-center gap-4">
+              <div className="space-y-0.5">
+                <p className="text-[7px] font-black text-white/40 uppercase tracking-widest leading-none">Security Standard</p>
+                <p className="text-[10px] font-bold text-primary">AES-256-GCM</p>
+              </div>
+              <div className="w-[1px] h-6 bg-white/10" />
+              <div className="space-y-0.5">
+                <p className="text-[7px] font-black text-white/40 uppercase tracking-widest leading-none">Ledger Nodes</p>
+                <p className="text-[10px] font-bold text-white tracking-tighter">{total} Specimens</p>
+              </div>
+              <div className="w-[1px] h-6 bg-white/10" />
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                <span className="text-[8px] font-black uppercase tracking-widest">Active</span>
               </div>
             </div>
-
-            {/* Results Table */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 overflow-hidden rounded-xl shadow-sm transition-colors">
-              <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50 transition-colors">
-                <div>
-                  <h2 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                    {t("history.archives")}
-                  </h2>
-                  <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                    {total} {t("history.recordsFound")}
-                  </p>
-                </div>
-              </div>
-
-              {/* Empty State */}
-              {!isLoading && analyses.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-4 border border-slate-100 dark:border-slate-700">
-                    <History className="h-6 w-6 text-slate-300 dark:text-slate-600" />
-                  </div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">
-                    {t("history.noRecords")}
-                  </p>
-                  <button
-                    onClick={() => {
-                      setSearchTerm("");
-                      setMediaFilter("all");
-                      setStatusFilter("all");
-                    }}
-                    className="mt-2 text-[9px] font-black text-primary uppercase tracking-[0.2em]"
-                  >
-                    {t("history.resetFilters")}
-                  </button>
-                </div>
-              )}
-
-              {/* Table */}
-              {analyses.length > 0 && (
-                <div className="overflow-x-auto w-full">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                        {[
-                          t("history.tableSpecimenId"),
-                          t("history.tableProtocol"),
-                          t("history.tableCount"),
-                          t("history.tableCfuMl"),
-                          t("history.tableConfidence"),
-                          t("history.tableTimestamp"),
-                          t("history.tableAuditStatus"),
-                          t("history.tableActions"),
-                        ].map((h) => (
-                          <th
-                            key={h}
-                            className="px-3 py-2 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest"
-                          >
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                      {analyses.map((analysis: any) => (
-                        <tr
-                          key={analysis.id}
-                          className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer text-[10px]"
-                          onClick={() => handleViewAnalysis(analysis.id)}
-                        >
-                          <td className="px-3 py-1.5">
-                            <div className="flex flex-col">
-                              <span className="font-bold text-slate-900 dark:text-white">{analysis.sample_id}</span>
-                              <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter mt-0.5">
-                                {analysis.user?.organization_name || "ColonyAI Global"} • {analysis.user?.full_name || "Unknown"}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-1.5 font-bold text-slate-700 dark:text-slate-300">
-                            {analysis.media_type}
-                          </td>
-                          <td className="px-3 py-1.5 font-mono text-slate-700 dark:text-slate-300">
-                            {analysis.colony_count}
-                          </td>
-                          <td className="px-3 py-1.5 font-black tabular-nums text-slate-900 dark:text-white">
-                            {formatCFU(analysis.cfu_per_ml, analysis.warnings)}
-                          </td>
-                          <td className="px-3 py-1.5 text-slate-600 dark:text-slate-400 font-medium">
-                            {(analysis.confidence_score * 100).toFixed(0)}%
-                          </td>
-                          <td className="px-3 py-1.5 text-slate-500 dark:text-slate-500 font-medium">
-                            {new Date(analysis.created_at).toLocaleDateString()}
-                          </td>
-                          <td className="px-3 py-1.5">
-                            <span
-                              className={`px-1.5 py-0.5 rounded-[2px] text-[8px] font-black uppercase ${analysis.is_valid_for_reporting ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800" : "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800"}`}
-                            >
-                              {analysis.is_valid_for_reporting
-                                ? t("history.verified")
-                                : t("history.reviewRequired")}
-                            </span>
-                          </td>
-                          <td className="px-3 py-1.5 flex gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(analysis.id, analysis.sample_id);
-                              }}
-                              className="text-slate-400 hover:text-rose-600"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30">
-                  <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">
-                    {t("history.showing")} {total} {t("history.of")}{" "}
-                    {t("history.specimens")}
-                  </p>
-                  <div className="flex gap-1">
-                    <button
-                      disabled={page <= 1}
-                      onClick={() => setPage(page - 1)}
-                      className="p-1 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30"
-                    >
-                      <ChevronLeft className="h-3 w-3" />
-                    </button>
-                    <button
-                      disabled={page >= totalPages}
-                      onClick={() => setPage(page + 1)}
-                      className="p-1 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30"
-                    >
-                      <ChevronRight className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            
+            <button
+              onClick={handleExportCsv}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-4 py-2 rounded-none font-black text-[9px] uppercase tracking-widest flex items-center gap-2 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
+              {t("history.exportCsv")}
+            </button>
           </div>
         </div>
 
-        <div className="hidden lg:block">
-          <DocumentationSidebar
-            showDocs={showDocs}
-            setShowDocs={setShowDocs}
-            directory={t("history.docsTitle")}
-            title={t("history.docsTitle")}
-            description={t("history.docsDescription")}
-            rawText={t("history.docsDescription")}
-          >
-            <section className="space-y-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
-                  01
-                </span>
-                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
-                  {t("history.docsTitle")}
-                </h2>
-              </div>
-              <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
-                {t("history.docsDescription")}
-              </p>
-            </section>
-
-            <section className="space-y-3 pt-2">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
-                  02
-                </span>
-                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
-                  {t("history.docsToggle")}
-                </h2>
-              </div>
-              <div className="space-y-3 ml-0.5">
-                {[
-                  {
-                    id: "1",
-                    title: t("history.searchPlaceholder"),
-                    desc: t("history.searchPlaceholder"),
-                  },
-                  {
-                    id: "2",
-                    title: t("history.allMedia"),
-                    desc: t("history.allMedia"),
-                  },
-                  {
-                    id: "3",
-                    title: t("history.viewIntelligence"),
-                    desc: t("history.tableSpecimenId"),
-                  },
-                  {
-                    id: "4",
-                    title: t("history.exportAudit"),
-                    desc: t("history.exportCsv"),
-                  },
-                ].map((step) => (
-                  <div key={step.id} className="flex gap-2.5 group">
-                    <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                      {step.id}
-                    </span>
-                    <div className="space-y-0.5">
-                      <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">
-                        {step.title}
-                      </h4>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                        {step.desc}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </DocumentationSidebar>
+        {/* FILTERS BAR */}
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-none border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input 
+              type="text"
+              placeholder={t("history.searchPlaceholder")}
+              className="w-full bg-slate-50 dark:bg-slate-950 border-none rounded-none pl-12 pr-4 py-3 text-[11px] font-black uppercase tracking-widest placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <select
+              value={mediaFilter}
+              onChange={(e) => setMediaFilter(e.target.value)}
+              className="bg-slate-50 dark:bg-slate-950 border-none rounded-none px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              <option value="all">{t("history.allMedia")}</option>
+              <option value="Plate Count Agar">PCA Protocol</option>
+              <option value="VRBA">VRBA Protocol</option>
+              <option value="BGBB">BGBB Protocol</option>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-slate-50 dark:bg-slate-950 border-none rounded-none px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              <option value="all">{t("history.allStatuses")}</option>
+              <option value="valid">{t("history.verifiedOnly")}</option>
+              <option value="TNTC">Critical (TNTC)</option>
+            </select>
+          </div>
         </div>
+
+        {/* LEDGER TABLE */}
+        <div className="bg-white dark:bg-slate-900 rounded-none border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                  <th className="px-8 py-5">Specimen Registry</th>
+                  <th className="px-8 py-5">Matrix</th>
+                  <th className="px-8 py-5">Analytical Yield</th>
+                  <th className="px-8 py-5">Audit Status</th>
+                  <th className="px-8 py-5">Neural Trust</th>
+                  <th className="px-8 py-5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                {isLoading ? (
+                  Array(5).fill(0).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td colSpan={6} className="px-8 py-6 h-16 bg-slate-50/20" />
+                    </tr>
+                  ))
+                ) : analyses.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-8 py-20 text-center">
+                      <div className="flex flex-col items-center">
+                        <Database className="w-12 h-12 text-slate-200 mb-4" />
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No matching records found in neural ledger</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  analyses.map((a: any) => (
+                    <tr 
+                      key={a.id} 
+                      onClick={() => handleViewAnalysis(a.id)}
+                      className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                    >
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-none bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <FlaskConical className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <span className="text-[13px] font-black text-slate-900 dark:text-white font-mono tracking-tight">{a.sample_id}</span>
+                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{new Date(a.created_at).toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{a.media_type}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-sm font-black text-slate-900 dark:text-white">{formatCFU(a.cfu_per_ml, a.warnings)}</span>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">CFU/mL</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-1.5 h-1.5 rounded-full ${a.is_valid_for_reporting ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                          <span className={`text-[10px] font-black uppercase tracking-tighter ${a.is_valid_for_reporting ? 'text-emerald-600' : 'text-amber-600'}`}>
+                            {a.is_valid_for_reporting ? 'Verified' : 'Pending Audit'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex flex-col gap-1 w-24">
+                          <div className="flex justify-between text-[9px] font-bold uppercase tracking-tighter">
+                            <span className="text-slate-400">Trust</span>
+                            <span className="text-slate-900 dark:text-white">{(a.confidence_score * 100).toFixed(0)}%</span>
+                          </div>
+                          <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-primary" style={{ width: `${a.confidence_score * 100}%` }} />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-none shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-all">
+                            <Eye className="w-4 h-4 text-slate-400" />
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDelete(a.id, a.sample_id); }}
+                            className="p-2 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-none transition-all"
+                          >
+                            <Trash2 className="w-4 h-4 text-rose-400" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* PAGINATION */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              Showing <span className="text-slate-900 dark:text-white">{analyses.length}</span> of {total} records
+            </p>
+            <div className="flex items-center gap-2">
+              <button 
+                disabled={page <= 1}
+                onClick={() => setPage(p => p - 1)}
+                className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none disabled:opacity-30 hover:bg-slate-50 transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <div className="px-4 text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                Page {page} of {totalPages}
+              </div>
+              <button 
+                disabled={page >= totalPages}
+                onClick={() => setPage(p => p + 1)}
+                className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none disabled:opacity-30 hover:bg-slate-50 transition-all"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+          </div>
+        </div>
+
+        {/* Documentation Sidebar */}
+        <DocumentationSidebar
+          showDocs={showDocs}
+          setShowDocs={setShowDocs}
+          directory={t("history.docsDirectory") || "Neural Repository Audit SOP"}
+          title={t("history.docsTitle") || "Analytical History Ledger"}
+          description={t("history.docsDescription") || "Comprehensive database of all biological specimens processed by the ColonyAI neural engine."}
+          rawText={`REPOSITORI ANALITIK NEURAL
+==========================
+
+1. INTEGRITAS DATA
+Semua data hasil analisis disimpan dalam ledger terenkripsi AES-256. Setiap baris mewakili satu spesimen biologis yang divalidasi.
+
+2. STATUS AUDIT
+- Completed: Analisis selesai dan siap diekspor.
+- Pending: Memerlukan verifikasi manual dari analis senior.
+
+3. EKSPOR DATA
+Gunakan tombol 'Export Hub' untuk mengunduh seluruh repositori dalam format CSV untuk pelaporan eksternal.`}
+        />
       </div>
     </div>
   );

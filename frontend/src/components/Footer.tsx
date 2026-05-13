@@ -22,8 +22,8 @@ export function Footer() {
     "bg-gradient-to-r from-[#00f2ff] via-[#0055ff] to-[#ff00ff]";
 
   return (
-    <footer className="bg-white border-t border-slate-100 pt-16 pb-8 px-6 font-sans">
-      <div className="max-w-7xl mx-auto">
+    <footer className="bg-white border-t border-slate-100 pt-16 pb-8 font-sans">
+      <div className="max-w-[1500px] mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           {/* ── Column 1: Brand & Desc ────────────────────────── */}
           <div className="space-y-6">
@@ -156,14 +156,14 @@ export function Footer() {
                   className="w-4 h-4 text-[#0055ff] flex-shrink-0"
                   aria-hidden="true"
                 />
-                <span>150881</span>
+                <span>0813-948-290</span>
               </li>
               <li className="flex gap-3 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
                 <Mail
                   className="w-4 h-4 text-[#0055ff] flex-shrink-0"
                   aria-hidden="true"
                 />
-                <span>committee-ai-open@president.ac.id</span>
+                <span>support@colonyai.id</span>
               </li>
               <li className="flex gap-3 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
                 <Globe

@@ -26,6 +26,7 @@ interface AuthState {
   logout: () => Promise<void>
   refreshAccessToken: () => Promise<void>
   verifyMfa: (code: string, trustDevice: boolean) => Promise<void>
+  updateUser: (data: Partial<User>) => void
   clearError: () => void
 }
 
@@ -207,6 +208,11 @@ export const useAuthStore = create<AuthState>()(
 
       clearError: () => {
         set({ error: null })
+      },
+      updateUser: (data: Partial<User>) => {
+        set((state) => ({
+          user: state.user ? { ...state.user, ...data } : null
+        }))
       },
     }),
     {

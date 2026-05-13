@@ -196,7 +196,7 @@ function ChartTooltip({ active, payload, label }: any) {
   const p = payload[0]?.payload as TimeSeriesPoint;
   if (!p) return null;
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-5 min-w-[200px] animate-in fade-in zoom-in-95 duration-200">
+    <div className="bg-slate-900 border border-slate-800 rounded-none shadow-2xl p-5 min-w-[200px] animate-in fade-in zoom-in-95 duration-200">
       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 pb-3 border-b border-slate-800">
         {label}
       </p>
@@ -255,7 +255,7 @@ export default function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [showDocs, setShowDocs] = useState(true);
+  const [showDocs, setShowDocs] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
   const fetchData = useCallback(async () => {
@@ -392,7 +392,7 @@ export default function AnalyticsPage() {
   if (isLoading && allAnalyses.length === 0)
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-5">
-        <div className="w-16 h-16 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center shadow-inner">
+        <div className="w-16 h-16 rounded-none bg-slate-50 dark:bg-slate-800 flex items-center justify-center shadow-inner">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">
@@ -404,7 +404,7 @@ export default function AnalyticsPage() {
   if (error && allAnalyses.length === 0)
     return (
       <div className="text-center py-24 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-        <div className="w-20 h-20 rounded-xl bg-rose-50 flex items-center justify-center mx-auto shadow-xl shadow-rose-100/50">
+        <div className="w-20 h-20 rounded-none bg-rose-50 flex items-center justify-center mx-auto shadow-xl shadow-rose-100/50">
           <AlertCircle className="h-10 w-10 text-rose-500" />
         </div>
         <div className="max-w-md mx-auto">
@@ -432,7 +432,7 @@ export default function AnalyticsPage() {
         <div
           className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
         >
-          <div className="max-w-[1200px] mx-auto px-4 py-0 pt-0 pb-6">
+          <div className="max-w-[1500px] mx-auto px-6 py-0 pt-0 pb-6">
             {/* Cloudflare-style Header */}
             <div className="space-y-0.5 mb-4">
               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
@@ -454,7 +454,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Main Analytics Container */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md shadow-sm overflow-hidden transition-colors">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none shadow-sm overflow-hidden transition-colors">
               <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                   {t("analytics.neuralQueriesHeader")}
@@ -477,7 +477,7 @@ export default function AnalyticsPage() {
               </div>
 
               <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-slate-50/30 dark:bg-slate-800/30">
-                <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
+                <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400 rounded-none text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
                   <Filter className="w-3 h-3" /> {t("analytics.addFilter")}
                 </button>
 
@@ -488,7 +488,7 @@ export default function AnalyticsPage() {
                       onChange={(e) =>
                         setDateRange(e.target.value as DateRange)
                       }
-                      className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-1.5 text-[10px] font-black text-slate-700 dark:text-slate-200 outline-none hover:border-slate-300 dark:hover:border-slate-600 transition-all appearance-none pr-8"
+                      className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none px-3 py-1.5 text-[10px] font-black text-slate-700 dark:text-slate-200 outline-none hover:border-slate-300 dark:hover:border-slate-600 transition-all appearance-none pr-8"
                     >
                       {DATE_RANGE_OPTIONS.map((o) => (
                         <option key={o.value} value={o.value}>
@@ -569,7 +569,7 @@ export default function AnalyticsPage() {
                     return (
                       <div
                         key={i}
-                        className={`backdrop-blur-sm border p-2 sm:p-4 rounded-xl shadow-sm group hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden ${
+                        className={`backdrop-blur-sm border p-2 sm:p-4 rounded-none shadow-sm group hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden ${
                           s.color === 'indigo' ? 'bg-indigo-50/40 border-indigo-100/50 hover:bg-indigo-50/60 dark:bg-indigo-950/20 dark:border-indigo-900/40' :
                           s.color === 'amber' ? 'bg-amber-50/40 border-amber-100/50 hover:bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-900/40' :
                           s.color === 'emerald' ? 'bg-emerald-50/40 border-emerald-100/50 hover:bg-emerald-50/60 dark:bg-emerald-950/20 dark:border-emerald-900/40' :
@@ -578,7 +578,7 @@ export default function AnalyticsPage() {
                         }`}
                       >
                         <div className="flex justify-between items-start mb-1 sm:mb-2">
-                           <div className={`p-1 sm:p-1.5 rounded-sm transition-colors ${
+                           <div className={`p-1 sm:p-1.5 rounded-none transition-colors ${
                               s.color === 'indigo' ? 'bg-indigo-50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400' :
                               s.color === 'amber' ? 'bg-amber-50 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400' :
                               s.color === 'emerald' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-400' :
@@ -700,7 +700,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Monthly Summary Table */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md shadow-sm overflow-hidden mt-10 transition-colors">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none shadow-sm overflow-hidden mt-10 transition-colors">
               <div className="px-6 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                   {t("analytics.intelligenceLedger")}
@@ -818,7 +818,7 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
                   {t("analytics.docsSectionOverviewTitle")}
                 </h2>
               </div>
-              <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700/50">
+              <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-none border border-slate-100 dark:border-slate-700/50">
                 {t("analytics.docsSectionOverviewText")}
               </p>
             </section>
@@ -914,7 +914,7 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
             </section>
 
             <div className="space-y-3 pt-4">
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-xl flex gap-3 shadow-sm">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-none flex gap-3 shadow-sm">
                 <div className="w-4 h-4 flex-shrink-0 mt-0.5">
                   <div className="w-full h-full rounded-full bg-blue-600 flex items-center justify-center">
                     <BarChart3 className="w-2.5 h-2.5 text-white" />
@@ -930,7 +930,7 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
                 </div>
               </div>
 
-              <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl flex gap-3 shadow-xl">
+              <div className="p-3 bg-slate-900 border border-slate-800 rounded-none flex gap-3 shadow-xl">
                 <div className="w-4 h-4 flex-shrink-0 mt-0.5">
                   <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
                     <Lock className="w-2.5 h-2.5 text-white" />

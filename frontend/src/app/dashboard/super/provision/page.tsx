@@ -44,7 +44,8 @@ export default function ProvisionNodePage() {
     encryption_standard: "AES-256-GCM",
     audit_frequency: "Quarterly",
     bsl_level: "BSL-2",
-    network_restriction: "0.0.0.0/0 (Global Access)"
+    network_restriction: "0.0.0.0/0 (Global Access)",
+    lims_webhook_url: "http://localhost:3000/api/mock-lims/receive"
   });
 
   const handleProvision = async (e: React.FormEvent) => {
@@ -60,6 +61,7 @@ export default function ProvisionNodePage() {
         license_tier: "Enterprise",
         institution_type: newOrgData.institution_type,
         compliance_standard: newOrgData.compliance_standard,
+        lims_webhook_url: newOrgData.lims_webhook_url,
         infra_config: {
           node: newOrgData.server_node,
           storage: newOrgData.storage_quota,
@@ -103,7 +105,7 @@ export default function ProvisionNodePage() {
             
             {/* Column 1: Entity & Person */}
             <div className="space-y-4">
-              <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-none p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-4 border-b border-slate-50 pb-3">
                   <Building2 className="w-4 h-4 text-primary" />
                   <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">Entity Registration</h4>
@@ -118,7 +120,7 @@ export default function ProvisionNodePage() {
                       value={newOrgData.name}
                       onChange={(e) => setNewOrgData({...newOrgData, name: e.target.value})}
                       placeholder="e.g. BioLab Ltd."
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-sm text-xs font-bold text-slate-900 focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-300"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900 focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-300"
                     />
                   </div>
                   <div className="space-y-1">
@@ -129,7 +131,7 @@ export default function ProvisionNodePage() {
                       value={newOrgData.location}
                       onChange={(e) => setNewOrgData({...newOrgData, location: e.target.value})}
                       placeholder="e.g. Jakarta, ID"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-sm text-xs font-bold text-slate-900 focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-300"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900 focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-300"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -138,7 +140,7 @@ export default function ProvisionNodePage() {
                       <select 
                         value={newOrgData.institution_type}
                         onChange={(e) => setNewOrgData({...newOrgData, institution_type: e.target.value})}
-                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-sm text-xs font-bold text-slate-900 focus:ring-1 focus:ring-primary/20 outline-none"
+                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900 focus:ring-1 focus:ring-primary/20 outline-none"
                       >
                         <option value="Clinical Laboratory">Clinical</option>
                         <option value="Academic Research">Academic</option>
@@ -150,7 +152,7 @@ export default function ProvisionNodePage() {
                       <select 
                         value={newOrgData.compliance_standard}
                         onChange={(e) => setNewOrgData({...newOrgData, compliance_standard: e.target.value})}
-                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-sm text-xs font-bold text-slate-900 focus:ring-1 focus:ring-primary/20 outline-none"
+                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900 focus:ring-1 focus:ring-primary/20 outline-none"
                       >
                         <option value="ISO-17025">ISO-17025</option>
                         <option value="ISO-15189">ISO-15189</option>
@@ -160,7 +162,7 @@ export default function ProvisionNodePage() {
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-none p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-4 border-b border-slate-50 pb-3">
                   <Users className="w-4 h-4 text-amber-500" />
                   <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">Administrator</h4>
@@ -174,7 +176,7 @@ export default function ProvisionNodePage() {
                       value={newOrgData.admin_full_name}
                       onChange={(e) => setNewOrgData({...newOrgData, admin_full_name: e.target.value})}
                       placeholder="Legal full name"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-sm text-xs font-bold text-slate-900 focus:ring-1 focus:ring-amber-500/20 outline-none transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900 focus:ring-1 focus:ring-amber-500/20 outline-none transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -185,7 +187,7 @@ export default function ProvisionNodePage() {
                       value={newOrgData.admin_email}
                       onChange={(e) => setNewOrgData({...newOrgData, admin_email: e.target.value})}
                       placeholder="admin@domain.diag"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-sm text-xs font-bold text-slate-900 focus:ring-1 focus:ring-amber-500/20 outline-none transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900 focus:ring-1 focus:ring-amber-500/20 outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -194,7 +196,7 @@ export default function ProvisionNodePage() {
 
             {/* Column 2: Infrastructure & Security */}
             <div className="space-y-4">
-              <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-none p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-4 border-b border-slate-50 pb-3">
                   <Server className="w-4 h-4 text-blue-500" />
                   <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">Infrastructure</h4>
@@ -211,7 +213,7 @@ export default function ProvisionNodePage() {
                     <select 
                       value={newOrgData.server_node}
                       onChange={(e) => setNewOrgData({...newOrgData, server_node: e.target.value})}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-sm text-xs font-bold text-slate-900 focus:ring-1 focus:ring-blue-500/20 outline-none"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900 focus:ring-1 focus:ring-blue-500/20 outline-none"
                     >
                       <option value="ap-southeast-1 (Jakarta)">ap-southeast-1 (Jakarta)</option>
                       <option value="ap-southeast-2 (Singapore)">ap-southeast-2 (Singapore)</option>
@@ -224,7 +226,7 @@ export default function ProvisionNodePage() {
                       <select 
                         value={newOrgData.storage_quota}
                         onChange={(e) => setNewOrgData({...newOrgData, storage_quota: e.target.value})}
-                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-sm text-xs font-bold text-slate-900"
+                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900"
                       >
                         <option value="1 TB">1 TB</option>
                         <option value="5 TB">5 TB</option>
@@ -236,7 +238,7 @@ export default function ProvisionNodePage() {
                       <select 
                         value={newOrgData.data_retention}
                         onChange={(e) => setNewOrgData({...newOrgData, data_retention: e.target.value})}
-                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-sm text-xs font-bold text-slate-900"
+                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900"
                       >
                         <option value="1 Year">1 Year</option>
                         <option value="5 Years">5 Years</option>
@@ -247,7 +249,7 @@ export default function ProvisionNodePage() {
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-none p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-4 border-b border-slate-50 pb-3">
                   <ShieldCheck className="w-4 h-4 text-rose-500" />
                   <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">Specialized Controls</h4>
@@ -259,7 +261,7 @@ export default function ProvisionNodePage() {
                       <select 
                         value={newOrgData.bsl_level}
                         onChange={(e) => setNewOrgData({...newOrgData, bsl_level: e.target.value})}
-                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-sm text-xs font-bold text-slate-900"
+                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900"
                       >
                         <option value="BSL-1">BSL-1</option>
                         <option value="BSL-2">BSL-2</option>
@@ -272,7 +274,7 @@ export default function ProvisionNodePage() {
                       <select 
                         value={newOrgData.audit_frequency}
                         onChange={(e) => setNewOrgData({...newOrgData, audit_frequency: e.target.value})}
-                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-sm text-xs font-bold text-slate-900"
+                        className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900"
                       >
                         <option value="Monthly">Monthly</option>
                         <option value="Quarterly">Quarterly</option>
@@ -286,9 +288,23 @@ export default function ProvisionNodePage() {
                       type="text" 
                       value={newOrgData.network_restriction}
                       onChange={(e) => setNewOrgData({...newOrgData, network_restriction: e.target.value})}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-sm text-xs font-bold text-slate-900"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900"
                     />
                     <p className="text-[7px] text-slate-400 font-bold ml-1 uppercase">Whitelisted IP Range (0.0.0.0/0 = Public)</p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">LIMS Webhook Bridge</label>
+                    <div className="relative">
+                      <Database className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+                      <input 
+                        type="url" 
+                        value={newOrgData.lims_webhook_url}
+                        onChange={(e) => setNewOrgData({...newOrgData, lims_webhook_url: e.target.value})}
+                        placeholder="https://lims.lab.id/api/receive"
+                        className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900 focus:ring-1 focus:ring-rose-500/20 outline-none"
+                      />
+                    </div>
+                    <p className="text-[7px] text-slate-400 font-bold ml-1 uppercase">URL for HL7/FHIR or Custom REST Integration</p>
                   </div>
                 </div>
               </div>
@@ -296,7 +312,7 @@ export default function ProvisionNodePage() {
 
             {/* Column 3: Authorization (Desktop Sidebar) */}
             <div className="xl:col-span-1 space-y-4">
-              <div className="bg-slate-900 rounded-sm p-5 shadow-xl text-white">
+              <div className="bg-slate-900 rounded-none p-5 shadow-xl text-white">
                 <div className="flex items-center gap-2 mb-4 border-b border-white/10 pb-3">
                   <Key className="w-4 h-4 text-primary" />
                   <h4 className="text-[10px] font-bold text-white uppercase tracking-widest">Authorization Matrix</h4>
@@ -314,7 +330,7 @@ export default function ProvisionNodePage() {
                     </div>
                   </div>
 
-                  <label className="flex items-start gap-3 p-3 bg-white/5 border border-white/10 rounded-sm cursor-pointer group hover:bg-white/10 transition-all">
+                  <label className="flex items-start gap-3 p-3 bg-white/5 border border-white/10 rounded-none cursor-pointer group hover:bg-white/10 transition-all">
                     <div className="flex items-center h-4 mt-0.5">
                       <input 
                         type="checkbox" 
@@ -332,7 +348,7 @@ export default function ProvisionNodePage() {
                   <button 
                     type="submit"
                     disabled={isProvisioning || !digitalSignature}
-                    className="w-full py-3 bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-sm shadow-lg hover:bg-primary/90 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-3 bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-none shadow-lg hover:bg-primary/90 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isProvisioning ? (
                       <><RefreshCw className="w-3 h-3 animate-spin" /> ...</>
@@ -343,7 +359,7 @@ export default function ProvisionNodePage() {
                 </div>
               </div>
               
-              <div className="hidden xl:block bg-slate-50 border border-slate-200 rounded-sm p-5">
+              <div className="hidden xl:block bg-slate-50 border border-slate-200 rounded-none p-5">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Protocol Note</p>
                 <p className="text-[10px] font-bold text-slate-500 leading-relaxed">
                   Provisioning a new node triggers a global ledger update. Ensure the administrator's email is a verified laboratory gateway to prevent security isolation.
@@ -356,9 +372,9 @@ export default function ProvisionNodePage() {
       ) : (
         /* Refined Success State */
         <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500 max-w-4xl mx-auto py-8">
-          <div className="bg-white border border-slate-200 rounded-[32px] p-8 sm:p-12 text-center shadow-xl shadow-slate-200/50 relative overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-none p-8 sm:p-12 text-center shadow-xl shadow-slate-200/50 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500" />
-            <div className="w-20 h-20 bg-emerald-50 rounded-sm flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-emerald-50 rounded-none flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 className="w-10 h-10 text-emerald-500" />
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">Provisioning Successful</h2>
@@ -368,7 +384,7 @@ export default function ProvisionNodePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-sm p-6 sm:p-8 border border-slate-200 shadow-sm transition-all hover:border-primary/30 group">
+            <div className="bg-white rounded-none p-6 sm:p-8 border border-slate-200 shadow-sm transition-all hover:border-primary/30 group">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Key className="w-4 h-4 text-primary" />
@@ -380,12 +396,12 @@ export default function ProvisionNodePage() {
                     navigator.clipboard.writeText(provisionResult.license_key);
                     toast.success("License Key copied to clipboard");
                   }}
-                  className="px-3 py-1 bg-slate-50 hover:bg-slate-100 text-[10px] font-bold text-slate-600 rounded-sm transition-all"
+                  className="px-3 py-1 bg-slate-50 hover:bg-slate-100 text-[10px] font-bold text-slate-600 rounded-none transition-all"
                 >
                   Copy
                 </button>
               </div>
-              <div className="bg-slate-50 rounded-sm p-4 border border-slate-100">
+              <div className="bg-slate-50 rounded-none p-4 border border-slate-100">
                 <p className="text-lg font-bold text-slate-900 tracking-wider break-all leading-tight">
                   {provisionResult.license_key}
                 </p>
@@ -395,7 +411,7 @@ export default function ProvisionNodePage() {
               </p>
             </div>
 
-            <div className="bg-white rounded-sm p-6 sm:p-8 border border-slate-200 shadow-sm transition-all hover:border-amber-300 group">
+            <div className="bg-white rounded-none p-6 sm:p-8 border border-slate-200 shadow-sm transition-all hover:border-amber-300 group">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Lock className="w-4 h-4 text-amber-500" />
@@ -407,12 +423,12 @@ export default function ProvisionNodePage() {
                     navigator.clipboard.writeText(provisionResult.admin_temp_password);
                     toast.success("Temporary Password copied to clipboard");
                   }}
-                  className="px-3 py-1 bg-slate-50 hover:bg-slate-100 text-[10px] font-bold text-slate-600 rounded-sm transition-all"
+                  className="px-3 py-1 bg-slate-50 hover:bg-slate-100 text-[10px] font-bold text-slate-600 rounded-none transition-all"
                 >
                   Copy
                 </button>
               </div>
-              <div className="bg-amber-50/50 rounded-sm p-4 border border-amber-100">
+              <div className="bg-amber-50/50 rounded-none p-4 border border-amber-100">
                 <p className="text-lg font-bold text-amber-700 tracking-wide">
                   {provisionResult.admin_temp_password}
                 </p>
@@ -430,13 +446,13 @@ export default function ProvisionNodePage() {
                 setNewOrgData({ name: "", location: "", admin_email: "", admin_full_name: "", license_tier: "Enterprise", institution_type: "Clinical Laboratory", compliance_standard: "ISO-17025", server_node: "ap-southeast-1 (Jakarta)", storage_quota: "1 TB", data_retention: "5 Years", clearance_level: "Level 3 (High)", encryption_standard: "AES-256-GCM", audit_frequency: "Quarterly", bsl_level: "BSL-2", network_restriction: "0.0.0.0/0 (Global Access)" });
                 setDigitalSignature(false);
               }}
-              className="w-full sm:w-auto px-10 py-4 bg-white border border-slate-200 text-slate-900 text-[11px] font-bold uppercase tracking-widest rounded-sm hover:bg-slate-50 transition-all active:scale-95 shadow-sm"
+              className="w-full sm:w-auto px-10 py-4 bg-white border border-slate-200 text-slate-900 text-[11px] font-bold uppercase tracking-widest rounded-none hover:bg-slate-50 transition-all active:scale-95 shadow-sm"
             >
               Provision Another Node
             </button>
             <button 
               onClick={() => router.push("/dashboard/super")}
-              className="w-full sm:w-auto px-12 py-4 bg-slate-900 text-white text-[11px] font-bold uppercase tracking-widest rounded-sm hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-900/20"
+              className="w-full sm:w-auto px-12 py-4 bg-slate-900 text-white text-[11px] font-bold uppercase tracking-widest rounded-none hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-900/20"
             >
               Return to Nexus
             </button>

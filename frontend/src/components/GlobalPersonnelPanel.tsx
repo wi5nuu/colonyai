@@ -35,11 +35,11 @@ interface OrgSummary {
 }
 
 const ROLE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  admin:     { label: "Admin",    color: "text-indigo-600",  bg: "bg-indigo-50 border-indigo-200" },
-  manager:   { label: "Manager",  color: "text-amber-600",   bg: "bg-amber-50 border-amber-200" },
-  auditor:   { label: "Auditor",  color: "text-purple-600",  bg: "bg-purple-50 border-purple-200" },
-  analyst:   { label: "Analyst",  color: "text-slate-600",   bg: "bg-slate-100 border-slate-200" },
-  super_admin:{ label: "Master",  color: "text-rose-600",    bg: "bg-rose-50 border-rose-200" },
+  admin:     { label: "Admin",    color: "text-indigo-600 dark:text-indigo-400",  bg: "bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800" },
+  manager:   { label: "Manager",  color: "text-amber-600 dark:text-amber-400",   bg: "bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800" },
+  auditor:   { label: "Auditor",  color: "text-purple-600 dark:text-purple-400",  bg: "bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800" },
+  analyst:   { label: "Analyst",  color: "text-slate-600 dark:text-slate-400",   bg: "bg-slate-100 border-slate-200 dark:bg-slate-800 dark:border-slate-700" },
+  super_admin:{ label: "Master",  color: "text-rose-600 dark:text-rose-400",    bg: "bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800" },
 };
 
 function OrgPersonnelRow({
@@ -81,28 +81,28 @@ function OrgPersonnelRow({
   );
 
   return (
-    <div className="border border-slate-100 rounded-xl overflow-hidden mb-2 last:mb-0">
+    <div className="border border-slate-100 dark:border-slate-800 rounded-none overflow-hidden mb-2 last:mb-0 bg-white dark:bg-slate-900/50">
       {/* Org Header Row */}
       <button
         onClick={loadPersonnel}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
-            <Building2 className="w-4 h-4 text-slate-500" />
+          <div className="w-8 h-8 rounded-none bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
+            <Building2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
           </div>
           <div className="text-left">
-            <p className="text-xs font-black text-slate-900">{org.name}</p>
+            <p className="text-xs font-black text-slate-900 dark:text-white">{org.name}</p>
             <p className="text-[10px] text-slate-400 font-medium">{org.location}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           <span
-            className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
+            className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-none border ${
               org.status === "active"
-                ? "bg-emerald-50 text-emerald-600 border-emerald-200"
-                : "bg-rose-50 text-rose-600 border-rose-200"
+                ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800"
+                : "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800"
             }`}
           >
             {org.status}
@@ -123,15 +123,15 @@ function OrgPersonnelRow({
 
       {/* Personnel Table */}
       {expanded && !loading && personnel.length > 0 && (
-        <div className="border-t border-slate-100 bg-slate-50/50">
+        <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900">
           {/* Sub-header with "Open Admin Panel" button */}
-          <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100">
+          <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
               {sorted.length} Personnel Terdaftar
             </p>
             <a
               href={`/dashboard/administration`}
-              className="flex items-center gap-1 px-3 py-1 bg-slate-900 hover:bg-primary text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-all"
+              className="flex items-center gap-1 px-3 py-1 bg-slate-900 dark:bg-primary/20 hover:bg-primary dark:hover:bg-primary text-white dark:text-primary dark:hover:text-white border border-transparent dark:border-primary/30 text-[9px] font-black uppercase tracking-widest rounded-none transition-all"
             >
               <Shield className="w-3 h-3" />
               Buka Panel Admin
@@ -141,7 +141,7 @@ function OrgPersonnelRow({
 
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-slate-100">
+              <tr className="border-b border-slate-100 dark:border-slate-800">
                 <th className="px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">
                   Nama
                 </th>
@@ -156,44 +156,44 @@ function OrgPersonnelRow({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {sorted.map((p) => {
                 const rc = ROLE_CONFIG[p.role] ?? ROLE_CONFIG.analyst;
                 return (
-                  <tr key={p.id} className="hover:bg-white transition-colors">
+                  <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-black text-slate-600 shrink-0">
+                        <div className="w-6 h-6 rounded-none bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[9px] font-black text-slate-600 dark:text-slate-300 shrink-0">
                           {p.full_name.charAt(0)}
                         </div>
-                        <span className="text-[11px] font-bold text-slate-800">
+                        <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">
                           {p.full_name}
                         </span>
                       </div>
                     </td>
                     <td className="px-4 py-2">
                       <span
-                        className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${rc.bg} ${rc.color}`}
+                        className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-none border ${rc.bg} ${rc.color}`}
                       >
                         {rc.label}
                       </span>
                     </td>
                     <td className="px-4 py-2">
-                      <span className="text-[10px] font-medium text-slate-500">
+                      <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
                         {p.email}
                       </span>
                     </td>
                     <td className="px-4 py-2">
                       {p.recovery_password ? (
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-mono text-slate-700">
+                          <span className="text-[10px] font-mono text-slate-700 dark:text-slate-300">
                             {revealedIds[p.id]
                               ? p.recovery_password
                               : "••••••••••••"}
                           </span>
                           <button
                             onClick={() => toggleReveal(p.id)}
-                            className="text-slate-300 hover:text-slate-600 transition-colors"
+                            className="text-slate-300 dark:text-slate-500 hover:text-slate-600 dark:hover:text-white transition-colors"
                           >
                             {revealedIds[p.id] ? (
                               <EyeOff className="w-3 h-3" />
@@ -203,7 +203,7 @@ function OrgPersonnelRow({
                           </button>
                         </div>
                       ) : (
-                        <span className="text-[9px] text-slate-300 italic">
+                        <span className="text-[9px] text-slate-300 dark:text-slate-600 italic">
                           —
                         </span>
                       )}
@@ -217,7 +217,7 @@ function OrgPersonnelRow({
       )}
 
       {expanded && !loading && personnel.length === 0 && (
-        <div className="px-4 py-3 border-t border-slate-100 text-center">
+        <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 text-center">
           <p className="text-[10px] text-slate-400">Tidak ada personel terdaftar.</p>
         </div>
       )}
@@ -259,13 +259,13 @@ export function GlobalPersonnelPanel() {
   );
 
   return (
-    <div className="bg-white border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm">
+    <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-3">
+      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <Key className="w-4 h-4 text-primary" />
-            <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">
+            <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
               Global Personnel Command
             </h3>
           </div>
@@ -282,12 +282,12 @@ export function GlobalPersonnelPanel() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari organisasi..."
-              className="pl-7 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/10 outline-none w-44"
+              className="pl-7 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 outline-none w-44"
             />
           </div>
           <button
             onClick={fetchOrgs}
-            className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
+            className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-none transition-all"
             title="Refresh"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -296,7 +296,7 @@ export function GlobalPersonnelPanel() {
       </div>
 
       {/* Content */}
-      <div className="p-4 max-h-[600px] overflow-y-auto">
+      <div className="p-4 max-h-[600px] overflow-y-auto scrollbar-hide">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-5 h-5 text-primary animate-spin" />
@@ -316,11 +316,11 @@ export function GlobalPersonnelPanel() {
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/30 flex items-center justify-between">
-        <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
+      <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900 flex items-center justify-between">
+        <span className="text-[9px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">
           Nexus Global Personnel Registry · Super Admin Eyes Only
         </span>
-        <span className="text-[9px] font-medium text-slate-300">
+        <span className="text-[9px] font-medium text-slate-300 dark:text-slate-500">
           {filtered.length} / {orgs.length} org ditampilkan
         </span>
       </div>

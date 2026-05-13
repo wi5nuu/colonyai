@@ -23,7 +23,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 262 52% 47%;
-    --radius: 1.25rem;
+    --radius: 0;
     --sidebar: 262 52% 47%;
     --sidebar-foreground: 0 0% 100%;
   }
@@ -70,11 +70,11 @@
 
 @layer components {
   .dashboard-card {
-    @apply bg-white dark:bg-slate-900 rounded-xl sm:rounded-[2rem] p-3 sm:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] sm:shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 dark:border-slate-800 transition-all duration-500 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] sm:hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 sm:hover:-translate-y-1 text-slate-900 dark:text-white;
+    @apply bg-white dark:bg-slate-900 rounded-none p-3 sm:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] sm:shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50 dark:border-slate-800 text-slate-900 dark:text-white;
   }
 
   .sidebar-item {
-    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200;
+    @apply flex items-center gap-3 px-4 py-3 rounded-none text-sm font-medium transition-all duration-200;
   }
 
   .sidebar-item-active {
@@ -86,11 +86,11 @@
   }
 
   .stat-card-purple {
-    @apply bg-primary text-white rounded-lg p-6 shadow-xl shadow-primary/20 relative overflow-hidden;
+    @apply bg-primary text-white rounded-none p-6 shadow-xl shadow-primary/20 relative overflow-hidden;
   }
 
   .glass-panel {
-    @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-white/20 dark:border-slate-800 shadow-xl text-slate-900 dark:text-white;
+    @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-white/20 dark:border-slate-800 shadow-xl text-slate-900 dark:text-white rounded-none;
   }
 
   .glass-card {
@@ -104,11 +104,11 @@
 
 
   .btn-primary {
-    @apply bg-slate-900 text-white rounded-xl sm:rounded-2xl px-4 sm:px-8 py-3 sm:py-3.5 text-[10px] sm:text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-xl shadow-slate-900/10 hover:bg-primary hover:shadow-primary/30 active:scale-95;
+    @apply bg-slate-900 text-white rounded-none px-4 sm:px-8 py-3 sm:py-3.5 text-[10px] sm:text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-xl shadow-slate-900/10 hover:bg-primary hover:shadow-primary/30 active:scale-95;
   }
 
   .neo-input {
-    @apply bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-sm font-bold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600;
+    @apply bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-none px-4 sm:px-6 py-3 sm:py-4 text-sm font-bold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600;
   }
 }
 

@@ -193,27 +193,40 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-24 right-6 w-[320px] lg:w-[400px] h-[550px] bg-white rounded-2xl shadow-2xl border border-slate-100 flex flex-col z-[300] overflow-hidden animate-in slide-in-from-bottom-8 duration-500">
+    <div className={`fixed z-[300] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+      isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-full pointer-events-none"
+    } 
+    /* Mobile Style */
+    bottom-0 left-0 w-full h-[92vh] rounded-t-[2.5rem] bg-white shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.3)] flex flex-col overflow-hidden
+    /* Desktop Style */
+    lg:bottom-24 lg:right-6 lg:left-auto lg:w-[400px] lg:h-[600px] lg:rounded-2xl lg:translate-y-0 lg:opacity-100 lg:pointer-events-auto
+    ${isOpen ? "" : "lg:hidden"}`}>
+      
+      {/* ── Grab Handle (Native Feel - Mobile Only) ── */}
+      <div className="w-full flex justify-center pt-4 pb-2 lg:hidden">
+        <div className="w-12 h-1.5 bg-slate-200 rounded-full" />
+      </div>
+
       {/* Header */}
-      <div className="bg-slate-900 p-4 flex justify-between items-center shrink-0">
+      <div className="bg-slate-900 p-5 lg:p-4 flex justify-between items-center shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#00f2ff] to-[#0055ff] flex items-center justify-center text-white">
-            <Bot className="w-5 h-5" />
+          <div className="w-10 h-10 lg:w-8 lg:h-8 rounded-xl lg:rounded-lg bg-gradient-to-r from-[#00f2ff] to-[#0055ff] flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+            <Bot className="w-6 h-6 lg:w-5 lg:h-5" />
           </div>
           <div>
-            <h4 className="text-white text-xs font-black uppercase tracking-widest">{t('chatbot.title')}</h4>
+            <h4 className="text-white text-[10px] lg:text-xs font-black uppercase tracking-[0.2em]">{t('chatbot.title')}</h4>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-[#00f2ff] animate-pulse" />
-              <span className="text-[9px] font-bold text-white/50 uppercase tracking-widest">{t('chatbot.online')}</span>
+              <span className="text-[8px] lg:text-[9px] font-bold text-white/50 uppercase tracking-widest">{t('chatbot.online')}</span>
             </div>
           </div>
         </div>
         <button 
           onClick={onClose} 
-          className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
+          className="p-3 lg:p-2 bg-white/5 hover:bg-white/10 rounded-full transition-all active:scale-90 text-white"
           aria-label={language === 'id' ? 'Tutup Chatbot' : 'Close Chatbot'}
         >
-          <X className="w-5 h-5" aria-hidden="true" />
+          <X className="w-6 h-6 lg:w-5 lg:h-5" aria-hidden="true" />
         </button>
       </div>
 

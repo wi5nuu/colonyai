@@ -11,7 +11,7 @@ export function LanguageSwitcher() {
   const isEnglish = language === "en";
 
   return (
-    <div className="flex items-center gap-1 p-1 rounded-lg bg-slate-100/80 border border-slate-100 shadow-sm">
+    <div className="flex items-center gap-1.5 px-1">
       <button
         onClick={() => {
           setLanguage("en");
@@ -19,14 +19,15 @@ export function LanguageSwitcher() {
           document.cookie = "lang=en;path=/;max-age=31536000";
         }}
         title="Switch to English"
-        className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all duration-200 ${
+        className={`px-1 py-1 rounded-none text-[9px] font-black uppercase tracking-widest transition-colors ${
           isEnglish
-            ? "bg-slate-900 text-white shadow-sm"
-            : "text-slate-400 hover:text-slate-700"
+            ? "text-slate-900 dark:text-white"
+            : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
         }`}
       >
         EN
       </button>
+      <div className="w-[1px] h-3 bg-slate-300 dark:bg-slate-700" />
       <button
         onClick={() => {
           setLanguage("id");
@@ -34,10 +35,10 @@ export function LanguageSwitcher() {
           document.cookie = "lang=id;path=/;max-age=31536000";
         }}
         title="Beralih ke Bahasa Indonesia"
-        className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all duration-200 ${
+        className={`px-1 py-1 rounded-none text-[9px] font-black uppercase tracking-widest transition-colors ${
           !isEnglish
-            ? "bg-slate-900 text-white shadow-sm"
-            : "text-slate-400 hover:text-slate-700"
+            ? "text-slate-900 dark:text-white"
+            : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
         }`}
       >
         ID

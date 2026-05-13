@@ -62,6 +62,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       
       const rolePermissions: Record<string, string[]> = {
         '/dashboard/super': ['super_admin'],
+        '/dashboard/network': ['super_admin'],
         '/dashboard/administration': ['admin', 'super_admin'],
         '/dashboard/upload': ['analyst', 'admin', 'super_admin'],
         '/dashboard/simulator': ['analyst', 'admin', 'super_admin'],

@@ -14,6 +14,7 @@ export const id: Dictionary = {
     settings: "Pengaturan",
     logout: "Keluar",
     sentinel: "Sistem Sentinel",
+    networkMap: "Peta Jaringan",
   },
   header: {
     askAi: "Tanya AI",
@@ -82,6 +83,9 @@ export const id: Dictionary = {
     syncingLedger: "Sinkronisasi dengan buku besar pusat",
     matrixData: "Matriks {label}",
     noMatrixData: "Tidak ada data matriks",
+    analysisFailed: "Pemrosesan analisis gagal",
+    noAlerts: "Semua sistem normal",
+    systemHealthy: "Tidak ada peringatan aktif terdeteksi",
     queryTimeFrame: "Rangka Waktu Kueri Neural (GMT+7)",
     systemOverview: "Ringkasan Sistem",
     neuralControlCenter: "Pusat Kontrol Neural",

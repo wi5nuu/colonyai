@@ -49,7 +49,17 @@ export function DocumentationSidebar({
   };
 
   return (
-    <div className="w-full sm:w-80 lg:w-[350px] flex flex-col bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in slide-in-from-right duration-300 fixed right-0 top-14 sm:top-16 bottom-0 z-[60] sm:z-30 transition-colors duration-300">
+    <div className={`fixed z-[100] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+      showDocs ? "opacity-100 translate-y-0" : "opacity-0 translate-y-full pointer-events-none"
+    } 
+    bottom-0 left-0 w-full h-[85vh] bg-white dark:bg-slate-950 shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.3)] flex flex-col rounded-none shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.3)] flex flex-col rounded-none overflow-hidden
+    sm:static sm:z-30 sm:w-80 lg:w-[350px] sm:h-full sm:rounded-none sm:opacity-100 sm:translate-y-0 sm:pointer-events-auto sm:border-l sm:border-slate-200 sm:dark:border-slate-800
+    ${showDocs ? "" : "sm:hidden"}`}>
+
+      {/* ── Grab Handle (Native Feel - Mobile Only) ── */}
+      <div className="w-full flex justify-center pt-4 pb-2 sm:hidden">
+        <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full" />
+      </div>
       {/* Header Section */}
       <div className="px-2 py-2 sm:px-3 sm:py-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 bg-white dark:bg-slate-950 sticky top-0 z-10 transition-colors">
         <button
@@ -109,7 +119,7 @@ export function DocumentationSidebar({
               <input
                 type="text"
                 placeholder={t("overview.docsUiSearchPlaceholder")}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-8 py-2 text-[10px] font-bold text-black dark:text-white focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none pl-8 pr-8 py-2 text-[10px] font-bold text-black dark:text-white focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
@@ -160,14 +170,14 @@ export function DocumentationSidebar({
 
         <div className="space-y-4">
           {isSearchOpen && searchQuery && (
-            <div className="bg-primary/5 border border-primary/10 rounded-lg p-3 space-y-2 animate-in fade-in zoom-in-95 duration-200 shadow-sm">
+            <div className="bg-primary/5 border border-primary/10 rounded-none p-3 space-y-2 animate-in fade-in zoom-in-95 duration-200 shadow-sm">
               <h4 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5">
                 <Search className="w-3 h-3" />{" "}
                 {t("overview.docsUiSearchResults")}: "{searchQuery}"
               </h4>
               <div className="space-y-2">
                 {rawText?.toLowerCase().includes(searchQuery.toLowerCase()) ? (
-                  <div className="p-2.5 bg-white dark:bg-slate-900 border border-primary/20 dark:border-primary/40 rounded-md shadow-sm border-l-4 border-l-primary">
+                  <div className="p-2.5 bg-white dark:bg-slate-900 border border-primary/20 dark:border-primary/40 rounded-none shadow-sm border-l-4 border-l-primary">
                     <p className="text-[9px] text-slate-700 dark:text-slate-200 font-bold leading-relaxed">
                       "
                       {rawText.substring(
@@ -191,7 +201,7 @@ export function DocumentationSidebar({
                     </p>
                   </div>
                 ) : (
-                  <div className="p-2.5 bg-white/50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-md">
+                  <div className="p-2.5 bg-white/50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-none">
                     <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold italic">
                       {t("overview.docsUiNoMatch")}
                     </p>
@@ -232,11 +242,9 @@ export function DocumentationToggle({
   return (
     <button
       onClick={() => setShowDocs(true)}
-      className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-95 group"
+      className="inline-flex items-center gap-1.5 px-2 py-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-[9px] font-black uppercase tracking-[0.2em] transition-colors active:scale-95 group"
     >
-      <div className="w-5 h-5 bg-primary/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-        <BookOpen className="w-3 h-3 text-primary" />
-      </div>
+      <BookOpen className="w-3 h-3 text-primary group-hover:scale-110 transition-transform" />
       {text}
     </button>
   );

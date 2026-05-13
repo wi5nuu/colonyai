@@ -151,7 +151,7 @@ export default function ResultsPage() {
   const [showAnnotations, setShowAnnotations] = useState(true);
   const [filterClass, setFilterClass] = useState<DetectionClass | null>(null);
   const [viewMode, setViewMode] = useState<"audit" | "certificate">("audit");
-  const [showDocs, setShowDocs] = useState(true);
+  const [showDocs, setShowDocs] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [limsLoading, setLimsLoading] = useState(false);
   const [limsResult, setLimsResult] = useState<{
@@ -260,24 +260,24 @@ MESIN: YOLOv8 SENSITIVE NODE`;
     <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
       <div className="flex relative min-h-[calc(100vh-200px)]">
         {/* Main Content Area */}
-        <div className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}>
-          <div className="max-w-full mx-auto px-4 sm:px-6 pt-12 pb-12">
+        <div className="flex-1 transition-all duration-300">
+          <div className="max-w-[1500px] mx-auto px-6 py-0 pt-0 pb-12">
             {/* Header - Horizontal Compact */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100 mb-6">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 mb-6">
               <div className="flex items-center gap-3">
                 <Link
                   href="/dashboard/history"
-                  className="w-8 h-8 rounded-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm group"
+                  className="w-8 h-8 rounded-none bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm group"
                 >
                   <ArrowLeft className="h-4 w-4 text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors" />
                 </Link>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+                    <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
                       {t("results.title")}
                     </h1>
                     <span
-                      className={`px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-widest border shadow-sm transition-colors ${
+                      className={`px-2 py-0.5 rounded-none text-[8px] font-black uppercase tracking-widest border shadow-sm transition-colors ${
                         analysis.status === "completed"
                           ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50"
                           : "bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700"
@@ -286,7 +286,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                       {statusInfo.label}
                     </span>
                   </div>
-                  <div className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 font-bold uppercase tracking-wider flex items-center gap-2">
+                  <div className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 sm:mt-1 font-bold uppercase tracking-[0.2em] flex items-center gap-2">
                     <span>
                       {t("results.sample")}:{" "}
                       <span className="text-slate-900 dark:text-white font-black">
@@ -312,23 +312,23 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                     text={t("results.auditProtocol")}
                   />
                 </div>
-                <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-sm border border-slate-200 dark:border-slate-700 transition-colors">
+                <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-none border border-slate-200 dark:border-slate-700 transition-colors">
                   <button
                     onClick={() => setViewMode("audit")}
-                    className={`px-3 py-1.5 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === "audit" ? "bg-slate-900 text-white shadow-md shadow-slate-900/10" : "text-slate-400 hover:text-slate-900"}`}
+                    className={`px-3 py-1.5 rounded-none text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === "audit" ? "bg-slate-900 text-white shadow-md shadow-slate-900/10" : "text-slate-400 hover:text-slate-900"}`}
                   >
                     {t("results.auditMatrix")}
                   </button>
                   <button
                     onClick={() => setViewMode("certificate")}
-                    className={`px-3 py-1.5 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === "certificate" ? "bg-primary text-white shadow-md shadow-primary/10" : "text-slate-400 hover:text-slate-900"}`}
+                    className={`px-3 py-1.5 rounded-none text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === "certificate" ? "bg-primary text-white shadow-md shadow-primary/10" : "text-slate-400 hover:text-slate-900"}`}
                   >
                     {t("results.certificate")}
                   </button>
                 </div>
                 <button
                   onClick={handleExportPdf}
-                  className="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2 shadow-sm"
+                  className="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2 shadow-sm"
                 >
                   <Download className="h-3.5 w-3.5" />
                   {t("results.exportProtocol")}
@@ -336,7 +336,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                 <button
                   onClick={handleSendToLims}
                   disabled={limsLoading || !!limsResult}
-                  className={`px-3 py-2 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm ${
+                  className={`px-3 py-2 rounded-none text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm ${
                     limsResult
                       ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-500 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/50 cursor-not-allowed"
                       : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -352,7 +352,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                 {analysis.status === "completed" && canApprove && (
                   <button
                     onClick={handleApprove}
-                    className={`px-4 py-2 flex items-center justify-center gap-2 rounded-sm text-[9px] font-black uppercase tracking-widest transition-all shadow-lg ${
+                    className={`px-4 py-2 flex items-center justify-center gap-2 rounded-none text-[9px] font-black uppercase tracking-widest transition-all shadow-lg ${
                       analysis.is_valid_for_reporting
                         ? "bg-emerald-500 text-white shadow-emerald-500/10"
                         : "bg-slate-900 text-white shadow-slate-900/10 hover:bg-slate-800 active:scale-95"
@@ -371,8 +371,8 @@ MESIN: YOLOv8 SENSITIVE NODE`;
             {analysis.warnings &&
               analysis.warnings.length > 0 &&
               viewMode === "audit" && (
-                <div className="bg-rose-50/50 dark:bg-rose-950/20 border-2 border-rose-100 dark:border-rose-900/40 p-4 rounded-lg flex items-start gap-4 mb-8 transition-colors">
-                  <div className="p-2.5 bg-rose-500 rounded-sm shadow-lg shadow-rose-200 dark:shadow-rose-900/40 flex-shrink-0">
+                <div className="bg-rose-50/50 dark:bg-rose-950/20 border-2 border-rose-100 dark:border-rose-900/40 p-4 rounded-none flex items-start gap-4 mb-8 transition-colors">
+                  <div className="p-2.5 bg-rose-500 rounded-none shadow-lg shadow-rose-200 dark:shadow-rose-900/40 flex-shrink-0">
                     <AlertTriangle className="h-5 w-5 text-white" />
                   </div>
                   <div>
@@ -395,8 +395,8 @@ MESIN: YOLOv8 SENSITIVE NODE`;
 
             {/* LIMS Success Card */}
             {limsResult && (
-              <div className="bg-indigo-50/50 dark:bg-indigo-950/20 border-2 border-indigo-100 dark:border-indigo-900/40 p-5 rounded-lg flex items-start gap-5 mb-8 animate-in slide-in-from-top duration-500 transition-colors">
-                <div className="p-3 bg-indigo-600 rounded-sm shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40 flex-shrink-0">
+              <div className="bg-indigo-50/50 dark:bg-indigo-950/20 border-2 border-indigo-100 dark:border-indigo-900/40 p-5 rounded-none flex items-start gap-5 mb-8 animate-in slide-in-from-top duration-500 transition-colors">
+                <div className="p-3 bg-indigo-600 rounded-none shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40 flex-shrink-0">
                   <Database className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
@@ -404,10 +404,10 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                     <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
                       {t("results.transmittedToLims")}
                     </p>
-                    <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-[8px] font-black rounded-sm uppercase">
+                    <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-[8px] font-black rounded-none uppercase">
                       {t("results.sampleManager")}
                     </span>
-                    <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-[8px] font-black rounded-sm uppercase">
+                    <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-[8px] font-black rounded-none uppercase">
                       {t("results.simulatedDemo")}
                     </span>
                   </div>
@@ -477,14 +477,14 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                   ].map((item, i) => (
                     <div
                       key={i}
-                      className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-2 sm:p-2.5 flex flex-col justify-between rounded-sm shadow-sm group hover:shadow-md transition-all"
+                      className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-2 sm:p-2.5 flex flex-col justify-between rounded-none shadow-sm group hover:shadow-md transition-all"
                     >
                       <div className="flex items-center justify-between mb-1.5">
                         <p className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                           {item.label}
                         </p>
                         <div
-                          className={`w-5 h-5 rounded-sm flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm ${
+                          className={`w-5 h-5 rounded-none flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm ${
                             item.color === "primary"
                               ? "bg-primary/5 dark:bg-primary/10 text-primary border border-primary/10 dark:border-primary/20"
                               : item.color === "indigo"
@@ -511,7 +511,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
 
                 {/* Compliance & Traceability Metadata (Audit Matrix View) */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 rounded-sm shadow-sm transition-colors">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 rounded-none shadow-sm transition-colors">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {t("results.incubationParameters")}
                     </p>
@@ -535,7 +535,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 rounded-sm shadow-sm transition-colors">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 rounded-none shadow-sm transition-colors">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {t("results.methodology")}
                     </p>
@@ -546,7 +546,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                       {t("results.standardReference")}
                     </p>
                   </div>
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 rounded-sm shadow-sm transition-colors">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 rounded-none shadow-sm transition-colors">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {t("results.traceability")}
                     </p>
@@ -569,7 +569,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 rounded-sm shadow-sm transition-colors">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 rounded-none shadow-sm transition-colors">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">
                       {t("results.calculationData")}
                     </p>
@@ -597,10 +597,10 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                   {/* Left Column - 50% */}
                   <div className="lg:col-span-6 flex flex-col gap-4">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 overflow-hidden rounded-sm shadow-sm transition-colors">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 overflow-hidden rounded-none shadow-sm transition-colors">
                       <div className="px-3 py-1.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-sm bg-slate-900 flex items-center justify-center">
+                          <div className="w-6 h-6 rounded-none bg-slate-900 flex items-center justify-center">
                             <Camera className="h-3 w-3 text-primary" />
                           </div>
                           <h3 className="text-[9px] font-black text-slate-900 uppercase tracking-widest">
@@ -608,7 +608,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                           </h3>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-0.5 shadow-sm transition-colors">
+                          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 rounded-none border border-slate-200 dark:border-slate-800 p-0.5 shadow-sm transition-colors">
                             <button
                               onClick={() =>
                                 setZoom((z) => Math.max(0.5, z - 0.1))
@@ -631,7 +631,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                           </div>
                           <button
                             onClick={() => setShowAnnotations(!showAnnotations)}
-                            className={`px-2 py-1 rounded-sm text-[8px] font-black uppercase tracking-tighter transition-all flex items-center gap-1.5 border shadow-sm ${
+                            className={`px-2 py-1 rounded-none text-[8px] font-black uppercase tracking-tighter transition-all flex items-center gap-1.5 border shadow-sm ${
                               showAnnotations
                                 ? "bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/10"
                                 : "bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white"
@@ -725,7 +725,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                                   </p>
                                   <button
                                     onClick={() => setImgError(false)}
-                                    className="mt-3 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest bg-slate-200 text-slate-600 rounded-md hover:bg-slate-300 transition-colors"
+                                    className="mt-3 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest bg-slate-200 text-slate-600 rounded-none hover:bg-slate-300 transition-colors"
                                   >
                                     {t("results.retrySignal")}
                                   </button>
@@ -743,7 +743,31 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                             );
                           })()}
 
-                          {/* Overlays */}
+                          {/* AGAR PLATE AREA IDENTIFICATION OVERLAY (CASE 1 REQUIREMENT) */}
+                          {showAnnotations && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+                              <div className="relative w-[90%] h-[90%] border-[3px] border-dashed border-primary/40 rounded-full animate-pulse shadow-[0_0_50px_rgba(var(--primary-rgb),0.2)]">
+                                {/* Plate Labels */}
+                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-slate-950 px-3 py-0.5 rounded text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg">
+                                  <Target className="w-3 h-3" />
+                                  AGAR PLATE AREA IDENTIFIED
+                                </div>
+                                
+                                {/* Plate Stats Overlay (Bottom) */}
+                                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-[7px] font-bold uppercase tracking-[0.2em] border border-white/10 whitespace-nowrap">
+                                  Diameter: 90mm | Area: 63.6 cm² | Validation: 100%
+                                </div>
+
+                                {/* Crosshair corners */}
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-4 bg-primary/40" />
+                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1px] h-4 bg-primary/40" />
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-[1px] w-4 bg-primary/40" />
+                                <div className="absolute right-0 top-1/2 -translate-y-1/2 h-[1px] w-4 bg-primary/40" />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Overlays - Detections */}
                           {showAnnotations &&
                             analysis.detections.map((detection) => {
                               const imgWidth = 1024;
@@ -771,16 +795,17 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                                         : detection.id,
                                     )
                                   }
-                                  className={`absolute border-2 rounded-md cursor-pointer transition-all duration-300 hover:scale-110 hover:z-50 ${
+                                  className={`absolute border-2 rounded-full cursor-pointer transition-all duration-300 hover:scale-125 hover:z-50 ${
                                     CLASS_BORDER_COLORS[
                                       detection.class_name as DetectionClass
                                     ]
-                                  } ${selectedDetection === detection.id ? "ring-4 ring-white shadow-2xl z-40 scale-125" : "opacity-80"}`}
+                                  } ${selectedDetection === detection.id ? "ring-2 ring-white shadow-[0_0_20px_rgba(255,255,255,0.5)] z-40 scale-150" : "opacity-90 shadow-sm"}`}
                                   style={{
                                     left: `${left}%`,
                                     top: `${top}%`,
                                     width: `${width}%`,
                                     height: `${height}%`,
+                                    backgroundColor: `${CLASS_COLORS[detection.class_name as DetectionClass].replace('bg-', '')}20`,
                                     display:
                                       filterClass &&
                                       detection.class_name !== filterClass
@@ -789,7 +814,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                                   }}
                                 >
                                   {selectedDetection === detection.id && (
-                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[8px] px-2 py-1 rounded-sm whitespace-nowrap font-bold shadow-xl">
+                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[8px] px-2 py-1 rounded-none whitespace-nowrap font-bold shadow-xl border border-white/10">
                                       {getClassLabel(
                                         detection.class_name as DetectionClass,
                                       )}{" "}
@@ -805,10 +830,10 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                     </div>
 
                     {/* Registry List/Table */}
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 overflow-hidden rounded-sm shadow-sm transition-colors">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 overflow-hidden rounded-none shadow-sm transition-colors">
                       <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-md bg-slate-900 flex items-center justify-center" />
+                          <div className="w-7 h-7 rounded-none bg-slate-900 flex items-center justify-center" />
                           <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
                             {t("results.neuralObjectRegistry")}
                           </h3>
@@ -850,7 +875,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                                 <td className="px-4 py-1.5">
                                   <div className="flex items-center gap-2">
                                     <div
-                                      className={`w-1.5 h-1.5 rounded-sm ${CLASS_COLORS[detection.class_name as DetectionClass]}`}
+                                      className={`w-1.5 h-1.5 rounded-none ${CLASS_COLORS[detection.class_name as DetectionClass]}`}
                                     />
                                     <span className="text-[9px] font-bold text-slate-700">
                                       {getClassLabel(
@@ -884,18 +909,18 @@ MESIN: YOLOv8 SENSITIVE NODE`;
 
                   {/* Right 6 - Sidebar Analysis */}
                   <div className="lg:col-span-6 flex flex-col gap-4">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-4 rounded-md shadow-sm transition-colors">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-4 rounded-none shadow-sm transition-colors">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-sm bg-slate-900 flex items-center justify-center">
+                          <div className="w-6 h-6 rounded-none bg-slate-900 flex items-center justify-center">
                             <PieIcon className="h-3 w-3 text-primary" />
                           </div>
                           <h3 className="text-[9px] font-black text-slate-900 uppercase tracking-widest">
                             {t("results.spectralDistribution")}
                           </h3>
                         </div>
-                        <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-sm">
-                          <span className="w-1 h-1 rounded-sm bg-emerald-500" />
+                        <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-none">
+                          <span className="w-1 h-1 rounded-none bg-emerald-500" />
                           Verified
                         </span>
                       </div>
@@ -958,7 +983,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                     </div>
 
                     {/* Confidence Histogram */}
-                    <div className="dashboard-card p-5 rounded-md">
+                    <div className="dashboard-card p-5 rounded-none">
                       <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest mb-3">
                         {t("results.neuralConfidenceProfile")}
                       </h3>
@@ -996,9 +1021,9 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                     </div>
 
                     {/* ISO Uncertainty */}
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-4 rounded-md shadow-sm transition-colors">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-4 rounded-none shadow-sm transition-colors">
                       <div className="flex items-center gap-2 mb-4">
-                        <div className="w-6 h-6 rounded-sm bg-slate-900 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-none bg-slate-900 flex items-center justify-center">
                           <Shield className="h-3 w-3 text-primary" />
                         </div>
                         <h3 className="text-[9px] font-black text-slate-900 uppercase tracking-widest">
@@ -1006,7 +1031,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                         </h3>
                       </div>
                       <div className="space-y-4">
-                        <div className="p-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-md">
+                        <div className="p-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-none">
                           <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">
                             {t("results.uncertaintyU")}
                           </p>
@@ -1020,7 +1045,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                           </p>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                          <div className="p-2 border border-slate-100 dark:border-slate-800 rounded-sm">
+                          <div className="p-2 border border-slate-100 dark:border-slate-800 rounded-none">
                             <p className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
                               {t("results.sr")}:
                             </p>
@@ -1028,7 +1053,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                               0.012 log₁₀
                             </p>
                           </div>
-                          <div className="p-2 border border-slate-100 dark:border-slate-800 rounded-sm">
+                          <div className="p-2 border border-slate-100 dark:border-slate-800 rounded-none">
                             <p className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
                               {t("results.sR")}:
                             </p>
@@ -1040,20 +1065,20 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                       </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-4 rounded-md shadow-sm transition-colors">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-4 rounded-none shadow-sm transition-colors">
                       <h3 className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <div className="w-1.5 h-3 bg-primary rounded-sm" />
+                        <div className="w-1.5 h-3 bg-primary rounded-none" />
                         {t("results.neuralLegend")}
                       </h3>
                       <div className="space-y-2 scrollbar-hide">
                         {Object.entries(CLASS_LABELS).map(([key, label]) => (
                           <div
                             key={key}
-                            className="flex items-center justify-between p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-sm transition-colors"
+                            className="flex items-center justify-between p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-none transition-colors"
                           >
                             <div className="flex items-center gap-2">
                               <div
-                                className={`w-2 h-2 rounded-sm ${CLASS_COLORS[key as DetectionClass]}`}
+                                className={`w-2 h-2 rounded-none ${CLASS_COLORS[key as DetectionClass]}`}
                               />
                               <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300">
                                 {label}
@@ -1214,7 +1239,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                           <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
                             {t("results.reliability")}
                           </span>
-                          <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 rounded-sm text-[8px] sm:text-[9px] font-black uppercase tracking-widest border border-emerald-100">
+                          <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 rounded-none text-[8px] sm:text-[9px] font-black uppercase tracking-widest border border-emerald-100">
                             {analysis.reliability.toUpperCase()}
                           </span>
                         </div>
@@ -1290,78 +1315,78 @@ MESIN: YOLOv8 SENSITIVE NODE`;
             )}
           </div>
         </div>
-      </div>
 
-      {/* Documentation Sidebar */}
-      <div className="hidden lg:block">
-        <DocumentationSidebar
-          showDocs={showDocs}
-          setShowDocs={setShowDocs}
-          directory="Post-Analysis Audit"
-          title="Interpretasi Hasil"
-          description="Panduan audit teknis untuk validasi deteksi saraf dan kepatuhan ISO-17025."
-          rawText={documentationText}
-        >
-          <section className="space-y-3">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
-                01
-              </span>
-              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
-                Overview
-              </h2>
-            </div>
-            <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-md border border-slate-100">
-              Halaman Intelligence Audit menyajikan bukti teknis mendalam atas
-              proses deteksi saraf. Auditor harus memastikan tidak ada koloni
-              yang terlewat atau artefak yang salah diklasifikasikan.
-            </p>
-          </section>
+        {/* Documentation Sidebar */}
+        <div className="hidden lg:block">
+          <DocumentationSidebar
+            showDocs={showDocs}
+            setShowDocs={setShowDocs}
+            directory="Post-Analysis Audit"
+            title="Interpretasi Hasil"
+            description="Panduan audit teknis untuk validasi deteksi saraf dan kepatuhan ISO-17025."
+            rawText={documentationText}
+          >
+            <section className="space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
+                  01
+                </span>
+                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
+                  Overview
+                </h2>
+              </div>
+              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-none border border-slate-100">
+                Halaman Intelligence Audit menyajikan bukti teknis mendalam atas
+                proses deteksi saraf. Auditor harus memastikan tidak ada koloni
+                yang terlewat atau artefak yang salah diklasifikasikan.
+              </p>
+            </section>
 
-          <section className="space-y-3 pt-2">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
-                02
-              </span>
-              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
-                {t("results.auditProtocol")}
-              </h2>
-            </div>
-            <div className="space-y-3 ml-0.5">
-              {[
-                {
-                  id: "1",
-                  title: t("results.neuralMappingLayer"),
-                  desc: "Tinjau kotak pembatas pada gambar. Klik objek untuk melihat detail skor kepercayaan individual.",
-                },
-                {
-                  id: "2",
-                  title: t("results.spectralDistribution"),
-                  desc: "Bandingkan jumlah Verified vs Filtered untuk memastikan integritas data biologis.",
-                },
-                {
-                  id: "3",
-                  title: t("results.iso17025Metrics"),
-                  desc: "Periksa nilai Uncertainty (U). Nilai tinggi mungkin memerlukan pengujian ulang spesimen.",
-                },
-              ].map((step) => (
-                <div key={step.id} className="flex gap-2.5 group">
-                  <span className="flex-shrink-0 w-4.5 h-4.5 rounded-sm bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    {step.id}
-                  </span>
-                  <div className="space-y-0.5">
-                    <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">
-                      {step.title}
-                    </h4>
-                    <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
-                      {step.desc}
-                    </p>
+            <section className="space-y-3 pt-2">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
+                  02
+                </span>
+                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
+                  {t("results.auditProtocol")}
+                </h2>
+              </div>
+              <div className="space-y-3 ml-0.5">
+                {[
+                  {
+                    id: "1",
+                    title: t("results.neuralMappingLayer"),
+                    desc: "Tinjau kotak pembatas pada gambar. Klik objek untuk melihat detail skor kepercayaan individual.",
+                  },
+                  {
+                    id: "2",
+                    title: t("results.spectralDistribution"),
+                    desc: "Bandingkan jumlah Verified vs Filtered untuk memastikan integritas data biologis.",
+                  },
+                  {
+                    id: "3",
+                    title: t("results.iso17025Metrics"),
+                    desc: "Periksa nilai Uncertainty (U). Nilai tinggi mungkin memerlukan pengujian ulang spesimen.",
+                  },
+                ].map((step) => (
+                  <div key={step.id} className="flex gap-2.5 group">
+                    <span className="flex-shrink-0 w-4.5 h-4.5 rounded-none bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      {step.id}
+                    </span>
+                    <div className="space-y-0.5">
+                      <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">
+                        {step.title}
+                      </h4>
+                      <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
+                        {step.desc}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        </DocumentationSidebar>
+                ))}
+              </div>
+            </section>
+          </DocumentationSidebar>
+        </div>
       </div>
     </div>
   );

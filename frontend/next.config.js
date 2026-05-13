@@ -8,6 +8,8 @@ const nextConfig = {
       { protocol: 'http', hostname: '127.0.0.1' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'th.bing.com' },
+      { protocol: 'https', hostname: 'upload.wikimedia.org' },
+      { protocol: 'https', hostname: 'ai-open.president.ac.id' },
     ],
   },
   async headers() {

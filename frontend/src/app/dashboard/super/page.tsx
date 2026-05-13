@@ -26,6 +26,7 @@ import {
   Activity,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   RefreshCw,
   X,
   Shield,
@@ -59,6 +60,7 @@ interface Organization {
   status: string;
   license_tier: string;
   license_expiry: string;
+  lims_webhook_url: string;
   users_count: number;
   analyses_count: number;
   growth_rate: string;
@@ -80,7 +82,7 @@ export default function SuperAdminRealTimeDashboard() {
   const [loading, setLoading] = useState(true);
   const [expandedOrg, setExpandedOrg] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showDocs, setShowDocs] = useState(true);
+  const [showDocs, setShowDocs] = useState(false);
 
   // Custom Modal State
   const [confirmModal, setConfirmModal] = useState<{
@@ -310,13 +312,13 @@ export default function SuperAdminRealTimeDashboard() {
             {/* Global Master Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm flex items-center justify-center transition-colors">
-                  <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                <div className="flex items-center justify-center shrink-0">
+                  <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
                     <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">Global Control</h1>
-                    <span className="px-1.5 py-0.5 bg-primary/10 border border-primary/20 rounded-full text-[7px] sm:text-[8px] font-bold text-primary uppercase tracking-[0.2em] hidden xs:inline-block">Master</span>
+                    <span className="px-1.5 py-0.5 bg-primary/10 border border-primary/20 rounded-none text-[7px] sm:text-[8px] font-bold text-primary uppercase tracking-[0.2em] hidden xs:inline-block">Master</span>
                   </div>
                   <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5">Multi-Tenant Laboratory OS</p>
                 </div>
@@ -332,22 +334,22 @@ export default function SuperAdminRealTimeDashboard() {
                 </div>
                 <button 
                   onClick={fetchData}
-                  className={`p-2 sm:p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg sm:rounded-xl shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all ${isRefreshing ? 'animate-spin' : ''}`}
+                  className={`p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors outline-none ${isRefreshing ? 'animate-spin' : ''}`}
                 >
-                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 dark:text-slate-500" />
+                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
-                <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg sm:rounded-xl flex items-center gap-2 sm:gap-3 shadow-sm transition-colors">
-                  <div className="flex flex-col items-end">
-                    <p className="text-[7px] sm:text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Throughput</p>
+                <div className="px-2 py-1.5 flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
                     <p className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono tracking-tighter">{(stats?.global_throughput || 0).toLocaleString()}</p>
+                    <p className="text-[7px] sm:text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest pt-0.5">Throughput</p>
                   </div>
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-emerald-500/10 rounded-md sm:rounded-lg flex items-center justify-center border border-emerald-500/20">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center shrink-0">
                     <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
                   </div>
                 </div>
                 <button 
                   onClick={() => router.push("/dashboard/super/provision")}
-                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-primary text-white rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary/90 transition-all shadow-md active:scale-95 group"
+                   className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-primary text-white rounded-none text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary/90 transition-all shadow-md active:scale-95 group"
                 >
                   <Plus className="w-3 h-3 group-hover:rotate-90 transition-transform" /> <span className="hidden xs:inline">Provision</span>
                 </button>
@@ -364,7 +366,7 @@ export default function SuperAdminRealTimeDashboard() {
               ].map((stat, i) => (
                 <div 
                   key={i} 
-                  className={`backdrop-blur-sm border p-2 sm:p-4 rounded-xl shadow-sm group hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden ${
+                  className={`backdrop-blur-sm border p-2 sm:p-4 rounded-none shadow-sm group hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden ${
                     stat.color === 'indigo' ? 'bg-indigo-50/40 border-indigo-100/50 dark:bg-indigo-950/20 dark:border-indigo-900/40' :
                     stat.color === 'blue' ? 'bg-blue-50/40 border-blue-100/50 dark:bg-blue-950/20 dark:border-blue-900/40' :
                     stat.color === 'emerald' ? 'bg-emerald-50/40 border-emerald-100/50 dark:bg-emerald-950/20 dark:border-emerald-900/40' :
@@ -372,7 +374,7 @@ export default function SuperAdminRealTimeDashboard() {
                   }`}
                 >
                   <div className="flex justify-between items-start mb-1 sm:mb-2">
-                    <div className={`p-1 sm:p-1.5 rounded-md transition-colors z-10 ${
+                    <div className={`p-1 sm:p-1.5 rounded-none transition-colors z-10 ${
                       stat.color === 'indigo' ? 'bg-indigo-100/50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400' :
                       stat.color === 'blue' ? 'bg-blue-100/50 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400' :
                       stat.color === 'emerald' ? 'bg-emerald-100/50 text-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-400' :
@@ -396,28 +398,29 @@ export default function SuperAdminRealTimeDashboard() {
             </div>
 
             {/* Live Multi-Tenant Registry */}
-            <div className="space-y-3 sm:space-y-4">
-              <div className="flex items-center justify-between">
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none overflow-hidden shadow-sm">
+              <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex items-center justify-between">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-ping" />
+                  <div className="w-1.5 h-1.5 bg-primary rounded-none animate-ping" />
                   <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Master Registry</h2>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="relative group/search hidden xs:block">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-300" />
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 dark:text-slate-500" />
                     <input 
                       type="text" 
                       placeholder={`Search ${organizations.length} orgs...`} 
-                      className="pl-8 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-[10px] font-bold w-40 sm:w-48 outline-none focus:border-primary/40 dark:text-white transition-colors shadow-sm"
+                      className="pl-8 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[10px] font-bold w-40 sm:w-48 outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-colors shadow-sm"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2 sm:space-y-3">
+              <div className="p-4 max-h-[600px] overflow-y-auto scrollbar-hide bg-slate-50/20 dark:bg-slate-900/20">
+                <div className="space-y-1">
                 {organizations.length === 0 ? (
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center shadow-sm transition-colors">
-                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto border border-slate-100 dark:border-slate-700 mb-3">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none p-8 text-center shadow-sm transition-colors">
+                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-none flex items-center justify-center mx-auto border border-slate-100 dark:border-slate-700 mb-3">
                       <Building2 className="w-5 h-5 text-slate-300 dark:text-slate-600" />
                     </div>
                     <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase">No Organizations Detected</h3>
@@ -430,18 +433,18 @@ export default function SuperAdminRealTimeDashboard() {
                       className={`transition-all duration-300 border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 ${expandedOrg === org.id ? 'bg-slate-50/50 dark:bg-slate-800/30' : 'bg-white dark:bg-slate-900'}`}
                     >
                       <div 
-                        className="p-3 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 cursor-pointer"
+                        className="p-2 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 cursor-pointer"
                         onClick={() => setExpandedOrg(expandedOrg === org.id ? null : org.id)}
                       >
                         <div className="flex items-center gap-3 sm:gap-4">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700 transition-colors shrink-0">
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-none bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700 transition-colors shrink-0">
                             <Building2 className="w-4 h-4 text-slate-400 group-hover:text-primary transition-colors" />
                           </div>
                           <div>
-                            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{org.name}</h3>
+                            <h3 className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{org.name}</h3>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest">{org.location || 'Remote'}</span>
-                              <div className="w-0.5 h-0.5 bg-slate-300 rounded-full" />
+                              <div className="w-0.5 h-0.5 bg-slate-300 rounded-none" />
                               <span className="text-[8px] sm:text-[9px] font-bold text-primary uppercase tracking-widest">{org.license_tier} Tier</span>
                             </div>
                           </div>
@@ -464,7 +467,7 @@ export default function SuperAdminRealTimeDashboard() {
                           <div>
                             <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
                             <div className="flex items-center gap-1.5">
-                              <div className={`w-1.5 h-1.5 rounded-full ${org.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
+                              <div className={`w-1.5 h-1.5 rounded-none ${org.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
                               <p className={`text-[9px] font-bold uppercase tracking-widest ${org.status === 'active' ? 'text-emerald-500' : 'text-rose-500'}`}>{org.status}</p>
                             </div>
                           </div>
@@ -477,7 +480,7 @@ export default function SuperAdminRealTimeDashboard() {
 
                       {/* Drill-down Admin Data */}
                       {expandedOrg === org.id && (
-                        <div className="px-3 sm:px-5 pb-4 sm:pb-5 pt-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+                        <div className="px-2 sm:px-3 pb-3 sm:pb-4 pt-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                             <div className="lg:col-span-2 space-y-3">
                               <div className="flex items-center gap-2 mb-2 sm:mb-3">
@@ -486,16 +489,16 @@ export default function SuperAdminRealTimeDashboard() {
                               </div>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                                 {org.admins.length > 0 ? org.admins.map((admin, idx) => (
-                                  <div key={idx} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-between group/admin hover:border-primary/30 shadow-sm transition-all">
+                                  <div key={idx} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none p-2 flex items-center justify-between group/admin hover:border-primary/30 shadow-sm transition-all">
                                     <div className="flex items-center gap-2 sm:gap-3">
-                                      <div className="w-8 h-8 rounded-lg bg-primary/5 dark:bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary border border-primary/10 dark:border-primary/20">
+                                      <div className="w-8 h-8 rounded-none bg-primary/5 dark:bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary border border-primary/10 dark:border-primary/20">
                                         {admin.full_name.charAt(0)}
                                       </div>
                                       <div className="flex flex-col">
                                         <h4 className="text-[10px] font-bold text-slate-900 dark:text-white leading-none">{admin.full_name}</h4>
                                         <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">{admin.email}</p>
                                         <div className="flex items-center gap-2 mt-1.5">
-                                          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-100 dark:border-slate-800 group/pass">
+                                          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-none border border-slate-100 dark:border-slate-800 group/pass">
                                              <Lock className="w-2.5 h-2.5 text-slate-300 dark:text-slate-600" />
                                              <span className="text-[9px] font-mono font-bold text-slate-600 dark:text-slate-400 tracking-tighter min-w-[60px]">
                                                {revealedPasswords[admin.id] ? (admin.recovery_password || "No Key Saved") : "••••••••"}
@@ -508,7 +511,7 @@ export default function SuperAdminRealTimeDashboard() {
                                                {revealedPasswords[admin.id] ? <EyeOff className="w-2.5 h-2.5" /> : <Eye className="w-2.5 h-2.5" />}
                                              </button>
                                           </div>
-                                          <span className="px-1.5 py-0.5 bg-primary/5 rounded text-[7px] font-bold text-primary uppercase tracking-widest">ADMIN</span>
+                                           <span className="px-1.5 py-0.5 bg-primary/5 rounded-none text-[7px] font-bold text-primary uppercase tracking-widest">ADMIN</span>
                                         </div>
                                       </div>
                                     </div>
@@ -520,7 +523,7 @@ export default function SuperAdminRealTimeDashboard() {
                                           adminName: admin.full_name,
                                           newPassword: ""
                                         })}
-                                        className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-md transition-all"
+                                         className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-none transition-all"
                                         title="Reset Master Password"
                                       >
                                         <Key className="w-3 h-3" />
@@ -532,7 +535,7 @@ export default function SuperAdminRealTimeDashboard() {
                                 )}
                               </div>
                                                 {/* Org Settings Summary */}
-                            <div className="bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-3 sm:p-4 shadow-sm transition-colors">
+                            <div className="bg-white dark:bg-slate-950 rounded-none border border-slate-200 dark:border-slate-800 p-2 sm:p-2.5 shadow-sm transition-colors">
                               <div className="flex items-center gap-2 mb-3">
                                 <Activity className="w-3 h-3 text-amber-500" />
                                 <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Compliance</h4>
@@ -550,10 +553,14 @@ export default function SuperAdminRealTimeDashboard() {
                                   <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Locality</span>
                                   <span className="text-[9px] font-black text-slate-900 dark:text-white uppercase">{org.location || 'Global'}</span>
                                 </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">LIMS Bridge</span>
+                                  <span className="text-[9px] font-black text-indigo-500 uppercase truncate max-w-[150px]" title={org.lims_webhook_url}>{org.lims_webhook_url ? (org.lims_webhook_url.includes('mock-lims') ? 'Mock Link' : 'Live Uplink') : 'Not Configured'}</span>
+                                </div>
                                 <div className="grid grid-cols-2 gap-2 mt-3">
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); handleRemoteIntervention(org.name); }}
-                                    className="py-2 bg-slate-900 dark:bg-slate-950 hover:bg-slate-800 dark:hover:bg-slate-900/80 text-[8px] font-black text-white uppercase tracking-widest rounded-lg transition-all active:scale-95 shadow-md shadow-slate-900/20"
+                                    className="py-2 bg-slate-900 dark:bg-slate-950 hover:bg-slate-800 dark:hover:bg-slate-900/80 text-[8px] font-black text-white uppercase tracking-widest rounded-none transition-all active:scale-95 shadow-md shadow-slate-900/20"
                                   >
                                     Remote
                                   </button>
@@ -567,7 +574,7 @@ export default function SuperAdminRealTimeDashboard() {
                                         currentStatus: org.status
                                       });
                                     }}
-                                    className={`py-2 border rounded-lg text-[8px] font-black uppercase tracking-widest transition-all active:scale-95 ${
+                                    className={`py-2 border rounded-none text-[8px] font-black uppercase tracking-widest transition-all active:scale-95 ${
                                       org.status === 'active' 
                                         ? 'bg-white dark:bg-slate-900 border-rose-100 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-500 shadow-sm' 
                                         : 'bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600 shadow-emerald-500/20 shadow-lg'
@@ -584,12 +591,16 @@ export default function SuperAdminRealTimeDashboard() {
                     </div>
                   ))
                 )}
+                </div>
               </div>
 
-              <div className="text-center pt-4 sm:pt-6">
-                <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.3em]">
+              <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900 flex items-center justify-between">
+                <span className="text-[9px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.2em]">
                   Master Access Only // ColonyAI Global Nexus v2.0
-                </p>
+                </span>
+                <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500">
+                  {organizations.length} Active Nodes
+                </span>
               </div>
 
               {/* Global Personnel Command */}
@@ -633,7 +644,7 @@ AUTHORITY: MASTER COMMAND`}
                 <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">01</span>
                 <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Overview</h2>
               </div>
-              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-lg border border-slate-100 font-medium">
+              <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-none border border-slate-100 font-medium">
                 Nexus Master Control memungkinkan pemantauan kesehatan klaster dan intervensi keamanan langsung pada seluruh penyewa (tenants).
               </p>
             </section>
@@ -641,23 +652,78 @@ AUTHORITY: MASTER COMMAND`}
             <section className="space-y-3 pt-2">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">02</span>
-                <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Standard Operating Procedures</h2>
+                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">Standard Operating Procedures</h2>
               </div>
               <div className="space-y-3 ml-0.5">
                 {[
-                  { id: '1', title: 'Nexus Provisioning', desc: 'Deploy infrastruktur baru dan inisialisasi akun Administrator utama untuk tenant baru.' },
-                  { id: '2', title: 'Remote Shell (Terminal)', desc: 'Buka terminal Remote untuk audit teknis jika terjadi anomali pada akurasi AI atau database lokal.' },
-                  { id: '3', title: 'Status Enforcement', desc: 'Kendali penuh atas status aktif/suspend organisasi untuk penegakan kebijakan lisensi.' },
-                  { id: '4', title: 'Telemetry Sync', desc: 'Data diperbarui otomatis setiap 10 detik untuk memastikan visibilitas real-time 24/7.' }
+                  { 
+                    id: '1', 
+                    title: 'Nexus Provisioning', 
+                    desc: 'Deploy infrastruktur baru dan inisialisasi akun Administrator utama untuk tenant baru.',
+                    details: [
+                      'Klik tombol \'Provision\' di panel utama.',
+                      'Masukkan metadata institusi (Nama, Lokasi, Tingkat Lisensi).',
+                      'Sistem meng-generate ID Cluster unik (contoh: CLNY-B2026-X).',
+                      'Kredensial Admin lokal akan di-setup ke node tenant.'
+                    ]
+                  },
+                  { 
+                    id: '2', 
+                    title: 'Remote Shell (Terminal)', 
+                    desc: 'Buka terminal Remote untuk audit teknis jika terjadi anomali pada akurasi AI atau database lokal.',
+                    details: [
+                      'Pilih organisasi target pada Registry dan klik \'Remote\'.',
+                      'Tunggu otentikasi handshake Secure Tunnel (AES-256).',
+                      'Pantau utilitas CPU dan Memory node bersangkutan.',
+                      'Jalankan \'Deep Diagnostics\' untuk verifikasi model AI.'
+                    ]
+                  },
+                  { 
+                    id: '3', 
+                    title: 'Status Enforcement', 
+                    desc: 'Kendali penuh atas status aktif/suspend organisasi untuk penegakan kebijakan lisensi.',
+                    details: [
+                      'Gunakan \'Suspend\' (merah) untuk isolasi darurat.',
+                      'Akses seluruh staf pada tenant tersebut akan diblokir.',
+                      'Gunakan \'Activate\' (hijau) untuk memulihkan sesi.',
+                      'Log protokol mencatat perubahan untuk keperluan audit.'
+                    ]
+                  },
+                  { 
+                    id: '4', 
+                    title: 'Telemetry Sync', 
+                    desc: 'Data diperbarui otomatis setiap 10 detik untuk memastikan visibilitas real-time 24/7.',
+                    details: [
+                      'Throughput analitik dipantau secara terus menerus.',
+                      'Sistem mendeteksi anomali keamanan lintas region.',
+                      'Lakukan \'Force Global Sync\' jika terlihat latensi.'
+                    ]
+                  }
                 ].map((step) => (
-                  <div key={step.id} className="flex gap-2.5 group">
-                     <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <div key={step.id} className="flex gap-2.5 group/item">
+                     <span className="flex-shrink-0 w-4.5 h-4.5 rounded-none bg-slate-900 dark:bg-slate-800 text-white text-[8px] font-bold flex items-center justify-center shadow-lg transition-transform mt-0.5 border border-slate-700">
                         {step.id}
                      </span>
-                     <div className="space-y-0.5">
-                        <h4 className="text-[10px] font-bold text-slate-900">{step.title}</h4>
-                        <p className="text-[9px] text-slate-500 leading-relaxed font-medium">{step.desc}</p>
-                     </div>
+                     <details className="group/details w-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-none shadow-sm overflow-hidden transition-all [&_summary::-webkit-details-marker]:hidden">
+                        <summary className="flex items-center justify-between cursor-pointer list-none p-2.5 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors select-none">
+                           <div className="flex flex-col">
+                             <h4 className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-wider">{step.title}</h4>
+                             <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium group-open/details:hidden line-clamp-1 mt-0.5 pr-2">{step.desc}</p>
+                           </div>
+                           <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-open/details:rotate-90 transition-transform shrink-0" />
+                        </summary>
+                        <div className="p-3 pt-2 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                           <p className="text-[9px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">{step.desc}</p>
+                           <ul className="space-y-2 pl-1">
+                              {step.details.map((detail, idx) => (
+                                <li key={idx} className="text-[8.5px] text-slate-500 dark:text-slate-400 font-bold leading-relaxed flex items-start gap-2">
+                                  <span className="text-primary mt-0.5 shrink-0">▹</span>
+                                  {detail}
+                                </li>
+                              ))}
+                           </ul>
+                        </div>
+                     </details>
                   </div>
                 ))}
               </div>
@@ -669,11 +735,11 @@ AUTHORITY: MASTER COMMAND`}
       {/* Premium Confirm Modal */}
       {confirmModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-300">
+          <div className="bg-white rounded-none w-full max-w-md overflow-hidden shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-300">
             <div className={`h-2 w-full ${confirmModal.currentStatus === 'active' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
             
             <div className="p-8 text-center">
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 ${confirmModal.currentStatus === 'active' ? 'bg-rose-50' : 'bg-emerald-50'}`}>
+              <div className={`w-16 h-16 rounded-none flex items-center justify-center mx-auto mb-6 ${confirmModal.currentStatus === 'active' ? 'bg-rose-50' : 'bg-emerald-50'}`}>
                 {confirmModal.currentStatus === 'active' ? (
                   <Ban className="w-8 h-8 text-rose-500" />
                 ) : (
@@ -695,13 +761,13 @@ AUTHORITY: MASTER COMMAND`}
               <div className="flex gap-3">
                 <button 
                   onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
-                  className="flex-1 py-3 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-xl transition-all"
+                  className="flex-1 py-3 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-none transition-all"
                 >
                   Batal
                 </button>
                 <button 
                   onClick={handleToggleOrgStatus}
-                  className={`flex-1 py-3 px-4 text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 ${
+                  className={`flex-1 py-3 px-4 text-white text-xs font-bold uppercase tracking-widest rounded-none shadow-lg transition-all active:scale-95 ${
                     confirmModal.currentStatus === 'active' 
                       ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' 
                       : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200'
@@ -722,14 +788,14 @@ AUTHORITY: MASTER COMMAND`}
       {/* High-Tech Remote Intervention Modal */}
       {remoteModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-500">
-          <div className="bg-[#0a0c10] rounded-[24px] w-full max-w-2xl overflow-hidden shadow-2xl border border-white/10 flex flex-col min-h-[400px] animate-in zoom-in-95 duration-300">
+          <div className="bg-[#0a0c10] rounded-none w-full max-w-2xl overflow-hidden shadow-2xl border border-white/10 flex flex-col min-h-[400px] animate-in zoom-in-95 duration-300">
             {/* Terminal Header */}
             <div className="px-6 py-4 bg-white/5 border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <div className="w-2.5 h-2.5 rounded-none bg-rose-500" />
+                  <div className="w-2.5 h-2.5 rounded-none bg-amber-500" />
+                  <div className="w-2.5 h-2.5 rounded-none bg-emerald-500" />
                 </div>
                 <div className="h-4 w-px bg-white/10 mx-2" />
                 <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em] flex items-center gap-2">
@@ -738,7 +804,7 @@ AUTHORITY: MASTER COMMAND`}
               </div>
               <button 
                 onClick={() => setRemoteModal({ ...remoteModal, isOpen: false })}
-                className="p-1 hover:bg-white/10 rounded-lg transition-all"
+                 className="p-1 hover:bg-white/10 rounded-none transition-all"
               >
                 <X className="w-4 h-4 text-white/40 hover:text-white" />
               </button>
@@ -762,18 +828,18 @@ AUTHORITY: MASTER COMMAND`}
 
               {remoteModal.step >= 4 && (
                 <div className="mt-8 pt-8 border-t border-white/5 grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <div className="bg-white/5 rounded-none p-4 border border-white/10">
                     <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">CPU Utilization</p>
                     <p className="text-xl font-bold text-white">12.4%</p>
                   </div>
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <div className="bg-white/5 rounded-none p-4 border border-white/10">
                     <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Memory Matrix</p>
                     <p className="text-xl font-bold text-white">0.8 GB / 16 GB</p>
                   </div>
                   <button 
                     onClick={handleExecuteDiagnostics}
                     disabled={remoteModal.step >= 5}
-                    className="col-span-2 py-3 bg-primary text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                     className="col-span-2 py-3 bg-primary text-white text-[10px] font-bold uppercase tracking-widest rounded-none hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {remoteModal.step === 5 ? (
                       <><RefreshCw className="w-3 h-3 animate-spin" /> Performing Deep Audit...</>
@@ -791,7 +857,7 @@ AUTHORITY: MASTER COMMAND`}
             {/* Terminal Footer */}
             <div className="px-6 py-3 bg-black/40 border-t border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${remoteModal.step >= 4 ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
+                <div className={`w-1.5 h-1.5 rounded-none ${remoteModal.step >= 4 ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
                 <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest">
                   {remoteModal.step >= 4 ? 'Secure Tunnel Active' : 'Connecting...'}
                 </span>
@@ -805,10 +871,10 @@ AUTHORITY: MASTER COMMAND`}
       {/* Simple & Clean Password Reset Modal */}
       {passwordResetModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-[24px] w-full max-w-sm overflow-hidden shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-300">
+          <div className="bg-white rounded-none w-full max-w-sm overflow-hidden shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-300">
             <div className="p-6">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-primary/10 rounded-none flex items-center justify-center">
                   <Lock className="w-5 h-5 text-primary" />
                 </div>
                 <div>
@@ -833,7 +899,7 @@ AUTHORITY: MASTER COMMAND`}
                       type={showPass ? "text" : "password"}
                       autoFocus
                       placeholder="Min. 8 chars, 1 uppercase, 1 symbol"
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 outline-none transition-all pr-10"
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-none text-xs font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 outline-none transition-all pr-10"
                       value={passwordResetModal.newPassword}
                       onChange={(e) => setPasswordResetModal({ ...passwordResetModal, newPassword: e.target.value })}
                     />
@@ -852,7 +918,7 @@ AUTHORITY: MASTER COMMAND`}
                         {[25, 50, 75, 100].map((lvl) => (
                           <div 
                             key={lvl}
-                            className={`h-full flex-1 rounded-full transition-all duration-500 ${
+                            className={`h-full flex-1 rounded-none transition-all duration-500 ${
                               getPassStrength(passwordResetModal.newPassword) >= lvl 
                                 ? lvl <= 25 ? 'bg-rose-400' : lvl <= 50 ? 'bg-amber-400' : 'bg-emerald-400'
                                 : 'bg-slate-100'
@@ -868,7 +934,7 @@ AUTHORITY: MASTER COMMAND`}
                           { label: "Simbol", met: validatePasswordRules(passwordResetModal.newPassword).symbol },
                         ].map((rule, i) => (
                           <div key={i} className="flex items-center gap-1">
-                            <div className={`w-1 h-1 rounded-full ${rule.met ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                            <div className={`w-1 h-1 rounded-none ${rule.met ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                             <span className={`text-[7px] font-bold uppercase tracking-widest ${rule.met ? 'text-emerald-600' : 'text-slate-400'}`}>
                               {rule.label}
                             </span>
@@ -885,14 +951,14 @@ AUTHORITY: MASTER COMMAND`}
                       setShowPass(false);
                       setPasswordResetModal({ ...passwordResetModal, isOpen: false });
                     }}
-                    className="flex-1 py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all"
+                    className="flex-1 py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-widest rounded-none transition-all"
                   >
                     Batal
                   </button>
                   <button 
                     onClick={handleResetAdminPassword}
                     disabled={getPassStrength(passwordResetModal.newPassword) < 100}
-                    className="flex-1 py-2.5 px-4 bg-primary hover:bg-primary/90 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+                    className="flex-1 py-2.5 px-4 bg-primary hover:bg-primary/90 text-white text-[10px] font-bold uppercase tracking-widest rounded-none shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
                   >
                     Sync Password
                   </button>

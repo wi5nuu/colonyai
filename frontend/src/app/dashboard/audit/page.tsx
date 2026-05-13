@@ -14,6 +14,11 @@ import {
   Loader2,
   X,
   Lock,
+  ChevronDown,
+  ChevronRight,
+  PlayCircle,
+  RefreshCw,
+  Maximize,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth-store";
 import api from "@/lib/api";
@@ -35,13 +40,15 @@ interface AuditLog {
   status: string;
   previous_hash?: string;
   current_hash?: string;
+  ip_address?: string;
+  user_agent?: string;
 }
 
 export default function AuditPage() {
   const { t } = useTranslationStore();
   const { user: currentUser } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
-  const [showDocs, setShowDocs] = useState(true);
+  const [showDocs, setShowDocs] = useState(false);
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,470 +93,118 @@ export default function AuditPage() {
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative bg-[#f4f7f6] dark:bg-slate-950 transition-colors duration-300">
+    <div className="flex flex-col h-[calc(100vh-64px)] w-full font-sans bg-transparent overflow-hidden">
+      <div className="max-w-[1500px] mx-auto w-full px-6 flex flex-col h-full">
+      {/* Top Bar */}
+      <div className="h-12 border-b border-slate-200 dark:border-slate-800 flex items-center px-4 sm:px-6 gap-4 bg-white dark:bg-slate-900 shrink-0">
+        <div className="flex items-center gap-2">
+          <Terminal className="w-4 h-4 text-primary" />
+          <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">Audit Ledger</h2>
+        </div>
+        
+        <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
+
+        <div className="flex-1 relative max-w-xl">
+          <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search audit logs..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none py-1.5 pl-8 pr-3 text-[11px] font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-primary/50 transition-colors"
+          />
+        </div>
+        <div className="flex items-center gap-3 ml-auto">
+          <div className="flex items-center gap-2 px-2 py-1 rounded-none border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-[10px] font-bold uppercase tracking-wider">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Live Stream
+          </div>
+        </div>
+      </div>
+
+      {/* Log Stream */}
+      <div className="flex-1 overflow-auto bg-transparent relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-slate-950/50 z-20 backdrop-blur-sm">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        )}
+        <table className="w-full text-left text-[11px] font-mono whitespace-nowrap">
+          <thead className="sticky top-0 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm z-10">
+            <tr>
+              <th className="px-4 sm:px-6 py-2.5 font-bold text-[10px] text-slate-900 dark:text-white uppercase tracking-widest">Time</th>
+              <th className="px-4 sm:px-6 py-2.5 font-bold text-[10px] text-slate-900 dark:text-white uppercase tracking-widest">Status</th>
+              <th className="px-4 sm:px-6 py-2.5 font-bold text-[10px] text-slate-900 dark:text-white uppercase tracking-widest">Host</th>
+              <th className="px-4 sm:px-6 py-2.5 font-bold text-[10px] text-slate-900 dark:text-white uppercase tracking-widest">Request</th>
+              <th className="px-4 sm:px-6 py-2.5 font-bold text-[10px] text-slate-900 dark:text-white uppercase tracking-widest w-full">Messages</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50 bg-white dark:bg-transparent">
+            {filteredLogs.map((log) => (
+              <tr
+                key={log.id}
+                className="hover:bg-slate-50 dark:hover:bg-slate-900/50 cursor-pointer transition-colors"
+                onClick={() => setSelectedLog(log)}
+              >
+                <td className="px-4 sm:px-6 py-2 text-slate-600 dark:text-slate-400">
+                  <span className="text-slate-400 dark:text-slate-600 mr-2">MAY 07</span>
+                  {new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ".84"}
+                </td>
+                <td className="px-4 sm:px-6 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 dark:text-slate-400 font-bold">{log.action === "AUTH_LOGIN" ? "GET" : "POST"}</span>
+                    <span className={`font-black ${log.action === "AUTH_LOGIN" ? "text-emerald-500" : "text-amber-500"}`}>
+                      {log.action === "AUTH_LOGIN" ? "200" : "201"}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-4 sm:px-6 py-2 text-slate-700 dark:text-slate-300 font-medium">
+                  {log.ip_address || "127.0.0.1"}
+                </td>
+                <td className="px-4 sm:px-6 py-2 text-slate-500 dark:text-slate-400 flex items-center gap-2" title={log.user_agent}>
+                  <Terminal className="w-3 h-3 text-primary" /> /api/{log.resource_type}
+                </td>
+                <td className="px-4 sm:px-6 py-2 text-slate-600 dark:text-slate-400 truncate max-w-2xl">
+                  <span className="text-slate-900 dark:text-white font-bold mr-2">[{log.user_name}]</span>
+                  {log.action} - Hash: {log.current_hash?.slice(0, 32)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!isLoading && filteredLogs.length === 0 && (
+          <div className="text-center py-20 text-slate-500 text-xs font-sans font-bold uppercase tracking-widest">
+            No logs found
+          </div>
+        )}
+      </div>
+      
       {/* Detail Overlay */}
       {selectedLog && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-slate-900 border border-slate-800 rounded-[2rem] w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="px-8 py-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/50 dark:bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none w-full max-w-2xl overflow-hidden shadow-2xl">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                  <ShieldCheck className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-white uppercase tracking-widest">
-                    {t("audit.overlayTitle")}
-                  </h3>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                    {t("audit.overlaySequenceId")} #
-                    {selectedLog.id.slice(0, 12)}
-                  </p>
-                </div>
+                <Terminal className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">
+                  Log Integrity Hash Payload
+                </h3>
               </div>
               <button
                 onClick={() => setSelectedLog(null)}
-                className="w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all"
+                className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors p-1"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto no-scrollbar">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                    {t("audit.overlayProtocolAction")}
-                  </p>
-                  <p className="text-sm font-bold text-slate-200">
-                    {selectedLog.action}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                    {t("audit.overlayAnalystNode")}
-                  </p>
-                  <p className="text-sm font-bold text-slate-200">
-                    {selectedLog.organization_name || "ColonyAI Global"} • {selectedLog.user_name}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                  {t("audit.overlayNeuralMetadata")}
-                </p>
-                <div className="bg-slate-950 rounded-2xl p-6 border border-slate-800/50 font-mono text-[11px] text-emerald-500/80 leading-relaxed overflow-x-auto shadow-inner">
-                  <pre>{JSON.stringify(selectedLog.details, null, 2)}</pre>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                  {t("audit.overlaySecurityHashes")}
-                </p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
-                    <Lock className="w-3.5 h-3.5 text-primary opacity-50" />
-                    <span className="text-[9px] font-mono text-slate-400 break-all uppercase">
-                      {t("audit.overlayCurrent")}: {selectedLog.current_hash}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
-                    <History className="w-3.5 h-3.5 text-slate-600 opacity-50" />
-                    <span className="text-[9px] font-mono text-slate-600 break-all uppercase">
-                      {t("audit.overlayPrevious")}:{" "}
-                      {selectedLog.previous_hash || t("audit.chainStart")}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="px-8 py-6 bg-slate-950/50 border-t border-slate-800 flex justify-end">
-              <button
-                onClick={() => setSelectedLog(null)}
-                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
-              >
-                {t("audit.closeStream")}
-              </button>
+            <div className="p-6 overflow-y-auto max-h-[70vh] bg-slate-50 dark:bg-slate-950">
+              <pre className="text-xs text-slate-900 dark:text-emerald-400 font-mono whitespace-pre-wrap leading-relaxed">
+                {JSON.stringify(selectedLog, null, 2)}
+              </pre>
             </div>
           </div>
         </div>
       )}
-
-      <div className="flex relative min-h-[calc(100vh-200px)]">
-        <div
-          className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
-        >
-          <div className="max-w-[1500px] mx-auto px-6 py-0 pt-0">
-            <div className="space-y-4">
-              {/* Audit Header */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-2">
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="w-8 h-8 bg-slate-50 border border-slate-200 rounded-lg shadow-sm flex items-center justify-center">
-                      <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase">
-                      {t("audit.title")}
-                    </h1>
-                  </div>
-                  <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">
-                    {t("audit.subtitle")}
-                  </p>
-                  <div className="hidden lg:block">
-                    <DocumentationToggle
-                      showDocs={showDocs}
-                      setShowDocs={setShowDocs}
-                      text={t("audit.docsToggle")}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="relative group flex-1 sm:flex-initial">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-primary transition-colors" />
-                    <input
-                      type="text"
-                      placeholder={t("audit.searchPlaceholder")}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all w-full sm:w-72 shadow-sm"
-                    />
-                  </div>
-                  <button className="w-10 h-10 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/20 transition-all shadow-sm">
-                    <Download className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Terminal View */}
-              <div className="space-y-6">
-                <div className="bg-slate-900 rounded-xl border border-slate-800 shadow-2xl overflow-hidden shadow-slate-900/40">
-                  <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]" />
-                      <div className="flex items-center gap-2.5">
-                        <Terminal className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                          {t("audit.eventStream")}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-slate-800" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-slate-800" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-slate-800" />
-                    </div>
-                  </div>
-
-                  {/* Loading State */}
-                  {isLoading && (
-                    <div className="flex flex-col items-center justify-center py-20 gap-4">
-                      <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">
-                        {t("audit.syncingAudit")}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Error State */}
-                  {!isLoading && error && (
-                    <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-                      <AlertCircle className="w-10 h-10 text-rose-500" />
-                      <p className="text-[11px] font-bold text-slate-400">
-                        {error}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Empty State */}
-                  {!isLoading && !error && filteredLogs.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-                      <History className="w-10 h-10 text-slate-700" />
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                        {t("audit.noEvents")}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Mobile Cards */}
-                  {!isLoading && filteredLogs.length > 0 && (
-                    <div className="block sm:hidden divide-y divide-slate-800">
-                      {filteredLogs.map((log) => (
-                        <div
-                          key={log.id}
-                          className="p-4 space-y-3 cursor-pointer hover:bg-slate-800/30 transition-colors"
-                          onClick={() => setSelectedLog(log)}
-                        >
-                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-widest">
-                              {log.id.slice(0, 8)}
-                            </span>
-                            <span
-                              className={`text-[8px] font-black px-1.5 py-0.5 rounded border ${
-                                log.resource_type === "security" ||
-                                log.resource_type === "auth"
-                                  ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
-                                  : log.resource_type === "system"
-                                    ? "bg-primary/10 text-primary border-primary/20"
-                                    : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                              }`}
-                            >
-                              {log.action}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-2">
-                              <User className="w-3 h-3 text-slate-600" />
-                              <span className="text-[10px] font-bold text-slate-300 truncate max-w-[120px]">
-                                {log.organization_name || "ColonyAI Global"} <span className="text-slate-600">•</span> {log.user_name}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Clock className="w-3 h-3 text-slate-600" />
-                              <span className="text-[9px] font-medium text-slate-500">
-                                {new Date(log.timestamp).toLocaleTimeString(
-                                  [],
-                                  { hour: "2-digit", minute: "2-digit" },
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="pt-2 border-t border-slate-800/50">
-                            <span className="text-[7px] font-mono text-emerald-500 opacity-40 uppercase tracking-tighter block">
-                              Hash:{" "}
-                              {log.current_hash?.substring(0, 24) || "N/A"}...
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Desktop Table */}
-                  {!isLoading && filteredLogs.length > 0 && (
-                    <div className="hidden sm:block overflow-x-auto">
-                      <table className="w-full text-left whitespace-nowrap">
-                        <thead>
-                          <tr className="border-b border-slate-800 bg-slate-900/30">
-                            {[
-                              t("audit.colSequenceId"),
-                              t("audit.colActionProtocol"),
-                              t("audit.colSourceAnalyst"),
-                              t("audit.colTimestamp"),
-                              t("audit.colLayer"),
-                              t("audit.integrityChain"),
-                            ].map((h) => (
-                              <th
-                                key={h}
-                                className="px-6 py-4 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]"
-                              >
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800">
-                          {filteredLogs.map((log) => (
-                            <tr
-                              key={log.id}
-                              className="hover:bg-slate-800/30 transition-colors group cursor-pointer"
-                              onClick={() => setSelectedLog(log)}
-                            >
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-slate-700 group-hover:bg-primary transition-colors" />
-                                  <span className="text-[11px] font-mono font-bold text-slate-400 group-hover:text-slate-200">
-                                    {log.id.slice(0, 8)}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <span
-                                  className={`text-[9px] font-black px-2 py-1 rounded border ${
-                                    log.resource_type === "security" ||
-                                    log.resource_type === "auth"
-                                      ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
-                                      : log.resource_type === "system"
-                                        ? "bg-primary/10 text-primary border-primary/20"
-                                        : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                                  }`}
-                                >
-                                  {log.action}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                  <User className="w-3 h-3 text-slate-600" />
-                                  <span className="text-[11px] font-bold text-slate-300">
-                                    {log.organization_name || "ColonyAI Global"} <span className="text-slate-600">•</span> {log.user_name}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                  <Clock className="w-3 h-3 text-slate-600" />
-                                  <span className="text-[10px] font-medium text-slate-500">
-                                    {new Date(log.timestamp).toLocaleString()}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                  <Activity className="w-3 h-3 text-slate-600" />
-                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    {log.resource_type}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex flex-col gap-1">
-                                  <span className="text-[7px] font-mono text-emerald-500 opacity-50 uppercase tracking-tighter">
-                                    Current:{" "}
-                                    {log.current_hash?.substring(0, 16) ||
-                                      "N/A"}
-                                    ...
-                                  </span>
-                                  <span className="text-[7px] font-mono text-slate-600 uppercase tracking-tighter">
-                                    Previous:{" "}
-                                    {log.previous_hash?.substring(0, 16) ||
-                                      "CHAIN_START"}
-                                    ...
-                                  </span>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-
-                {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {[
-                    {
-                      title: t("audit.summarySecurityViolations"),
-                      value: logs
-                        .filter(
-                          (l) =>
-                            l.resource_type === "security" ||
-                            l.resource_type === "auth",
-                        )
-                        .length.toString(),
-                      icon: AlertCircle,
-                      color: "emerald",
-                    },
-                    {
-                      title: t("audit.summaryDataTransactions"),
-                      value: logs.length.toString(),
-                      icon: History,
-                      color: "primary",
-                    },
-                    {
-                      title: t("audit.summaryProtocolUptime"),
-                      value: "99.99%",
-                      icon: Clock,
-                      color: "purple",
-                    },
-                  ].map((s, i) => (
-                    <div
-                      key={i}
-                      className="dashboard-card p-6 group hover:scale-[1.02] transition-all rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 shadow-sm"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`w-12 h-12 rounded-lg bg-${s.color === "primary" ? "primary" : s.color === "purple" ? "purple-500" : "emerald-500"}/10 flex items-center justify-center group-hover:scale-110 transition-transform`}
-                        >
-                          <s.icon
-                            className={`w-5 h-5 text-${s.color === "primary" ? "primary" : s.color === "purple" ? "purple-500" : "emerald-500"}`}
-                          />
-                        </div>
-                        <div>
-                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.15em] mb-0.5">
-                            {s.title}
-                          </p>
-                          <p className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-                            {s.value}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Right: Documentation Sidebar */}
-        <div className="hidden lg:block">
-          <DocumentationSidebar
-            showDocs={showDocs}
-            setShowDocs={setShowDocs}
-            directory={t("audit.sidebarDirectory")}
-            title={t("audit.sidebarTitle")}
-            description={t("audit.sidebarDescription")}
-            rawText={t("audit.sidebarRawText")}
-          >
-            <section className="space-y-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
-                  {t("audit.sidebarOverviewLabel")}
-                </span>
-                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
-                  {t("audit.sidebarOverviewTitle")}
-                </h2>
-              </div>
-              <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
-                {t("audit.sidebarOverviewText")}
-              </p>
-            </section>
-
-            <section className="space-y-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
-                  {t("audit.sidebarProtocolLabel")}
-                </span>
-                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
-                  {t("audit.sidebarProtocolTitle")}
-                </h2>
-              </div>
-              <div className="space-y-3 ml-0.5">
-                {[
-                  {
-                    id: "1",
-                    title: t("audit.sidebarTraceabilityTitle"),
-                    desc: t("audit.sidebarTraceabilityDesc"),
-                  },
-                  {
-                    id: "2",
-                    title: t("audit.sidebarLayerTrackingTitle"),
-                    desc: t("audit.sidebarLayerTrackingDesc"),
-                  },
-                  {
-                    id: "3",
-                    title: t("audit.sidebarSearchExportTitle"),
-                    desc: t("audit.sidebarSearchExportDesc"),
-                  },
-                ].map((step) => (
-                  <div key={step.id} className="flex gap-2.5 group">
-                    <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                      {step.id}
-                    </span>
-                    <div className="space-y-0.5">
-                      <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">
-                        {step.title}
-                      </h4>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                        {step.desc}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </DocumentationSidebar>
-        </div>
       </div>
     </div>
   );

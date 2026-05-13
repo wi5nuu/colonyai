@@ -58,7 +58,7 @@ export default function AdministrationPage() {
     latency: 4,
     uptime: 99.98,
   });
-  const [showDocs, setShowDocs] = useState(true);
+  const [showDocs, setShowDocs] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [downloadingXls, setDownloadingXls] = useState(false);
 
@@ -302,15 +302,15 @@ export default function AdministrationPage() {
               {/* Header Administration */}
               <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm flex items-center justify-center">
-                      <Lock className="w-5 h-5 text-primary" />
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="flex items-center justify-center shrink-0">
+                      <Lock className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                     </div>
                     <div>
-                      <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
+                      <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
                         System Control
                       </h1>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                      <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
                         Node Authorization & Governance Matrix
                       </p>
                     </div>
@@ -318,7 +318,7 @@ export default function AdministrationPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg flex items-center gap-2 shadow-sm">
+                  <div className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none flex items-center gap-2 shadow-sm">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest">
                       Master Node: Operational
@@ -327,7 +327,7 @@ export default function AdministrationPage() {
                   <DocumentationToggle showDocs={showDocs} setShowDocs={setShowDocs} text="SOP Kontrol" />
                   <button
                     onClick={() => setAddUserModalOpen(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-primary text-slate-900 dark:text-slate-950 font-bold rounded-lg text-[10px] uppercase tracking-widest hover:bg-primary/90 transition-all shadow-md shadow-primary/10"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-primary text-slate-900 dark:text-slate-950 font-bold rounded-none text-[10px] uppercase tracking-widest hover:bg-primary/90 transition-all shadow-md shadow-primary/10"
                   >
                     <Plus className="w-3.5 h-3.5" /> Provision New Staff
                   </button>
@@ -368,7 +368,7 @@ export default function AdministrationPage() {
                 ].map((s, i) => (
                   <div
                     key={i}
-                    className={`backdrop-blur-sm border p-2 sm:p-4 rounded-xl shadow-sm hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden group ${
+                    className={`backdrop-blur-sm border p-2 sm:p-4 rounded-none shadow-sm hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden group ${
                       s.color === "emerald" ? "bg-emerald-50/40 border-emerald-100/50 dark:bg-emerald-950/20 dark:border-emerald-900/40" :
                       s.color === "primary" ? "bg-indigo-50/40 border-indigo-100/50 dark:bg-indigo-950/20 dark:border-indigo-900/40" :
                       s.color === "purple" ? "bg-purple-50/40 border-purple-100/50 dark:bg-purple-950/20 dark:border-purple-900/40" :
@@ -412,7 +412,7 @@ export default function AdministrationPage() {
 
               {/* Personnel Registry */}
               <div className="lg:col-span-12">
-                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 transition-colors">
+                <div className="dashboard-card overflow-hidden !p-0 rounded-none border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 transition-colors">
                   <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
@@ -432,14 +432,14 @@ export default function AdministrationPage() {
                             value={searchQuery}
                             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                             placeholder="Cari nama / email..."
-                            className="pl-7 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-primary/10 outline-none w-44"
+                            className="pl-7 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-none text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-primary/10 outline-none w-44"
                           />
                         </div>
                         {/* Role filter */}
                         <select
                           value={filterRole}
                           onChange={(e) => { setFilterRole(e.target.value); setCurrentPage(1); }}
-                          className="py-1.5 px-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/10 outline-none"
+                          className="py-1.5 px-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-none text-xs font-medium text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/10 outline-none"
                         >
                           <option value="">Semua Role</option>
                           <option value="super_admin">Super Admin</option>
@@ -452,7 +452,7 @@ export default function AdministrationPage() {
                         <select
                           value={filterCompany}
                           onChange={(e) => { setFilterCompany(e.target.value); setCurrentPage(1); }}
-                          className="py-1.5 px-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/10 outline-none max-w-[180px]"
+                          className="py-1.5 px-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-none text-xs font-medium text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/10 outline-none max-w-[180px]"
                         >
                           <option value="">Semua Company</option>
                           {Array.from(new Set(analysts.map(a => a.organizationName).filter(Boolean)))
@@ -542,7 +542,7 @@ export default function AdministrationPage() {
                                       </span>
                                     </td>
                                     <td className="px-5 py-2.5">
-                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 uppercase">
+                                      <span className="px-2 py-0.5 rounded-none bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 uppercase">
                                         {a.clearance}
                                       </span>
                                     </td>
@@ -565,14 +565,14 @@ export default function AdministrationPage() {
                                       <div className="flex items-center justify-end gap-1">
                                         <button
                                           onClick={() => { setTargetUser(a); setResetModalOpen(true); }}
-                                          className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
+                                          className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-primary hover:bg-primary/5 rounded-none transition-all"
                                           title="Reset Password"
                                         >
                                           <Key className="w-3.5 h-3.5" />
                                         </button>
                                         <button
                                           onClick={() => handleToggleStatus(a.id)}
-                                          className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                          className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-rose-500 hover:bg-rose-50 rounded-none transition-all"
                                           title="Suspend Node"
                                         >
                                           <Trash2 className="w-3.5 h-3.5" />
@@ -593,7 +593,7 @@ export default function AdministrationPage() {
                                       <button
                                         disabled={safePage <= 1}
                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                        className="px-3 py-1 text-[10px] font-black uppercase rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                        className="px-3 py-1 text-[10px] font-black uppercase rounded-none border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                                       >
                                         ← Prev
                                       </button>
@@ -615,7 +615,7 @@ export default function AdministrationPage() {
                                             <button
                                               key={p}
                                               onClick={() => setCurrentPage(p as number)}
-                                              className={`w-7 h-7 text-[10px] font-black rounded-lg transition-all ${
+                                              className={`w-7 h-7 text-[10px] font-black rounded-none transition-all ${
                                                 p === safePage
                                                   ? "bg-slate-900 dark:bg-primary text-white"
                                                   : "border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -629,7 +629,7 @@ export default function AdministrationPage() {
                                       <button
                                         disabled={safePage >= totalPages}
                                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                        className="px-3 py-1 text-[10px] font-black uppercase rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                        className="px-3 py-1 text-[10px] font-black uppercase rounded-none border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                                       >
                                         Next →
                                       </button>
@@ -648,7 +648,7 @@ export default function AdministrationPage() {
 
               {/* Password Reset Requests */}
               <div className="lg:col-span-12">
-                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 transition-colors">
+                <div className="dashboard-card overflow-hidden !p-0 rounded-none border border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 transition-colors">
                   <div className="px-6 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
                     <ResetRequestsPanel />
                   </div>
@@ -657,10 +657,10 @@ export default function AdministrationPage() {
 
               {/* Export Hub */}
               <div className="lg:col-span-12">
-                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-lg group bg-white dark:bg-slate-900 transition-colors">
+                <div className="dashboard-card overflow-hidden !p-0 rounded-none border border-slate-200/60 dark:border-slate-800 shadow-lg group bg-white dark:bg-slate-900 transition-colors">
                   <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-900 dark:bg-slate-950 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                      <div className="w-10 h-10 rounded-none bg-primary/10 flex items-center justify-center border border-primary/20">
                         <BarChart3 className="w-5 h-5 text-primary" />
                       </div>
                       <div>
@@ -673,7 +673,7 @@ export default function AdministrationPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg">
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-none">
                         <ShieldAlert className="w-3.5 h-3.5 text-primary" />
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                           ISO-17025 Compliant
@@ -684,9 +684,9 @@ export default function AdministrationPage() {
 
                   <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/30 dark:bg-slate-800/30">
                     {/* PDF Export */}
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 flex flex-col gap-3 hover:border-red-200 dark:hover:border-red-900/40 hover:shadow-xl transition-all group/pdf relative overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-none p-5 flex flex-col gap-3 hover:border-red-200 dark:hover:border-red-900/40 hover:shadow-xl transition-all group/pdf relative overflow-hidden">
                       <div className="flex items-center gap-3 relative z-10">
-                        <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center group-hover/pdf:scale-110 transition-transform">
+                        <div className="w-10 h-10 rounded-none bg-red-50 border border-red-100 flex items-center justify-center group-hover/pdf:scale-110 transition-transform">
                           <FileText className="w-5 h-5 text-red-500" />
                         </div>
                         <div>
@@ -712,7 +712,7 @@ export default function AdministrationPage() {
                         ].map((tag) => (
                           <span
                             key={tag}
-                            className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500 dark:text-slate-400 rounded-md uppercase tracking-widest"
+                            className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500 dark:text-slate-400 rounded-none uppercase tracking-widest"
                           >
                             {tag}
                           </span>
@@ -722,7 +722,7 @@ export default function AdministrationPage() {
                       <button
                         onClick={handleDownloadPdf}
                         disabled={downloadingPdf}
-                        className="w-fit self-start px-5 flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-red-500/20 relative z-10 mt-1"
+                        className="w-fit self-start px-5 flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white rounded-none text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-red-500/20 relative z-10 mt-1"
                       >
                         {downloadingPdf ? (
                           "Building Ledger..."
@@ -735,9 +735,9 @@ export default function AdministrationPage() {
                     </div>
 
                     {/* Excel Export */}
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 flex flex-col gap-3 hover:border-emerald-200 dark:hover:border-emerald-900/40 hover:shadow-xl transition-all group/excel relative overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-none p-5 flex flex-col gap-3 hover:border-emerald-200 dark:hover:border-emerald-900/40 hover:shadow-xl transition-all group/excel relative overflow-hidden">
                       <div className="flex items-center gap-3 relative z-10">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center group-hover/excel:scale-110 transition-transform">
+                        <div className="w-10 h-10 rounded-none bg-emerald-50 border border-emerald-100 flex items-center justify-center group-hover/excel:scale-110 transition-transform">
                           <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
                         </div>
                         <div>
@@ -760,7 +760,7 @@ export default function AdministrationPage() {
                           (tag) => (
                             <span
                               key={tag}
-                              className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500 dark:text-slate-400 rounded-md uppercase tracking-widest"
+                              className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500 dark:text-slate-400 rounded-none uppercase tracking-widest"
                             >
                               {tag}
                             </span>
@@ -771,7 +771,7 @@ export default function AdministrationPage() {
                       <button
                         onClick={handleDownloadExcel}
                         disabled={downloadingXls}
-                        className="w-fit self-start px-5 flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 relative z-10 mt-1"
+                        className="w-fit self-start px-5 flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-none text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 relative z-10 mt-1"
                       >
                         {downloadingXls ? (
                           "Building Matrix..."
@@ -789,7 +789,7 @@ export default function AdministrationPage() {
 
               {/* Recent Audit Trail - MOVED BELOW */}
               <div className="lg:col-span-12">
-                <div className="dashboard-card overflow-hidden !p-0 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900 transition-colors">
+                <div className="dashboard-card overflow-hidden !p-0 rounded-none border border-slate-200/60 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900 transition-colors">
                   <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-900 dark:bg-slate-950 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
@@ -804,7 +804,7 @@ export default function AdministrationPage() {
                     </div>
                     <button
                       onClick={() => window.location.href = '/dashboard/audit'}
-                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all border border-white/5"
+                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[9px] font-black uppercase tracking-widest rounded-none transition-all border border-white/5"
                     >
                       Lihat Lengkap
                     </button>
@@ -853,7 +853,7 @@ export default function AdministrationPage() {
                             </p>
                           </div>
                           <div className="w-20 text-right">
-                            <span className={`inline-block text-[9px] font-black px-2.5 py-1 rounded-lg border uppercase tracking-widest shadow-sm ${
+                            <span className={`inline-block text-[9px] font-black px-2.5 py-1 rounded-none border uppercase tracking-widest shadow-sm ${
                               log.status === 'SUCCESS' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' :
                               log.status === 'FAILED' ? 'bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800' :
                               'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-800'
@@ -901,7 +901,7 @@ AUTORITAS: MASTER ROOT`}
               <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">01</span>
               <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">Overview</h2>
             </div>
-            <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+            <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-none border border-slate-100 dark:border-slate-800">
               Modul Node Governance dirancang secara khusus untuk Administrator sebagai pusat komando otorisasi staf dan pemantauan kesehatan operasional server.
             </p>
           </section>
@@ -939,7 +939,7 @@ AUTORITAS: MASTER ROOT`}
           <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
             <div className="p-8 space-y-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
+                <div className="w-12 h-12 bg-primary rounded-none flex items-center justify-center shadow-lg shadow-primary/20">
                   <Key className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -949,7 +949,7 @@ AUTORITAS: MASTER ROOT`}
               </div>
 
               <div className="space-y-4">
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-none border border-slate-100 dark:border-slate-800">
                   <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Target Analyst</p>
                   <p className="text-sm font-bold text-slate-900 dark:text-white">{targetUser.name}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{targetUser.email}</p>
@@ -963,7 +963,7 @@ AUTORITAS: MASTER ROOT`}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••••••••••"
-                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 pr-12"
+                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 pr-12"
                       autoFocus
                     />
                     <button
@@ -982,14 +982,14 @@ AUTORITAS: MASTER ROOT`}
                 <button
                   onClick={() => setResetModalOpen(false)}
                   disabled={isResetting}
-                  className="flex-1 py-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all border border-slate-100"
+                  className="flex-1 py-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-none hover:bg-slate-100 transition-all border border-slate-100"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleResetPassword}
                   disabled={isResetting || !newPassword}
-                  className="flex-[2] py-4 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50"
+                  className="flex-[2] py-4 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-none shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50"
                 >
                   {isResetting ? "Synchronizing..." : "Update Authority"}
                 </button>
@@ -1006,7 +1006,7 @@ AUTORITAS: MASTER ROOT`}
           <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
             <form onSubmit={handleCreateUser} className="p-8 space-y-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/20">
+                <div className="w-12 h-12 bg-slate-900 rounded-none flex items-center justify-center shadow-lg shadow-slate-900/20">
                   <UserPlus className="w-6 h-6 text-primary" />
                 </div>
                 <div>
@@ -1025,7 +1025,7 @@ AUTORITAS: MASTER ROOT`}
                       value={newUserData.full_name}
                       onChange={(e) => setNewUserData({...newUserData, full_name: e.target.value})}
                       placeholder="e.g. John Doe"
-                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                     />
                   </div>
                   <div className="space-y-2">
@@ -1033,7 +1033,7 @@ AUTORITAS: MASTER ROOT`}
                     <select
                       value={newUserData.role}
                       onChange={(e) => setNewUserData({...newUserData, role: e.target.value})}
-                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                     >
                       <option value="analyst">Analyst (Level-01)</option>
                       <option value="auditor">Auditor (Level-02)</option>
@@ -1051,7 +1051,7 @@ AUTORITAS: MASTER ROOT`}
                     value={newUserData.email}
                     onChange={(e) => setNewUserData({...newUserData, email: e.target.value})}
                     placeholder="staff@laboratory.diag"
-                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                   />
                 </div>
 
@@ -1063,7 +1063,7 @@ AUTORITAS: MASTER ROOT`}
                     value={newUserData.password}
                     onChange={(e) => setNewUserData({...newUserData, password: e.target.value})}
                     placeholder="••••••••••••"
-                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                   />
                   <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight italic">Minimum 12 characters with Uppercase, Lowercase, Number, and Special Char.</p>
                 </div>
@@ -1074,14 +1074,14 @@ AUTORITAS: MASTER ROOT`}
                   type="button"
                   onClick={() => setAddUserModalOpen(false)}
                   disabled={isCreating}
-                  className="flex-1 py-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-100 transition-all border border-slate-100"
+                  className="flex-1 py-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-none hover:bg-slate-100 transition-all border border-slate-100"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="flex-[2] py-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-900/20 hover:bg-primary transition-all disabled:opacity-50"
+                  className="flex-[2] py-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-none shadow-lg shadow-slate-900/20 hover:bg-primary transition-all disabled:opacity-50"
                 >
                   {isCreating ? "Initializing..." : "Provision Node"}
                 </button>

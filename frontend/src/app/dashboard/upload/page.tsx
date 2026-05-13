@@ -44,7 +44,7 @@ export default function UploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showDocs, setShowDocs] = useState(true);
+  const [showDocs, setShowDocs] = useState(false);
 
   const [formData, setFormData] = useState({
     sampleId: "ISO-PCA-B2026-001",
@@ -87,6 +87,18 @@ export default function UploadPage() {
     if (e.dataTransfer.files && e.dataTransfer.files[0])
       handleFile(e.dataTransfer.files[0]);
   }, [handleFile]);
+
+  const handleSampleClick = async (samplePath: string, fileName: string) => {
+    try {
+      const response = await fetch(samplePath);
+      const blob = await response.blob();
+      const file = new File([blob], fileName, { type: "image/jpeg" });
+      handleFile(file);
+      toast.success(`Loaded sample: ${fileName}`);
+    } catch (error) {
+      toast.error("Failed to load sample image");
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
@@ -145,21 +157,19 @@ export default function UploadPage() {
       {/* Container for Main Content and Docs */}
       <div className="flex relative min-h-[calc(100vh-200px)]">
         {/* Main Workspace Area */}
-        <div
-          className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
-        >
-          <div className="max-w-[1500px] mx-auto px-1 sm:px-2 py-0 sm:py-0">
+        <div className="flex-1 transition-all duration-300">
+          <div className="max-w-[1500px] mx-auto px-6 py-2 pb-6">
             {/* Page Header */}
             <div className="flex flex-row items-center justify-between gap-1 pb-1 border-b border-slate-100 dark:border-slate-800 mb-2">
               <div className="flex items-center gap-1.5">
-                <div className="w-5 h-5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm flex items-center justify-center flex-shrink-0">
+                <div className="w-5 h-5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none shadow-sm flex items-center justify-center flex-shrink-0">
                   <UploadIcon className="w-2.5 h-2.5 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-[10px] sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+                  <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
                     {t("upload.title")}
                   </h1>
-                  <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em] mt-0.5 hidden sm:block">
+                  <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
                     {t("upload.subtitle")}
                   </p>
                 </div>
@@ -169,7 +179,7 @@ export default function UploadPage() {
                   showDocs={showDocs}
                   setShowDocs={setShowDocs}
                 />
-                <div className="flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm">
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none shadow-sm">
                   <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
                   <span className="text-[8px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest leading-none">
                     Awaiting Input
@@ -180,9 +190,9 @@ export default function UploadPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-8 items-start">
               {/* Left: Image Upload */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 flex flex-col p-3 sm:p-5 rounded-sm sm:rounded-sm shadow-sm">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 flex flex-col p-3 sm:p-5 rounded-none sm:rounded-none shadow-sm">
                 <div className="flex items-center gap-2 sm:gap-4 mb-3">
-                  <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-sm bg-primary/5 dark:bg-primary/10 flex items-center justify-center border border-primary/10 dark:border-primary/20">
+                  <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-none bg-primary/5 dark:bg-primary/10 flex items-center justify-center border border-primary/10 dark:border-primary/20">
                     <ImageIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
                   <div>
@@ -196,7 +206,7 @@ export default function UploadPage() {
                 </div>
 
                 <div
-                  className={`flex-1 relative border-2 border-dashed rounded-sm transition-all duration-300 overflow-hidden min-h-[140px] sm:min-h-[320px] flex items-center justify-center ${
+                  className={`flex-1 relative border-2 border-dashed rounded-none transition-all duration-300 overflow-hidden min-h-[140px] sm:min-h-[320px] flex items-center justify-center ${
                     dragActive
                       ? "border-primary bg-primary/5 dark:bg-primary/10 scale-[0.99]"
                       : "border-slate-200 dark:border-slate-800 hover:border-primary/50 bg-slate-50/50 dark:bg-slate-900/50"
@@ -220,14 +230,14 @@ export default function UploadPage() {
                             setSelectedFile(null);
                             setPreview(null);
                           }}
-                          className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 text-xs font-black uppercase tracking-widest rounded-sm shadow-2xl hover:scale-105 active:scale-95 transition-all"
+                          className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 text-xs font-black uppercase tracking-widest rounded-none shadow-2xl hover:scale-105 active:scale-95 transition-all"
                         >
                           <Trash2 className="h-4 w-4" />{" "}
                           {t("upload.removeImage")}
                         </button>
                       </div>
                       <div className="absolute bottom-6 left-6 right-6">
-                        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-slate-900 dark:text-white text-[11px] font-black px-5 py-4 rounded-sm flex items-center gap-4 shadow-xl border border-white/20 dark:border-slate-800 uppercase tracking-widest transition-colors">
+                        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-slate-900 dark:text-white text-[11px] font-black px-5 py-4 rounded-none flex items-center gap-4 shadow-xl border border-white/20 dark:border-slate-800 uppercase tracking-widest transition-colors">
                           <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0" />
                           <span className="truncate max-w-[150px]">
                             {selectedFile?.name}
@@ -244,7 +254,7 @@ export default function UploadPage() {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center p-5 sm:p-12 text-center group">
-                      <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-sm bg-white dark:bg-slate-900 shadow-xl shadow-primary/10 flex items-center justify-center mb-3 sm:mb-6 group-hover:scale-110 transition-transform duration-500 border border-slate-100 dark:border-slate-800">
+                      <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-none bg-white dark:bg-slate-900 shadow-xl shadow-primary/10 flex items-center justify-center mb-3 sm:mb-6 group-hover:scale-110 transition-transform duration-500 border border-slate-100 dark:border-slate-800">
                         <UploadIcon className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
                       </div>
                       <label htmlFor="file-upload" className="cursor-pointer">
@@ -272,20 +282,62 @@ export default function UploadPage() {
                 </div>
 
                 {/* ISO Tip */}
-                <div className="mt-2 sm:mt-8 flex items-start gap-2 sm:gap-4 p-2 sm:p-5 bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-sm sm:rounded-sm transition-colors">
-                  <div className="p-1 sm:p-2 bg-blue-100 dark:bg-blue-900/30 rounded-sm sm:rounded-sm flex-shrink-0 border border-blue-200 dark:border-blue-800">
+                <div className="mt-2 sm:mt-8 flex items-start gap-2 sm:gap-4 p-2 sm:p-5 bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-none sm:rounded-none transition-colors">
+                  <div className="p-1 sm:p-2 bg-blue-100 dark:bg-blue-900/30 rounded-none sm:rounded-none flex-shrink-0 border border-blue-200 dark:border-blue-800">
                     <Info className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <p className="text-[8px] sm:text-[9px] text-blue-700 dark:text-blue-300 font-bold leading-relaxed uppercase tracking-tight sm:tracking-widest">
                     {t("upload.isoAdvisory")}
                   </p>
                 </div>
+
+                {/* Sample Images Section */}
+                <div className="mt-4 sm:mt-6">
+                  <div className="flex items-center justify-between mb-2 px-1">
+                    <h3 className="text-[8px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                      <ImageIcon className="w-3 h-3 text-primary" />
+                      Try with Samples (50 High-Res Data)
+                    </h3>
+                    <span className="text-[7px] font-bold text-slate-400 uppercase tracking-tighter">
+                      Swipe to explore
+                    </span>
+                  </div>
+                  <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {Array.from({ length: 50 }).map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => handleSampleClick(`/samples/sample_${i + 1}.jpg`, `sample_${i + 1}.jpg`)}
+                        className="flex-shrink-0 group relative w-16 h-16 rounded-none overflow-hidden border border-slate-200 dark:border-slate-800 hover:border-primary transition-all shadow-sm active:scale-95"
+                      >
+                        <img 
+                          src={`/samples/sample_${i + 1}.jpg`} 
+                          alt={`Sample ${i + 1}`}
+                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
+                        />
+                        <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="text-[7px] font-black text-white uppercase tracking-tighter">
+                            Load
+                          </span>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 py-0.5 text-[5px] font-black text-slate-900 dark:text-white uppercase text-center border-t border-slate-100 dark:border-slate-800">
+                          {i + 1}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  <style jsx>{`
+                    .no-scrollbar::-webkit-scrollbar {
+                      display: none;
+                    }
+                  `}</style>
+                </div>
               </div>
 
               {/* Middle: Protocol Form */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 sm:p-8 rounded-sm sm:rounded-sm shadow-sm transition-colors">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 sm:p-8 rounded-none sm:rounded-none shadow-sm transition-colors">
                 <div className="flex items-center gap-2 sm:gap-4 mb-3 sm:mb-8">
-                  <div className="w-7 h-7 sm:w-12 sm:h-12 rounded-sm sm:rounded-sm bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-800">
+                  <div className="w-7 h-7 sm:w-12 sm:h-12 rounded-none sm:rounded-none bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-800">
                     <FlaskConical className="h-4 w-4 sm:h-6 sm:w-6 text-slate-400 dark:text-slate-500" />
                   </div>
                   <div>
@@ -310,14 +362,12 @@ export default function UploadPage() {
                     >
                       {t("upload.specimenIdentifier")} *
                     </label>
-                    <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium ml-1 mb-1.5 leading-snug">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.purposeLabel")}</span> {t("upload.descSampleIdPurpose")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.inputLabel")}</span> {t("upload.descSampleIdInput")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.resultLabel")}</span> {t("upload.descSampleIdResult")}
-                    </p>
+
                     <input
                       type="text"
                       id="sampleId"
                       required
-                      className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-sm"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-sm"
                       value={formData.sampleId}
                       onChange={(e) =>
                         setFormData({ ...formData, sampleId: e.target.value })
@@ -333,14 +383,12 @@ export default function UploadPage() {
                     >
                       {t("upload.agarMediaMatrix")} *
                     </label>
-                    <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium ml-1 mb-1.5 leading-snug">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.purposeLabel")}</span> {t("upload.descMediaPurpose")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.inputLabel")}</span> {t("upload.descMediaInput")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.resultLabel")}</span> {t("upload.descMediaResult")}
-                    </p>
+
                     <div className="relative">
                       <select
                         id="mediaType"
                         required
-                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
                         value={formData.mediaType}
                         onChange={(e) =>
                           setFormData({
@@ -379,14 +427,12 @@ export default function UploadPage() {
                       >
                         {t("upload.dilutionFactor")} *
                       </label>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium ml-1 mb-1.5 leading-snug">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.purposeLabel")}</span> {t("upload.descDilutionPurpose")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.inputLabel")}</span> {t("upload.descDilutionInput")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.resultLabel")}</span> {t("upload.descDilutionResult")}
-                      </p>
+
                       <div className="relative">
                         <select
                           id="dilutionFactor"
                           required
-                          className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
+                          className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
                           value={formData.dilutionFactor}
                           onChange={(e) =>
                             setFormData({
@@ -416,16 +462,14 @@ export default function UploadPage() {
                       >
                         {t("upload.volume")} *
                       </label>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium ml-1 mb-1.5 leading-snug">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.purposeLabel")}</span> {t("upload.descVolumePurpose")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.inputLabel")}</span> {t("upload.descVolumeInput")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.resultLabel")}</span> {t("upload.descVolumeResult")}
-                      </p>
+
                       <input
                         type="number"
                         id="platedVolume"
                         required
                         step="0.1"
                         min="0.1"
-                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.platedVolume}
                         onChange={(e) =>
                           setFormData({
@@ -443,13 +487,11 @@ export default function UploadPage() {
                       <label className="text-[8px] font-black text-slate-900 dark:text-white uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                         Incubation Temp (°C)
                       </label>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium ml-1 mb-1.5 leading-snug">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.purposeLabel")}</span> {t("upload.descTempPurpose")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.inputLabel")}</span> {t("upload.descTempInput")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.resultLabel")}</span> {t("upload.descTempResult")}
-                      </p>
+
                       <input
                         type="number"
                         step="0.1"
-                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.incubationTemp}
                         onChange={(e) =>
                           setFormData({
@@ -463,12 +505,10 @@ export default function UploadPage() {
                       <label className="text-[8px] font-black text-slate-900 dark:text-white uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                         Time (Hours)
                       </label>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium ml-1 mb-1.5 leading-snug">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.purposeLabel")}</span> {t("upload.descTimePurpose")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.inputLabel")}</span> {t("upload.descTimeInput")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.resultLabel")}</span> {t("upload.descTimeResult")}
-                      </p>
+
                       <input
                         type="number"
-                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.incubationTime}
                         onChange={(e) =>
                           setFormData({
@@ -484,12 +524,10 @@ export default function UploadPage() {
                     <label className="text-[8px] font-black text-slate-900 dark:text-white uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                       Method Standard (ISO)
                     </label>
-                    <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium ml-1 mb-1.5 leading-snug">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.purposeLabel")}</span> {t("upload.descMethodPurpose")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.inputLabel")}</span> {t("upload.descMethodInput")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.resultLabel")}</span> {t("upload.descMethodResult")}
-                    </p>
+
                     <input
                       type="text"
-                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                       value={formData.methodStandard}
                       onChange={(e) =>
                         setFormData({
@@ -506,13 +544,11 @@ export default function UploadPage() {
                       <label className="text-[8px] font-black text-slate-900 dark:text-white uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                         Media Batch/Lot #
                       </label>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium ml-1 mb-1.5 leading-snug">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.purposeLabel")}</span> {t("upload.descBatchPurpose")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.inputLabel")}</span> {t("upload.descBatchInput")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.resultLabel")}</span> {t("upload.descBatchResult")}
-                      </p>
+
                       <input
                         type="text"
                         placeholder="e.g., LOT-2026-X"
-                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.mediaBatchNumber}
                         onChange={(e) =>
                           setFormData({
@@ -526,13 +562,11 @@ export default function UploadPage() {
                       <label className="text-[8px] font-black text-slate-900 dark:text-white uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1">
                         Incubator ID
                       </label>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium ml-1 mb-1.5 leading-snug">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.purposeLabel")}</span> {t("upload.descIncubatorPurpose")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.inputLabel")}</span> {t("upload.descIncubatorInput")} <span className="font-bold text-slate-700 dark:text-slate-300">{t("upload.resultLabel")}</span> {t("upload.descIncubatorResult")}
-                      </p>
+
                       <input
                         type="text"
                         placeholder="e.g., INC-01"
-                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         value={formData.incubatorId}
                         onChange={(e) =>
                           setFormData({
@@ -549,7 +583,7 @@ export default function UploadPage() {
                     <button
                       type="submit"
                       disabled={!selectedFile || isSubmitting}
-                      className="w-auto sm:w-full min-w-[150px] sm:min-w-0 bg-primary text-slate-900 px-3 py-1.5 sm:py-2.5 text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] flex items-center justify-center gap-1.5 sm:gap-3 rounded-sm shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group mx-auto"
+                      className="w-auto sm:w-full min-w-[150px] sm:min-w-0 bg-primary text-slate-900 px-3 py-1.5 sm:py-2.5 text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] flex items-center justify-center gap-1.5 sm:gap-3 rounded-none shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group mx-auto"
                     >
                       {isSubmitting ? (
                         <>
@@ -648,12 +682,12 @@ PRESISI: 99.8% pada PCA Standard.`}
                   {
                     id: "1",
                     title: "Pengidentifikasi Spesimen (Traceability)",
-                    desc: "Alasan: Merupakan kunci utama pelacakan data (Data Integrity) sesuai ISO-17025. Cara: Masukkan kode unik laboratorium. Jika tidak ada, sistem akan menolak sinkronisasi audit.",
+                    desc: `${t("upload.purposeLabel")} ${t("upload.descSampleIdPurpose")} ${t("upload.inputLabel")} ${t("upload.descSampleIdInput")} ${t("upload.resultLabel")} ${t("upload.descSampleIdResult")}`,
                   },
                   {
                     id: "2",
                     title: "Matriks Media Agar (Selectivity)",
-                    desc: "Alasan: Menentukan target mikroba yang dianalisis oleh AI. Jenis:",
+                    desc: `${t("upload.purposeLabel")} ${t("upload.descMediaPurpose")} ${t("upload.inputLabel")} ${t("upload.descMediaInput")} ${t("upload.resultLabel")} ${t("upload.descMediaResult")}`,
                     list: [
                       "PCA: Untuk Total Plate Count (TPC) umum.",
                       "VRBA/BGBB: Spesifik untuk kelompok Coliform/E.coli.",
@@ -664,25 +698,26 @@ PRESISI: 99.8% pada PCA Standard.`}
                   {
                     id: "3",
                     title: "Faktor Pengenceran (Dilution)",
-                    desc: "Alasan: Memastikan jumlah koloni berada pada rentang hitung (30-300 CFU). Cara: Pilih tingkat dilusi sesuai SOP preparasi sampel (10⁻¹ hingga 10⁻⁶).",
+                    desc: `${t("upload.purposeLabel")} ${t("upload.descDilutionPurpose")} ${t("upload.inputLabel")} ${t("upload.descDilutionInput")} ${t("upload.resultLabel")} ${t("upload.descDilutionResult")}`,
                   },
                   {
                     id: "4",
-                    title: "Parameter Inkubasi & Volume",
-                    desc: "Alasan: Kondisi lingkungan (Suhu & Waktu) menentukan kecepatan pertumbuhan saraf koloni. Volume (ml) digunakan AI sebagai pembagi hasil akhir CFU/ml atau CFU/g.",
+                    title: "Volume & Parameter Inkubasi",
+                    desc: `${t("upload.purposeLabel")} Normalisasi hitungan dan pencatatan kondisi fisik.`,
                     list: [
-                      "Incubation Temp: Masukkan suhu operasional (e.g. 35°C).",
-                      "Time (Hours): Total durasi spesimen dalam inkubator (e.g. 48 jam).",
+                      `Volume: ${t("upload.descVolumeInput")} -> ${t("upload.descVolumeResult")}`,
+                      `Suhu: ${t("upload.descTempInput")} -> ${t("upload.descTempResult")}`,
+                      `Waktu: ${t("upload.descTimeInput")} -> ${t("upload.descTimeResult")}`,
                     ],
                   },
                   {
                     id: "5",
                     title: "Kepatuhan Audit (Batch & Method)",
-                    desc: "Alasan: Menjamin ketertelusuran penuh (Full Traceability) sesuai standar audit ISO-17025.",
+                    desc: "Menjamin ketertelusuran penuh (Full Traceability) sesuai standar audit ISO-17025.",
                     list: [
-                      "Method Standard: Kode referensi ISO (e.g. ISO 4833).",
-                      "Media Batch/Lot: Nomor produksi media agar untuk validasi kualitas.",
-                      "Incubator ID: Kode unit alat untuk pelacakan distribusi suhu.",
+                      `Standard: ${t("upload.descMethodInput")} -> ${t("upload.descMethodResult")}`,
+                      `Batch/Lot: ${t("upload.descBatchInput")} -> ${t("upload.descBatchResult")}`,
+                      `Incubator: ${t("upload.descIncubatorInput")} -> ${t("upload.descIncubatorResult")}`,
                     ],
                   },
                 ].map((step) => (

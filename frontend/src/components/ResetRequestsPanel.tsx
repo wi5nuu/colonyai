@@ -362,48 +362,48 @@ export function ResetRequestsPanel() {
       {/* Token Modal */}
       {showTokenModal && mounted && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
-            <div className="p-6 bg-emerald-600 dark:bg-emerald-700 text-white relative">
-              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-4">
-                <ShieldAlert className="w-6 h-6" />
+          <div className="bg-white dark:bg-slate-900 rounded-none shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
+            <div className="p-6 bg-[#1a237e] text-white relative">
+              <div className="w-10 h-10 bg-white/10 rounded-none flex items-center justify-center mb-4">
+                <ShieldAlert className="w-5 h-5 text-emerald-400" />
               </div>
-              <h3 className="text-lg font-black uppercase tracking-tighter">Token Reset Berhasil Dibuat</h3>
-              <p className="text-white/80 text-xs font-medium">{showTokenModal.email}</p>
+              <h3 className="text-base font-black uppercase tracking-widest">Token Reset Berhasil Dibuat</h3>
+              <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-1">{showTokenModal.email}</p>
               
               <button 
                 onClick={() => setShowTokenModal(null)}
-                className="absolute top-6 right-6 p-2 hover:bg-white/10 rounded-xl transition-all"
+                className="absolute top-6 right-6 p-2 hover:bg-white/10 rounded-none transition-all"
               >
                 <XCircle className="w-5 h-5" />
               </button>
             </div>
             
-            <div className="p-8 space-y-6">
+            <div className="p-6 space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Sampaikan Token Ini Secara Aman</label>
-                <div className="flex items-center gap-2 p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl">
-                  <code className="flex-1 font-mono font-black text-slate-900 dark:text-white text-lg tracking-wider break-all">
+                <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Sampaikan Token Ini Secara Aman</label>
+                <div className="flex items-center gap-2 p-4 bg-slate-50 dark:bg-slate-950 border-b-2 border-slate-200 dark:border-slate-800 rounded-none">
+                  <code className="flex-1 font-mono font-black text-slate-900 dark:text-white text-base tracking-widest break-all">
                     {showTokenModal.token}
                   </code>
                   <button
                     onClick={() => handleCopyToken(showTokenModal.token, 'modal')}
-                    className="p-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all active:scale-95"
+                    className="p-3 bg-slate-900 text-white rounded-none hover:bg-[#0055ff] transition-all active:scale-95"
                   >
                     {copiedId === 'modal' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
 
-              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/50 rounded-2xl flex gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium leading-relaxed">
-                  Token ini bersifat rahasia dan hanya berlaku selama <strong>1 jam</strong>. Harap sampaikan melalui saluran komunikasi internal yang terenkripsi.
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-none flex gap-3">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-[9px] text-amber-800 dark:text-amber-400 font-bold uppercase leading-relaxed tracking-wider">
+                   Token ini bersifat rahasia dan hanya berlaku selama 1 jam. Harap sampaikan melalui saluran komunikasi internal yang terenkripsi.
                 </p>
               </div>
 
               <button
                 onClick={() => setShowTokenModal(null)}
-                className="w-full py-4 bg-slate-900 dark:bg-slate-950 text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-slate-800 dark:hover:bg-slate-900 transition-all shadow-xl shadow-slate-900/10"
+                className="w-full h-12 bg-[#1a237e] text-white rounded-none text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[#0055ff] transition-all shadow-xl shadow-[#1a237e]/10"
               >
                 Tutup & Selesai
               </button>
