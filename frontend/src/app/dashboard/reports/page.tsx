@@ -195,7 +195,7 @@ export default function ReportsPage() {
         date_to: dateTo || undefined,
       });
       
-      toast.success(response.data.message || `Report sent via ${platform.toUpperCase()} to ${targetId}`);
+      toast.success((response.data as any).message || `Report sent via ${platform.toUpperCase()} to ${targetId}`);
     } catch (error: any) {
       toast.error(error.response?.data?.detail || `Failed to send via ${platform.toUpperCase()}`);
     } finally {

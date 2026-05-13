@@ -19,7 +19,7 @@ interface DocumentationSidebarProps {
   directory: string;
   title: string;
   description: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   rawText?: string; // Content to be copied/searched
 }
 
@@ -222,7 +222,15 @@ export function DocumentationSidebar({
           </div>
 
           {/* Main Content Rendered Here */}
-          <div className="prose-tighter">{children}</div>
+          <div className="prose-tighter">
+            {children || (
+              rawText && (
+                <pre className="text-[10px] text-slate-500 font-mono whitespace-pre-wrap p-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-none mt-2 leading-relaxed">
+                  {rawText}
+                </pre>
+              )
+            )}
+          </div>
         </div>
       </div>
     </div>

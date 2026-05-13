@@ -112,7 +112,7 @@ export function Navbar() {
                 className="text-[13px] font-medium text-slate-600 hover:text-[#1a237e] transition-all flex items-center gap-1 group"
               >
                 {item.name}
-                {item.hasSub && <ChevronDown className="w-3 h-3 text-slate-400 group-hover:rotate-180 transition-transform" />}
+                {(item as any).hasSub && <ChevronDown className="w-3 h-3 text-slate-400 group-hover:rotate-180 transition-transform" />}
               </Link>
             ))}
           </div>

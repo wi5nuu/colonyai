@@ -443,7 +443,7 @@ export default function ProvisionNodePage() {
             <button 
               onClick={() => {
                 setProvisionResult(null);
-                setNewOrgData({ name: "", location: "", admin_email: "", admin_full_name: "", license_tier: "Enterprise", institution_type: "Clinical Laboratory", compliance_standard: "ISO-17025", server_node: "ap-southeast-1 (Jakarta)", storage_quota: "1 TB", data_retention: "5 Years", clearance_level: "Level 3 (High)", encryption_standard: "AES-256-GCM", audit_frequency: "Quarterly", bsl_level: "BSL-2", network_restriction: "0.0.0.0/0 (Global Access)" });
+                setNewOrgData({ name: "", location: "", admin_email: "", admin_full_name: "", license_tier: "Enterprise", institution_type: "Clinical Laboratory", compliance_standard: "ISO-17025", server_node: "ap-southeast-1 (Jakarta)", storage_quota: "1 TB", data_retention: "5 Years", clearance_level: "Level 3 (High)", encryption_standard: "AES-256-GCM", audit_frequency: "Quarterly", bsl_level: "BSL-2", network_restriction: "0.0.0.0/0 (Global Access)", lims_webhook_url: "" });
                 setDigitalSignature(false);
               }}
               className="w-full sm:w-auto px-10 py-4 bg-white border border-slate-200 text-slate-900 text-[11px] font-bold uppercase tracking-widest rounded-none hover:bg-slate-50 transition-all active:scale-95 shadow-sm"
