@@ -40,6 +40,23 @@ export default function SentinelPage() {
   // Chart bar heights – updated live as training progresses
   const [chartBars, setChartBars] = useState<number[]>([]);
 
+  // Weights Integrity Scanner & Audit Ledger States
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [scanResult, setScanResult] = useState(false);
+  const [auditHistory, setAuditHistory] = useState([
+    {
+      node: "NODE-01 (Main Server)",
+      time: "18/05/2026, 14.23.11",
+      hash: "3f7c9a8b1d2e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a",
+    },
+    {
+      node: "NODE-12 (Edge Laboratorium)",
+      time: "18/05/2026, 09.12.45",
+      hash: "7d9e0f2a4b6c8d0e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3d5e7f9a1b3c5d7e",
+    },
+  ]);
+
   const [metrics, setMetrics] = useState([
     {
       name: "Neural Cluster 01-A",
