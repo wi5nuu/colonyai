@@ -1,0 +1,32 @@
+Organization instances in SQLAlchemy:
+- Name: PT Prodia Widyahusada Tbk | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: PT Bio Farma (Persero) | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: Quest Diagnostics | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: Eurofins Scientific | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: PT Kimia Farma Diagnostika | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: LabCorp | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: SGS SA | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: Mayo Clinic Laboratories | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: PT Pramita Lab | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: PT Cito Putra Utama | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: Sonic Healthcare | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: SYNLAB International | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: Eijkman Institute (BRIN) | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: Charles River Labs | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: Intertek Group | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: PT Nalagenetics Indonesia | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: Bureau Veritas | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: BioMÃ©rieux | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: ARUP Laboratories | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: PT Indec Diagnostics | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: Siloam Hospitals Lab | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: TÃœV SÃœD | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: NeoGenomics | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: Myriad Genetics | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: Laboratoire Cerba | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: PT Prima Medika Lab | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: ICON plc | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: PT Prodia Diagnostic Line | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: ABC Central Clinical Lab | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: Mitra Keluarga Lab | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active
+- Name: Global Bio-Research Institute | is_active: OrgStatus.active (type: <enum 'OrgStatus'>) | Mapped Status: OrgStatus.active

@@ -37,31 +37,28 @@ export default function TeknologiPage() {
   const { t } = useTranslationStore();
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-[#00f2ff] selection:text-slate-900">
-      {/* ── Page Header ── */}
-      <section className="py-12 lg:py-16 bg-slate-50 relative overflow-hidden border-b border-slate-100">
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-white border-l border-slate-100 -z-0" />
-        <div className="max-w-7xl mx-auto px-6 relative z-10 text-left space-y-4 lg:space-y-6">
-          <div className="inline-flex items-center gap-3 px-3 py-1.5 bg-white border border-slate-200 rounded-xl">
-            <Terminal className="w-3.5 h-3.5 text-[#0055ff]" />
-            <span className="text-[9px] lg:text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-[#00f2ff] selection:text-slate-900 transition-colors duration-300">
+      {/* ── Futuristic Header ── */}
+      <section className="py-12 lg:py-16 bg-white dark:bg-slate-950 relative overflow-hidden border-b border-slate-100 dark:border-slate-900 transition-colors duration-300">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f2ff] to-transparent opacity-20" />
+        <div className="max-w-[1500px] mx-auto px-6">
+          <div className="max-w-3xl space-y-4 text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 dark:bg-slate-800 text-white rounded-full text-[9px] font-black uppercase tracking-widest">
               {t("teknologi.badge")}
-            </span>
+            </div>
+            <h1 className="text-2xl lg:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#00f2ff] to-[#ff00ff] uppercase">
+              {t("teknologi.heroTitle")}
+            </h1>
+            <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 font-bold leading-relaxed max-w-xl uppercase tracking-wide">
+              {t("teknologi.heroDesc")}
+            </p>
           </div>
-
-          <h1 className="text-2xl lg:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#00f2ff] to-[#ff00ff] uppercase">
-            {t("teknologi.heroTitle")}
-          </h1>
-
-          <p className="text-xs lg:text-sm text-slate-500 font-bold leading-relaxed max-w-2xl uppercase tracking-wide">
-            {t("teknologi.heroDesc")}
-          </p>
         </div>
       </section>
 
       {/* ── Technology Pillars ── */}
-      <section className="py-20 lg:py-24 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-20 lg:py-24 px-6 bg-white dark:bg-slate-950 transition-colors duration-300">
+        <div className="max-w-[1500px] mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             {[
               {
@@ -91,18 +88,18 @@ export default function TeknologiPage() {
             ].map((tech, i) => (
               <div
                 key={i}
-                className="bg-slate-50 border border-slate-100 p-6 lg:p-8 rounded-xl hover:bg-white hover:shadow-xl transition-all group h-full"
+                className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 lg:p-8 rounded-xl hover:bg-white dark:hover:bg-slate-950 hover:shadow-xl transition-all group h-full"
               >
-                <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center mb-6 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center mb-6 transition-transform">
                   {tech.icon}
                 </div>
-                <h4 className="text-[8px] lg:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                <h4 className="text-[8px] lg:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
                   {tech.label}
                 </h4>
-                <h3 className="text-base lg:text-lg font-bold text-slate-900 uppercase tracking-tight mb-3 lg:mb-4">
+                <h3 className="text-base lg:text-lg font-bold text-slate-900 dark:text-[#00f2ff] uppercase tracking-tight mb-3 lg:mb-4">
                   {tech.title}
                 </h3>
-                <p className="text-[10px] lg:text-[11px] font-bold text-slate-500 leading-relaxed uppercase tracking-wide">
+                <p className="text-[10px] lg:text-[11px] font-bold text-slate-500 dark:text-slate-400 leading-relaxed uppercase tracking-wide">
                   {tech.desc}
                 </p>
               </div>
@@ -112,18 +109,18 @@ export default function TeknologiPage() {
       </section>
 
       {/* ── Training Workflow Section ── */}
-      <section className="py-24 px-6 bg-slate-50">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <section className="py-24 px-6 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+        <div className="max-w-[1500px] mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="space-y-8">
             <div className="space-y-4">
-              <h4 className="text-[10px] font-black text-[#0055ff] uppercase tracking-[0.3em]">
+              <h4 className="text-[10px] font-black text-[#0055ff] dark:text-[#00f2ff] uppercase tracking-[0.3em]">
                 {t("teknologi.lifecycleTitle")}
               </h4>
-              <h2 className="text-2xl lg:text-5xl font-bold text-slate-900 uppercase tracking-tight leading-tight">
+              <h2 className="text-2xl lg:text-5xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-tight">
                 {t("teknologi.trainingTitle")}
               </h2>
             </div>
-            <p className="text-[10px] lg:text-sm font-bold text-slate-500 leading-relaxed uppercase tracking-wide">
+            <p className="text-[10px] lg:text-sm font-bold text-slate-500 dark:text-slate-400 leading-relaxed uppercase tracking-wide">
               {t("teknologi.trainingDesc")}
             </p>
             <div className="space-y-6">
@@ -147,19 +144,19 @@ export default function TeknologiPage() {
               ].map((stat, i) => (
                 <div
                   key={i}
-                  className="flex justify-between items-center border-b border-slate-200 pb-3"
+                  className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3"
                 >
-                  <span className="text-[9px] lg:text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                  <span className="text-[9px] lg:text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                     {stat.title}
                   </span>
-                  <span className="text-[10px] lg:text-xs font-black text-slate-900">
+                  <span className="text-[10px] lg:text-xs font-black text-slate-900 dark:text-white">
                     {stat.val}
                   </span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="bg-white p-6 lg:p-8 rounded-xl border border-slate-200 shadow-2xl relative">
+          <div className="bg-white dark:bg-slate-950 p-6 lg:p-8 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl relative transition-colors duration-300">
             <div className="space-y-8 relative z-10">
               {[
                 {
@@ -188,10 +185,10 @@ export default function TeknologiPage() {
                     {item.step}
                   </div>
                   <div className="space-y-1">
-                    <h4 className="text-xs lg:text-sm font-black text-slate-900 uppercase tracking-widest">
+                    <h4 className="text-xs lg:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
                       {item.title}
                     </h4>
-                    <p className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                    <p className="text-[9px] lg:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                       {item.desc}
                     </p>
                   </div>
@@ -206,10 +203,10 @@ export default function TeknologiPage() {
       </section>
 
       {/* ── Infrastructure Spec ── */}
-      <section className="py-24 px-6 bg-white">
-        <div className="max-w-7xl mx-auto space-y-16">
+      <section className="py-24 px-6 bg-white dark:bg-slate-950 transition-colors duration-300">
+        <div className="max-w-[1500px] mx-auto space-y-16">
           <div className="text-center space-y-4">
-            <h2 className="text-xl lg:text-4xl font-bold text-slate-900 uppercase tracking-tight">
+            <h2 className="text-xl lg:text-4xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">
               {t("teknologi.infraTitle")}
             </h2>
             <div
@@ -252,15 +249,15 @@ export default function TeknologiPage() {
             ].map((stack, i) => (
               <div
                 key={i}
-                className="bg-slate-50 p-6 lg:p-8 rounded-xl border border-slate-100 space-y-6 shadow-sm hover:shadow-xl transition-all"
+                className="bg-slate-50 dark:bg-slate-900 p-6 lg:p-8 rounded-xl border border-slate-100 dark:border-slate-800 space-y-6 shadow-sm hover:shadow-xl transition-all"
               >
-                <div className="flex items-center gap-4 border-b border-slate-200 pb-4">
+                <div className="flex items-center gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
                   <div
                     className={`w-10 h-10 rounded-lg ${PRIMARY_GRADIENT} flex items-center justify-center text-white`}
                   >
                     {stack.icon}
                   </div>
-                  <h3 className="text-xs lg:text-sm font-black text-slate-900 uppercase tracking-widest">
+                  <h3 className="text-xs lg:text-sm font-black text-slate-900 dark:text-[#00f2ff] uppercase tracking-widest">
                     {stack.cat}
                   </h3>
                 </div>
@@ -268,7 +265,7 @@ export default function TeknologiPage() {
                   {stack.techs.map((tech, idx) => (
                     <li
                       key={idx}
-                      className="flex items-center gap-3 text-[9px] lg:text-[11px] font-bold text-slate-500 uppercase tracking-widest"
+                      className="flex items-center gap-3 text-[9px] lg:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
                     >
                       <div className="w-1 h-1 rounded-full bg-[#00f2ff]" />
                       {tech}
@@ -282,8 +279,8 @@ export default function TeknologiPage() {
       </section>
 
       {/* ── Code Showcase ── */}
-      <section className="py-24 px-6 bg-slate-50">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center text-center lg:text-left">
+      <section className="py-24 px-6 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+        <div className="max-w-[1500px] mx-auto grid lg:grid-cols-2 gap-16 items-center text-center lg:text-left">
           <div className="space-y-8">
             <h2 className="text-3xl lg:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#00f2ff] to-[#ff00ff]">
               {t("teknologi.devTitle")}
@@ -300,7 +297,7 @@ export default function TeknologiPage() {
                   className="flex items-center gap-4 group justify-center lg:justify-start"
                 >
                   <div className="w-1.5 h-1.5 rounded-full bg-[#00f2ff] shadow-[0_0_10px_#00f2ff]" />
-                  <span className="text-[10px] lg:text-xs font-black text-slate-600 uppercase tracking-widest">
+                  <span className="text-[10px] lg:text-xs font-black text-slate-600 dark:text-slate-350 uppercase tracking-widest">
                     {text}
                   </span>
                 </div>
@@ -309,14 +306,14 @@ export default function TeknologiPage() {
             <Link
               href="https://github.com/wi5nuu/colonyai"
               target="_blank"
-              className="inline-flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-2xl"
+              className="inline-flex items-center gap-3 bg-slate-900 dark:bg-slate-800 text-white px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-2xl"
             >
               <Code2 className="w-4 h-4" />
               {t("teknologi.repoButton")}
             </Link>
           </div>
 
-          <div className="bg-slate-900 rounded-xl p-6 lg:p-8 border border-white/10 shadow-2xl relative overflow-hidden group hidden lg:block">
+          <div className="bg-slate-900 dark:bg-slate-950 rounded-xl p-6 lg:p-8 border border-white/10 dark:border-slate-800 shadow-2xl relative overflow-hidden group hidden lg:block">
             <div className="font-mono text-[11px] space-y-2 text-[#00f2ff]/80">
               <p className="text-white/20 uppercase tracking-[0.2em] mb-4">
                 {t("teknologi.codeComment")}

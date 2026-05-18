@@ -50,11 +50,10 @@ export function DocumentationSidebar({
 
   return (
     <div className={`fixed z-[100] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-      showDocs ? "opacity-100 translate-y-0" : "opacity-0 translate-y-full pointer-events-none"
+      showDocs ? "opacity-100 translate-y-0 sm:translate-x-0" : "opacity-0 translate-y-full sm:translate-y-0 sm:translate-x-full pointer-events-none"
     } 
-    bottom-0 left-0 w-full h-[85vh] bg-white dark:bg-slate-950 shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.3)] flex flex-col rounded-none shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.3)] flex flex-col rounded-none overflow-hidden
-    sm:static sm:z-30 sm:w-80 lg:w-[350px] sm:h-full sm:rounded-none sm:opacity-100 sm:translate-y-0 sm:pointer-events-auto sm:border-l sm:border-slate-200 sm:dark:border-slate-800
-    ${showDocs ? "" : "sm:hidden"}`}>
+    bottom-0 left-0 w-full h-[85vh] bg-white dark:bg-slate-950 shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.3)] flex flex-col rounded-none overflow-hidden
+    sm:top-[64px] sm:bottom-auto sm:right-0 sm:left-auto sm:w-80 lg:w-[400px] sm:h-[calc(100vh-64px)] sm:border-l sm:border-slate-200 sm:dark:border-slate-800`}>
 
       {/* ── Grab Handle (Native Feel - Mobile Only) ── */}
       <div className="w-full flex justify-center pt-4 pb-2 sm:hidden">

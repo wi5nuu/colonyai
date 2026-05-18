@@ -649,7 +649,7 @@ async def list_analyses(
         if org_id:
             base_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
         else:
-            return AnalysisListResponse(analyses=[], total=0, page=page, page_size=page_size, total_pages=0)
+            base_conditions.append(Analysis.organization_id.is_(None))
 
     # Analyst sees only own data; Manager/Admin/Auditor see all org data
     if user_role == "analyst":
@@ -736,19 +736,7 @@ async def get_dashboard_stats(
         if org_id:
             base_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
         else:
-            return DashboardStatsResponse(
-                total_analyses=0,
-                avg_time_saved_minutes=0,
-                success_rate=0.0,
-                pending_review=0,
-                neural_confidence=0.0,
-                system_latency_ms=0.0,
-                verified_count=0,
-                failed_count=0,
-                matrix_breakdown={},
-                weekly_trend=[],
-                recent_analyses=[]
-            )
+            base_conditions.append(Analysis.organization_id.is_(None))
 
     # Manager, Auditor, Admin see all stats in their org. Analyst sees only own stats.
     if current_user["role"] == "analyst":
@@ -881,7 +869,7 @@ async def get_analysis(
         if org_id:
             query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
         else:
-            raise HTTPException(status_code=403, detail="Unauthorized access")
+            query_conditions.append(Analysis.organization_id.is_(None))
 
     # Analyst sees only own data; Manager/Admin/Auditor see all org data
     if user_role == "analyst":
@@ -1009,7 +997,7 @@ async def flag_for_review(
         if org_id:
             query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
         else:
-            raise HTTPException(status_code=403, detail="Unauthorized access")
+            query_conditions.append(Analysis.organization_id.is_(None))
 
     result = await db.execute(
         select(Analysis)

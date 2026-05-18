@@ -1,0 +1,11 @@
+Found super admins:
+- ID: f3506c67-97bc-4578-9574-e7906915c0f4 | Email: master@colonyai.diag | Name: Global Master Administrator | Role: SUPER_ADMIN
+- ID: 199f350b-e2f2-4226-920f-be092c01f620 | Email: wisnu@colonyai.com | Name: Wisnu Master | Role: SUPER_ADMIN
+- ID: 27bdd6ea-ad62-4be8-bc30-c79f42bfa58e | Email: ashar@colonyai.com | Name: Ashar Master | Role: SUPER_ADMIN
+- ID: 57cf483f-42fa-4a0c-9f41-a081f2e68b4d | Email: suci@colonyai.com | Name: Suci Master | Role: SUPER_ADMIN
+- ID: 79c7ecd4-a260-44d6-9f82-4419889e82d0 | Email: steven@colonyai.com | Name: Steven Master | Role: SUPER_ADMIN
+- ID: a7f51ebb-820f-421c-85d5-7dfc93a69386 | Email: faras@colonyai.com | Name: Faras Master | Role: SUPER_ADMIN
+- ID: 63b7146e-3910-4d74-906a-3b81a65a4243 | Email: wisnualfian117@gmail.com | Name: Wisnu Alfian Nur Ashar | Role: SUPER_ADMIN
+Successfully reset passwords for all SUPER_ADMIN users to: WisnuSuper2026!
+Found admin: admin@colonyai.com | Role: ADMIN
+Successfully reset password for admin@colonyai.com to: WisnuSuper2026!

@@ -26,26 +26,26 @@ export default function TujuanManfaatPage() {
   const { t } = useTranslationStore();
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-[#00f2ff] selection:text-slate-900">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-[#00f2ff] selection:text-slate-900 transition-colors duration-300">
       {/* ── Futuristic Header ── */}
-      <section className="py-12 lg:py-16 bg-white relative overflow-hidden">
+      <section className="py-12 lg:py-16 bg-white dark:bg-slate-950 relative overflow-hidden border-b border-slate-100 dark:border-slate-900 transition-colors duration-300">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f2ff] to-transparent opacity-20" />
-        <div className="max-w-7xl mx-auto px-6 text-left space-y-4 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-full text-[9px] font-black uppercase tracking-widest">
+        <div className="max-w-[1500px] mx-auto px-6 text-left space-y-4 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 dark:bg-slate-800 text-white rounded-full text-[9px] font-black uppercase tracking-widest">
             {t("tujuanManfaat.badge")}
           </div>
           <h1 className="text-2xl lg:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#00f2ff] to-[#ff00ff] uppercase">
             {t("tujuanManfaat.heroTitle")}
           </h1>
-          <p className="text-xs lg:text-sm text-slate-500 font-bold leading-relaxed max-w-2xl uppercase tracking-wide">
+          <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 font-bold leading-relaxed max-w-xl uppercase tracking-wide">
             {t("tujuanManfaat.heroDesc")}
           </p>
         </div>
       </section>
 
       {/* ── Goals Grid ── */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <section className="py-20 px-6 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+        <div className="max-w-[1500px] mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[
             {
               title: t("tujuanManfaat.strategicTitle"),
@@ -83,21 +83,21 @@ export default function TujuanManfaatPage() {
           ].map((goal, i) => (
             <div
               key={i}
-              className="bg-white rounded-xl p-8 border border-slate-100 shadow-xl hover:shadow-2xl transition-all group"
+              className="bg-white dark:bg-slate-950 rounded-xl p-8 border border-slate-100 dark:border-slate-800 shadow-xl hover:shadow-2xl transition-all group"
             >
               <div
                 className={`w-14 h-14 rounded-xl bg-gradient-to-r ${goal.color} flex items-center justify-center text-white mb-8 shadow-lg group-hover:scale-110 transition-transform`}
               >
                 {goal.icon}
               </div>
-              <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight mb-6">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight mb-6">
                 {goal.title}
               </h3>
               <div className="space-y-4">
                 {goal.items.map((item, idx) => (
                   <div key={idx} className="flex items-start gap-3 group/item">
                     <CheckCircle2 className="w-4 h-4 text-[#00f2ff] mt-0.5 flex-shrink-0" />
-                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide group-hover/item:text-slate-900 transition-colors">
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide group-hover/item:text-slate-900 dark:group-hover/item:text-white transition-colors">
                       {item}
                     </span>
                   </div>
@@ -109,13 +109,13 @@ export default function TujuanManfaatPage() {
       </section>
 
       {/* ── Innovation Callout ── */}
-      <section className="py-24 px-6 bg-slate-900">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+      <section className="py-24 px-6 bg-slate-900 dark:bg-slate-950 border-t border-transparent dark:border-slate-800 transition-colors duration-300">
+        <div className="max-w-[1500px] mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-8">
             <h2 className="text-3xl lg:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#00f2ff] to-[#ff00ff]">
               {t("tujuanManfaat.valueTitle")}
             </h2>
-            <p className="text-sm lg:text-base text-white/50 font-medium leading-relaxed uppercase tracking-widest">
+            <p className="text-sm lg:text-base text-white/50 dark:text-slate-400 font-medium leading-relaxed uppercase tracking-widest">
               {t("tujuanManfaat.valueDesc")}
             </p>
             <div className="pt-4">

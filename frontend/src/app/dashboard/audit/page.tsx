@@ -99,7 +99,7 @@ export default function AuditPage() {
       <div className="h-12 border-b border-slate-200 dark:border-slate-800 flex items-center px-4 sm:px-6 gap-4 bg-white dark:bg-slate-900 shrink-0">
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-primary" />
-          <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">Audit Ledger</h2>
+          <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">Audit Ledger</h1>
         </div>
         
         <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" />

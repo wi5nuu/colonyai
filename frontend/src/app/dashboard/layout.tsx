@@ -24,6 +24,7 @@ import {
   AlertCircle,
   Globe,
   Map,
+  Key,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/auth-store";
@@ -32,6 +33,7 @@ import { AskAI } from "@/components/AskAI";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslationStore } from "@/lib/i18n/store";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import api from "@/lib/api";
 
 const navigation = [
   {
@@ -135,6 +137,7 @@ export default function DashboardLayout({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [askAIOpen, setAskAIOpen] = useState(false);
+  const [activeNotifTab, setActiveNotifTab] = useState<"all" | "system" | "security">("all");
   const [notifications, setNotifications] = useState<
     {
       id: string | number;
@@ -143,8 +146,34 @@ export default function DashboardLayout({
       message: string;
       time: string;
       read: boolean;
+      link?: string;
     }[]
-  >([]);
+  >([
+    {
+      id: "sys-001",
+      type: "system",
+      title: "MODEL TRAINING COMPLETE",
+      message: "FT_COLONY_V3_NIGHTLY reached mAP@50: 0.9850 — 80/80 epochs completed.",
+      time: "Just Now",
+      read: false,
+    },
+    {
+      id: "sys-002",
+      type: "system",
+      title: "SYSTEM STATUS: OPTIMAL",
+      message: "All 12 nodes active. Uptime: 99.98%. No anomalies detected.",
+      time: "5 Min Ago",
+      read: true,
+    },
+    {
+      id: "sys-003",
+      type: "system",
+      title: "ISO-17025 CALIBRATION SCHEDULED",
+      message: "Next system calibration is due in 5 days. Ensure all instruments are ready.",
+      time: "1 Hour Ago",
+      read: true,
+    },
+  ]);
 
   const { language } = useTranslationStore();
   const isId = language === "id";
@@ -188,6 +217,37 @@ export default function DashboardLayout({
 
     return () => clearTimeout(timer);
   }, [router, isId]);
+
+  // Fetch real password reset requests and push to notifications
+  useEffect(() => {
+    const fetchResetRequests = async () => {
+      try {
+        const res = await api.get<{ reset_requests: { id: string; user_name: string; user_email: string; requested_at: string }[] }>("/api/v1/auth/reset-requests");
+        const pending = res.data.reset_requests.filter((r: any) => r.status === "pending");
+        if (pending.length === 0) return;
+        setNotifications((prev) => {
+          const existingIds = new Set(prev.map((n) => n.id));
+          const newOnes = pending
+            .filter((r: any) => !existingIds.has(`reset-${r.id}`))
+            .map((r: any) => ({
+              id: `reset-${r.id}`,
+              type: "approval",
+              title: "PASSWORD RESET REQUEST",
+              message: `${r.user_name} (${r.user_email}) meminta reset password.`,
+              time: new Date(r.requested_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+              read: false,
+              link: "/dashboard/administration",
+            }));
+          return newOnes.length > 0 ? [...newOnes, ...prev] : prev;
+        });
+      } catch {
+        // silently fail — backend might not be running
+      }
+    };
+    fetchResetRequests();
+    const interval = setInterval(fetchResetRequests, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Calibration Countdown Logic
   const [timeLeft, setTimeLeft] = useState({
@@ -378,7 +438,7 @@ export default function DashboardLayout({
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Header */}
-          <header className="px-1 py-0.5 sm:px-3 sm:py-0.5 flex items-center justify-between sticky top-0 bg-[#f4f7f6]/80 dark:bg-slate-950/80 backdrop-blur-md z-30 h-10 transition-colors duration-300">
+          <header className="px-3 py-1 sm:px-5 sm:py-1.5 flex items-center justify-between sticky top-0 bg-[#f4f7f6]/80 dark:bg-slate-950/80 backdrop-blur-md z-30 h-14 transition-colors duration-300">
             <div className="flex items-center gap-2 sm:gap-4 flex-1">
               <button
                 onClick={() => {
@@ -399,9 +459,9 @@ export default function DashboardLayout({
               <div className="relative">
                 <button
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
-                  className="relative p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer outline-none"
+                  className="relative p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer outline-none"
                 >
-                  <Bell className="h-4 w-4" />
+                  <Bell className="h-5 w-5" />
                   {notifications.some((n) => !n.read) && (
                     <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
                   )}
@@ -415,8 +475,8 @@ export default function DashboardLayout({
                     />
                     <div
                       className={`
-                      fixed bottom-0 left-0 w-full h-[70vh] bg-white dark:bg-slate-900 rounded-t-[2.5rem] shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.3)] z-50 overflow-hidden animate-in slide-in-from-bottom duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
-                      lg:absolute lg:bottom-auto lg:top-full lg:right-0 lg:mt-3 lg:w-80 lg:h-auto lg:max-h-[500px] lg:rounded-xl lg:shadow-2xl lg:border lg:border-slate-100 lg:dark:border-slate-800 lg:animate-in lg:fade-in lg:slide-in-from-top-2
+                      fixed bottom-0 left-0 w-full h-[70vh] bg-white dark:bg-slate-900 rounded-none shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.3)] z-50 overflow-hidden animate-in slide-in-from-bottom duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
+                      lg:absolute lg:bottom-auto lg:top-full lg:right-0 lg:mt-3 lg:w-96 lg:h-auto lg:max-h-[500px] lg:rounded-none lg:shadow-2xl lg:border lg:border-slate-100 lg:dark:border-slate-800 lg:animate-in lg:fade-in lg:slide-in-from-top-2
                     `}
                     >
                       {/* Grab Handle - Mobile Only */}
@@ -443,40 +503,51 @@ export default function DashboardLayout({
                           notifications.map((n) => (
                             <div
                               key={n.id}
-                              className={`px-6 py-5 lg:px-4 lg:py-3 border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer relative ${!n.read ? "bg-primary/5" : ""}`}
+                              onClick={() => {
+                                if (n.link) {
+                                  router.push(n.link);
+                                  setNotificationsOpen(false);
+                                }
+                              }}
+                              className={`px-6 py-5 lg:px-5 lg:py-4 border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer relative ${!n.read ? "bg-primary/5" : ""} ${n.link ? "hover:pr-8" : ""}`}
                             >
                               {!n.read && (
                                 <div className="absolute left-0 top-0 bottom-0 w-1.5 lg:w-1 bg-primary" />
                               )}
                               <div className="flex gap-4 lg:gap-3">
                                 <div
-                                  className={`p-2 lg:p-1.5 rounded-xl lg:rounded-md shadow-sm ${
+                                  className={`p-2 lg:p-2 rounded-none shadow-sm ${
                                     n.type === "alert"
-                                      ? "bg-rose-100 text-rose-500"
+                                      ? "bg-rose-100 text-rose-500 border border-rose-200"
                                       : n.type === "approval"
-                                        ? "bg-amber-100 text-amber-500"
-                                        : "bg-emerald-100 text-emerald-500"
+                                        ? "bg-amber-100 text-amber-500 border border-amber-200"
+                                        : "bg-emerald-100 text-emerald-500 border border-emerald-200"
                                   }`}
                                 >
                                   {n.type === "alert" ? (
-                                    <AlertCircle className="w-5 h-5 lg:w-3.5 lg:h-3.5" />
+                                    <AlertCircle className="w-5 h-5 lg:w-4 lg:h-4" />
                                   ) : n.type === "approval" ? (
-                                    <Activity className="w-5 h-5 lg:w-3.5 lg:h-3.5" />
+                                    <Key className="w-5 h-5 lg:w-4 lg:h-4" />
                                   ) : (
-                                    <CheckCircle className="w-5 h-5 lg:w-3.5 lg:h-3.5" />
+                                    <CheckCircle className="w-5 h-5 lg:w-4 lg:h-4" />
                                   )}
                                 </div>
                                 <div className="flex-1">
                                   <p className="text-xs lg:text-[11px] font-black text-slate-900 dark:text-white leading-tight uppercase tracking-wide">
                                     {n.title}
                                   </p>
-                                  <p className="text-[11px] lg:text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-1 leading-snug">
+                                  <p className="text-[11px] lg:text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-1.5 leading-snug">
                                     {n.message}
                                   </p>
-                                  <p className="text-[9px] text-slate-300 dark:text-slate-600 font-black mt-2 lg:mt-1 uppercase tracking-widest">
+                                  <p className="text-[9px] text-slate-300 dark:text-slate-600 font-black mt-2 lg:mt-2 uppercase tracking-widest">
                                     {n.time}
                                   </p>
                                 </div>
+                                {n.link && (
+                                  <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                                    <ChevronRight className="w-4 h-4 text-slate-300" />
+                                  </div>
+                                )}
                               </div>
                             </div>
                           ))
@@ -502,24 +573,24 @@ export default function DashboardLayout({
                   className="hidden sm:flex flex-col items-end cursor-pointer"
                   onClick={() => setProfileOpen(!profileOpen)}
                 >
-                  <p className="text-[9px] font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight hover:text-primary transition-colors">
+                  <p className="text-[11px] font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight hover:text-primary transition-colors">
                     {user?.full_name || "User"}
                   </p>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 truncate max-w-[120px]">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 truncate max-w-[140px]">
                       {user?.email}
                     </span>
                     <div className="w-1 h-1 bg-slate-300 dark:bg-slate-700 rounded-none" />
-                    <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[7px] font-black uppercase tracking-widest rounded-none border border-primary/20">
+                    <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest rounded-none border border-primary/20">
                       {user?.role?.replace("_", " ")}
                     </span>
                   </div>
                 </div>
                 <div
-                  className="w-8 h-8 rounded-none overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:scale-110 cursor-pointer"
+                  className="w-10 h-10 rounded-none overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:scale-110 cursor-pointer"
                   onClick={() => setProfileOpen(!profileOpen)}
                 >
-                  <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold text-[10px]">
+                  <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold text-[12px]">
                     {user?.full_name?.[0] || "U"}
                   </div>
                 </div>
@@ -579,7 +650,7 @@ export default function DashboardLayout({
               <div className="flex-1">{children}</div>
 
               {/* Global Dashboard Footer */}
-              <footer className="mt-8 pt-4 pb-6 border-t border-slate-200">
+              <footer className="mt-8 pt-4 pb-6 border-t border-slate-200 dark:border-slate-800">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                     {[
@@ -599,14 +670,14 @@ export default function DashboardLayout({
                       </Link>
                     ))}
                   </div>
-
+ 
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 py-1 px-2.5 bg-white border border-slate-200 rounded-none cursor-pointer hover:bg-slate-50 transition-all shadow-sm scale-90">
+                    <div className="flex items-center gap-2 py-1 px-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm scale-90">
                       <div className="flex">
                         <div className="w-2 h-2 rounded-none bg-blue-500 border border-white -mr-1" />
                         <div className="w-2 h-2 rounded-none bg-white border border-blue-500" />
                       </div>
-                      <span className="text-[9px] text-slate-600 font-bold uppercase">
+                      <span className="text-[9px] text-slate-600 dark:text-slate-400 font-bold uppercase">
                         {t("footer.cookiePreferences")}
                       </span>
                     </div>

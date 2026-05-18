@@ -1,0 +1,32 @@
+Organizations in DB:
+- ID: 8c691770-b1d0-42a1-a03f-c0944e8994b2 | Name: PT Prodia Widyahusada Tbk | is_active: active (type: <class 'str'>) | Location: Jakarta, ID
+- ID: ca7b3afe-d86b-4342-b4e3-7da829d3bd11 | Name: PT Bio Farma (Persero) | is_active: active (type: <class 'str'>) | Location: Bandung, ID
+- ID: beff0eff-e056-44b8-acd9-fce7c152be28 | Name: Quest Diagnostics | is_active: active (type: <class 'str'>) | Location: Secaucus, NJ, USA
+- ID: 3d2b8d13-0e6e-46f6-8171-c8dc610c7d27 | Name: Eurofins Scientific | is_active: active (type: <class 'str'>) | Location: Luxembourg
+- ID: 93c7b8e6-a9ef-48b5-8e44-51513c12302c | Name: PT Kimia Farma Diagnostika | is_active: active (type: <class 'str'>) | Location: Jakarta, ID
+- ID: 27847261-c979-4fae-b1b7-fda4e6e58501 | Name: LabCorp | is_active: active (type: <class 'str'>) | Location: Burlington, NC, USA
+- ID: a8490394-f5ce-4c47-8d6a-29c3e52eef6c | Name: SGS SA | is_active: active (type: <class 'str'>) | Location: Geneva, Switzerland
+- ID: a5e80fbf-0d90-4254-adff-1ad56567abc0 | Name: Mayo Clinic Laboratories | is_active: active (type: <class 'str'>) | Location: Rochester, MN, USA
+- ID: d40536a6-492e-4255-bf70-1d154e1eb90b | Name: PT Pramita Lab | is_active: active (type: <class 'str'>) | Location: Surabaya, ID
+- ID: dc16e7da-b831-4ea6-ab04-007467b0dd7c | Name: PT Cito Putra Utama | is_active: active (type: <class 'str'>) | Location: Semarang, ID
+- ID: 624fd557-58fc-40c6-b3ea-1a5d126c8a6f | Name: Sonic Healthcare | is_active: active (type: <class 'str'>) | Location: Sydney, Australia
+- ID: 898708b4-4cfd-49ce-98ac-63b620b955e3 | Name: SYNLAB International | is_active: active (type: <class 'str'>) | Location: Munich, Germany
+- ID: 4024cf9e-3eb4-4c32-b84a-399483487110 | Name: Eijkman Institute (BRIN) | is_active: active (type: <class 'str'>) | Location: Jakarta, ID
+- ID: 6431e2dc-39c3-48dd-bbce-c93031f71b51 | Name: Charles River Labs | is_active: active (type: <class 'str'>) | Location: Wilmington, MA, USA
+- ID: 942011ff-8e24-44f0-a3ec-70d803742831 | Name: Intertek Group | is_active: active (type: <class 'str'>) | Location: London, UK
+- ID: 4ba54f27-12cd-4f4e-8139-9e90c4154e21 | Name: PT Nalagenetics Indonesia | is_active: active (type: <class 'str'>) | Location: Jakarta, ID
+- ID: 20a610bd-0031-4419-919b-4bededf0579e | Name: Bureau Veritas | is_active: active (type: <class 'str'>) | Location: Paris, France
+- ID: 7b422f44-2d42-40bb-b91c-c55633c7c262 | Name: BioMÃ©rieux | is_active: active (type: <class 'str'>) | Location: Marcy-l'Ã‰toile, FR
+- ID: a8a99984-1be4-447d-ab93-0a2c02ecf3c5 | Name: ARUP Laboratories | is_active: active (type: <class 'str'>) | Location: Salt Lake City, USA
+- ID: 626e2390-7cd5-46f0-9632-78f1d85a1c43 | Name: PT Indec Diagnostics | is_active: active (type: <class 'str'>) | Location: Jakarta, ID
+- ID: 2c09b6cc-590e-4dee-9d46-dfb900ec2d6f | Name: Siloam Hospitals Lab | is_active: active (type: <class 'str'>) | Location: Tangerang, ID
+- ID: f93f3e18-806f-4d0b-89fb-6467de040306 | Name: TÃœV SÃœD | is_active: active (type: <class 'str'>) | Location: Munich, Germany
+- ID: 65f3562e-c3d0-434f-b1e3-35c6b97a742d | Name: NeoGenomics | is_active: active (type: <class 'str'>) | Location: Fort Myers, FL, USA
+- ID: 8c91ca79-4cca-4033-9b15-f364744d4ee6 | Name: Myriad Genetics | is_active: active (type: <class 'str'>) | Location: Salt Lake City, USA
+- ID: 9905f8e0-0fe9-4ec4-8402-149178bc05bf | Name: Laboratoire Cerba | is_active: active (type: <class 'str'>) | Location: Paris, France
+- ID: 3adfe496-d85f-42c8-9d58-e38287b76a44 | Name: PT Prima Medika Lab | is_active: active (type: <class 'str'>) | Location: Jakarta, ID
+- ID: b92a1e69-cb36-4cfd-89a7-e5e06629cf38 | Name: ICON plc | is_active: active (type: <class 'str'>) | Location: Dublin, Ireland
+- ID: 56455154-4ba1-4860-ad85-715683c7a932 | Name: PT Prodia Diagnostic Line | is_active: active (type: <class 'str'>) | Location: Cikarang, ID
+- ID: f9afd706-0c4f-40ed-b853-8bbc074893c8 | Name: ABC Central Clinical Lab | is_active: active (type: <class 'str'>) | Location: Jakarta, ID
+- ID: 6dc78054-cfa0-4334-97db-7ba3752b1728 | Name: Mitra Keluarga Lab | is_active: active (type: <class 'str'>) | Location: Jakarta, ID
+- ID: 19f89249-45cc-4df4-8870-622db325ed8d | Name: Global Bio-Research Institute | is_active: active (type: <class 'str'>) | Location: None

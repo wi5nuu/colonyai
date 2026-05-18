@@ -24,7 +24,10 @@ import {
 import { toast } from "sonner";
 
 import api, { API_URL } from "@/lib/api";
-import { DocumentationSidebar, DocumentationToggle } from "@/components/DocumentationSidebar";
+import {
+  DocumentationSidebar,
+  DocumentationToggle,
+} from "@/components/DocumentationSidebar";
 import { useTranslationStore } from "@/lib/i18n/store";
 import { useAuthStore } from "@/lib/auth-store";
 import { ResetRequestsPanel } from "@/components/ResetRequestsPanel";
@@ -40,10 +43,9 @@ interface Analyst {
   organizationName?: string;
 }
 
-
-
 export default function AdministrationPage() {
-  const { t } = useTranslationStore();
+  const { t, language } = useTranslationStore();
+  const isId = language === "id";
   const currentUser = useAuthStore((s) => s.user);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("");
@@ -76,7 +78,7 @@ export default function AdministrationPage() {
     email: "",
     password: "",
     full_name: "",
-    role: "analyst"
+    role: "analyst",
   });
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -85,36 +87,38 @@ export default function AdministrationPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-          const [usersRes, auditRes] = await Promise.all([
-            api.get<any[]>("/api/v1/users/"),
-            api.get<any[]>("/api/v1/audit/"),
-          ]);
+        const [usersRes, auditRes] = await Promise.all([
+          api.get<any[]>("/api/v1/users/"),
+          api.get<any[]>("/api/v1/audit/"),
+        ]);
 
-          const mappedUsers = usersRes.data.map((u) => {
-            const roleStr = u.role === "system_admin" ? "admin" : u.role;
-            let clearanceLevel = "Level-01";
-            if (roleStr === "admin") clearanceLevel = "Level-04";
-            else if (roleStr === "manager") clearanceLevel = "Level-03";
-            else if (roleStr === "auditor") clearanceLevel = "Level-02";
-            else if (roleStr === "analyst") clearanceLevel = "Level-01";
+        const mappedUsers = usersRes.data.map((u) => {
+          const roleStr = u.role === "system_admin" ? "admin" : u.role;
+          let clearanceLevel = "Level-01";
+          if (roleStr === "admin") clearanceLevel = "Level-04";
+          else if (roleStr === "manager") clearanceLevel = "Level-03";
+          else if (roleStr === "auditor") clearanceLevel = "Level-02";
+          else if (roleStr === "analyst") clearanceLevel = "Level-01";
 
-            return {
-              id: u.id,
-              name: u.full_name,
-              email: u.email,
-              role: roleStr,
-              status: "active",
-              lastActive: u.email === currentUser?.email ? "Online" : "Offline",
-              clearance: clearanceLevel,
-              organizationName: u.organization_name || undefined,
-            };
-          });
+          return {
+            id: u.id,
+            name: u.full_name,
+            email: u.email,
+            role: roleStr,
+            status: "active",
+            lastActive: u.email === currentUser?.email ? "Online" : "Offline",
+            clearance: clearanceLevel,
+            organizationName: u.organization_name || undefined,
+          };
+        });
 
-          setAnalysts(mappedUsers);
-          setAuditLogs(auditRes.data);
+        setAnalysts(mappedUsers);
+        setAuditLogs(auditRes.data);
       } catch (err) {
         console.error("Failed to fetch admin data:", err);
-        toast.error("Gagal memuat data dari server. Pastikan backend berjalan.");
+        toast.error(
+          "Gagal memuat data dari server. Pastikan backend berjalan.",
+        );
       } finally {
         setLoading(false);
       }
@@ -150,7 +154,9 @@ export default function AdministrationPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ detail: "Gagal mengunduh PDF" }));
+        const errorData = await res
+          .json()
+          .catch(() => ({ detail: "Gagal mengunduh PDF" }));
         throw new Error(errorData.detail || "Gagal mengunduh PDF");
       }
       const blob = await res.blob();
@@ -180,7 +186,9 @@ export default function AdministrationPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ detail: "Gagal mengunduh Excel" }));
+        const errorData = await res
+          .json()
+          .catch(() => ({ detail: "Gagal mengunduh Excel" }));
         throw new Error(errorData.detail || "Gagal mengunduh Excel");
       }
       const blob = await res.blob();
@@ -215,9 +223,12 @@ export default function AdministrationPage() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     // Password complexity check
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{12,}$/;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{12,}$/;
     if (!passwordRegex.test(newUserData.password)) {
-      toast.error("Password must be at least 12 characters and contain uppercase, lowercase, number, and special character.");
+      toast.error(
+        "Password must be at least 12 characters and contain uppercase, lowercase, number, and special character.",
+      );
       setIsCreating(false);
       return;
     }
@@ -226,7 +237,12 @@ export default function AdministrationPage() {
       await api.post("/api/v1/auth/register", newUserData);
       toast.success(`User ${newUserData.full_name} has been provisioned.`);
       setAddUserModalOpen(false);
-      setNewUserData({ email: "", password: "", full_name: "", role: "analyst" });
+      setNewUserData({
+        email: "",
+        password: "",
+        full_name: "",
+        role: "analyst",
+      });
 
       // Refresh list
       const usersRes = await api.get<any[]>("/api/v1/users/");
@@ -260,9 +276,12 @@ export default function AdministrationPage() {
     if (!targetUser || !newPassword) return;
 
     // Password complexity check
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{12,}$/;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{12,}$/;
     if (!passwordRegex.test(newPassword)) {
-      toast.error("Password must be at least 12 characters and contain uppercase, lowercase, number, and special character.");
+      toast.error(
+        "Password must be at least 12 characters and contain uppercase, lowercase, number, and special character.",
+      );
       setIsResetting(false);
       return;
     }
@@ -270,7 +289,7 @@ export default function AdministrationPage() {
     try {
       await api.post("/api/v1/users/admin-reset-password", {
         user_id: targetUser.id,
-        new_password: newPassword
+        new_password: newPassword,
       });
       toast.success(`Password for ${targetUser.name} reset successfully.`);
       setResetModalOpen(false);
@@ -308,10 +327,12 @@ export default function AdministrationPage() {
                     </div>
                     <div>
                       <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
-                        System Control
+                        {isId ? "Kontrol Sistem" : "System Control"}
                       </h1>
                       <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
-                        Node Authorization & Governance Matrix
+                        {isId
+                          ? "Otorisasi Node & Matriks Tata Kelola"
+                          : "Node Authorization & Governance Matrix"}
                       </p>
                     </div>
                   </div>
@@ -321,15 +342,22 @@ export default function AdministrationPage() {
                   <div className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none flex items-center gap-2 shadow-sm">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest">
-                      Master Node: Operational
+                      {isId
+                        ? "Node Utama: Operasional"
+                        : "Master Node: Operational"}
                     </span>
                   </div>
-                  <DocumentationToggle showDocs={showDocs} setShowDocs={setShowDocs} text="SOP Kontrol" />
+                  <DocumentationToggle
+                    showDocs={showDocs}
+                    setShowDocs={setShowDocs}
+                    text={isId ? "SOP Kontrol" : "Control SOP"}
+                  />
                   <button
                     onClick={() => setAddUserModalOpen(true)}
                     className="flex items-center gap-1.5 px-4 py-2 bg-primary text-slate-900 dark:text-slate-950 font-bold rounded-none text-[10px] uppercase tracking-widest hover:bg-primary/90 transition-all shadow-md shadow-primary/10"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Provision New Staff
+                    <Plus className="w-3.5 h-3.5" />{" "}
+                    {isId ? "Buat Staf Baru" : "Provision New Staff"}
                   </button>
                 </div>
               </div>
@@ -338,30 +366,30 @@ export default function AdministrationPage() {
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
                   {
-                    label: "Active Clusters",
+                    label: isId ? "Kluster Aktif" : "Active Clusters",
                     value: "12/12",
                     sub: "Optimal",
                     icon: Activity,
                     color: "emerald",
                   },
                   {
-                    label: "Security Clearance",
+                    label: isId ? "Tingkat Keamanan" : "Security Clearance",
                     value: "Level-04",
-                    sub: "Root Access",
+                    sub: isId ? "Akses Root" : "Root Access",
                     icon: ShieldCheck,
                     color: "primary",
                   },
                   {
-                    label: "System Uptime",
+                    label: isId ? "Waktu Aktif Sistem" : "System Uptime",
                     value: `${performance.uptime}%`,
                     sub: "Real-time",
                     icon: Database,
                     color: "purple",
                   },
                   {
-                    label: "Total Nodes",
+                    label: isId ? "Total Node" : "Total Nodes",
                     value: analysts.length.toString(),
-                    sub: "Authorized",
+                    sub: isId ? "Terotorisasi" : "Authorized",
                     icon: Users,
                     color: "blue",
                   },
@@ -369,19 +397,25 @@ export default function AdministrationPage() {
                   <div
                     key={i}
                     className={`backdrop-blur-sm border p-2 sm:p-4 rounded-none shadow-sm hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden group ${
-                      s.color === "emerald" ? "bg-emerald-50/40 border-emerald-100/50 dark:bg-emerald-950/20 dark:border-emerald-900/40" :
-                      s.color === "primary" ? "bg-indigo-50/40 border-indigo-100/50 dark:bg-indigo-950/20 dark:border-indigo-900/40" :
-                      s.color === "purple" ? "bg-purple-50/40 border-purple-100/50 dark:bg-purple-950/20 dark:border-purple-900/40" :
-                      "bg-blue-50/40 border-blue-100/50 dark:bg-blue-950/20 dark:border-blue-900/40"
+                      s.color === "emerald"
+                        ? "bg-emerald-50/40 border-emerald-100/50 dark:bg-emerald-950/20 dark:border-emerald-900/40"
+                        : s.color === "primary"
+                          ? "bg-indigo-50/40 border-indigo-100/50 dark:bg-indigo-950/20 dark:border-indigo-900/40"
+                          : s.color === "purple"
+                            ? "bg-purple-50/40 border-purple-100/50 dark:bg-purple-950/20 dark:border-purple-900/40"
+                            : "bg-blue-50/40 border-blue-100/50 dark:bg-blue-950/20 dark:border-blue-900/40"
                     }`}
                   >
                     <div className="flex justify-between items-start mb-1 sm:mb-2">
                       <div
                         className={`p-1 sm:p-1.5 rounded-sm transition-colors ${
-                          s.color === "emerald" ? "bg-emerald-50 text-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-400" :
-                          s.color === "primary" ? "bg-indigo-50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400" :
-                          s.color === "purple" ? "bg-purple-50 text-purple-500 dark:bg-purple-900/30 dark:text-purple-400" :
-                          "bg-blue-50 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400"
+                          s.color === "emerald"
+                            ? "bg-emerald-50 text-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-400"
+                            : s.color === "primary"
+                              ? "bg-indigo-50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400"
+                              : s.color === "purple"
+                                ? "bg-purple-50 text-purple-500 dark:bg-purple-900/30 dark:text-purple-400"
+                                : "bg-blue-50 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400"
                         }`}
                       >
                         <s.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -395,16 +429,16 @@ export default function AdministrationPage() {
                         {s.label}
                       </p>
                       <div className="flex items-baseline gap-1.5">
-                         <h3 className="text-sm sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tighter tabular-nums">
-                            {s.value}
-                         </h3>
-                         <span className="text-[8px] sm:text-[10px] font-bold text-primary opacity-80">
-                            {s.sub}
-                         </span>
+                        <h3 className="text-sm sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tighter tabular-nums">
+                          {s.value}
+                        </h3>
+                        <span className="text-[8px] sm:text-[10px] font-bold text-primary opacity-80">
+                          {s.sub}
+                        </span>
                       </div>
                     </div>
                     <div className="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-                       <s.icon className="w-8 h-8 sm:w-12 sm:h-12" />
+                      <s.icon className="w-8 h-8 sm:w-12 sm:h-12" />
                     </div>
                   </div>
                 ))}
@@ -417,10 +451,14 @@ export default function AdministrationPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
                         <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                          Authorized Personnel Registry
+                          {isId
+                            ? "Registri Personel Resmi"
+                            : "Authorized Personnel Registry"}
                         </h3>
                         <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
-                          Verified Laboratory Analysts &amp; Administrators
+                          {isId
+                            ? "Analis & Administrator Laboratorium Terverifikasi"
+                            : "Verified Laboratory Analysts & Administrators"}
                         </p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
@@ -430,18 +468,30 @@ export default function AdministrationPage() {
                           <input
                             type="text"
                             value={searchQuery}
-                            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                            placeholder="Cari nama / email..."
+                            onChange={(e) => {
+                              setSearchQuery(e.target.value);
+                              setCurrentPage(1);
+                            }}
+                            placeholder={
+                              isId
+                                ? "Cari nama / email..."
+                                : "Search name / email..."
+                            }
                             className="pl-7 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-none text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-primary/10 outline-none w-44"
                           />
                         </div>
                         {/* Role filter */}
                         <select
                           value={filterRole}
-                          onChange={(e) => { setFilterRole(e.target.value); setCurrentPage(1); }}
+                          onChange={(e) => {
+                            setFilterRole(e.target.value);
+                            setCurrentPage(1);
+                          }}
                           className="py-1.5 px-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-none text-xs font-medium text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/10 outline-none"
                         >
-                          <option value="">Semua Role</option>
+                          <option value="">
+                            {isId ? "Semua Role" : "All Roles"}
+                          </option>
                           <option value="super_admin">Super Admin</option>
                           <option value="admin">Admin</option>
                           <option value="manager">Manager</option>
@@ -451,14 +501,27 @@ export default function AdministrationPage() {
                         {/* Company filter */}
                         <select
                           value={filterCompany}
-                          onChange={(e) => { setFilterCompany(e.target.value); setCurrentPage(1); }}
+                          onChange={(e) => {
+                            setFilterCompany(e.target.value);
+                            setCurrentPage(1);
+                          }}
                           className="py-1.5 px-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-none text-xs font-medium text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/10 outline-none max-w-[180px]"
                         >
-                          <option value="">Semua Company</option>
-                          {Array.from(new Set(analysts.map(a => a.organizationName).filter(Boolean)))
+                          <option value="">
+                            {isId ? "Semua Company" : "All Companies"}
+                          </option>
+                          {Array.from(
+                            new Set(
+                              analysts
+                                .map((a) => a.organizationName)
+                                .filter(Boolean),
+                            ),
+                          )
                             .sort()
-                            .map(org => (
-                              <option key={org} value={org!}>{org}</option>
+                            .map((org) => (
+                              <option key={org} value={org!}>
+                                {org}
+                              </option>
                             ))}
                         </select>
                       </div>
@@ -493,29 +556,47 @@ export default function AdministrationPage() {
                         {(() => {
                           const filtered = analysts.filter((a) => {
                             const q = searchQuery.toLowerCase();
-                            const matchSearch = !q ||
+                            const matchSearch =
+                              !q ||
                               a.name.toLowerCase().includes(q) ||
                               a.email.toLowerCase().includes(q) ||
                               a.role.toLowerCase().includes(q);
-                            const matchRole = !filterRole || a.role === filterRole;
-                            const matchCompany = !filterCompany || a.organizationName === filterCompany;
+                            const matchRole =
+                              !filterRole || a.role === filterRole;
+                            const matchCompany =
+                              !filterCompany ||
+                              a.organizationName === filterCompany;
                             return matchSearch && matchRole && matchCompany;
                           });
-                          const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+                          const totalPages = Math.max(
+                            1,
+                            Math.ceil(filtered.length / PAGE_SIZE),
+                          );
                           const safePage = Math.min(currentPage, totalPages);
-                          const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+                          const paginated = filtered.slice(
+                            (safePage - 1) * PAGE_SIZE,
+                            safePage * PAGE_SIZE,
+                          );
 
                           return (
                             <>
                               {paginated.length === 0 ? (
                                 <tr>
-                                  <td colSpan={6} className="px-5 py-8 text-center text-xs text-slate-400 dark:text-slate-600">
-                                    Tidak ada data yang cocok dengan filter.
+                                  <td
+                                    colSpan={6}
+                                    className="px-5 py-8 text-center text-xs text-slate-400 dark:text-slate-600"
+                                  >
+                                    {isId
+                                      ? "Tidak ada data yang cocok dengan filter."
+                                      : "No data matching the filters."}
                                   </td>
                                 </tr>
                               ) : (
                                 paginated.map((a) => (
-                                  <tr key={a.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group border-b border-slate-100 dark:border-slate-800 last:border-0">
+                                  <tr
+                                    key={a.id}
+                                    className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group border-b border-slate-100 dark:border-slate-800 last:border-0"
+                                  >
                                     <td className="px-5 py-2.5">
                                       <div className="flex items-center gap-2.5">
                                         <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0">
@@ -523,22 +604,38 @@ export default function AdministrationPage() {
                                         </div>
                                         <div>
                                           <div className="flex items-center gap-1.5 mb-0.5">
-                                            <p className="text-[11px] font-bold text-slate-900 dark:text-white">{a.name}</p>
-                                            <span className={`px-1 py-0.5 text-[8px] font-black uppercase tracking-widest rounded ${
-                                              a.role === "super_admin" ? "bg-rose-100 text-rose-600"
-                                              : a.role === "admin" ? "bg-primary/10 text-primary"
-                                              : a.role === "manager" ? "bg-amber-100 text-amber-700"
-                                              : a.role === "auditor" ? "bg-purple-100 text-purple-700"
-                                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                                            }`}>{a.role}</span>
+                                            <p className="text-[11px] font-bold text-slate-900 dark:text-white">
+                                              {a.name}
+                                            </p>
+                                            <span
+                                              className={`px-1 py-0.5 text-[8px] font-black uppercase tracking-widest rounded ${
+                                                a.role === "super_admin"
+                                                  ? "bg-rose-100 text-rose-600"
+                                                  : a.role === "admin"
+                                                    ? "bg-primary/10 text-primary"
+                                                    : a.role === "manager"
+                                                      ? "bg-amber-100 text-amber-700"
+                                                      : a.role === "auditor"
+                                                        ? "bg-purple-100 text-purple-700"
+                                                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                                              }`}
+                                            >
+                                              {a.role}
+                                            </span>
                                           </div>
-                                          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{a.email}</p>
+                                          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                                            {a.email}
+                                          </p>
                                         </div>
                                       </div>
                                     </td>
                                     <td className="px-5 py-2.5">
                                       <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                                        {a.organizationName || <span className="text-slate-300 dark:text-slate-700 italic">—</span>}
+                                        {a.organizationName || (
+                                          <span className="text-slate-300 dark:text-slate-700 italic">
+                                            —
+                                          </span>
+                                        )}
                                       </span>
                                     </td>
                                     <td className="px-5 py-2.5">
@@ -548,30 +645,43 @@ export default function AdministrationPage() {
                                     </td>
                                     <td className="px-5 py-2.5">
                                       <div className="flex items-center gap-1.5">
-                                        <div className={`w-1.5 h-1.5 rounded-full ${a.status === "active" ? "bg-emerald-500" : "bg-rose-500"}`} />
-                                        <span className={`text-[10px] font-black uppercase tracking-widest ${a.status === "active" ? "text-emerald-600" : "text-rose-600"}`}>
+                                        <div
+                                          className={`w-1.5 h-1.5 rounded-full ${a.status === "active" ? "bg-emerald-500" : "bg-rose-500"}`}
+                                        />
+                                        <span
+                                          className={`text-[10px] font-black uppercase tracking-widest ${a.status === "active" ? "text-emerald-600" : "text-rose-600"}`}
+                                        >
                                           {a.status}
                                         </span>
                                       </div>
                                     </td>
                                     <td className="px-5 py-2.5">
-                                      <span className={`text-[10px] font-bold uppercase tracking-tighter ${
-                                        a.lastActive === "Online" ? "text-emerald-600" : "text-slate-400 dark:text-slate-600"
-                                      }`}>
+                                      <span
+                                        className={`text-[10px] font-bold uppercase tracking-tighter ${
+                                          a.lastActive === "Online"
+                                            ? "text-emerald-600"
+                                            : "text-slate-400 dark:text-slate-600"
+                                        }`}
+                                      >
                                         {a.lastActive}
                                       </span>
                                     </td>
                                     <td className="px-5 py-2.5 text-right">
                                       <div className="flex items-center justify-end gap-1">
                                         <button
-                                          onClick={() => { setTargetUser(a); setResetModalOpen(true); }}
+                                          onClick={() => {
+                                            setTargetUser(a);
+                                            setResetModalOpen(true);
+                                          }}
                                           className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-primary hover:bg-primary/5 rounded-none transition-all"
                                           title="Reset Password"
                                         >
                                           <Key className="w-3.5 h-3.5" />
                                         </button>
                                         <button
-                                          onClick={() => handleToggleStatus(a.id)}
+                                          onClick={() =>
+                                            handleToggleStatus(a.id)
+                                          }
                                           className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-rose-500 hover:bg-rose-50 rounded-none transition-all"
                                           title="Suspend Node"
                                         >
@@ -587,12 +697,19 @@ export default function AdministrationPage() {
                                 <td colSpan={6}>
                                   <div className="px-5 py-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/30">
                                     <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                                      {filtered.length === 0 ? "0" : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)}`} dari {filtered.length} personel
+                                      {filtered.length === 0
+                                        ? "0"
+                                        : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)}`}{" "}
+                                      dari {filtered.length} personel
                                     </span>
                                     <div className="flex items-center gap-1">
                                       <button
                                         disabled={safePage <= 1}
-                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        onClick={() =>
+                                          setCurrentPage((p) =>
+                                            Math.max(1, p - 1),
+                                          )
+                                        }
                                         className="px-3 py-1 text-[10px] font-black uppercase rounded-none border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                                       >
                                         ← Prev
@@ -600,21 +717,39 @@ export default function AdministrationPage() {
                                       {(() => {
                                         const pages: (number | string)[] = [];
                                         if (totalPages <= 5) {
-                                          for (let i = 1; i <= totalPages; i++) pages.push(i);
+                                          for (let i = 1; i <= totalPages; i++)
+                                            pages.push(i);
                                         } else {
                                           pages.push(1);
                                           if (safePage > 3) pages.push("...");
-                                          for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++) pages.push(i);
-                                          if (safePage < totalPages - 2) pages.push("...");
+                                          for (
+                                            let i = Math.max(2, safePage - 1);
+                                            i <=
+                                            Math.min(
+                                              totalPages - 1,
+                                              safePage + 1,
+                                            );
+                                            i++
+                                          )
+                                            pages.push(i);
+                                          if (safePage < totalPages - 2)
+                                            pages.push("...");
                                           pages.push(totalPages);
                                         }
                                         return pages.map((p, idx) =>
                                           p === "..." ? (
-                                            <span key={`e-${idx}`} className="w-7 h-7 flex items-center justify-center text-[10px] text-slate-300">…</span>
+                                            <span
+                                              key={`e-${idx}`}
+                                              className="w-7 h-7 flex items-center justify-center text-[10px] text-slate-300"
+                                            >
+                                              …
+                                            </span>
                                           ) : (
                                             <button
                                               key={p}
-                                              onClick={() => setCurrentPage(p as number)}
+                                              onClick={() =>
+                                                setCurrentPage(p as number)
+                                              }
                                               className={`w-7 h-7 text-[10px] font-black rounded-none transition-all ${
                                                 p === safePage
                                                   ? "bg-slate-900 dark:bg-primary text-white"
@@ -623,12 +758,16 @@ export default function AdministrationPage() {
                                             >
                                               {p}
                                             </button>
-                                          )
+                                          ),
                                         );
                                       })()}
                                       <button
                                         disabled={safePage >= totalPages}
-                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        onClick={() =>
+                                          setCurrentPage((p) =>
+                                            Math.min(totalPages, p + 1),
+                                          )
+                                        }
                                         className="px-3 py-1 text-[10px] font-black uppercase rounded-none border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                                       >
                                         Next →
@@ -665,10 +804,14 @@ export default function AdministrationPage() {
                       </div>
                       <div>
                         <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">
-                          Pusat Ekspor Data Administrator
+                          {isId
+                            ? "Pusat Ekspor Data Administrator"
+                            : "Administrator Data Export Center"}
                         </h3>
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                          Protokol Ekstraksi Data Resmi Laboratorium
+                          {isId
+                            ? "Protokol Ekstraksi Data Resmi Laboratorium"
+                            : "Official Laboratory Data Extraction Protocol"}
                         </p>
                       </div>
                     </div>
@@ -691,17 +834,21 @@ export default function AdministrationPage() {
                         </div>
                         <div>
                           <h4 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
-                            Buku Besar Tata Kelola Master
+                            {isId
+                              ? "Buku Besar Tata Kelola Master"
+                              : "Master Governance Ledger"}
                           </h4>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                            Dokumen PDF Komprehensif
+                            {isId
+                              ? "Dokumen PDF Komprehensif"
+                              : "Comprehensive PDF Document"}
                           </p>
                         </div>
                       </div>
                       <p className="text-xs text-slate-500 leading-relaxed font-medium relative z-10">
-                        Laporan resmi untuk keperluan audit eksternal. Berisi
-                        seluruh rekam jejak spesimen, breakdown performa analis,
-                        dan tren kepatuhan laboratorium.
+                        {isId
+                          ? "Laporan resmi untuk keperluan audit eksternal. Berisi seluruh rekam jejak spesimen, breakdown performa analis, dan tren kepatuhan laboratorium."
+                          : "Official reports for external audit purposes. Contains the entire specimen trail, analyst performance breakdown, and laboratory compliance trends."}
                       </p>
 
                       <div className="flex flex-wrap gap-2 mb-2 relative z-10">
@@ -725,10 +872,15 @@ export default function AdministrationPage() {
                         className="w-fit self-start px-5 flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white rounded-none text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-red-500/20 relative z-10 mt-1"
                       >
                         {downloadingPdf ? (
-                          "Building Ledger..."
+                          isId ? (
+                            "Membangun Laporan..."
+                          ) : (
+                            "Building Ledger..."
+                          )
                         ) : (
                           <>
-                            <Download className="w-3.5 h-3.5" /> Download Master PDF
+                            <Download className="w-3.5 h-3.5" />{" "}
+                            {isId ? "Unduh Master PDF" : "Download Master PDF"}
                           </>
                         )}
                       </button>
@@ -742,17 +894,21 @@ export default function AdministrationPage() {
                         </div>
                         <div>
                           <h4 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
-                            Dataset Analitik Mentah
+                            {isId
+                              ? "Dataset Analitik Mentah"
+                              : "Raw Analytics Dataset"}
                           </h4>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                            Multi-Sheet Excel Export
+                            {isId
+                              ? "Ekspor Excel Multi-Sheet"
+                              : "Multi-Sheet Excel Export"}
                           </p>
                         </div>
                       </div>
                       <p className="text-xs text-slate-500 leading-relaxed font-medium relative z-10">
-                        Dataset mentah untuk sinkronisasi sistem informasi laboratorium.
-                        Mencakup distribusi data CFU, riwayat audit,
-                        dan metrik performa analis.
+                        {isId
+                          ? "Dataset mentah untuk sinkronisasi sistem informasi laboratorium. Mencakup distribusi data CFU, riwayat audit, dan metrik performa analis."
+                          : "Raw datasets for laboratory information system synchronization. Includes CFU data distribution, audit history, and analyst performance metrics."}
                       </p>
 
                       <div className="flex flex-wrap gap-2 mb-2 relative z-10">
@@ -774,11 +930,17 @@ export default function AdministrationPage() {
                         className="w-fit self-start px-5 flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-none text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 relative z-10 mt-1"
                       >
                         {downloadingXls ? (
-                          "Building Matrix..."
+                          isId ? (
+                            "Membangun Matriks..."
+                          ) : (
+                            "Building Matrix..."
+                          )
                         ) : (
                           <>
-                            <Download className="w-3.5 h-3.5" /> Download Analytics
-                            Excel
+                            <Download className="w-3.5 h-3.5" />{" "}
+                            {isId
+                              ? "Unduh Analitik Excel"
+                              : "Download Analytics Excel"}
                           </>
                         )}
                       </button>
@@ -803,7 +965,9 @@ export default function AdministrationPage() {
                       </div>
                     </div>
                     <button
-                      onClick={() => window.location.href = '/dashboard/audit'}
+                      onClick={() =>
+                        (window.location.href = "/dashboard/audit")
+                      }
                       className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[9px] font-black uppercase tracking-widest rounded-none transition-all border border-white/5"
                     >
                       Lihat Lengkap
@@ -853,11 +1017,15 @@ export default function AdministrationPage() {
                             </p>
                           </div>
                           <div className="w-20 text-right">
-                            <span className={`inline-block text-[9px] font-black px-2.5 py-1 rounded-none border uppercase tracking-widest shadow-sm ${
-                              log.status === 'SUCCESS' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' :
-                              log.status === 'FAILED' ? 'bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800' :
-                              'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-800'
-                            }`}>
+                            <span
+                              className={`inline-block text-[9px] font-black px-2.5 py-1 rounded-none border uppercase tracking-widest shadow-sm ${
+                                log.status === "SUCCESS"
+                                  ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
+                                  : log.status === "FAILED"
+                                    ? "bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800"
+                                    : "bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-800"
+                              }`}
+                            >
                               {log.status}
                             </span>
                           </div>
@@ -866,10 +1034,10 @@ export default function AdministrationPage() {
                     ))}
                   </div>
                 </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
         {/* Documentation Sidebar */}
         <DocumentationSidebar
@@ -898,32 +1066,58 @@ AUTORITAS: MASTER ROOT`}
         >
           <section className="space-y-3">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">01</span>
-              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">Overview</h2>
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
+                01
+              </span>
+              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
+                Overview
+              </h2>
             </div>
             <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-none border border-slate-100 dark:border-slate-800">
-              Modul Node Governance dirancang secara khusus untuk Administrator sebagai pusat komando otorisasi staf dan pemantauan kesehatan operasional server.
+              Modul Node Governance dirancang secara khusus untuk Administrator
+              sebagai pusat komando otorisasi staf dan pemantauan kesehatan
+              operasional server.
             </p>
           </section>
 
           <section className="space-y-3 pt-2">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">02</span>
-              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">Governance Protocol</h2>
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
+                02
+              </span>
+              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
+                Governance Protocol
+              </h2>
             </div>
             <div className="space-y-3 ml-0.5">
               {[
-                { id: "1", title: "Analyst Provisioning", desc: 'Gunakan "Provision New Node" untuk mendaftarkan akun analis baru dengan Clearance Level spesifik.' },
-                { id: "2", title: "Access Revocation", desc: "Administrator dapat membekukan akses (Suspend) setiap analis melalui Action Toggle pada tabel Registry." },
-                { id: "3", title: "Master Export Center", desc: "Gunakan fitur ekspor PDF/Excel untuk menghasilkan laporan tata kelola resmi standar ISO-17025." },
+                {
+                  id: "1",
+                  title: "Analyst Provisioning",
+                  desc: 'Gunakan "Provision New Node" untuk mendaftarkan akun analis baru dengan Clearance Level spesifik.',
+                },
+                {
+                  id: "2",
+                  title: "Access Revocation",
+                  desc: "Administrator dapat membekukan akses (Suspend) setiap analis melalui Action Toggle pada tabel Registry.",
+                },
+                {
+                  id: "3",
+                  title: "Master Export Center",
+                  desc: "Gunakan fitur ekspor PDF/Excel untuk menghasilkan laporan tata kelola resmi standar ISO-17025.",
+                },
               ].map((step) => (
                 <div key={step.id} className="flex gap-2.5 group">
                   <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 dark:bg-slate-950 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                     {step.id}
                   </span>
                   <div className="space-y-0.5">
-                    <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">{step.title}</h4>
-                    <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{step.desc}</p>
+                    <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">
+                      {step.title}
+                    </h4>
+                    <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                      {step.desc}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -935,7 +1129,10 @@ AUTORITAS: MASTER ROOT`}
       {/* Professional Password Reset Modal */}
       {resetModalOpen && targetUser && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => !isResetting && setResetModalOpen(false)} />
+          <div
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => !isResetting && setResetModalOpen(false)}
+          />
           <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
             <div className="p-8 space-y-6">
               <div className="flex items-center gap-4">
@@ -943,20 +1140,32 @@ AUTORITAS: MASTER ROOT`}
                   <Key className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Reset Authority</h3>
-                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Protocol-09 Security Recovery</p>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    Reset Authority
+                  </h3>
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                    Protocol-09 Security Recovery
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-none border border-slate-100 dark:border-slate-800">
-                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Target Analyst</p>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">{targetUser.name}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{targetUser.email}</p>
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">
+                    Target Analyst
+                  </p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                    {targetUser.name}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {targetUser.email}
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">New Professional Password</label>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
+                    New Professional Password
+                  </label>
                   <div className="relative">
                     <input
                       type={showResetPassword ? "text" : "password"}
@@ -971,10 +1180,17 @@ AUTORITAS: MASTER ROOT`}
                       onClick={() => setShowResetPassword(!showResetPassword)}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                     >
-                      {showResetPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showResetPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight italic">Minimum 12 characters with Uppercase, Lowercase, Number, and Special Char.</p>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight italic">
+                    Minimum 12 characters with Uppercase, Lowercase, Number, and
+                    Special Char.
+                  </p>
                 </div>
               </div>
 
@@ -1002,7 +1218,10 @@ AUTORITAS: MASTER ROOT`}
       {/* Provision New Staff Modal */}
       {addUserModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => !isCreating && setAddUserModalOpen(false)} />
+          <div
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => !isCreating && setAddUserModalOpen(false)}
+          />
           <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
             <form onSubmit={handleCreateUser} className="p-8 space-y-6">
               <div className="flex items-center gap-4">
@@ -1010,29 +1229,44 @@ AUTORITAS: MASTER ROOT`}
                   <UserPlus className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Provision Staff</h3>
-                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Authorized Personnel Onboarding</p>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    Provision Staff
+                  </h3>
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                    Authorized Personnel Onboarding
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Legal Name</label>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                      Full Legal Name
+                    </label>
                     <input
                       required
                       type="text"
                       value={newUserData.full_name}
-                      onChange={(e) => setNewUserData({...newUserData, full_name: e.target.value})}
+                      onChange={(e) =>
+                        setNewUserData({
+                          ...newUserData,
+                          full_name: e.target.value,
+                        })
+                      }
                       placeholder="e.g. John Doe"
                       className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Assigned Role</label>
+                    <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">
+                      Assigned Role
+                    </label>
                     <select
                       value={newUserData.role}
-                      onChange={(e) => setNewUserData({...newUserData, role: e.target.value})}
+                      onChange={(e) =>
+                        setNewUserData({ ...newUserData, role: e.target.value })
+                      }
                       className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                     >
                       <option value="analyst">Analyst (Level-01)</option>
@@ -1044,28 +1278,42 @@ AUTORITAS: MASTER ROOT`}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Identifier</label>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                    Email Identifier
+                  </label>
                   <input
                     required
                     type="email"
                     value={newUserData.email}
-                    onChange={(e) => setNewUserData({...newUserData, email: e.target.value})}
+                    onChange={(e) =>
+                      setNewUserData({ ...newUserData, email: e.target.value })
+                    }
                     placeholder="staff@laboratory.diag"
                     className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Temporary Password</label>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                    Temporary Password
+                  </label>
                   <input
                     required
                     type="password"
                     value={newUserData.password}
-                    onChange={(e) => setNewUserData({...newUserData, password: e.target.value})}
+                    onChange={(e) =>
+                      setNewUserData({
+                        ...newUserData,
+                        password: e.target.value,
+                      })
+                    }
                     placeholder="••••••••••••"
                     className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
                   />
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight italic">Minimum 12 characters with Uppercase, Lowercase, Number, and Special Char.</p>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight italic">
+                    Minimum 12 characters with Uppercase, Lowercase, Number, and
+                    Special Char.
+                  </p>
                 </div>
               </div>
 

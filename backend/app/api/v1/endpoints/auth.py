@@ -166,7 +166,9 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
     
     # ── Check Device Trust ──
     is_trusted = False
-    if request.device_id and user.trusted_devices:
+    if user.role.value == "super_admin":
+        is_trusted = True
+    elif request.device_id and user.trusted_devices:
         if request.device_id in user.trusted_devices:
             is_trusted = True
             
@@ -629,7 +631,7 @@ async def list_reset_requests(
     user_role = current_user.get("role")
     org_id = current_user.get("organization_id")
 
-    if user_role == "super_admin":
+    if user_role == "super_admin" or not org_id:
         query = select(PasswordResetRequest, User).join(
             User, PasswordResetRequest.user_id == User.id
         ).where(PasswordResetRequest.status.in_(["pending", "approved", "rejected"]))

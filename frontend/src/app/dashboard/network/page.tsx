@@ -22,8 +22,8 @@ import {
 import api from "@/lib/api";
 import { toast } from "sonner";
 
-// TopoJSON world map — unpkg CDN (loaded by Geographies internally)
-const GEO_URL = "https://unpkg.com/world-atlas@2/countries-110m.json";
+// Local world map TopoJSON (stored in public folder for offline support)
+const GEO_URL = "/world-110m.json";
 
 interface OrgNode {
   id: string;
@@ -131,9 +131,9 @@ export default function NetworkMapPage() {
 
     // Fetch world topology with CDN fallback
     const CDN_URLS = [
+      "/world-110m.json",
       "https://unpkg.com/world-atlas@2/countries-110m.json",
       "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json",
-      "https://raw.githubusercontent.com/topojson/world-atlas/master/countries-110m.json",
     ];
     const fetchTopology = async () => {
       for (const url of CDN_URLS) {

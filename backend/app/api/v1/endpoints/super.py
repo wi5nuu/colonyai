@@ -112,7 +112,7 @@ async def get_all_organizations(
             "name": org.name,
             "slug": org.slug,
             "location": org.location,
-            "status": "active" if org.is_active in [1, True, "active", "1"] else ("suspended" if org.is_active in [0, False, "suspended", "0"] else str(org.is_active)),
+            "status": "active" if getattr(org.is_active, "name", "") == "active" or getattr(org.is_active, "value", None) in [1, "1"] or str(org.is_active) in ["active", "1", "true"] else "suspended",
             "license_tier": org.license_key or "Standard",
             "license_expiry": org.license_expires_at,
             "lims_webhook_url": org.lims_webhook_url,
@@ -253,8 +253,21 @@ async def toggle_org_status(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
         
-    current_status = org.is_active.value if hasattr(org.is_active, 'value') else str(org.is_active)
-    new_status = 'suspended' if current_status == 'active' else 'active'
+    current_status_str = getattr(org.is_active, "name", str(org.is_active)).lower()
+    if current_status_str == 'orgstatus.active':
+        current_status_str = 'active'
+    elif current_status_str == 'orgstatus.suspended':
+        current_status_str = 'suspended'
+        
+    # Kalau bukan active/suspended dari string, coba parse valuenya
+    if current_status_str not in ['active', 'suspended']:
+        val = getattr(org.is_active, "value", None)
+        if val in [1, "1"]:
+            current_status_str = 'active'
+        elif val in [2, "2"]:
+            current_status_str = 'suspended'
+
+    new_status = 'suspended' if current_status_str == 'active' else 'active'
     org.is_active = new_status
     
     await db.commit()

@@ -5,6 +5,7 @@ import { Providers } from "@/components/Providers";
 import { ConditionalNavbar } from "@/components/ConditionalNavbar";
 import { LanguageSync } from "./language-script";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -54,6 +55,7 @@ export default function RootLayout({
           <ThemeProvider>
             <ConditionalNavbar />
             <main id="main-content">{children}</main>
+            <GlobalSearch />
           </ThemeProvider>
         </Providers>
       </body>

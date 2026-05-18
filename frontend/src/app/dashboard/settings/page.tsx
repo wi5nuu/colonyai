@@ -169,17 +169,7 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <div className="bg-slate-900 dark:bg-black p-3 rounded-none shadow-xl text-white border border-white/5 flex items-center gap-4">
-                  <div className="space-y-0.5">
-                    <p className="text-[7px] font-black text-white/40 uppercase tracking-widest leading-none">Security Standard</p>
-                    <p className="text-[10px] font-bold text-primary">AES-256-GCM</p>
-                  </div>
-                  <div className="w-[1px] h-6 bg-white/10" />
-                  <div className="space-y-0.5">
-                    <p className="text-[7px] font-black text-white/40 uppercase tracking-widest leading-none">Encryption</p>
-                    <p className="text-[10px] font-bold text-white tracking-tighter">End-to-End</p>
-                  </div>
-                </div>
+
                 
                 <div className="hidden lg:block">
                   <DocumentationToggle

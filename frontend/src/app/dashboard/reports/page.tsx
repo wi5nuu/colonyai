@@ -32,7 +32,7 @@ interface GeneratedReport {
 }
 
 export default function ReportsPage() {
-  const { t } = useTranslationStore();
+  const { t, language } = useTranslationStore();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isLoadingAnalyses, setIsLoadingAnalyses] = useState(true);
@@ -71,20 +71,28 @@ export default function ReportsPage() {
   };
 
   useEffect(() => {
-    const load = async () => {
-      setIsLoadingAnalyses(true);
+    const load = async (silent = false) => {
+      if (!silent) setIsLoadingAnalyses(true);
       try {
         const result = await analysesApi.list({ page_size: 100 });
         setAnalyses(result.analyses);
       } catch (error: any) {
-        toast.error(
+        if (!silent) toast.error(
           error.response?.data?.detail || t("reports.errorLoadAnalyses"),
         );
       } finally {
-        setIsLoadingAnalyses(false);
+        if (!silent) setIsLoadingAnalyses(false);
       }
     };
+    
     load();
+    
+    // Polling Real-time setiap 5 detik
+    const interval = setInterval(() => {
+      load(true);
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, [t]);
 
   const filteredAnalyses = analyses.filter((a) => {
@@ -182,22 +190,56 @@ export default function ReportsPage() {
   const handleSendMessenger = async (platform: "whatsapp" | "telegram") => {
     setIsSendingMessenger(true);
     try {
-      // Default support number — no prompt needed
-      const defaultNumber = "+6281394829";
-      const targetId = platform === "whatsapp" ? defaultNumber
-        : prompt("Enter Telegram Chat ID:");
-      if (!targetId) return;
-
-      const response = await api.post("/api/v1/reports/send-messenger", {
-        platform,
-        target_id: targetId,
-        date_from: dateFrom || undefined,
-        date_to: dateTo || undefined,
-      });
+      const defaultNumber = "6281394829";
+      let targetId = "";
       
-      toast.success((response.data as any).message || `Report sent via ${platform.toUpperCase()} to ${targetId}`);
+      if (platform === "whatsapp") {
+        const inputNum = prompt("Masukkan Nomor WhatsApp (contoh: 6281394829):", defaultNumber);
+        if (!inputNum) {
+          setIsSendingMessenger(false);
+          return;
+        }
+        targetId = inputNum.replace(/[^0-9]/g, ""); // digits only for wa.me URL
+      } else {
+        const inputUser = prompt("Masukkan Username/ID Telegram (contoh: colonyai_support):", "colonyai_support");
+        if (!inputUser) {
+          setIsSendingMessenger(false);
+          return;
+        }
+        targetId = inputUser.replace("@", "");
+      }
+
+      // ── Trigger API (Audit Trail) ──
+      try {
+        await api.post("/api/v1/reports/send-messenger", {
+          platform,
+          target_id: targetId,
+          date_from: dateFrom || undefined,
+          date_to: dateTo || undefined,
+        });
+      } catch (apiErr) {
+        console.error("API send-messenger logged in background, continuing redirect...", apiErr);
+      }
+
+      // ── Generate Share Message ──
+      const messageText = `*ColonyAI - Laporan Diagnostik ISO-17025*\n\n` +
+                          `• Total Spesimen Terpilih: *${selectedIds.size}* dari *${filteredAnalyses.length}* spesimen\n` +
+                          `• Rentang Tanggal: *${dateFrom || '-'}* s/d *${dateTo || '-'}*\n` +
+                          `• Protokol Media: *${mediaType === 'all' ? 'Semua Protokol' : mediaType}*\n\n` +
+                          `Mohon diproses untuk keperluan audit sistem. Terima kasih!`;
+      
+      const encodedMsg = encodeURIComponent(messageText);
+
+      // ── Open platform redirect in new tab ──
+      if (platform === "whatsapp") {
+        window.open(`https://api.whatsapp.com/send?phone=${targetId}&text=${encodedMsg}`, "_blank");
+        toast.success("Mengarahkan ke WhatsApp...");
+      } else {
+        window.open(`https://t.me/${targetId}?text=${encodedMsg}`, "_blank");
+        toast.success("Mengarahkan ke Telegram...");
+      }
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || `Failed to send via ${platform.toUpperCase()}`);
+      toast.error(`Gagal mengirim via ${platform.toUpperCase()}`);
     } finally {
       setIsSendingMessenger(false);
     }
@@ -206,19 +248,19 @@ export default function ReportsPage() {
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] w-full font-sans bg-transparent">
-      <div className="max-w-[1500px] mx-auto w-full px-6 flex flex-col h-full">
+    <div className="flex flex-col w-full font-sans bg-transparent">
+      <div className="w-full pl-2 pr-6 flex flex-col">
         {/* Main Content */}
         <div
           className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[320px]" : ""}`}
         >
-          <div className="max-w-[1500px] mx-auto px-6 py-6">
+          <div className="w-full py-6">
             {/* Header */}
             <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-3">
                 <FileText className="w-4 h-4 text-primary" />
                 <div>
-                  <h1 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest leading-none">
+                  <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">
                     {t("reports.title")}
                   </h1>
                   <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
@@ -380,12 +422,14 @@ export default function ReportsPage() {
 
                 {/* Executive Summary — Efficiency Panel */}
                 <div className="border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 mb-5">
-                  <p className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-3">Executive Summary — AI vs Manual Efficiency</p>
+                  <p className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-3">
+                    {language === 'id' ? "Ringkasan Eksekutif — Efisiensi AI vs Manual" : "Executive Summary — AI vs Manual Efficiency"}
+                  </p>
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { label: "AI Analysis Time", val: "~3s", sub: "per plate", color: "text-emerald-600 dark:text-emerald-400" },
-                      { label: "Manual Analysis Time", val: "~15m", sub: "per plate", color: "text-slate-500" },
-                      { label: "Efficiency Gain", val: "300×", sub: "faster with AI", color: "text-[#1a237e] dark:text-blue-400" },
+                      { label: language === 'id' ? "Waktu Analisis AI" : "AI Analysis Time", val: "~3s", sub: language === 'id' ? "per pelat" : "per plate", color: "text-emerald-600 dark:text-emerald-400" },
+                      { label: language === 'id' ? "Waktu Analisis Manual" : "Manual Analysis Time", val: "~15m", sub: language === 'id' ? "per pelat" : "per plate", color: "text-slate-500" },
+                      { label: language === 'id' ? "Peningkatan Efisiensi" : "Efficiency Gain", val: "300×", sub: language === 'id' ? "lebih cepat dengan AI" : "faster with AI", color: "text-[#1a237e] dark:text-blue-400" },
                     ].map((m, i) => (
                       <div key={i} className="text-center">
                         <p className={`text-lg font-black ${m.color}`}>{m.val}</p>
@@ -394,10 +438,10 @@ export default function ReportsPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-900/30 flex gap-4">
-                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Consistency: <span className="text-emerald-600 dark:text-emerald-400">ISO-17025 Compliant</span></p>
-                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Accuracy: <span className="text-emerald-600 dark:text-emerald-400">&gt;95% mAP50</span></p>
-                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Dataset: <span className="text-emerald-600 dark:text-emerald-400">97K+ instances</span></p>
+                  <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-900/30 flex flex-wrap gap-4">
+                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{language === 'id' ? "Konsistensi" : "Consistency"}: <span className="text-emerald-600 dark:text-emerald-400">{language === 'id' ? "Kepatuhan ISO-17025" : "ISO-17025 Compliant"}</span></p>
+                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{language === 'id' ? "Akurasi" : "Accuracy"}: <span className="text-emerald-600 dark:text-emerald-400">&gt;95% mAP50</span></p>
+                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{language === 'id' ? "Dataset" : "Dataset"}: <span className="text-emerald-600 dark:text-emerald-400">{language === 'id' ? "97K+ instans" : "97K+ instances"}</span></p>
                   </div>
                 </div>
 

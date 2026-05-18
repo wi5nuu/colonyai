@@ -22,7 +22,7 @@ export function Footer() {
     "bg-gradient-to-r from-[#00f2ff] via-[#0055ff] to-[#ff00ff]";
 
   return (
-    <footer className="bg-white border-t border-slate-100 pt-16 pb-8 font-sans">
+    <footer className="bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900 pt-16 pb-8 font-sans transition-colors duration-300">
       <div className="max-w-[1500px] mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           {/* ── Column 1: Brand & Desc ────────────────────────── */}
@@ -36,15 +36,15 @@ export function Footer() {
                 className="h-12 w-auto"
               />
               <div className="flex flex-col leading-none">
-                <span className="text-[14px] font-black uppercase tracking-widest text-[#0055ff]">
+                <span className="text-[14px] font-black uppercase tracking-widest text-[#0055ff] dark:text-[#00f2ff]">
                   ColonyAI Lab
                 </span>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">
                   {t("footer.caseLabel")}
                 </span>
               </div>
             </div>
-            <p className="text-[11px] text-slate-600 font-bold leading-relaxed uppercase tracking-wide">
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-bold leading-relaxed uppercase tracking-wide">
               {t("footer.description")}
             </p>
             <div className="flex gap-3">
@@ -90,7 +90,7 @@ export function Footer() {
 
           {/* ── Column 2: Tautan Terkait (Internal) ───────────────── */}
           <div className="space-y-6">
-            <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em]">
+            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
               {t("footer.relatedLinks")}
             </h4>
             <nav className="grid grid-cols-1 gap-3">
@@ -104,9 +104,9 @@ export function Footer() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className="text-[10px] font-bold text-slate-600 hover:text-[#0055ff] transition-colors uppercase tracking-widest flex items-center gap-2 group"
+                  className="text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-[#0055ff] dark:hover:text-[#00f2ff] transition-colors uppercase tracking-widest flex items-center gap-2 group"
                 >
-                  <div className="w-1 h-1 rounded-full bg-slate-300 group-hover:bg-[#0055ff] transition-colors" />
+                  <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700 group-hover:bg-[#0055ff] dark:group-hover:bg-[#00f2ff] transition-colors" />
                   {link.name}
                 </Link>
               ))}
@@ -115,7 +115,7 @@ export function Footer() {
 
           {/* ── Column 3: Partner Eksternal ────────────────────────── */}
           <div className="space-y-6">
-            <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em]">
+            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
               {t("footer.strategicEcosystem")}
             </h4>
             <nav className="grid grid-cols-1 gap-3">
@@ -129,9 +129,9 @@ export function Footer() {
                 <a
                   key={partner}
                   href="#"
-                  className="text-[10px] font-bold text-slate-600 hover:text-[#0055ff] transition-colors uppercase tracking-widest flex items-center gap-2 group"
+                  className="text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-[#0055ff] dark:hover:text-[#00f2ff] transition-colors uppercase tracking-widest flex items-center gap-2 group"
                 >
-                  <div className="w-1 h-1 rounded-full bg-slate-300 group-hover:bg-[#0055ff] transition-colors" />
+                  <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700 group-hover:bg-[#0055ff] dark:group-hover:bg-[#00f2ff] transition-colors" />
                   {partner}
                 </a>
               ))}
@@ -140,34 +140,34 @@ export function Footer() {
 
           {/* ── Column 4: Tetap Terhubung ────────────────────────── */}
           <div className="space-y-6">
-            <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em]">
+            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
               {t("footer.stayConnected")}
             </h4>
             <ul className="space-y-4">
-              <li className="flex gap-3 text-[10px] font-bold text-slate-600 leading-relaxed uppercase tracking-wide">
+              <li className="flex gap-3 text-[10px] font-bold text-slate-600 dark:text-slate-400 leading-relaxed uppercase tracking-wide">
                 <MapPin
-                  className="w-4 h-4 text-[#0055ff] flex-shrink-0"
+                  className="w-4 h-4 text-[#0055ff] dark:text-[#00f2ff] flex-shrink-0"
                   aria-hidden="true"
                 />
                 <span>{t("footer.address")}</span>
               </li>
-              <li className="flex gap-3 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+              <li className="flex gap-3 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
                 <Phone
-                  className="w-4 h-4 text-[#0055ff] flex-shrink-0"
+                  className="w-4 h-4 text-[#0055ff] dark:text-[#00f2ff] flex-shrink-0"
                   aria-hidden="true"
                 />
                 <span>0813-948-290</span>
               </li>
-              <li className="flex gap-3 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+              <li className="flex gap-3 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
                 <Mail
-                  className="w-4 h-4 text-[#0055ff] flex-shrink-0"
+                  className="w-4 h-4 text-[#0055ff] dark:text-[#00f2ff] flex-shrink-0"
                   aria-hidden="true"
                 />
                 <span>support@colonyai.id</span>
               </li>
-              <li className="flex gap-3 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+              <li className="flex gap-3 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
                 <Globe
-                  className="w-4 h-4 text-[#0055ff] flex-shrink-0"
+                  className="w-4 h-4 text-[#0055ff] dark:text-[#00f2ff] flex-shrink-0"
                   aria-hidden="true"
                 />
                 <span>www.colonyai.id</span>
@@ -177,23 +177,23 @@ export function Footer() {
         </div>
 
         {/* ── Bottom Row ────────────────────────────────────────── */}
-        <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+        <div className="pt-8 border-t border-slate-100 dark:border-slate-900 flex flex-col md:flex-row items-center justify-between gap-6">
+          <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
             {t("footer.footerCopyright")}
           </p>
-          <nav className="flex gap-8 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+          <nav className="flex gap-8 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">
             <Link
               href="/privacy"
-              className="hover:text-slate-900 transition-colors"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               {t("footer.privacyPolicyFull")}
             </Link>
-            <span className="text-slate-200" aria-hidden="true">
+            <span className="text-slate-200 dark:text-slate-800" aria-hidden="true">
               |
             </span>
             <Link
               href="/terms"
-              className="hover:text-slate-900 transition-colors"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               {t("footer.termsAndConditions")}
             </Link>
