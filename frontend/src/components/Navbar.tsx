@@ -166,7 +166,7 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* ── Mobile Interface (Unchanged for now, focusing on desktop first) ── */}
+      {/* ── Mobile Interface ── */}
       <div
         className={`fixed inset-0 z-[200] transition-all duration-500 ${
           mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
@@ -178,32 +178,94 @@ export function Navbar() {
         />
 
         <div
-          className={`absolute bottom-0 left-0 right-0 h-[80vh] bg-white shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col rounded-t-[2rem] overflow-hidden ${
+          className={`absolute bottom-0 left-0 right-0 h-[80vh] bg-white dark:bg-slate-950 shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col rounded-t-[2rem] overflow-hidden ${
             mobileMenuOpen ? "translate-y-0" : "translate-y-[120%]"
           }`}
         >
-          <div className="w-full flex justify-center pt-6 pb-2">
-            <div className="w-12 h-1.5 bg-slate-100 rounded-full" />
+          <div className="w-full flex justify-center pt-6 pb-2 bg-white dark:bg-slate-950">
+            <div className="w-12 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full" />
           </div>
 
-          <div className="px-8 py-6 flex justify-between items-center border-b border-slate-100">
-             <span className="text-xl font-black tracking-tighter text-[#1a237e]">
-                COLONY<span className="text-amber-500">AI</span>
-              </span>
-            <button
+          <div className="px-8 py-6 flex justify-between items-center border-b border-slate-100 dark:border-slate-850 bg-white dark:bg-slate-950">
+            <span className="text-xl font-black tracking-tighter text-[#1a237e] dark:text-[#00f2ff]">
+              COLONY<span className="text-amber-500">AI</span>
+            </span>
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 bg-slate-50 dark:bg-slate-900 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-900 dark:text-white" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-white dark:bg-slate-950">
+            {navItems.map((item) => (
+              <Link
+                key={item.nameKey}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block py-3 border-b border-slate-50 dark:border-slate-900 text-sm font-bold text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-[#00f2ff] transition-all"
+              >
+                {t(item.nameKey)}
+              </Link>
+            ))}
+          </div>
+
+          {/* Mobile Footer with quick controls */}
+          <div className="px-8 py-6 border-t border-slate-100 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                <button
+                  onClick={() => {
+                    setLanguage("en");
+                    document.documentElement.lang = "en";
+                    document.cookie = "lang=en;path=/;max-age=31536000";
+                  }}
+                  className={`text-xs font-black uppercase tracking-widest transition-colors ${
+                    language === "en" ? "text-[#0055ff] dark:text-[#00f2ff]" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  }`}
+                >
+                  EN
+                </button>
+                <span className="text-slate-300 dark:text-slate-750">|</span>
+                <button
+                  onClick={() => {
+                    setLanguage("id");
+                    document.documentElement.lang = "id";
+                    document.cookie = "lang=id;path=/;max-age=31536000";
+                  }}
+                  className={`text-xs font-black uppercase tracking-widest transition-colors ${
+                    language === "id" ? "text-[#0055ff] dark:text-[#00f2ff]" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  }`}
+                >
+                  ID
+                </button>
+              </div>
+
+              <a
+                href="tel:0813-948-290"
+                className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-400"
+              >
+                <Phone className="w-3.5 h-3.5 text-emerald-500" />
+                <span>0813-948-290</span>
+              </a>
+            </div>
+
+            {/* Action Button */}
+            <Link
+              href={isAuthenticated ? "/dashboard" : "/login"}
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2 bg-slate-50 rounded-full"
+              className="w-full py-3 bg-[#1a237e] dark:bg-[#00f2ff] text-white dark:text-slate-950 text-xs font-black uppercase tracking-widest text-center shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2"
             >
-              <X className="w-5 h-5 text-slate-900" />
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-             {navItems.map((item) => (
-                <Link key={item.nameKey} href={item.href} className="block py-3 border-b border-slate-50 text-sm font-bold text-slate-700">
-                  {t(item.nameKey)}
-                </Link>
-             ))}
+              <span>
+                {isAuthenticated ? "Dashboard" : language === "en" ? "Login / Register" : "Login / Daftar"}
+              </span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </div>
