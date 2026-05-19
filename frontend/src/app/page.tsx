@@ -210,8 +210,42 @@ export default function LandingPage() {
         </div>
       </section>
       {/* ── Center of Neural Excellence ── */}
-      <section className="py-16 lg:py-24 bg-white dark:bg-slate-950 overflow-hidden transition-colors duration-300">
-        <div className="max-w-[1500px] mx-auto px-6 flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+      <section className="relative py-16 lg:py-24 bg-white dark:bg-slate-950 overflow-hidden transition-colors duration-300">
+        {/* Subtle Decorative Background Variations (Petri-dish/Microbial Bubble Aesthetic) */}
+        <div className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20 overflow-hidden">
+          {/* Subtle grid pattern */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)]" />
+
+          {/* Organic microbial/colony-like bubbles */}
+          <div className="absolute top-10 left-10 w-72 h-72 rounded-full bg-emerald-100/30 dark:bg-emerald-950/10 blur-3xl animate-pulse" style={{ animationDuration: "8s" }} />
+          <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-[#1a237e]/5 dark:bg-[#00f2ff]/5 blur-3xl animate-pulse" style={{ animationDuration: "12s" }} />
+          <div className="absolute top-1/2 left-1/3 w-64 h-64 rounded-full bg-[#fbc02d]/10 dark:bg-[#fbc02d]/5 blur-3xl animate-pulse" style={{ animationDuration: "10s" }} />
+
+          {/* Floating petri-dish outline rings & colony micro-structures */}
+          <svg className="absolute -top-12 -left-12 w-48 h-48 text-[#1a237e]/5 dark:text-[#00f2ff]/5 stroke-current" fill="none" strokeWidth="1.5" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" strokeDasharray="3 3" />
+            <circle cx="50" cy="50" r="35" className="animate-spin" style={{ transformOrigin: "center", animationDuration: "60s" }} />
+            <circle cx="35" cy="40" r="4" fill="currentColor" opacity="0.3" />
+            <circle cx="65" cy="55" r="3" fill="currentColor" opacity="0.2" />
+            <circle cx="45" cy="65" r="5" fill="currentColor" opacity="0.4" />
+          </svg>
+
+          <svg className="absolute bottom-1/4 -right-16 w-64 h-64 text-emerald-500/5 dark:text-emerald-400/5 stroke-current" fill="none" strokeWidth="1" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="48" />
+            <circle cx="50" cy="50" r="42" strokeDasharray="1 5" />
+            <circle cx="50" cy="50" r="28" className="animate-spin" style={{ transformOrigin: "center", animationDuration: "40s" }} />
+            <circle cx="45" cy="40" r="2" fill="currentColor" />
+            <circle cx="55" cy="48" r="4" fill="currentColor" opacity="0.5" />
+            <circle cx="38" cy="58" r="3" fill="currentColor" opacity="0.3" />
+          </svg>
+
+          {/* Tiny floating colony bubble structures */}
+          <div className="absolute top-1/3 right-1/4 w-3 h-3 rounded-full bg-emerald-400/20 dark:bg-emerald-400/10 animate-bounce" style={{ animationDuration: "3s" }} />
+          <div className="absolute top-1/4 left-1/2 w-4 h-4 rounded-full bg-[#1a237e]/10 dark:bg-[#00f2ff]/10 animate-bounce" style={{ animationDuration: "4s", animationDelay: "1s" }} />
+          <div className="absolute bottom-1/3 left-10 w-2 h-2 rounded-full bg-[#fbc02d]/25 dark:bg-[#fbc02d]/10 animate-ping" style={{ animationDuration: "5s" }} />
+        </div>
+
+        <div className="max-w-[1500px] mx-auto px-6 flex flex-col lg:flex-row items-center gap-12 lg:gap-16 relative z-10">
           <div className="w-full lg:w-1/2 space-y-6 text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start gap-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">
               <span>{t("layanan.breadcrumbHome")}</span> <ArrowRight className="w-3 h-3" />{" "}
@@ -289,8 +323,22 @@ export default function LandingPage() {
       </section>
 
       {/* ── The Challenge (Case 1) ── */}
-      <section className="py-16 bg-white dark:bg-slate-950 border-t border-slate-50 dark:border-slate-900 transition-colors duration-300">
-        <div className="max-w-[1500px] mx-auto px-6">
+      <section className="relative py-16 bg-white dark:bg-slate-950 border-t border-slate-50 dark:border-slate-900 transition-colors duration-300 overflow-hidden">
+        {/* Subtle Decorative Background Variations (Petri-dish/Microbial Bubble Aesthetic) */}
+        <div className="absolute inset-0 pointer-events-none opacity-45 dark:opacity-20 overflow-hidden">
+          {/* Subtle grid pattern */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_100%,#000_70%,transparent_100%)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)]" />
+
+          {/* Organic microbial/colony-like bubbles */}
+          <div className="absolute bottom-10 left-10 w-96 h-96 rounded-full bg-emerald-100/30 dark:bg-emerald-950/10 blur-3xl animate-pulse" style={{ animationDuration: "14s" }} />
+          <div className="absolute top-10 right-10 w-72 h-72 rounded-full bg-[#1a237e]/5 dark:bg-[#00f2ff]/5 blur-3xl animate-pulse" style={{ animationDuration: "9s" }} />
+
+          {/* Tiny floating colony bubble structures */}
+          <div className="absolute top-1/4 right-1/3 w-3 h-3 rounded-full bg-emerald-400/25 dark:bg-emerald-400/10 animate-bounce" style={{ animationDuration: "3.5s" }} />
+          <div className="absolute bottom-1/4 left-1/4 w-4 h-4 rounded-full bg-[#fbc02d]/15 dark:bg-[#fbc02d]/10 animate-ping" style={{ animationDuration: "6s" }} />
+        </div>
+
+        <div className="max-w-[1500px] mx-auto px-6 relative z-10">
           {/* Header */}
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-12">
             <div className="space-y-3">
@@ -318,11 +366,11 @@ export default function LandingPage() {
             {/* Brief Explanation */}
             <div className="p-8 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 space-y-4 bg-white dark:bg-slate-900 transition-colors duration-300">
               <div className="flex items-center gap-3">
-                <h3 className="text-[11px] font-black text-[#1a237e] dark:text-[#00f2ff] uppercase tracking-widest">
+                <h3 className="text-sm md:text-base font-black text-[#1a237e] dark:text-[#00f2ff] uppercase tracking-wider">
                   {useTranslationStore.getState().language === "en" ? "Brief Explanation" : "Penjelasan Singkat"}
                 </h3>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+              <p className="text-sm md:text-[15px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
                 {useTranslationStore.getState().language === "en"
                   ? "Microbiology labs perform Total Plate Count (TPC) tests to determine microorganisms in food and environmental samples. Analysts count colonies manually — making results time-consuming, inconsistent, and prone to error."
                   : "Laboratorium mikrobiologi melakukan uji Total Plate Count (TPC) untuk menentukan mikroorganisme dalam sampel makanan dan lingkungan. Analis menghitung koloni secara manual — membuat hasil memakan waktu, tidak konsisten, dan rentan terhadap kesalahan."}
@@ -332,7 +380,7 @@ export default function LandingPage() {
             {/* Challenge */}
             <div className="p-8 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 space-y-4 bg-white dark:bg-slate-900 transition-colors duration-300">
               <div className="flex items-center gap-3">
-                <h3 className="text-[11px] font-black text-[#1a237e] dark:text-[#00f2ff] uppercase tracking-widest">
+                <h3 className="text-sm md:text-base font-black text-[#1a237e] dark:text-[#00f2ff] uppercase tracking-wider">
                   {useTranslationStore.getState().language === "en" ? "The Challenge" : "Tantangan Utama"}
                 </h3>
               </div>
@@ -346,7 +394,7 @@ export default function LandingPage() {
                 ].map((item, i) => (
                   <li
                     key={i}
-                    className="flex items-start gap-2 text-[10px] text-slate-500 dark:text-slate-400 font-medium"
+                    className="flex items-start gap-2 text-[13px] md:text-[14px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed"
                   >
                     <div className="w-1.5 h-1.5 bg-emerald-500 rounded-none flex-shrink-0 mt-1.5" />
                     {item}
@@ -358,7 +406,7 @@ export default function LandingPage() {
             {/* Scope & Limitations */}
             <div className="p-8 border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800 space-y-4 bg-white dark:bg-slate-900 transition-colors duration-300">
               <div className="flex items-center gap-3">
-                <h3 className="text-[11px] font-black text-[#1a237e] dark:text-[#00f2ff] uppercase tracking-widest">
+                <h3 className="text-sm md:text-base font-black text-[#1a237e] dark:text-[#00f2ff] uppercase tracking-wider">
                   {useTranslationStore.getState().language === "en" ? "Scope & Limitations" : "Batasan & Ruang Lingkup"}
                 </h3>
               </div>
@@ -372,7 +420,7 @@ export default function LandingPage() {
                 ].map((item, i) => (
                   <li
                     key={i}
-                    className="flex items-start gap-2 text-[10px] text-slate-500 dark:text-slate-400 font-medium"
+                    className="flex items-start gap-2 text-[13px] md:text-[14px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed"
                   >
                     <div className="w-1.5 h-1.5 bg-rose-400 rounded-none flex-shrink-0 mt-1.5" />
                     {item}
@@ -384,7 +432,7 @@ export default function LandingPage() {
             {/* Expected Output */}
             <div className="p-8 space-y-4 bg-white dark:bg-slate-900 transition-colors duration-300">
               <div className="flex items-center gap-3">
-                <h3 className="text-[11px] font-black text-[#1a237e] dark:text-[#00f2ff] uppercase tracking-widest">
+                <h3 className="text-sm md:text-base font-black text-[#1a237e] dark:text-[#00f2ff] uppercase tracking-wider">
                   {useTranslationStore.getState().language === "en" ? "Expected Output" : "Output yang Diharapkan"}
                 </h3>
               </div>
@@ -408,10 +456,10 @@ export default function LandingPage() {
                   },
                 ].map((item, i) => (
                   <div key={i} className="border-b border-slate-50 dark:border-slate-800 pb-2">
-                    <p className="text-[9px] font-black text-[#1a237e] dark:text-[#00f2ff] uppercase tracking-widest">
+                    <p className="text-[12px] md:text-[13px] font-black text-[#1a237e] dark:text-[#00f2ff] uppercase tracking-widest">
                       {item.label}
                     </p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">
+                    <p className="text-[13px] md:text-[14px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
                       {item.desc}
                     </p>
                   </div>

@@ -147,8 +147,19 @@ export default function AuditPage() {
                 onClick={() => setSelectedLog(log)}
               >
                 <td className="px-4 sm:px-6 py-2 text-slate-600 dark:text-slate-400">
-                  <span className="text-slate-400 dark:text-slate-600 mr-2">MAY 07</span>
-                  {new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ".84"}
+                  {(() => {
+                    const ts = log.timestamp.endsWith("Z") ? log.timestamp : `${log.timestamp}Z`;
+                    const dateObj = new Date(ts);
+                    const monthDay = dateObj.toLocaleDateString("en-US", { month: "short", day: "2-digit" }).toUpperCase();
+                    const timeStr = dateObj.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    const msVal = String(dateObj.getMilliseconds()).padStart(3, "0").slice(0, 2);
+                    return (
+                      <>
+                        <span className="text-slate-400 dark:text-slate-600 mr-2">{monthDay}</span>
+                        {timeStr}.{msVal}
+                      </>
+                    );
+                  })()}
                 </td>
                 <td className="px-4 sm:px-6 py-2">
                   <div className="flex items-center gap-2">

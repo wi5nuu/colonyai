@@ -58,6 +58,22 @@ export default function ResetPasswordPage() {
       toast.error("Password must be at least 12 characters");
       return;
     }
+    if (!/[A-Z]/.test(formData.password)) {
+      toast.error("Password must contain at least one uppercase letter");
+      return;
+    }
+    if (!/[a-z]/.test(formData.password)) {
+      toast.error("Password must contain at least one lowercase letter");
+      return;
+    }
+    if (!/[0-9]/.test(formData.password)) {
+      toast.error("Password must contain at least one number");
+      return;
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
+      toast.error("Password must contain at least one special character/symbol");
+      return;
+    }
 
     setIsLoading(true);
     try {

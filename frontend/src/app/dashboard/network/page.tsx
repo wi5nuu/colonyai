@@ -18,6 +18,7 @@ import {
   MapPin,
   ArrowUpRight,
   X,
+  Search,
 } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "sonner";
@@ -119,6 +120,15 @@ export default function NetworkMapPage() {
   const [mapZoom, setMapZoom] = useState(1);
   const [isDark, setIsDark] = useState(false);
   const [topology, setTopology] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredOrgs = orgs.filter((org) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      org.name.toLowerCase().includes(query) ||
+      org.location.toLowerCase().includes(query)
+    );
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -276,15 +286,38 @@ export default function NetworkMapPage() {
                 {r.label}
               </button>
             ))}
-            <div className="ml-auto flex items-center gap-4 pr-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />{" "}
-                Active
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />{" "}
-                Inactive
-              </span>
+            <div className="ml-auto flex items-center gap-4 pr-2">
+              {/* Sleek Search Input */}
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search nodes..."
+                  className="w-32 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[9px] font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-primary transition-all px-2 py-1 pl-6 rounded-none uppercase tracking-wide placeholder:text-slate-400"
+                />
+                <Search className="w-3 h-3 text-slate-400 absolute left-2 pointer-events-none" />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                  >
+                    <X className="w-2.5 h-2.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Status Indicators */}
+              <div className="flex items-center gap-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />{" "}
+                  Active
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />{" "}
+                  Inactive
+                </span>
+              </div>
             </div>
           </div>
 
@@ -338,7 +371,7 @@ export default function NetworkMapPage() {
                     }
                   </Geographies>
 
-                  {orgs.map((org) => {
+                  {filteredOrgs.map((org) => {
                     const isActive = org.status === "active";
                     const isHovered = hoveredId === org.id;
                     const isSelected = popup?.org.id === org.id;
@@ -523,7 +556,7 @@ export default function NetworkMapPage() {
           <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 shrink-0">
             <p className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
               Active Regions{" "}
-              <span className="text-primary ml-1">{orgs.length}</span>
+              <span className="text-primary ml-1">{filteredOrgs.length}</span>
             </p>
           </div>
 
@@ -544,7 +577,7 @@ export default function NetworkMapPage() {
                 </p>
               </div>
             ) : (
-              orgs.map((org) => (
+              filteredOrgs.map((org) => (
                 <div
                   key={org.id}
                   onClick={() => {

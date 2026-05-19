@@ -33,7 +33,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: "manager@mitrakeluarga.com",
+    email: "company@gmail.com",
     password: "",
     mfaToken: "",
   });
@@ -100,7 +100,7 @@ export default function LoginPage() {
                           type="email"
                           required
                           className="w-full h-14 bg-slate-50 dark:bg-slate-900 border-b-2 border-slate-200 dark:border-slate-800 px-4 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0055ff] dark:focus:border-[#00f2ff] transition-all"
-                          placeholder="manager@mitrakeluarga.com"
+                          placeholder="company@gmail.com"
                           value={formData.email}
                           onChange={(e) =>
                             setFormData({ ...formData, email: e.target.value })

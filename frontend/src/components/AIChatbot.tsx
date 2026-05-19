@@ -164,10 +164,42 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         ? t('chatbot.noResults') || "Maaf, saya belum memiliki informasi spesifik mengenai hal tersebut."
         : t('chatbot.noResults') || "Sorry, I don't have specific information regarding that yet.";
 
-      const quickMatch = quickQuestions.find(item => item.q.toLowerCase() === lowerInput);
+      // 1. Cek kecocokan persis
+      let quickMatch = quickQuestions.find(item => item.q.toLowerCase() === lowerInput);
+
+      // 2. Algoritma pencocokan kata (overlap word matching) berintelegensi tinggi
+      if (!quickMatch) {
+        const inputWords = lowerInput
+          .replace(/[?.!,;:]/g, "")
+          .split(/\s+/)
+          .filter(w => w.length > 2); // Filter kata-kata pendek
+
+        let bestMatch = null;
+        let maxOverlap = 0;
+
+        for (const item of quickQuestions) {
+          const qWords = item.q.toLowerCase()
+            .replace(/[?.!,;:]/g, "")
+            .split(/\s+/)
+            .filter(w => w.length > 2);
+
+          const overlap = inputWords.filter(w => qWords.includes(w)).length;
+          if (overlap > maxOverlap) {
+            maxOverlap = overlap;
+            bestMatch = item;
+          }
+        }
+
+        // Jika terdapat minimal 2 kata yang tumpang tindih (atau 1 jika input sangat pendek)
+        if (bestMatch && (maxOverlap >= 2 || (inputWords.length === 1 && maxOverlap >= 1))) {
+          quickMatch = bestMatch;
+        }
+      }
+
       if (quickMatch) {
         foundResponse = quickMatch.a;
       } else {
+        // 3. Fallback kata kunci tradisional
         const keywords = language === 'id' ? [
           { k: ["yolo", "v8"], r: "Kami menggunakan YOLOv8 dengan mAP > 0.85 untuk akurasi maksimal." },
           { k: ["tuv", "nord"], r: "TUV NORD Indonesia adalah Case Provider resmi untuk Healthcare Case 1." },

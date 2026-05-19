@@ -935,7 +935,7 @@ export default function SentinelPage() {
               </span>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-2.5">
               {[
                 {
                   name: "v3.2.0_FINETUNED",
@@ -961,15 +961,15 @@ export default function SentinelPage() {
               ].map((model) => (
                 <div
                   key={model.name}
-                  className="group relative border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 rounded-none transition-all hover:border-primary/50 hover:shadow-lg cursor-pointer"
+                  className="group relative border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 rounded-none transition-all hover:border-primary/50 hover:shadow-lg cursor-pointer"
                   onClick={() => setSelectedModel(model)}
                 >
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex justify-between items-start mb-2.5">
                     <div>
-                      <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                      <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
                         {model.name}
                       </h4>
-                      <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+                      <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">
                         {model.date}
                       </p>
                     </div>
@@ -982,14 +982,14 @@ export default function SentinelPage() {
 
                   <div className="flex items-center justify-between gap-6">
                     <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 rounded-none bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700">
-                        <TrendingUp className="w-5 h-5 text-slate-400" />
+                      <div className="w-8 h-8 rounded-none bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700">
+                        <TrendingUp className="w-4 h-4 text-slate-400" />
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[8px] font-black text-slate-400 uppercase">
                           {isId ? "Presisi mAP" : "Precision mAP"}
                         </span>
-                        <span className="text-sm font-mono font-bold text-slate-900 dark:text-white">
+                        <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">
                           {model.map}
                         </span>
                       </div>
@@ -999,7 +999,7 @@ export default function SentinelPage() {
                       <button
                         onClick={handleDeploy}
                         disabled={isDeploying}
-                        className={`flex-1 py-2.5 rounded-none text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                        className={`flex-1 py-2 rounded-none text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
                           isDeploying
                             ? "bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed"
                             : "bg-primary text-white hover:shadow-lg hover:shadow-primary/30 active:scale-[0.98]"
@@ -1013,8 +1013,8 @@ export default function SentinelPage() {
                             ? "Men-deploy..."
                             : "Deploying..."
                           : isId
-                            ? "Deploy ke Node"
-                            : "Deploy to Nodes"}
+                            ? "Deploy"
+                            : "Deploy"}
                       </button>
                     )}
                   </div>

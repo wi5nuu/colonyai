@@ -25,12 +25,14 @@ import {
   DocumentationToggle,
 } from "@/components/DocumentationSidebar";
 import { useTranslationStore } from "@/lib/i18n/store";
+import { useAuthStore } from "@/lib/auth-store";
 import { toast } from "sonner";
 import { AnalysisListResponse, MediaType, ReportType } from "@/lib/types";
 
 export default function HistoryPage() {
   const { t } = useTranslationStore();
   const router = useRouter();
+  const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [mediaFilter, setMediaFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -221,28 +223,28 @@ export default function HistoryPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                  <th className="px-8 py-5">Specimen Registry</th>
-                  <th className="px-8 py-5">Matrix</th>
-                  <th className="px-8 py-5">Analytical Yield</th>
-                  <th className="px-8 py-5">Audit Status</th>
-                  <th className="px-8 py-5">Neural Trust</th>
-                  <th className="px-8 py-5 text-right">Actions</th>
+                <tr className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                  <th className="px-4 py-2.5">Specimen Registry</th>
+                  <th className="px-4 py-2.5">Matrix</th>
+                  <th className="px-4 py-2.5">Analytical Yield</th>
+                  <th className="px-4 py-2.5">Audit Status</th>
+                  <th className="px-4 py-2.5">Neural Trust</th>
+                  <th className="px-4 py-2.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                 {isLoading ? (
                   Array(5).fill(0).map((_, i) => (
                     <tr key={i} className="animate-pulse">
-                      <td colSpan={6} className="px-8 py-6 h-16 bg-slate-50/20" />
+                      <td colSpan={6} className="px-4 py-3 h-10 bg-slate-50/20" />
                     </tr>
                   ))
                 ) : analyses.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-8 py-20 text-center">
+                    <td colSpan={6} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center">
-                        <Database className="w-12 h-12 text-slate-200 mb-4" />
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No matching records found in neural ledger</p>
+                        <Database className="w-8 h-8 text-slate-200 mb-3" />
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">No matching records found in neural ledger</p>
                       </div>
                     </td>
                   </tr>
@@ -253,56 +255,58 @@ export default function HistoryPage() {
                       onClick={() => handleViewAnalysis(a.id)}
                       className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                     >
-                      <td className="px-8 py-5">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-none bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <FlaskConical className="w-5 h-5 text-primary" />
+                      <td className="px-4 py-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-7 h-7 rounded-none bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
+                            <FlaskConical className="w-3.5 h-3.5 text-primary" />
                           </div>
                           <div>
-                            <span className="text-[13px] font-black text-slate-900 dark:text-white font-mono tracking-tight">{a.sample_id}</span>
-                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{new Date(a.created_at).toLocaleString()}</p>
+                            <span className="text-[11px] font-black text-slate-900 dark:text-white font-mono tracking-tight">{a.sample_id}</span>
+                            <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{new Date(a.created_at).toLocaleString()}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-8 py-5">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{a.media_type}</span>
+                      <td className="px-4 py-2">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{a.media_type}</span>
                       </td>
-                      <td className="px-8 py-5">
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-sm font-black text-slate-900 dark:text-white">{formatCFU(a.cfu_per_ml, a.warnings)}</span>
-                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">CFU/mL</span>
+                      <td className="px-4 py-2">
+                        <div className="flex items-baseline gap-0.5">
+                          <span className="text-[12px] font-black text-slate-900 dark:text-white">{formatCFU(a.cfu_per_ml, a.warnings)}</span>
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">CFU/mL</span>
                         </div>
                       </td>
-                      <td className="px-8 py-5">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-1.5 h-1.5 rounded-full ${a.is_valid_for_reporting ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                          <span className={`text-[10px] font-black uppercase tracking-tighter ${a.is_valid_for_reporting ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      <td className="px-4 py-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-1 h-1 rounded-full ${a.is_valid_for_reporting ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                          <span className={`text-[9px] font-black uppercase tracking-tighter ${a.is_valid_for_reporting ? 'text-emerald-600' : 'text-amber-600'}`}>
                             {a.is_valid_for_reporting ? 'Verified' : 'Pending Audit'}
                           </span>
                         </div>
                       </td>
-                      <td className="px-8 py-5">
-                        <div className="flex flex-col gap-1 w-24">
-                          <div className="flex justify-between text-[9px] font-bold uppercase tracking-tighter">
+                      <td className="px-4 py-2">
+                        <div className="flex flex-col gap-0.5 w-20">
+                          <div className="flex justify-between text-[8px] font-bold uppercase tracking-tighter">
                             <span className="text-slate-400">Trust</span>
                             <span className="text-slate-900 dark:text-white">{(a.confidence_score * 100).toFixed(0)}%</span>
                           </div>
-                          <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                          <div className="w-full h-0.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                             <div className="h-full bg-primary" style={{ width: `${a.confidence_score * 100}%` }} />
                           </div>
                         </div>
                       </td>
-                      <td className="px-8 py-5 text-right">
-                        <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-none shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-all">
-                            <Eye className="w-4 h-4 text-slate-400" />
+                      <td className="px-4 py-2 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded-none shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-all">
+                            <Eye className="w-3.5 h-3.5 text-slate-400" />
                           </button>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); handleDelete(a.id, a.sample_id); }}
-                            className="p-2 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-none transition-all"
-                          >
-                            <Trash2 className="w-4 h-4 text-rose-400" />
-                          </button>
+                          {user?.role !== "auditor" && (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleDelete(a.id, a.sample_id); }}
+                              className="p-1 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-none transition-all"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -88,11 +88,11 @@ def convert_md_to_docx(md_path, docx_path):
         section.left_margin = Inches(1.0)
         section.right_margin = Inches(1.0)
         
-    # Configure Normal Style (Calibri 11pt, 1.15 line spacing)
+    # Configure Normal Style (Calibri 12pt, 1.15 line spacing)
     style_normal = doc.styles['Normal']
     font_normal = style_normal.font
     font_normal.name = 'Calibri'
-    font_normal.size = Pt(11)
+    font_normal.size = Pt(12)
     font_normal.color.rgb = RGBColor(0x33, 0x33, 0x33) # Charcoal
     style_normal.paragraph_format.line_spacing = 1.15
     style_normal.paragraph_format.space_after = Pt(6)
@@ -140,7 +140,7 @@ def convert_md_to_docx(md_path, docx_path):
                 code_text = "\n".join(code_lines)
                 run = cell_p.add_run(code_text)
                 run.font.name = 'Consolas'
-                run.font.size = Pt(9)
+                run.font.size = Pt(10)
                 run.font.color.rgb = RGBColor(0x2C, 0x3E, 0x50)
                 
                 # Spacer paragraph after table
@@ -207,6 +207,7 @@ def convert_md_to_docx(md_path, docx_path):
                             run.bold = True
                             run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF) # White text
                             run.font.name = 'Calibri'
+                            run.font.size = Pt(12)
                         else:
                             # Striped rows
                             if r_idx % 2 == 0:
@@ -233,7 +234,7 @@ def convert_md_to_docx(md_path, docx_path):
             
             run = p.add_run(title_text)
             run.bold = True
-            run.font.size = Pt(20)
+            run.font.size = Pt(22)
             run.font.name = 'Calibri Light'
             run.font.color.rgb = RGBColor(0x1F, 0x4E, 0x79) # Primary Blue
             
@@ -247,7 +248,7 @@ def convert_md_to_docx(md_path, docx_path):
             
             run = p.add_run(h2_text)
             run.bold = True
-            run.font.size = Pt(14)
+            run.font.size = Pt(16)
             run.font.name = 'Calibri Light'
             run.font.color.rgb = RGBColor(0x2C, 0x3E, 0x50) # Dark Charcoal
             
@@ -261,7 +262,7 @@ def convert_md_to_docx(md_path, docx_path):
             
             run = p.add_run(h3_text)
             run.bold = True
-            run.font.size = Pt(12)
+            run.font.size = Pt(13)
             run.font.name = 'Calibri'
             run.font.color.rgb = RGBColor(0x56, 0x65, 0x73) # Soft Blue/Grey
             

@@ -221,6 +221,8 @@ export default function DashboardLayout({
   // Fetch real password reset requests and push to notifications
   useEffect(() => {
     const fetchResetRequests = async () => {
+      const role = auth.user?.role;
+      if (role !== "admin" && role !== "super_admin") return;
       try {
         const res = await api.get<{ reset_requests: { id: string; user_name: string; user_email: string; requested_at: string }[] }>("/api/v1/auth/reset-requests");
         const pending = res.data.reset_requests.filter((r: any) => r.status === "pending");
@@ -247,7 +249,7 @@ export default function DashboardLayout({
     fetchResetRequests();
     const interval = setInterval(fetchResetRequests, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [auth.user?.role]);
 
   // Calibration Countdown Logic
   const [timeLeft, setTimeLeft] = useState({
@@ -476,7 +478,7 @@ export default function DashboardLayout({
                     <div
                       className={`
                       fixed bottom-0 left-0 w-full h-[70vh] bg-white dark:bg-slate-900 rounded-none shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.3)] z-50 overflow-hidden animate-in slide-in-from-bottom duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
-                      lg:absolute lg:bottom-auto lg:top-full lg:right-0 lg:mt-3 lg:w-96 lg:h-auto lg:max-h-[500px] lg:rounded-none lg:shadow-2xl lg:border lg:border-slate-100 lg:dark:border-slate-800 lg:animate-in lg:fade-in lg:slide-in-from-top-2
+                      lg:absolute lg:bottom-auto lg:top-full lg:right-0 lg:-translate-x-6 lg:mt-3 lg:w-96 lg:h-auto lg:max-h-[500px] lg:rounded-none lg:shadow-2xl lg:border lg:border-slate-100 lg:dark:border-slate-800 lg:animate-in lg:fade-in lg:slide-in-from-top-2
                     `}
                     >
                       {/* Grab Handle - Mobile Only */}
@@ -498,7 +500,7 @@ export default function DashboardLayout({
                           {t("header.clearAll")}
                         </button>
                       </div>
-                      <div className="overflow-y-auto h-[calc(100%-120px)] lg:max-h-[350px]">
+                      <div className="overflow-y-auto h-[calc(100%-120px)] lg:max-h-[350px] scrollbar-hide">
                         {notifications.length > 0 ? (
                           notifications.map((n) => (
                             <div
@@ -509,19 +511,19 @@ export default function DashboardLayout({
                                   setNotificationsOpen(false);
                                 }
                               }}
-                              className={`px-6 py-5 lg:px-5 lg:py-4 border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer relative ${!n.read ? "bg-primary/5" : ""} ${n.link ? "hover:pr-8" : ""}`}
+                              className={`px-5 py-3 lg:px-4 lg:py-2.5 border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer relative ${!n.read ? "bg-primary/5" : ""} ${n.link ? "hover:pr-8" : ""}`}
                             >
                               {!n.read && (
                                 <div className="absolute left-0 top-0 bottom-0 w-1.5 lg:w-1 bg-primary" />
                               )}
-                              <div className="flex gap-4 lg:gap-3">
+                              <div className="flex gap-3.5 lg:gap-2.5">
                                 <div
-                                  className={`p-2 lg:p-2 rounded-none shadow-sm ${
+                                  className={`flex items-center justify-center w-8 h-8 rounded-none ${
                                     n.type === "alert"
-                                      ? "bg-rose-100 text-rose-500 border border-rose-200"
+                                      ? "text-rose-500"
                                       : n.type === "approval"
-                                        ? "bg-amber-100 text-amber-500 border border-amber-200"
-                                        : "bg-emerald-100 text-emerald-500 border border-emerald-200"
+                                        ? "text-amber-500"
+                                        : "text-emerald-500"
                                   }`}
                                 >
                                   {n.type === "alert" ? (
@@ -536,10 +538,10 @@ export default function DashboardLayout({
                                   <p className="text-xs lg:text-[11px] font-black text-slate-900 dark:text-white leading-tight uppercase tracking-wide">
                                     {n.title}
                                   </p>
-                                  <p className="text-[11px] lg:text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-1.5 leading-snug">
+                                  <p className="text-[11px] lg:text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-1 leading-snug">
                                     {n.message}
                                   </p>
-                                  <p className="text-[9px] text-slate-300 dark:text-slate-600 font-black mt-2 lg:mt-2 uppercase tracking-widest">
+                                  <p className="text-[9px] text-slate-300 dark:text-slate-600 font-black mt-1 uppercase tracking-widest">
                                     {n.time}
                                   </p>
                                 </div>

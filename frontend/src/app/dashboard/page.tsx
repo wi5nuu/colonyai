@@ -131,15 +131,17 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => router.push("/dashboard/upload")}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-4 py-2 rounded-none font-black text-[9px] uppercase tracking-widest flex items-center gap-2 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95"
-            >
-              <Plus className="w-3.5 h-3.5 text-primary" />
-              {isId ? "Analisis Baru" : "New Analysis"}
-            </button>
-          </div>
+          {user?.role && ["analyst", "admin"].includes(user.role) && (
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => router.push("/dashboard/upload")}
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-4 py-2 rounded-none font-black text-[9px] uppercase tracking-widest flex items-center gap-2 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95"
+              >
+                <Plus className="w-3.5 h-3.5 text-primary" />
+                {isId ? "Analisis Baru" : "New Analysis"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* STATS GRID - HIGH FIDELITY */}
@@ -305,7 +307,10 @@ export default function DashboardPage() {
                     Validated Analysis Records
                   </p>
                 </div>
-                <button className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline flex items-center gap-1">
+                <button 
+                  onClick={() => router.push("/dashboard/history")}
+                  className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline flex items-center gap-1 cursor-pointer"
+                >
                   View Full History <ArrowUpRight className="w-3 h-3" />
                 </button>
               </div>
@@ -370,48 +375,87 @@ export default function DashboardPage() {
           {/* RIGHT: SYSTEM HEALTH & QUICK ACTIONS */}
           <div className="col-span-12 lg:col-span-4 space-y-4">
             {/* QUICK ACTIONS GRID */}
-            <div className="grid grid-cols-2 gap-4">
-              {[
+            <div className={`grid ${
+              [
                 {
-                  label: "Reports",
+                  label: isId ? "Laporan" : "Reports",
                   icon: FileText,
                   href: "/dashboard/reports",
                   color: "text-blue-500",
+                  roles: ["manager", "auditor", "admin", "super_admin"],
                 },
                 {
                   label: "Simulator",
                   icon: Beaker,
                   href: "/dashboard/simulator",
                   color: "text-rose-500",
+                  roles: ["analyst", "admin"],
                 },
                 {
-                  label: "Audit Ledger",
+                  label: isId ? "Catatan Audit" : "Audit Ledger",
                   icon: Shield,
                   href: "/dashboard/audit",
                   color: "text-purple-500",
+                  roles: ["manager", "auditor", "admin", "super_admin"],
                 },
                 {
-                  label: "History",
+                  label: isId ? "Riwayat" : "History",
                   icon: HistoryIcon,
                   href: "/dashboard/history",
                   color: "text-amber-500",
+                  roles: ["analyst", "manager", "auditor", "admin"],
                 },
-              ].map((item, i) => (
-                <Link
-                  key={i}
-                  href={item.href}
-                  className="bg-white dark:bg-slate-900 p-4 rounded-none border border-slate-200 dark:border-slate-800 shadow-sm hover:border-primary transition-all group text-center"
-                >
-                  <div
-                    className={`p-2.5 bg-slate-50 dark:bg-slate-800 rounded-none mb-2 w-fit mx-auto group-hover:scale-110 transition-transform`}
+              ].filter(item => !user?.role || item.roles.includes(user.role)).length <= 2 
+                ? "grid-cols-2" 
+                : "grid-cols-2"
+            } gap-4`}>
+              {[
+                {
+                  label: isId ? "Laporan" : "Reports",
+                  icon: FileText,
+                  href: "/dashboard/reports",
+                  color: "text-blue-500",
+                  roles: ["manager", "auditor", "admin", "super_admin"],
+                },
+                {
+                  label: "Simulator",
+                  icon: Beaker,
+                  href: "/dashboard/simulator",
+                  color: "text-rose-500",
+                  roles: ["analyst", "admin"],
+                },
+                {
+                  label: isId ? "Catatan Audit" : "Audit Ledger",
+                  icon: Shield,
+                  href: "/dashboard/audit",
+                  color: "text-purple-500",
+                  roles: ["manager", "auditor", "admin", "super_admin"],
+                },
+                {
+                  label: isId ? "Riwayat" : "History",
+                  icon: HistoryIcon,
+                  href: "/dashboard/history",
+                  color: "text-amber-500",
+                  roles: ["analyst", "manager", "auditor", "admin"],
+                },
+              ]
+                .filter((item) => !user?.role || item.roles.includes(user.role))
+                .map((item, i) => (
+                  <Link
+                    key={i}
+                    href={item.href}
+                    className="bg-white dark:bg-slate-900 p-4 rounded-none border border-slate-200 dark:border-slate-800 shadow-sm hover:border-primary transition-all group text-center"
                   >
-                    <item.icon className={`w-4 h-4 ${item.color}`} />
-                  </div>
-                  <p className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-[0.1em]">
-                    {item.label}
-                  </p>
-                </Link>
-              ))}
+                    <div
+                      className={`p-2.5 bg-slate-50 dark:bg-slate-800 rounded-none mb-2 w-fit mx-auto group-hover:scale-110 transition-transform`}
+                    >
+                      <item.icon className={`w-4 h-4 ${item.color}`} />
+                    </div>
+                    <p className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-[0.1em]">
+                      {item.label}
+                    </p>
+                  </Link>
+                ))}
             </div>
 
             {/* NEURAL NODE STATUS */}

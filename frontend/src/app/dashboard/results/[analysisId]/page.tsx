@@ -1098,7 +1098,38 @@ MESIN: YOLOv8 SENSITIVE NODE`;
               </>
             ) : (
               /* Certificate of Analysis View */
-              <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 border-2 border-slate-900 dark:border-slate-700 rounded-none shadow-xl relative overflow-hidden animate-in zoom-in-95 duration-700 print:shadow-none print:border-none print:p-0 print:max-w-full transition-colors">
+              <div className="print-certificate-container max-w-3xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 border-2 border-slate-900 dark:border-slate-700 rounded-none shadow-xl relative overflow-hidden animate-in zoom-in-95 duration-700 print:shadow-none print:border-none print:p-0 print:max-w-full transition-colors">
+                <style dangerouslySetInnerHTML={{__html: `
+                  @media print {
+                    /* Hide entire body and dashboard wrapping elements */
+                    body * {
+                      visibility: hidden !important;
+                    }
+                    /* Display ONLY the certificate container and all its children */
+                    .print-certificate-container, .print-certificate-container * {
+                      visibility: visible !important;
+                    }
+                    /* Force container to fill the page cleanly without borders or shadows */
+                    .print-certificate-container {
+                      position: absolute !important;
+                      left: 0 !important;
+                      top: 0 !important;
+                      width: 100% !important;
+                      max-width: 100% !important;
+                      margin: 0 !important;
+                      padding: 20px !important;
+                      border: none !important;
+                      box-shadow: none !important;
+                      background: white !important;
+                      color: black !important;
+                    }
+                    /* Hide the floating action buttons during print */
+                    .print-certificate-container .print\\:hidden, 
+                    .print-certificate-container button {
+                      display: none !important;
+                    }
+                  }
+                `}} />
                 <button 
                   onClick={() => window.print()}
                   className="absolute top-4 right-4 px-3 py-1.5 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-slate-800 transition-colors print:hidden"

@@ -36,13 +36,14 @@ export function LanguageSync() {
     document.dispatchEvent(new CustomEvent('langchange', { detail: { lang: newLang } }))
   }, [language])
 
-  // Also apply on mount in case the store was rehydrated from localStorage
+  // Also apply on mount and trigger manual rehydration to prevent Next.js SSR hydration mismatch
   useEffect(() => {
-    const savedLang = typeof window !== 'undefined' ? localStorage.getItem('colonyai-html-lang') : null
+    useTranslationStore.persist.rehydrate();
+    const savedLang = typeof window !== 'undefined' ? localStorage.getItem('colonyai-html-lang') : null;
     if (savedLang) {
-      document.documentElement.lang = savedLang === 'id' ? 'id' : 'en'
+      document.documentElement.lang = savedLang === 'id' ? 'id' : 'en';
     }
-  }, [])
+  }, []);
 
   return null
 }

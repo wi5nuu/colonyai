@@ -60,8 +60,7 @@ async def simulate_analysis(
     from app.services.colony_detector import ColonyDetector
 
     # 1. Validation
-    contents = await file.read()
-    validate_and_sanitize_image(contents)
+    contents, safe_filename, detected_mime = await validate_and_sanitize_image(file)
 
     # 2. Processing
     processor = ImageProcessor()
@@ -352,7 +351,7 @@ async def create_analysis(
             s3_key = f"{settings.AWS_S3_ORIGINAL_PREFIX}{safe_filename}"
             upload_to_s3(file_content, s3_key, content_type=detected_mime)
             # BUG-039: presigned URL 15 menit (900 detik), bukan 1 jam
-            original_url = get_presigned_url(s3_key, expires_in=900) or s3_key
+            original_url = get_presigned_url(s3_key, expiry_seconds=900) or s3_key
 
         # ── Step 2: Buat record analisis ──
         # Multi-tenant: Tag with organization_id
@@ -499,7 +498,7 @@ async def create_analysis(
             s3_key = f"{settings.AWS_S3_ANNOTATED_PREFIX}{annotated_filename}"
             with open(annotated_path, "rb") as f:
                 upload_to_s3(f.read(), s3_key, content_type="image/jpeg")
-            annotated_url = get_presigned_url(s3_key, expires_in=900) or s3_key
+            annotated_url = get_presigned_url(s3_key, expiry_seconds=900) or s3_key
         else:
             annotated_url = _get_file_url(annotated_path)
 
@@ -949,6 +948,8 @@ async def approve_analysis(
     if analysis.status != AnalysisStatus.COMPLETED:
         analysis.status = AnalysisStatus.COMPLETED
 
+    # Override low reliability with high to mark as verified / valid for reporting
+    analysis.reliability = "high"
     analysis.updated_at = datetime.now(timezone.utc) # Force version increment
 
     try:

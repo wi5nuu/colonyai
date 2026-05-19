@@ -43,6 +43,9 @@ export default function ReportsPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showDocs, setShowDocs] = useState(false);
   const [isSendingMessenger, setIsSendingMessenger] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [sharePlatform, setSharePlatform] = useState<"whatsapp" | "telegram" | null>(null);
+  const [shareInput, setShareInput] = useState("");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -187,32 +190,30 @@ export default function ReportsPage() {
     }
   };
 
-  const handleSendMessenger = async (platform: "whatsapp" | "telegram") => {
+  const handleOpenShareModal = (platform: "whatsapp" | "telegram") => {
+    setSharePlatform(platform);
+    setShareInput(platform === "whatsapp" ? "62813948290" : "colonyai_support");
+    setIsShareModalOpen(true);
+  };
+
+  const handleConfirmShare = async () => {
+    if (!sharePlatform) return;
     setIsSendingMessenger(true);
     try {
-      const defaultNumber = "6281394829";
-      let targetId = "";
+      const targetId = sharePlatform === "whatsapp"
+        ? shareInput.replace(/[^0-9]/g, "")
+        : shareInput.replace("@", "");
       
-      if (platform === "whatsapp") {
-        const inputNum = prompt("Masukkan Nomor WhatsApp (contoh: 6281394829):", defaultNumber);
-        if (!inputNum) {
-          setIsSendingMessenger(false);
-          return;
-        }
-        targetId = inputNum.replace(/[^0-9]/g, ""); // digits only for wa.me URL
-      } else {
-        const inputUser = prompt("Masukkan Username/ID Telegram (contoh: colonyai_support):", "colonyai_support");
-        if (!inputUser) {
-          setIsSendingMessenger(false);
-          return;
-        }
-        targetId = inputUser.replace("@", "");
+      if (!targetId) {
+        toast.error(sharePlatform === "whatsapp" ? "Nomor WhatsApp tidak boleh kosong" : "Username Telegram tidak boleh kosong");
+        setIsSendingMessenger(false);
+        return;
       }
 
       // ── Trigger API (Audit Trail) ──
       try {
         await api.post("/api/v1/reports/send-messenger", {
-          platform,
+          platform: sharePlatform,
           target_id: targetId,
           date_from: dateFrom || undefined,
           date_to: dateTo || undefined,
@@ -231,15 +232,16 @@ export default function ReportsPage() {
       const encodedMsg = encodeURIComponent(messageText);
 
       // ── Open platform redirect in new tab ──
-      if (platform === "whatsapp") {
+      if (sharePlatform === "whatsapp") {
         window.open(`https://api.whatsapp.com/send?phone=${targetId}&text=${encodedMsg}`, "_blank");
         toast.success("Mengarahkan ke WhatsApp...");
       } else {
         window.open(`https://t.me/${targetId}?text=${encodedMsg}`, "_blank");
         toast.success("Mengarahkan ke Telegram...");
       }
+      setIsShareModalOpen(false);
     } catch (error: any) {
-      toast.error(`Gagal mengirim via ${platform.toUpperCase()}`);
+      toast.error(`Gagal mengirim via ${sharePlatform.toUpperCase()}`);
     } finally {
       setIsSendingMessenger(false);
     }
@@ -475,7 +477,7 @@ export default function ReportsPage() {
                   <div className="w-px h-8 bg-slate-200 dark:bg-slate-800 hidden sm:block mx-2" />
 
                   <button
-                    onClick={() => handleSendMessenger("whatsapp")}
+                    onClick={() => handleOpenShareModal("whatsapp")}
                     disabled={isSendingMessenger}
                     className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed text-white text-[9px] font-black uppercase tracking-widest transition-all"
                   >
@@ -483,7 +485,7 @@ export default function ReportsPage() {
                     WhatsApp
                   </button>
                   <button
-                    onClick={() => handleSendMessenger("telegram")}
+                    onClick={() => handleOpenShareModal("telegram")}
                     disabled={isSendingMessenger}
                     className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed text-white text-[9px] font-black uppercase tracking-widest transition-all"
                   >
@@ -667,6 +669,94 @@ export default function ReportsPage() {
           </div>
         )}
       </div>
+
+      {/* Premium Share Modal */}
+      {isShareModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none w-full max-w-md overflow-hidden shadow-2xl p-6 relative animate-in zoom-in-95 duration-300">
+            {/* Close Button */}
+            <button
+              onClick={() => setIsShareModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Modal Title */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`p-2 rounded-none border ${sharePlatform === "whatsapp" ? "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/20 dark:border-emerald-900/50" : "bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-950/20 dark:border-blue-900/50"}`}>
+                <MessageCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                  {sharePlatform === "whatsapp" ? "Kirim Laporan via WhatsApp" : "Kirim Laporan via Telegram"}
+                </h3>
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                  ISO-17025 Validated Share
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="space-y-4">
+              <div className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-none">
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                  Pratinjau Pesan yang Akan Dikirim
+                </p>
+                <div className="text-[10px] text-slate-600 dark:text-slate-300 font-mono space-y-1 whitespace-pre-line leading-relaxed">
+                  {`*ColonyAI - Laporan Diagnostik ISO-17025*\n\n` +
+                   `• Total Spesimen: *${selectedIds.size}* dari *${filteredAnalyses.length}* spesimen\n` +
+                   `• Rentang Tanggal: *${dateFrom || '-'}* s/d *${dateTo || '-'}*\n` +
+                   `• Protokol: *${mediaType === 'all' ? 'Semua Protokol' : mediaType}*\n\n` +
+                   `Mohon diproses untuk keperluan audit sistem. Terima kasih!`}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  {sharePlatform === "whatsapp" ? "Nomor WhatsApp Tujuan (Dengan Kode Negara)" : "Username Telegram Tujuan"}
+                </label>
+                <input
+                  type="text"
+                  value={shareInput}
+                  onChange={(e) => setShareInput(e.target.value)}
+                  placeholder={sharePlatform === "whatsapp" ? "Contoh: 62813948290" : "Contoh: colonyai_support"}
+                  className="w-full px-3 py-2 text-[10px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none focus:border-primary transition-all"
+                />
+                <span className="text-[8px] text-slate-400 dark:text-slate-600 font-bold uppercase tracking-wide block">
+                  {sharePlatform === "whatsapp"
+                    ? "Harap masukkan nomor lengkap diawali kode negara (misal 62813948290)."
+                    : "Username tidak perlu diawali dengan tanda @."}
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex gap-3 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onClick={() => setIsShareModalOpen(false)}
+                className="flex-1 py-2 border border-slate-200 dark:border-slate-800 text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleConfirmShare}
+                disabled={isSendingMessenger}
+                className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest text-white transition-colors flex items-center justify-center gap-2 ${sharePlatform === "whatsapp" ? "bg-emerald-500 hover:bg-emerald-600" : "bg-blue-500 hover:bg-blue-600"}`}
+              >
+                {isSendingMessenger ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Send className="w-3.5 h-3.5" />
+                )}
+                Kirim Sekarang
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

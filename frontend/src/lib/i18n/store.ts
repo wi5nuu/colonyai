@@ -80,6 +80,7 @@ export const useTranslationStore = create<TranslationStore>()(
           }
         }
       },
+      skipHydration: true,
     },
   ),
 );

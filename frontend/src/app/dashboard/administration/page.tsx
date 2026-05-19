@@ -74,11 +74,16 @@ export default function AdministrationPage() {
   // Add User Modal State
   const [addUserModalOpen, setAddUserModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [showAddUserPassword, setShowAddUserPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [newUserData, setNewUserData] = useState({
     email: "",
     password: "",
     full_name: "",
     role: "analyst",
+    organization_id: "",
   });
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -126,6 +131,18 @@ export default function AdministrationPage() {
 
     fetchData();
   }, [currentUser?.email]);
+
+  useEffect(() => {
+    if (currentUser?.role === "super_admin") {
+      api.get("/api/v1/super/organizations")
+        .then((res) => {
+          setOrganizations(res.data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch organizations for dropdown:", err);
+        });
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -223,6 +240,12 @@ export default function AdministrationPage() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     // Password complexity check
+    if (newUserData.password !== confirmPassword) {
+      toast.error("Passwords do not match!");
+      setIsCreating(false);
+      return;
+    }
+
     const passwordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{12,}$/;
     if (!passwordRegex.test(newUserData.password)) {
@@ -233,8 +256,23 @@ export default function AdministrationPage() {
       return;
     }
 
+    if (currentUser?.role === "super_admin" && !newUserData.organization_id) {
+      toast.error("Please select a company/organization for the new staff member.");
+      setIsCreating(false);
+      return;
+    }
+
+    setIsCreating(true);
     try {
-      await api.post("/api/v1/auth/register", newUserData);
+      const payload = {
+        email: newUserData.email,
+        password: newUserData.password,
+        full_name: newUserData.full_name,
+        role: newUserData.role,
+        organization_id: currentUser?.role === "super_admin" ? newUserData.organization_id : undefined,
+      };
+
+      await api.post("/api/v1/auth/register", payload);
       toast.success(`User ${newUserData.full_name} has been provisioned.`);
       setAddUserModalOpen(false);
       setNewUserData({
@@ -242,7 +280,11 @@ export default function AdministrationPage() {
         password: "",
         full_name: "",
         role: "analyst",
+        organization_id: "",
       });
+      setConfirmPassword("");
+      setShowAddUserPassword(false);
+      setShowConfirmPassword(false);
 
       // Refresh list
       const usersRes = await api.get<any[]>("/api/v1/users/");
@@ -262,6 +304,7 @@ export default function AdministrationPage() {
           status: "active",
           lastActive: "Online",
           clearance: clearanceLevel,
+          organizationName: u.organization_name || undefined,
         };
       });
       setAnalysts(mappedUsers);
@@ -1277,6 +1320,32 @@ AUTORITAS: MASTER ROOT`}
                   </div>
                 </div>
 
+                {currentUser?.role === "super_admin" && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">
+                      Assign Company / Organization
+                    </label>
+                    <select
+                      required
+                      value={newUserData.organization_id}
+                      onChange={(e) =>
+                        setNewUserData({
+                          ...newUserData,
+                          organization_id: e.target.value,
+                        })
+                      }
+                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                    >
+                      <option value="">Select Company...</option>
+                      {organizations.map((org) => (
+                        <option key={org.id} value={org.id}>
+                          {org.name} ({org.location || "Global"})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
                     Email Identifier
@@ -1297,23 +1366,63 @@ AUTORITAS: MASTER ROOT`}
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
                     Temporary Password
                   </label>
-                  <input
-                    required
-                    type="password"
-                    value={newUserData.password}
-                    onChange={(e) =>
-                      setNewUserData({
-                        ...newUserData,
-                        password: e.target.value,
-                      })
-                    }
-                    placeholder="••••••••••••"
-                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600"
-                  />
+                  <div className="relative">
+                    <input
+                      required
+                      type={showAddUserPassword ? "text" : "password"}
+                      value={newUserData.password}
+                      onChange={(e) =>
+                        setNewUserData({
+                          ...newUserData,
+                          password: e.target.value,
+                        })
+                      }
+                      placeholder="••••••••••••"
+                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 pr-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAddUserPassword(!showAddUserPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showAddUserPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                   <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight italic">
                     Minimum 12 characters with Uppercase, Lowercase, Number, and
                     Special Char.
                   </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                    Confirm Temporary Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      required
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••••••"
+                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 pr-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 

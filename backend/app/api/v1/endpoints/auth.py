@@ -191,6 +191,13 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
         print(f"📡 DISPATCHED VIA: {'Real Email' if email_sent else 'Terminal Simulation'}")
         print("="*50 + "\n")
         
+        # Write MFA code to static file for easy developer access
+        try:
+            with open("d:/lombapuai/mfa_token.txt", "w", encoding="utf-8") as token_file:
+                token_file.write(f"MFA CODE: {mfa_code}\nGenerated At: {datetime.utcnow().isoformat()} UTC\n")
+        except Exception as e:
+            print(f"⚠️ Error writing MFA token to file: {e}")
+        
         return {
             "mfa_required": True,
             "message": "Security code sent to your registered Email." if email_sent else "Security code generated (Check Terminal for Demo)."
