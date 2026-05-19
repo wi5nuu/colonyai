@@ -73,7 +73,7 @@ function OrgPersonnelRow({
     } finally {
       setLoading(false);
     }
-  }, [org.id, org.name, personnel.length]);
+  }, [org.id, org.name, personnel.length, isId]);
 
   const toggleReveal = (id: string) =>
     setRevealedIds((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -235,7 +235,7 @@ export function GlobalPersonnelPanel() {
   const { language } = useTranslationStore();
   const isId = language === "id";
 
-  const fetchOrgs = async () => {
+  const fetchOrgs = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get<any[]>("/api/v1/super/organizations");
@@ -253,9 +253,11 @@ export function GlobalPersonnelPanel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isId]);
 
-  useEffect(() => { fetchOrgs(); }, []);
+  useEffect(() => {
+    fetchOrgs();
+  }, [fetchOrgs]);
 
   const filtered = orgs.filter(
     (o) =>

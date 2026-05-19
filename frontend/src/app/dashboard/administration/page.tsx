@@ -134,7 +134,7 @@ export default function AdministrationPage() {
 
   useEffect(() => {
     if (currentUser?.role === "super_admin") {
-      api.get("/api/v1/super/organizations")
+      api.get<any[]>("/api/v1/super/organizations")
         .then((res) => {
           setOrganizations(res.data);
         })
