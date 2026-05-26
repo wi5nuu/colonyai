@@ -22,7 +22,7 @@ from app.core.database import get_db
 from app.core.config import settings
 from app.core.thresholds import get_all_thresholds
 from app.utils.s3 import s3_is_configured, upload_to_s3, get_presigned_url
-from app.services.colony_detector import ColonyDetector, VALID_COLONY_CLASSES
+from app.services.colony_detector_optimized import ColonyDetectorOptimized, VALID_COLONY_CLASSES
 from app.services.file_validator import validate_and_sanitize_image
 from app.services.image_processor import ImageProcessor
 from app.services.cfu_calculator import CFUCalculator
@@ -57,19 +57,18 @@ async def simulate_analysis(
     Processes image with AI but DOES NOT save to audit history.
     """
     from app.services.image_processor import ImageProcessor
-    from app.services.colony_detector import ColonyDetector
 
     # 1. Validation
     contents, safe_filename, detected_mime = await validate_and_sanitize_image(file)
 
     # 2. Processing
     processor = ImageProcessor()
-    detector = ColonyDetector()
+    detector = ColonyDetectorOptimized()
 
     processed_img, roi_info = processor.preprocess_from_bytes(contents)
     
-    # Use the lower global threshold (0.25) to catch small dots
-    detections = detector.detect(processed_img)
+    # Use optimized detector with TTA for maximum accuracy in simulation
+    detections = detector.detect(processed_img, media_type="PCA", aggressive=True, use_tta=True)
 
     # 3. Build a transient response (not saved to DB)
     temp_id = uuid.uuid4()
@@ -382,24 +381,21 @@ async def create_analysis(
         image_processor = ImageProcessor()
         processed_image, roi_info = image_processor.preprocess(original_path)
 
-        # ── Step 4: YOLOv8 inference ──
-        media_thresholds = get_all_thresholds(media_type)
-        colony_detector = ColonyDetector()
-
-        min_threshold = min(media_thresholds.values()) if media_thresholds else 0.40
+        # ── Step 4: YOLOv8 inference (Optimized) ──
+        colony_detector = ColonyDetectorOptimized()
 
         start_time = time.time()
+        # Menggunakan Optimized Detector yang sudah menangani threshold per-media, 
+        # filtering ukuran, dan aspect ratio secara internal.
         detections = colony_detector.detect(
             processed_image,
-            confidence_override=min_threshold,
+            media_type=media_type,
+            aggressive=False
         )
         inference_time_ms = (time.time() - start_time) * 1000
 
-        # Filter lebih lanjut dengan threshold per-kelas
-        detections = [
-            d for d in detections
-            if d["confidence"] >= media_thresholds.get(d["class_name"], 0.20)
-        ]
+        # Note: ColonyDetectorOptimized sudah melakukan filtering per-class dan NMS.
+        # Kita tetap simpan Step NMS di sini sebagai double-check untuk cross-class overlap.
 
         # ── Cross-class NMS: Hapus deteksi ganda di lokasi yang sama ──
         # Jika dua kelas berbeda mendeteksi objek yang sama (IoU > 0.30),

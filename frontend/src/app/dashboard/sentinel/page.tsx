@@ -450,7 +450,6 @@ export default function SentinelPage() {
           </div>
         </div>
       )}
-        a]
 
           <div className="max-w-[1500px] mx-auto px-4 sm:px-8 py-0 sm:py-0 space-y-4 sm:space-y-6 pb-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
@@ -1366,8 +1365,10 @@ export default function SentinelPage() {
               </div>
             </div>
           </div>
+          </div>
         </div>
-        <DocumentationSidebar
+      </div>
+      <DocumentationSidebar
           showDocs={showDocs}
           setShowDocs={setShowDocs}
           directory={isId ? "Sistem / Sentinel" : "System / Sentinel"}
@@ -1428,7 +1429,7 @@ export default function SentinelPage() {
             </div>
           </div>
         </DocumentationSidebar>
-      </div>
     </div>
+  </div>
   );
 }

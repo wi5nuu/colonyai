@@ -989,6 +989,6 @@ INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
           </div>
         </DocumentationSidebar>
       </div>
-    </div>
+      </div>
   );
 }

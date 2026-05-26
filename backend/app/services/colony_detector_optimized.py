@@ -295,3 +295,20 @@ class ColonyDetectorOptimized:
     def get_valid_colony_count(self, detections: List[Dict[str, Any]]) -> int:
         """Get count of valid colonies only"""
         return sum(1 for d in detections if d['is_valid_colony'])
+
+    def get_average_confidence(self, detections: List[Dict[str, Any]], valid_only: bool = True) -> float:
+        """Get average confidence score"""
+        filtered = self.filter_valid_colonies(detections) if valid_only else detections
+        if not filtered:
+            return 0.0
+        return sum(d['confidence'] for d in filtered) / len(filtered)
+
+    def get_reliability_indicator(self, detections: List[Dict[str, Any]]) -> str:
+        """Get plate-level reliability indicator"""
+        avg_conf = self.get_average_confidence(detections, valid_only=True)
+        if avg_conf >= 0.8:
+            return 'high'
+        elif avg_conf >= 0.6:
+            return 'medium'
+        else:
+            return 'low'

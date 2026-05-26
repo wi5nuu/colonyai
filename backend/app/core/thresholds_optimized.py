@@ -94,23 +94,30 @@ IOU_THRESHOLDS = {
 }
 
 
+# ── Alias mapping: nama frontend → key internal ──────────────────────────────
+MEDIA_TYPE_ALIASES = {
+    "plate count agar":  "PCA",
+    "pca":               "PCA",
+    "macconkey":         "MacConkey",
+    "macconkey agar":    "MacConkey",
+    "tsa":               "TSA",
+    "tryptic soy agar":  "TSA",
+}
+
 def get_threshold(class_name: str, media_type: str = None, aggressive: bool = False) -> float:
     """
     Get optimal threshold untuk class dan media type tertentu
-
-    Args:
-        class_name: Nama class (colony_single, colony_merged, dll)
-        media_type: Jenis media agar (PCA, MacConkey, dll)
-        aggressive: Gunakan threshold sangat rendah untuk gambar sulit
-
-    Returns:
-        Threshold confidence optimal
     """
     if aggressive:
         return AGGRESSIVE_THRESHOLDS.get(class_name, 0.15)
 
-    if media_type and media_type in MEDIA_TYPE_THRESHOLDS:
-        return MEDIA_TYPE_THRESHOLDS[media_type].get(class_name, 0.40)
+    if media_type:
+        # Resolve alias
+        key = media_type.strip().lower()
+        internal_key = MEDIA_TYPE_ALIASES.get(key, media_type)
+        
+        if internal_key in MEDIA_TYPE_THRESHOLDS:
+            return MEDIA_TYPE_THRESHOLDS[internal_key].get(class_name, 0.40)
 
     return CLASS_THRESHOLDS.get(class_name, 0.40)
 
