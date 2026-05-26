@@ -67,14 +67,14 @@ export function Navbar() {
               </div>
               <span className="uppercase tracking-wider font-bold">Contact Center: 0813-948-290</span>
             </a>
-            <span className="text-white/30">|</span>
+            <span className="text-white/50">|</span>
             <Link href={isAuthenticated ? "/dashboard" : "/login"} className="flex items-center gap-2 hover:text-white/80 transition-colors">
               <div className="w-4 h-4 bg-amber-50 rounded-full flex items-center justify-center">
                  <ArrowRight className="w-2.5 h-2.5 text-slate-900" />
               </div>
               <span className="uppercase tracking-wider font-bold">{isAuthenticated ? "Dashboard" : (language === "en" ? "Login/Register" : "Login/Daftar")}</span>
             </Link>
-            <span className="text-white/30">|</span>
+            <span className="text-white/50">|</span>
             <div className="flex items-center gap-2">
               <Globe className="w-3.5 h-3.5 text-white" />
               <button
@@ -84,12 +84,12 @@ export function Navbar() {
                   document.cookie = "lang=en;path=/;max-age=31536000";
                 }}
                 className={`text-[9px] font-black uppercase tracking-widest transition-colors ${
-                  language === "en" ? "text-white font-black" : "text-white/40 hover:text-white font-medium"
+                  language === "en" ? "text-white font-black" : "text-white/70 hover:text-white font-medium"
                 }`}
               >
                 EN
               </button>
-              <span className="text-white/20">|</span>
+              <span className="text-white/50">|</span>
               <button
                 onClick={() => {
                   setLanguage("id");
@@ -97,7 +97,7 @@ export function Navbar() {
                   document.cookie = "lang=id;path=/;max-age=31536000";
                 }}
                 className={`text-[9px] font-black uppercase tracking-widest transition-colors ${
-                  language === "id" ? "text-white font-black" : "text-white/40 hover:text-white font-medium"
+                  language === "id" ? "text-white font-black" : "text-white/70 hover:text-white font-medium"
                 }`}
               >
                 ID
@@ -160,6 +160,7 @@ export function Navbar() {
           <button
             className="lg:hidden p-2 text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
             onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open mobile menu"
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -195,6 +196,7 @@ export function Navbar() {
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 className="p-2 bg-slate-50 dark:bg-slate-900 rounded-full transition-colors"
+                aria-label="Close mobile menu"
               >
                 <X className="w-5 h-5 text-slate-900 dark:text-white" />
               </button>

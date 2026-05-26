@@ -93,34 +93,39 @@ export default function AuditPage() {
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] w-full font-sans bg-transparent overflow-hidden">
-      <div className="max-w-[1500px] mx-auto w-full px-6 flex flex-col h-full">
-      {/* Top Bar */}
-      <div className="h-12 border-b border-slate-200 dark:border-slate-800 flex items-center px-4 sm:px-6 gap-4 bg-white dark:bg-slate-900 shrink-0">
-        <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-primary" />
-          <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">Audit Ledger</h1>
-        </div>
-        
-        <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
-
-        <div className="flex-1 relative max-w-xl">
-          <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search audit logs..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none py-1.5 pl-8 pr-3 text-[11px] font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-primary/50 transition-colors"
-          />
-        </div>
-        <div className="flex items-center gap-3 ml-auto">
-          <div className="flex items-center gap-2 px-2 py-1 rounded-none border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-[10px] font-bold uppercase tracking-wider">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Live Stream
-          </div>
-        </div>
-      </div>
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
+      <div className="flex relative min-h-[calc(100vh-200px)]">
+        <div className="flex-1 transition-all duration-300">
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-8 py-0 sm:py-0 space-y-4 sm:space-y-6 pb-6">
+{/* Log Stream */}
+</div>
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
+              <div>
+                <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+                  {t("audit.title") || "Audit Ledger"}
+                </h1>
+                <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
+                  {t("audit.subtitle") || "Immutable Cryptographic Log Stream"}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search logs..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none py-1.5 pl-8 pr-3 text-[11px] font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-primary/50 transition-colors w-48 sm:w-64"
+                  />
+                </div>
+                <div className="flex items-center gap-2 px-2 py-1.5 border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/30">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Live Stream</span>
+                </div>
+              </div>
+            </div>
 
       {/* Log Stream */}
       <div className="flex-1 overflow-auto bg-transparent relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -188,8 +193,10 @@ export default function AuditPage() {
             No logs found
           </div>
         )}
+          </div>
+        </div>
       </div>
-      
+
       {/* Detail Overlay */}
       {selectedLog && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/50 dark:bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
@@ -216,7 +223,6 @@ export default function AuditPage() {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }

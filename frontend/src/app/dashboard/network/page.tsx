@@ -210,17 +210,14 @@ export default function NetworkMapPage() {
   return (
     <div className="flex flex-col w-full bg-white dark:bg-slate-950 min-h-[calc(100vh-64px)]">
       {/* Header */}
-      <div className="border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between bg-white dark:bg-slate-900">
-        <div className="flex items-center gap-3">
-          <Globe className="w-4 h-4 text-primary" />
-          <div>
-            <h1 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest leading-none">
-              Global Network Map
-            </h1>
-            <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
-              Real-time organization location intelligence
-            </p>
-          </div>
+      <div className="px-4 sm:px-8 py-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+            Global Network Map
+          </h1>
+          <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
+            Real-time organization location intelligence
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest px-2 py-1 border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/30">
@@ -672,6 +669,3 @@ export default function NetworkMapPage() {
     </div>
   );
 }
-
-
-

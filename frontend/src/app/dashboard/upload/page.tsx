@@ -153,26 +153,21 @@ export default function UploadPage() {
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden bg-[#f4f7f6] dark:bg-slate-950 transition-colors duration-300">
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
       {/* Container for Main Content and Docs */}
       <div className="flex relative min-h-[calc(100vh-200px)]">
         {/* Main Workspace Area */}
         <div className="flex-1 transition-all duration-300">
-          <div className="max-w-[1500px] mx-auto px-6 py-2 pb-6">
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-8 py-0 sm:py-0 space-y-4 sm:space-y-6 pb-6">
             {/* Page Header */}
-            <div className="flex flex-row items-center justify-between gap-1 pb-1 border-b border-slate-100 dark:border-slate-800 mb-2">
-              <div className="flex items-center gap-1.5">
-                <div className="w-5 h-5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none shadow-sm flex items-center justify-center flex-shrink-0">
-                  <UploadIcon className="w-2.5 h-2.5 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
-                    {t("upload.title")}
-                  </h1>
-                  <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
-                    {t("upload.subtitle")}
-                  </p>
-                </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
+              <div>
+                <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+                  {t("upload.title")}
+                </h1>
+                <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
+                  {t("upload.subtitle")}
+                </p>
               </div>
               <div className="flex items-center gap-1 sm:gap-2">
                 <DocumentationToggle
@@ -188,9 +183,9 @@ export default function UploadPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-8 items-stretch">
               {/* Left: Image Upload */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 flex flex-col p-3 sm:p-5 rounded-none sm:rounded-none shadow-sm">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 flex flex-col p-3 sm:p-5 rounded-none sm:rounded-none shadow-sm h-full">
                 <div className="flex items-center gap-2 sm:gap-4 mb-3">
                   <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-none bg-primary/5 dark:bg-primary/10 flex items-center justify-center border border-primary/10 dark:border-primary/20">
                     <ImageIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
@@ -310,8 +305,8 @@ export default function UploadPage() {
                         onClick={() => handleSampleClick(`/samples/sample_${i + 1}.jpg`, `sample_${i + 1}.jpg`)}
                         className="flex-shrink-0 group relative w-16 h-16 rounded-none overflow-hidden border border-slate-200 dark:border-slate-800 hover:border-primary transition-all shadow-sm active:scale-95"
                       >
-                        <img 
-                          src={`/samples/sample_${i + 1}.jpg`} 
+                        <img
+                          src={`/samples/sample_${i + 1}.jpg`}
                           alt={`Sample ${i + 1}`}
                           className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
                         />
@@ -335,8 +330,8 @@ export default function UploadPage() {
               </div>
 
               {/* Middle: Protocol Form */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 sm:p-8 rounded-none sm:rounded-none shadow-sm transition-colors">
-                <div className="flex items-center gap-2 sm:gap-4 mb-3 sm:mb-8">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-3 sm:p-8 rounded-none sm:rounded-none shadow-sm transition-colors h-full flex flex-col">
+                <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
                   <div className="w-7 h-7 sm:w-12 sm:h-12 rounded-none sm:rounded-none bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-800">
                     <FlaskConical className="h-4 w-4 sm:h-6 sm:w-6 text-slate-400 dark:text-slate-500" />
                   </div>
@@ -352,8 +347,9 @@ export default function UploadPage() {
 
                 <form
                   onSubmit={handleSubmit}
-                  className="space-y-2 sm:space-y-4"
+                  className="space-y-2 sm:space-y-4 flex-1 flex flex-col"
                 >
+                  <div className="flex-1 space-y-2 sm:space-y-4">
                   {/* Sample ID */}
                   <div className="space-y-1">
                     <label
@@ -577,9 +573,10 @@ export default function UploadPage() {
                       />
                     </div>
                   </div>
+                  </div>
 
                   {/* Submit */}
-                  <div className="pt-1 sm:pt-4 flex justify-center sm:block">
+                  <div className="pt-1 sm:pt-4 flex justify-center sm:block mt-auto">
                     <button
                       type="submit"
                       disabled={!selectedFile || isSubmitting}

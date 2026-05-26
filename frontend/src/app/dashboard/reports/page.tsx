@@ -44,9 +44,12 @@ export default function ReportsPage() {
   const [showDocs, setShowDocs] = useState(false);
   const [isSendingMessenger, setIsSendingMessenger] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [sharePlatform, setSharePlatform] = useState<"whatsapp" | "telegram" | null>(null);
+  const [sharePlatform, setSharePlatform] = useState<
+    "whatsapp" | "telegram" | null
+  >(null);
   const [shareInput, setShareInput] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -80,21 +83,22 @@ export default function ReportsPage() {
         const result = await analysesApi.list({ page_size: 100 });
         setAnalyses(result.analyses);
       } catch (error: any) {
-        if (!silent) toast.error(
-          error.response?.data?.detail || t("reports.errorLoadAnalyses"),
-        );
+        if (!silent)
+          toast.error(
+            error.response?.data?.detail || t("reports.errorLoadAnalyses"),
+          );
       } finally {
         if (!silent) setIsLoadingAnalyses(false);
       }
     };
-    
+
     load();
-    
+
     // Polling Real-time setiap 5 detik
     const interval = setInterval(() => {
       load(true);
     }, 5000);
-    
+
     return () => clearInterval(interval);
   }, [t]);
 
@@ -200,12 +204,17 @@ export default function ReportsPage() {
     if (!sharePlatform) return;
     setIsSendingMessenger(true);
     try {
-      const targetId = sharePlatform === "whatsapp"
-        ? shareInput.replace(/[^0-9]/g, "")
-        : shareInput.replace("@", "");
-      
+      const targetId =
+        sharePlatform === "whatsapp"
+          ? shareInput.replace(/[^0-9]/g, "")
+          : shareInput.replace("@", "");
+
       if (!targetId) {
-        toast.error(sharePlatform === "whatsapp" ? "Nomor WhatsApp tidak boleh kosong" : "Username Telegram tidak boleh kosong");
+        toast.error(
+          sharePlatform === "whatsapp"
+            ? "Nomor WhatsApp tidak boleh kosong"
+            : "Username Telegram tidak boleh kosong",
+        );
         setIsSendingMessenger(false);
         return;
       }
@@ -219,21 +228,28 @@ export default function ReportsPage() {
           date_to: dateTo || undefined,
         });
       } catch (apiErr) {
-        console.error("API send-messenger logged in background, continuing redirect...", apiErr);
+        console.error(
+          "API send-messenger logged in background, continuing redirect...",
+          apiErr,
+        );
       }
 
       // ── Generate Share Message ──
-      const messageText = `*ColonyAI - Laporan Diagnostik ISO-17025*\n\n` +
-                          `• Total Spesimen Terpilih: *${selectedIds.size}* dari *${filteredAnalyses.length}* spesimen\n` +
-                          `• Rentang Tanggal: *${dateFrom || '-'}* s/d *${dateTo || '-'}*\n` +
-                          `• Protokol Media: *${mediaType === 'all' ? 'Semua Protokol' : mediaType}*\n\n` +
-                          `Mohon diproses untuk keperluan audit sistem. Terima kasih!`;
-      
+      const messageText =
+        `*ColonyAI - Laporan Diagnostik ISO-17025*\n\n` +
+        `• Total Spesimen Terpilih: *${selectedIds.size}* dari *${filteredAnalyses.length}* spesimen\n` +
+        `• Rentang Tanggal: *${dateFrom || "-"}* s/d *${dateTo || "-"}*\n` +
+        `• Protokol Media: *${mediaType === "all" ? "Semua Protokol" : mediaType}*\n\n` +
+        `Mohon diproses untuk keperluan audit sistem. Terima kasih!`;
+
       const encodedMsg = encodeURIComponent(messageText);
 
       // ── Open platform redirect in new tab ──
       if (sharePlatform === "whatsapp") {
-        window.open(`https://api.whatsapp.com/send?phone=${targetId}&text=${encodedMsg}`, "_blank");
+        window.open(
+          `https://api.whatsapp.com/send?phone=${targetId}&text=${encodedMsg}`,
+          "_blank",
+        );
         toast.success("Mengarahkan ke WhatsApp...");
       } else {
         window.open(`https://t.me/${targetId}?text=${encodedMsg}`, "_blank");
@@ -250,27 +266,28 @@ export default function ReportsPage() {
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col w-full font-sans bg-transparent">
-      <div className="w-full pl-2 pr-6 flex flex-col">
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
+      <div className="flex relative min-h-[calc(100vh-200px)]">
         {/* Main Content */}
-        <div
-          className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[320px]" : ""}`}
-        >
-          <div className="w-full py-6">
+        <div className="flex-1 transition-all duration-300">
+          <div className="max-w-full mx-auto px-4 sm:px-6 py-0 sm:py-0 space-y-4 sm:space-y-6 pb-6">
             {/* Header */}
-            <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200 dark:border-slate-800">
-              <div className="flex items-center gap-3">
-                <FileText className="w-4 h-4 text-primary" />
-                <div>
-                  <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">
-                    {t("reports.title")}
-                  </h1>
-                  <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
-                    {t("reports.subtitle")}
-                  </p>
-                </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
+              <div>
+                <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+                  {t("reports.title")}
+                </h1>
+                <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
+                  {t("reports.subtitle")}
+                </p>
               </div>
               <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowMobileFilters(!showMobileFilters)}
+                  className="lg:hidden px-3 py-1.5 border border-slate-200 dark:border-slate-700 hover:border-primary hover:text-primary bg-white dark:bg-slate-950 text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 transition-all"
+                >
+                  {showMobileFilters ? "Hide Filters" : "Show Filters"}
+                </button>
                 <div className="hidden lg:block">
                   <DocumentationToggle
                     showDocs={showDocs}
@@ -323,93 +340,45 @@ export default function ReportsPage() {
               ))}
             </div>
 
-            {/* Export Parameters */}
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 mb-6">
-              <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80">
-                <Filter className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
-                <div>
-                  <h2 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest leading-none">
-                    {t("reports.exportParameters")}
-                  </h2>
-                  <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
-                    {t("reports.selectToEnable")}
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-5">
-                {/* Presets */}
-                <div className="flex flex-wrap gap-2 mb-5 pb-5 border-b border-slate-200 dark:border-slate-800">
-                  {[
-                    {
-                      label:
-                        t("reports.presetDaily") || "Daily Report (Last 24H)",
-                      preset: "daily" as const,
-                    },
-                    {
-                      label:
-                        t("reports.presetMonthly") ||
-                        "Monthly Intelligence (Last 30D)",
-                      preset: "monthly" as const,
-                    },
-                    {
-                      label:
-                        t("reports.presetYearly") ||
-                        "Annual Audit Ledger (YTD)",
-                      preset: "yearly" as const,
-                    },
-                  ].map(({ label, preset }) => (
-                    <button
-                      key={preset}
-                      onClick={() => setPreset(preset)}
-                      className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 hover:border-primary hover:text-primary dark:hover:border-primary bg-white dark:bg-slate-950 text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 transition-all"
-                    >
-                      {label}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => {
-                      setDateFrom("");
-                      setDateTo("");
-                    }}
-                    className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 hover:border-rose-400 hover:text-rose-500 dark:hover:border-rose-700 bg-white dark:bg-slate-950 text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-600 transition-all"
-                  >
-                    {t("reports.clearFilters") || "Clear Temporal Filters"}
-                  </button>
-                </div>
-
-                {/* Date + Protocol */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-                  <div className="space-y-1.5">
-                    <label className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                      {t("reports.rangeStart")}
-                    </label>
-                    <input
-                      type="date"
-                      value={dateFrom}
-                      onChange={(e) => setDateFrom(e.target.value)}
-                      className="w-full px-3 py-2 text-[10px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none focus:border-primary transition-all"
-                    />
+            {/* Mobile Filters (Collapsible) */}
+            {showMobileFilters && (
+              <div className="lg:hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 mb-6">
+                <div className="space-y-4">
+                  {/* Date Range */}
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <label className="text-[7.5px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                        Range Start
+                      </label>
+                      <input
+                        type="date"
+                        value={dateFrom}
+                        onChange={(e) => setDateFrom(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-[9px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none focus:border-primary transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[7.5px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                        Range End
+                      </label>
+                      <input
+                        type="date"
+                        value={dateTo}
+                        onChange={(e) => setDateTo(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-[9px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none focus:border-primary transition-all"
+                      />
+                    </div>
                   </div>
+
+                  {/* Protocol Matrix */}
                   <div className="space-y-1.5">
-                    <label className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                      {t("reports.rangeEnd")}
-                    </label>
-                    <input
-                      type="date"
-                      value={dateTo}
-                      onChange={(e) => setDateTo(e.target.value)}
-                      className="w-full px-3 py-2 text-[10px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none focus:border-primary transition-all"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                      {t("reports.protocolMatrix")}
+                    <label className="text-[7.5px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                      Protocol Matrix
                     </label>
                     <select
                       value={mediaType}
                       onChange={(e) => setMediaType(e.target.value)}
-                      className="w-full px-3 py-2 text-[10px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none focus:border-primary transition-all appearance-none"
+                      className="w-full px-2.5 py-1.5 text-[9px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none focus:border-primary transition-all appearance-none"
                     >
                       <option value="all">{t("reports.allProtocols")}</option>
                       <option value="Plate Count Agar">PCA Protocol</option>
@@ -420,80 +389,179 @@ export default function ReportsPage() {
                       <option value="MacConkey">MAC Protocol</option>
                     </select>
                   </div>
-                </div>
 
-                {/* Executive Summary — Efficiency Panel */}
-                <div className="border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 mb-5">
-                  <p className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-3">
-                    {language === 'id' ? "Ringkasan Eksekutif — Efisiensi AI vs Manual" : "Executive Summary — AI vs Manual Efficiency"}
-                  </p>
-                  <div className="grid grid-cols-3 gap-3">
+                  {/* Quick Presets */}
+                  <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                     {[
-                      { label: language === 'id' ? "Waktu Analisis AI" : "AI Analysis Time", val: "~3s", sub: language === 'id' ? "per pelat" : "per plate", color: "text-emerald-600 dark:text-emerald-400" },
-                      { label: language === 'id' ? "Waktu Analisis Manual" : "Manual Analysis Time", val: "~15m", sub: language === 'id' ? "per pelat" : "per plate", color: "text-slate-500" },
-                      { label: language === 'id' ? "Peningkatan Efisiensi" : "Efficiency Gain", val: "300×", sub: language === 'id' ? "lebih cepat dengan AI" : "faster with AI", color: "text-[#1a237e] dark:text-blue-400" },
-                    ].map((m, i) => (
-                      <div key={i} className="text-center">
-                        <p className={`text-lg font-black ${m.color}`}>{m.val}</p>
-                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-tight">{m.label}</p>
-                        <p className="text-[7px] text-slate-300 dark:text-slate-600 uppercase">{m.sub}</p>
-                      </div>
+                      {
+                        label:
+                          t("reports.presetDaily") || "Daily Report (Last 24H)",
+                        preset: "daily" as const,
+                      },
+                      {
+                        label:
+                          t("reports.presetMonthly") ||
+                          "Monthly Intelligence (Last 30D)",
+                        preset: "monthly" as const,
+                      },
+                      {
+                        label:
+                          t("reports.presetYearly") ||
+                          "Annual Audit Ledger (YTD)",
+                        preset: "yearly" as const,
+                      },
+                    ].map(({ label, preset }) => (
+                      <button
+                        key={preset}
+                        onClick={() => setPreset(preset)}
+                        className="w-full px-2 py-1.5 border border-slate-200 dark:border-slate-700 hover:border-primary hover:text-primary dark:hover:border-primary bg-white dark:bg-slate-950 text-[8px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 transition-all text-left"
+                      >
+                        {label}
+                      </button>
                     ))}
                   </div>
-                  <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-900/30 flex flex-wrap gap-4">
-                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{language === 'id' ? "Konsistensi" : "Consistency"}: <span className="text-emerald-600 dark:text-emerald-400">{language === 'id' ? "Kepatuhan ISO-17025" : "ISO-17025 Compliant"}</span></p>
-                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{language === 'id' ? "Akurasi" : "Accuracy"}: <span className="text-emerald-600 dark:text-emerald-400">&gt;95% mAP50</span></p>
-                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{language === 'id' ? "Dataset" : "Dataset"}: <span className="text-emerald-600 dark:text-emerald-400">{language === 'id' ? "97K+ instans" : "97K+ instances"}</span></p>
+
+                  {/* Clear Filters - Aligned Right */}
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => {
+                        setDateFrom("");
+                        setDateTo("");
+                      }}
+                      className="px-2 py-1.5 border border-slate-200 dark:border-slate-700 hover:border-rose-400 hover:text-rose-500 dark:hover:border-rose-700 bg-white dark:bg-slate-950 text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-600 transition-all"
+                    >
+                      {t("reports.clearFilters") || "Clear Temporal Filters"}
+                    </button>
+                  </div>
+
+                  {/* Executive Summary — AI vs Manual Efficiency */}
+                  <div className="border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 p-3">
+                    <p className="text-[7.5px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-3">
+                      {language === "id"
+                        ? "Ringkasan Eksekutif — Efisiensi AI vs Manual"
+                        : "Executive Summary — AI vs Manual Efficiency"}
+                    </p>
+                    <div className="space-y-2">
+                      {[
+                        {
+                          label:
+                            language === "id"
+                              ? "Waktu Analisis AI"
+                              : "AI Analysis Time",
+                          val: "~3s",
+                          sub: language === "id" ? "per pelat" : "per plate",
+                          color: "text-emerald-600 dark:text-emerald-400",
+                        },
+                        {
+                          label:
+                            language === "id"
+                              ? "Waktu Analisis Manual"
+                              : "Manual Analysis Time",
+                          val: "~15m",
+                          sub: language === "id" ? "per pelat" : "per plate",
+                          color: "text-slate-500",
+                        },
+                        {
+                          label:
+                            language === "id"
+                              ? "Peningkatan Efisiensi"
+                              : "Efficiency Gain",
+                          val: "300×",
+                          sub:
+                            language === "id"
+                              ? "lebih cepat dengan AI"
+                              : "faster with AI",
+                          color: "text-[#1a237e] dark:text-blue-400",
+                        },
+                      ].map((m, i) => (
+                        <div key={i} className="flex items-center justify-between">
+                          <div>
+                            <p className="text-[7px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest leading-tight">
+                              {m.label}
+                            </p>
+                            <p className="text-[6.5px] text-slate-400 dark:text-slate-600 uppercase">
+                              {m.sub}
+                            </p>
+                          </div>
+                          <p className={`text-base font-black ${m.color}`}>{m.val}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-900/30 space-y-1">
+                      <p className="text-[6.5px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                        {language === "id"
+                          ? "✓ Kepatuhan ISO-17025"
+                          : "✓ ISO-17025 Compliant"}
+                      </p>
+                      <p className="text-[6.5px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                        {language === "id"
+                          ? "✓ Akurasi >95% mAP50"
+                          : "✓ Accuracy >95% mAP50"}
+                      </p>
+                      <p className="text-[6.5px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                        {language === "id"
+                          ? "✓ Dataset 97K+ instans"
+                          : "✓ Dataset 97K+ instances"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-5 border-t border-slate-200 dark:border-slate-800">
-                  <button
-                    onClick={handleGeneratePdf}
-                    disabled={isGenerating || selectedIds.size === 0}
-                    className="flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-white dark:text-slate-900 text-[9px] font-black uppercase tracking-widest transition-all"
-                  >
-                    {isGenerating ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <FileText className="h-3 w-3" />
-                    )}
-                    {t("reports.generatePdf")}
-                  </button>
-                  <button
-                    onClick={handleGenerateCsv}
-                    disabled={isGenerating || selectedIds.size === 0}
-                    className="flex items-center justify-center gap-2 px-6 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 disabled:opacity-30 disabled:cursor-not-allowed text-slate-700 dark:text-slate-300 text-[9px] font-black uppercase tracking-widest transition-all"
-                  >
-                    {isGenerating ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Download className="h-3 w-3" />
-                    )}
-                    {t("reports.exportCsv")}
-                  </button>
-
-                  <div className="w-px h-8 bg-slate-200 dark:bg-slate-800 hidden sm:block mx-2" />
-
-                  <button
-                    onClick={() => handleOpenShareModal("whatsapp")}
-                    disabled={isSendingMessenger}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed text-white text-[9px] font-black uppercase tracking-widest transition-all"
-                  >
-                    {isSendingMessenger ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageCircle className="h-3 w-3" />}
-                    WhatsApp
-                  </button>
-                  <button
-                    onClick={() => handleOpenShareModal("telegram")}
-                    disabled={isSendingMessenger}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed text-white text-[9px] font-black uppercase tracking-widest transition-all"
-                  >
-                    {isSendingMessenger ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-                    Telegram
-                  </button>
-                </div>
               </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-5 border-t border-slate-200 dark:border-slate-800">
+              <button
+                onClick={handleGeneratePdf}
+                disabled={isGenerating || selectedIds.size === 0}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-white dark:text-slate-900 text-[9px] font-black uppercase tracking-widest transition-all"
+              >
+                {isGenerating ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <FileText className="h-3 w-3" />
+                )}
+                {t("reports.generatePdf")}
+              </button>
+              <button
+                onClick={handleGenerateCsv}
+                disabled={isGenerating || selectedIds.size === 0}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 disabled:opacity-30 disabled:cursor-not-allowed text-slate-700 dark:text-slate-300 text-[9px] font-black uppercase tracking-widest transition-all"
+              >
+                {isGenerating ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Download className="h-3 w-3" />
+                )}
+                {t("reports.exportCsv")}
+              </button>
+
+              <div className="w-px h-8 bg-slate-200 dark:bg-slate-800 hidden sm:block mx-2" />
+
+              <button
+                onClick={() => handleOpenShareModal("whatsapp")}
+                disabled={isSendingMessenger}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed text-white text-[9px] font-black uppercase tracking-widest transition-all"
+              >
+                {isSendingMessenger ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <MessageCircle className="h-3 w-3" />
+                )}
+                WhatsApp
+              </button>
+              <button
+                onClick={() => handleOpenShareModal("telegram")}
+                disabled={isSendingMessenger}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed text-white text-[9px] font-black uppercase tracking-widest transition-all"
+              >
+                {isSendingMessenger ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Send className="h-3 w-3" />
+                )}
+                Telegram
+              </button>
             </div>
 
             {/* Specimen Selection */}
@@ -611,9 +679,191 @@ export default function ReportsPage() {
           </div>
         </div>
 
+        {/* RIGHT SIDEBAR — FILTERS */}
+        <div className="hidden lg:flex lg:w-[280px] lg:border-l lg:border-slate-200 lg:dark:border-slate-800 lg:sticky lg:top-[64px] lg:h-[calc(100vh-64px)] lg:overflow-y-auto lg:flex-col lg:bg-white lg:dark:bg-slate-900 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="p-4 space-y-3">
+            {/* Header */}
+            <div className="pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h2 className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-widest mb-0.5">
+                {t("reports.exportParameters")}
+              </h2>
+              <p className="text-[7.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                {t("reports.selectToEnable")}
+              </p>
+            </div>
+
+            {/* Date Range */}
+            <div className="space-y-2">
+              <div className="space-y-1">
+                <label className="text-[7.5px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  Range Start
+                </label>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-full px-2 py-1.5 text-[9px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none focus:border-primary transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[7.5px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  Range End
+                </label>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-full px-2 py-1.5 text-[9px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none focus:border-primary transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Protocol Matrix */}
+            <div className="space-y-1">
+              <label className="text-[7.5px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                Protocol Matrix
+              </label>
+              <select
+                value={mediaType}
+                onChange={(e) => setMediaType(e.target.value)}
+                className="w-full px-2 py-1.5 text-[9px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none focus:border-primary transition-all appearance-none"
+              >
+                <option value="all">{t("reports.allProtocols")}</option>
+                <option value="Plate Count Agar">PCA Protocol</option>
+                <option value="VRBA">VRBA Protocol</option>
+                <option value="BGBB">BGBB Protocol</option>
+                <option value="R2A">R2A Protocol</option>
+                <option value="TSA">TSA Protocol</option>
+                <option value="MacConkey">MAC Protocol</option>
+              </select>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-slate-200 dark:border-slate-800 pt-3">
+              <p className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">
+                Quick Presets
+              </p>
+            </div>
+
+            {/* Preset Buttons */}
+            <div className="space-y-1.5">
+              {[
+                {
+                  label: t("reports.presetDaily") || "Daily Report (Last 24H)",
+                  preset: "daily" as const,
+                },
+                {
+                  label:
+                    t("reports.presetMonthly") ||
+                    "Monthly Intelligence (Last 30D)",
+                  preset: "monthly" as const,
+                },
+                {
+                  label:
+                    t("reports.presetYearly") || "Annual Audit Ledger (YTD)",
+                  preset: "yearly" as const,
+                },
+              ].map(({ label, preset }) => (
+                <button
+                  key={preset}
+                  onClick={() => setPreset(preset)}
+                  className="w-full px-2 py-1.5 border border-slate-200 dark:border-slate-700 hover:border-primary hover:text-primary dark:hover:border-primary bg-white dark:bg-slate-950 text-[8px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 transition-all text-left"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Clear Filters - Aligned Right */}
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  setDateFrom("");
+                  setDateTo("");
+                }}
+                className="px-2 py-1.5 border border-slate-200 dark:border-slate-700 hover:border-rose-400 hover:text-rose-500 dark:hover:border-rose-700 bg-white dark:bg-slate-950 text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-600 transition-all"
+              >
+                {t("reports.clearFilters") || "Clear Temporal Filters"}
+              </button>
+            </div>
+
+            {/* Executive Summary — AI vs Manual Efficiency */}
+            <div className="border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 p-2.5">
+              <p className="text-[7.5px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-2">
+                {language === "id"
+                  ? "Ringkasan Eksekutif — Efisiensi AI vs Manual"
+                  : "Executive Summary — AI vs Manual Efficiency"}
+              </p>
+              <div className="space-y-1.5">
+                {[
+                  {
+                    label:
+                      language === "id"
+                        ? "Waktu Analisis AI"
+                        : "AI Analysis Time",
+                    val: "~3s",
+                    sub: language === "id" ? "per pelat" : "per plate",
+                    color: "text-emerald-600 dark:text-emerald-400",
+                  },
+                  {
+                    label:
+                      language === "id"
+                        ? "Waktu Analisis Manual"
+                        : "Manual Analysis Time",
+                    val: "~15m",
+                    sub: language === "id" ? "per pelat" : "per plate",
+                    color: "text-slate-500",
+                  },
+                  {
+                    label:
+                      language === "id"
+                        ? "Peningkatan Efisiensi"
+                        : "Efficiency Gain",
+                    val: "300×",
+                    sub:
+                      language === "id"
+                        ? "lebih cepat dengan AI"
+                        : "faster with AI",
+                    color: "text-[#1a237e] dark:text-blue-400",
+                  },
+                ].map((m, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[7.5px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest leading-tight">
+                        {m.label}
+                      </p>
+                      <p className="text-[7px] text-slate-400 dark:text-slate-600 uppercase">
+                        {m.sub}
+                      </p>
+                    </div>
+                    <p className={`text-base font-black ${m.color}`}>{m.val}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-2 pt-2 border-t border-emerald-200 dark:border-emerald-900/30 space-y-0.5">
+                <p className="text-[7px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                  {language === "id"
+                    ? "✓ Kepatuhan ISO-17025"
+                    : "✓ ISO-17025 Compliant"}
+                </p>
+                <p className="text-[7px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                  {language === "id"
+                    ? "✓ Akurasi >95% mAP50"
+                    : "✓ Accuracy >95% mAP50"}
+                </p>
+                <p className="text-[7px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                  {language === "id"
+                    ? "✓ Dataset 97K+ instans"
+                    : "✓ Dataset 97K+ instances"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Docs Sidebar */}
         {showDocs && (
-          <div className="hidden lg:flex flex-col fixed right-0 top-[64px] bottom-0 w-[320px] border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="hidden lg:flex flex-col fixed right-0 top-[64px] bottom-0 w-[320px] border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] z-50">
             <div className="p-6">
               <h2 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest mb-1">
                 {t("reports.docsTitle")}
@@ -679,19 +929,33 @@ export default function ReportsPage() {
               onClick={() => setIsShareModalOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
-              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-4.5 h-4.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
 
             {/* Modal Title */}
             <div className="flex items-center gap-3 mb-4">
-              <div className={`p-2 rounded-none border ${sharePlatform === "whatsapp" ? "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/20 dark:border-emerald-900/50" : "bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-950/20 dark:border-blue-900/50"}`}>
+              <div
+                className={`p-2 rounded-none border ${sharePlatform === "whatsapp" ? "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/20 dark:border-emerald-900/50" : "bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-950/20 dark:border-blue-900/50"}`}
+              >
                 <MessageCircle className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                  {sharePlatform === "whatsapp" ? "Kirim Laporan via WhatsApp" : "Kirim Laporan via Telegram"}
+                  {sharePlatform === "whatsapp"
+                    ? "Kirim Laporan via WhatsApp"
+                    : "Kirim Laporan via Telegram"}
                 </h3>
                 <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                   ISO-17025 Validated Share
@@ -707,22 +971,28 @@ export default function ReportsPage() {
                 </p>
                 <div className="text-[10px] text-slate-600 dark:text-slate-300 font-mono space-y-1 whitespace-pre-line leading-relaxed">
                   {`*ColonyAI - Laporan Diagnostik ISO-17025*\n\n` +
-                   `• Total Spesimen: *${selectedIds.size}* dari *${filteredAnalyses.length}* spesimen\n` +
-                   `• Rentang Tanggal: *${dateFrom || '-'}* s/d *${dateTo || '-'}*\n` +
-                   `• Protokol: *${mediaType === 'all' ? 'Semua Protokol' : mediaType}*\n\n` +
-                   `Mohon diproses untuk keperluan audit sistem. Terima kasih!`}
+                    `• Total Spesimen: *${selectedIds.size}* dari *${filteredAnalyses.length}* spesimen\n` +
+                    `• Rentang Tanggal: *${dateFrom || "-"}* s/d *${dateTo || "-"}*\n` +
+                    `• Protokol: *${mediaType === "all" ? "Semua Protokol" : mediaType}*\n\n` +
+                    `Mohon diproses untuk keperluan audit sistem. Terima kasih!`}
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                  {sharePlatform === "whatsapp" ? "Nomor WhatsApp Tujuan (Dengan Kode Negara)" : "Username Telegram Tujuan"}
+                  {sharePlatform === "whatsapp"
+                    ? "Nomor WhatsApp Tujuan (Dengan Kode Negara)"
+                    : "Username Telegram Tujuan"}
                 </label>
                 <input
                   type="text"
                   value={shareInput}
                   onChange={(e) => setShareInput(e.target.value)}
-                  placeholder={sharePlatform === "whatsapp" ? "Contoh: 62813948290" : "Contoh: colonyai_support"}
+                  placeholder={
+                    sharePlatform === "whatsapp"
+                      ? "Contoh: 62813948290"
+                      : "Contoh: colonyai_support"
+                  }
                   className="w-full px-3 py-2 text-[10px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none focus:border-primary transition-all"
                 />
                 <span className="text-[8px] text-slate-400 dark:text-slate-600 font-bold uppercase tracking-wide block">

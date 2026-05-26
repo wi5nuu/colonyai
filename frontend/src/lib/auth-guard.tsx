@@ -68,6 +68,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         '/dashboard/administration': ['admin', 'super_admin'],
         '/dashboard/upload': ['analyst', 'admin', 'super_admin'],
         '/dashboard/simulator': ['analyst', 'admin', 'super_admin'],
+        '/dashboard/history': ['analyst', 'manager', 'auditor', 'admin', 'super_admin'],
         '/dashboard/analytics': ['manager', 'admin', 'super_admin'],
         '/dashboard/reports': ['manager', 'auditor', 'admin', 'super_admin'],
         '/dashboard/audit': ['manager', 'auditor', 'admin', 'super_admin'],

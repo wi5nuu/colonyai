@@ -130,28 +130,23 @@ export default function HistoryPage() {
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden bg-[#f4f7f6] dark:bg-slate-950 transition-colors duration-300">
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
       <div className="flex relative min-h-[calc(100vh-200px)]">
         <div
           className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
         >
-          <div className="max-w-[1500px] mx-auto px-6 py-0 pt-0 sm:px-6 sm:py-0 sm:pt-0 space-y-6">
-        
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-8 py-0 sm:py-0 space-y-4 sm:space-y-6">
+
         {/* HEADER */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
           <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-none bg-slate-900 flex items-center justify-center">
-                <History className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">
-                  {t("history.title")}
-                </h1>
-                <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
-                  Validated Analytical Repository // Neural Ledger
-                </p>
-              </div>
+            <div>
+              <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">
+                {t("history.title")}
+              </h1>
+              <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
+                Validated Analytical Repository // Neural Ledger
+              </p>
             </div>
           </div>
 
@@ -172,7 +167,7 @@ export default function HistoryPage() {
                 <span className="text-[8px] font-black uppercase tracking-widest">Active</span>
               </div>
             </div>
-            
+
             <button
               onClick={handleExportCsv}
               className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-4 py-2 rounded-none font-black text-[9px] uppercase tracking-widest flex items-center gap-2 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95"
@@ -187,7 +182,7 @@ export default function HistoryPage() {
         <div className="bg-white dark:bg-slate-900 p-4 rounded-none border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-4 items-center">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
+            <input
               type="text"
               placeholder={t("history.searchPlaceholder")}
               className="w-full bg-slate-50 dark:bg-slate-950 border-none rounded-none pl-12 pr-4 py-3 text-[11px] font-black uppercase tracking-widest placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-2 focus:ring-primary/20 transition-all"
@@ -250,8 +245,8 @@ export default function HistoryPage() {
                   </tr>
                 ) : (
                   analyses.map((a: any) => (
-                    <tr 
-                      key={a.id} 
+                    <tr
+                      key={a.id}
                       onClick={() => handleViewAnalysis(a.id)}
                       className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                     >
@@ -300,7 +295,7 @@ export default function HistoryPage() {
                             <Eye className="w-3.5 h-3.5 text-slate-400" />
                           </button>
                           {user?.role !== "auditor" && (
-                            <button 
+                            <button
                               onClick={(e) => { e.stopPropagation(); handleDelete(a.id, a.sample_id); }}
                               className="p-1 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-none transition-all"
                             >
@@ -324,7 +319,7 @@ export default function HistoryPage() {
               Showing <span className="text-slate-900 dark:text-white">{analyses.length}</span> of {total} records
             </p>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 disabled={page <= 1}
                 onClick={() => setPage(p => p - 1)}
                 className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none disabled:opacity-30 hover:bg-slate-50 transition-all"
@@ -334,7 +329,7 @@ export default function HistoryPage() {
               <div className="px-4 text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
                 Page {page} of {totalPages}
               </div>
-              <button 
+              <button
                 disabled={page >= totalPages}
                 onClick={() => setPage(p => p + 1)}
                 className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none disabled:opacity-30 hover:bg-slate-50 transition-all"

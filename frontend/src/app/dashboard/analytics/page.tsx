@@ -196,18 +196,18 @@ function ChartTooltip({ active, payload, label }: any) {
   const p = payload[0]?.payload as TimeSeriesPoint;
   if (!p) return null;
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-none shadow-2xl p-5 min-w-[200px] animate-in fade-in zoom-in-95 duration-200">
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 pb-3 border-b border-slate-800">
+    <div className="bg-slate-900 border border-slate-800 rounded-none shadow-2xl p-4 min-w-[180px] animate-in fade-in zoom-in-95 duration-200">
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 pb-2 border-b border-slate-800">
         {label}
       </p>
-      <div className="space-y-3">
-        <div className="flex justify-between items-center gap-6">
+      <div className="space-y-2.5">
+        <div className="flex justify-between items-center gap-4">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             {t("analytics.tooltipAnalyses")}
           </span>
           <span className="text-sm font-bold text-white">{p.testCount}</span>
         </div>
-        <div className="flex justify-between items-center gap-6">
+        <div className="flex justify-between items-center gap-4">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             {t("analytics.tooltipDensity")}
           </span>
@@ -215,7 +215,7 @@ function ChartTooltip({ active, payload, label }: any) {
             {formatCFU(p.avgCfu)}
           </span>
         </div>
-        <div className="flex justify-between items-center gap-6">
+        <div className="flex justify-between items-center gap-4">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             {t("analytics.tooltipSuccess")}
           </span>
@@ -224,7 +224,7 @@ function ChartTooltip({ active, payload, label }: any) {
           </span>
         </div>
         {p.tntcCount > 0 && (
-          <div className="flex justify-between items-center gap-6 pt-2 border-t border-slate-800">
+          <div className="flex justify-between items-center gap-4 pt-2 border-t border-slate-800">
             <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest">
               {t("analytics.tooltipBoundary")}
             </span>
@@ -246,6 +246,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
   const [dateRange, setDateRange] = useState<DateRange>("30d");
   const [mediaType, setMediaType] = useState<MediaType | "all">("all");
   const [analystFilter, setAnalystFilter] = useState("all");
@@ -300,7 +301,7 @@ export default function AnalyticsPage() {
     fetchData();
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") fetchData();
-    }, 30000); // 30s polling
+    }, 30000);
     return () => clearInterval(interval);
   }, [fetchData]);
 
@@ -315,6 +316,7 @@ export default function AnalyticsPage() {
           ),
     [allAnalyses, analystFilter],
   );
+
   const uniqueAnalysts = useMemo(
     () =>
       Array.from(
@@ -324,11 +326,13 @@ export default function AnalyticsPage() {
       ).sort(),
     [allAnalyses],
   );
+
   const timeSeriesData = useMemo(
     () => groupByDate(filtered, dateRange),
     [filtered, dateRange],
   );
   const monthlySummaries = useMemo(() => groupByMonth(filtered), [filtered]);
+
   const stats = useMemo(() => {
     const total = filtered.length;
     if (total === 0)
@@ -354,7 +358,6 @@ export default function AnalyticsPage() {
       },
       {} as Record<string, number>,
     );
-
     return {
       total,
       avgCfu: Math.round(avgCfu * 10) / 10,
@@ -403,7 +406,7 @@ export default function AnalyticsPage() {
 
   if (error && allAnalyses.length === 0)
     return (
-      <div className="text-center py-24 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+      <div className="text-center py-24 space-y-6 animate-in slide-in-from-bottom-4 duration-500 px-4">
         <div className="w-20 h-20 rounded-none bg-rose-50 flex items-center justify-center mx-auto shadow-xl shadow-rose-100/50">
           <AlertCircle className="h-10 w-10 text-rose-500" />
         </div>
@@ -425,371 +428,410 @@ export default function AnalyticsPage() {
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden bg-[#f4f7f6] dark:bg-slate-950 transition-colors duration-300">
-      {/* Container for Main Content and Docs */}
-      <div className="flex relative min-h-[calc(100vh-200px)]">
-        {/* Main Workspace Area */}
-        <div
-          className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
-        >
-          <div className="max-w-[1500px] mx-auto px-6 py-0 pt-0 pb-6">
-            {/* Cloudflare-style Header */}
-            <div className="space-y-0.5 mb-4">
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                {t("analytics.supertitle")}
-              </p>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+    <div className="flex flex-col animate-in fade-in duration-500 w-full min-w-0">
+      {/* Main content — full width, sidebar is overlay via DocumentationSidebar */}
+      <div className="w-full min-w-0">
+        <div className="w-full min-w-0 px-3 sm:px-4 md:px-6 py-0 space-y-4 pb-6">
+          {/* ── HEADER ─────────────────────────────────────────────────────── */}
+          <div className="flex flex-wrap items-start justify-between gap-3 pt-1">
+            <div className="min-w-0">
+              <h1 className="text-xs sm:text-sm md:text-base lg:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none truncate">
                 {t("overview.neuralIntelligenceLayer")}
               </h1>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              <p className="text-[7px] sm:text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] mt-0.5">
+                {t("analytics.supertitle")} {"//"}{" "}
                 {t("overview.realTimeSpectral")}
               </p>
-              <div className="hidden lg:block">
-                <DocumentationToggle
-                  showDocs={showDocs}
-                  setShowDocs={setShowDocs}
-                  text={t("analytics.docsToggle")}
-                />
-              </div>
             </div>
+            <div className="hidden lg:block flex-shrink-0">
+              <DocumentationToggle
+                showDocs={showDocs}
+                setShowDocs={setShowDocs}
+                text={t("analytics.docsToggle")}
+              />
+            </div>
+          </div>
 
-            {/* Main Analytics Container */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none shadow-sm overflow-hidden transition-colors">
-              <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+          {/* ── MAIN ANALYTICS CARD ────────────────────────────────────────── */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none shadow-sm overflow-hidden transition-colors w-full min-w-0">
+            {/* Card Header */}
+            <div className="px-3 sm:px-4 md:px-5 py-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                   {t("analytics.neuralQueriesHeader")}
                 </h2>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 flex-wrap">
                   <button
                     onClick={() => toast.info(t("analytics.generatingReport"))}
-                    className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-widest hover:underline"
+                    className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 text-[9px] font-bold uppercase tracking-widest hover:underline whitespace-nowrap"
                   >
                     {t("overview.downloadDataset")}
                   </button>
                   <button
                     onClick={handleExport}
-                    className="flex items-center gap-1 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-widest hover:underline"
+                    className="flex items-center gap-1 text-blue-600 dark:text-blue-400 text-[9px] font-bold uppercase tracking-widest hover:underline whitespace-nowrap"
                   >
                     {t("overview.activeSink")}{" "}
                     <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
               </div>
-
-              <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-slate-50/30 dark:bg-slate-800/30">
-                <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400 rounded-none text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
-                  <Filter className="w-3 h-3" /> {t("analytics.addFilter")}
-                </button>
-
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <select
-                      value={dateRange}
-                      onChange={(e) =>
-                        setDateRange(e.target.value as DateRange)
-                      }
-                      className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none px-3 py-1.5 text-[10px] font-black text-slate-700 dark:text-slate-200 outline-none hover:border-slate-300 dark:hover:border-slate-600 transition-all appearance-none pr-8"
-                    >
-                      {DATE_RANGE_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {t(o.labelKey)}
-                        </option>
-                      ))}
-                    </select>
-                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Query Overview Pills */}
-              <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-4">
-                <div className="flex items-center gap-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white">
-                  {t("analytics.queryOverview")}{" "}
-                  <Clock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
-                </div>
-                 <div className="flex border-b border-slate-100 dark:border-slate-800 gap-4 sm:gap-6 overflow-x-auto no-scrollbar">
-                  {[
-                    t("overview.queryOverview"),
-                    t("overview.throughput"),
-                    t("overview.successRate"),
-                    t("analytics.tabDataCenter"),
-                  ].map((tab, i) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(i)}
-                      className={`pb-2 text-[9px] sm:text-[11px] font-bold transition-all whitespace-nowrap ${activeTab === i ? "text-blue-600 border-b-2 border-blue-600" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"}`}
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-
-                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 py-4">
-                  {[
-                    {
-                      labelKey: "analytics.cardPcaMatrix" as const,
-                      key: "Plate Count Agar",
-                      trend: "+14%",
-                      color: "indigo",
-                    },
-                    {
-                      labelKey: "analytics.cardVrbaMatrix" as const,
-                      key: "VRBA",
-                      trend: "+2.1%",
-                      color: "amber",
-                    },
-                    {
-                      labelKey: "analytics.cardBgbbProtocol" as const,
-                      key: "BGBB",
-                      trend: "OPTIMAL",
-                      color: "emerald",
-                    },
-                    {
-                      labelKey: "analytics.cardR2aAnalytics" as const,
-                      key: "R2A",
-                      trend: "+5.4%",
-                      color: "rose",
-                    },
-                    {
-                      labelKey: "analytics.cardIntegrity" as const,
-                      key: "Integrity",
-                      trend: "99.9%",
-                      color: "blue",
-                    },
-                  ].map((s, i) => {
-                    let val: string | number = 0;
-                    if (s.key === "Integrity") {
-                      val = `${stats.passRate}%`;
-                    } else {
-                      const count = stats.breakdown[s.key] || 0;
-                      val =
-                        count > 1000 ? `${(count / 1000).toFixed(1)}k` : count;
-                    }
-
-                    return (
-                      <div
-                        key={i}
-                        className={`backdrop-blur-sm border p-2 sm:p-4 rounded-none shadow-sm group hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden ${
-                          s.color === 'indigo' ? 'bg-indigo-50/40 border-indigo-100/50 hover:bg-indigo-50/60 dark:bg-indigo-950/20 dark:border-indigo-900/40' :
-                          s.color === 'amber' ? 'bg-amber-50/40 border-amber-100/50 hover:bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-900/40' :
-                          s.color === 'emerald' ? 'bg-emerald-50/40 border-emerald-100/50 hover:bg-emerald-50/60 dark:bg-emerald-950/20 dark:border-emerald-900/40' :
-                          s.color === 'rose' ? 'bg-rose-50/40 border-rose-100/50 hover:bg-rose-50/60 dark:bg-rose-950/20 dark:border-rose-900/40' :
-                          'bg-blue-50/40 border-blue-100/50 hover:bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-900/40'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start mb-1 sm:mb-2">
-                           <div className={`p-1 sm:p-1.5 rounded-none transition-colors ${
-                              s.color === 'indigo' ? 'bg-indigo-50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400' :
-                              s.color === 'amber' ? 'bg-amber-50 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400' :
-                              s.color === 'emerald' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                              s.color === 'rose' ? 'bg-rose-50 text-rose-500 dark:bg-rose-900/30 dark:text-rose-400' :
-                              'bg-blue-50 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400'
-                           }`}>
-                              <FlaskConical className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                           </div>
-                           <span className={`text-[7px] sm:text-[9px] font-bold ${s.color === 'emerald' ? 'text-emerald-500' : 'text-slate-400'} uppercase tracking-widest z-10`}>
-                              {s.trend}
-                           </span>
-                        </div>
-                        <div className="z-10">
-                          <p className="text-slate-400 dark:text-slate-500 text-[6px] sm:text-[8px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-0.5">
-                            {t(s.labelKey)}
-                          </p>
-                          <p className="text-sm sm:text-2xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tighter">
-                            {val}
-                          </p>
-                        </div>
-                        <div className="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-                           <FlaskConical className="w-8 h-8 sm:w-12 sm:h-12" />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                 {/* Chart Container */}
-                <div className="h-[300px] w-full mt-8 border-t border-slate-100 dark:border-slate-800 pt-8">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={timeSeriesData}>
-                      <CartesianGrid
-                        strokeDasharray="0"
-                        vertical={false}
-                        stroke={theme === 'dark' ? "#1e293b" : "#f1f5f9"}
-                      />
-                      <XAxis
-                        dataKey="label"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 9, fill: theme === 'dark' ? "#64748b" : "#94a3b8", fontWeight: 700 }}
-                        dy={10}
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 9, fill: theme === 'dark' ? "#64748b" : "#94a3b8", fontWeight: 700 }}
-                        dx={-10}
-                      />
-                      <Tooltip
-                        content={<ChartTooltip />}
-                        cursor={{ stroke: theme === 'dark' ? "#334155" : "#f1f5f9", strokeWidth: 1 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="avgCfu"
-                        stroke="#3b82f6"
-                        strokeWidth={1.5}
-                        dot={false}
-                        activeDot={{ r: 4, fill: "#3b82f6", strokeWidth: 0 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="testCount"
-                        stroke="#f59e0b"
-                        strokeWidth={1.5}
-                        dot={false}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="passRate"
-                        stroke="#10b981"
-                        strokeWidth={1.5}
-                        dot={false}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-                 <p className="text-[9px] text-center text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-4">
-                  {t("overview.queryTimeFrame")}
-                </p>
-              </div>
-
-              {/* Query Statistics Section */}
-              <div className="px-4 sm:px-6 py-6 sm:py-8 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800">
-                <h3 className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-white mb-4 sm:mb-6 uppercase tracking-widest">
-                  {t("analytics.queryStats")}
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
-                  <div className="space-y-1 sm:space-y-2 border-l-2 border-slate-200 dark:border-slate-700 pl-4 sm:pl-6">
-                     <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                      {t("overview.totalNeuralQueries")}
-                    </p>
-                    <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                      {stats.total > 1000
-                        ? `${(stats.total / 1000).toFixed(2)}k`
-                        : stats.total}
-                    </p>
-                  </div>
-                  <div className="space-y-1 sm:space-y-2 border-l-2 border-slate-200 dark:border-slate-700 pl-4 sm:pl-6">
-                     <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                      {t("overview.avgQps")}
-                    </p>
-                    <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                      0.035
-                    </p>
-                  </div>
-                  <div className="space-y-1 sm:space-y-2 border-l-2 border-slate-200 dark:border-slate-700 pl-4 sm:pl-6 col-span-2 md:col-span-1">
-                    <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                      {t("overview.processingTime")}
-                    </p>
-                    <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                      42ms
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
 
-            {/* Monthly Summary Table */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none shadow-sm overflow-hidden mt-10 transition-colors">
-              <div className="px-6 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                  {t("analytics.intelligenceLedger")}
-                </h2>
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                  {monthlySummaries.length} {t("analytics.cyclesLogged")}
-                </span>
+            {/* Filter Bar */}
+            <div className="px-3 sm:px-4 md:px-5 py-2.5 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-2 bg-slate-50/30 dark:bg-slate-800/30">
+              <div className="relative flex-shrink-0">
+                <select
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value as DateRange)}
+                  className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none px-3 py-1.5 text-[10px] font-black text-slate-700 dark:text-slate-200 outline-none hover:border-slate-300 dark:hover:border-slate-600 transition-all appearance-none pr-8"
+                >
+                  {DATE_RANGE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {t(o.labelKey)}
+                    </option>
+                  ))}
+                </select>
+                <Calendar className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+              </div>
+              <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400 rounded-none text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all whitespace-nowrap flex-shrink-0">
+                <Filter className="w-3 h-3" /> {t("analytics.addFilter")}
+              </button>
+            </div>
+
+            {/* Query Overview Section */}
+            <div className="px-3 sm:px-4 md:px-5 py-3 space-y-2">
+              {/* Section Label */}
+              <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-bold text-slate-900 dark:text-white">
+                {t("analytics.queryOverview")}{" "}
+                <Clock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
               </div>
 
-              {monthlySummaries.length === 0 ? (
-                <div className="py-24 text-center">
-                  <FlaskConical className="w-16 h-16 text-slate-100 mx-auto mb-6" />
-                  <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">
-                    {t("analytics.noMonthlyArchived")}
+              {/* Tabs — scrollable, no wrap, no cutoff */}
+              <div className="flex border-b border-slate-100 dark:border-slate-800 gap-3 sm:gap-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {[
+                  t("overview.queryOverview"),
+                  t("overview.throughput"),
+                  t("overview.successRate"),
+                  t("analytics.tabDataCenter"),
+                ].map((tab, i) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(i)}
+                    className={`pb-2 text-[9px] sm:text-[10px] font-bold transition-all whitespace-nowrap flex-shrink-0 ${
+                      activeTab === i
+                        ? "text-blue-600 border-b-2 border-blue-600"
+                        : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+
+              {/* Stats Cards — responsive auto-fit grid, never overflows */}
+              <div className="grid grid-cols-2 min-[480px]:grid-cols-3 lg:grid-cols-5 gap-2 py-2">
+                {[
+                  {
+                    labelKey: "analytics.cardPcaMatrix" as const,
+                    key: "Plate Count Agar",
+                    trend: "+14%",
+                    color: "indigo",
+                  },
+                  {
+                    labelKey: "analytics.cardVrbaMatrix" as const,
+                    key: "VRBA",
+                    trend: "+2.1%",
+                    color: "amber",
+                  },
+                  {
+                    labelKey: "analytics.cardBgbbProtocol" as const,
+                    key: "BGBB",
+                    trend: "OPTIMAL",
+                    color: "emerald",
+                  },
+                  {
+                    labelKey: "analytics.cardR2aAnalytics" as const,
+                    key: "R2A",
+                    trend: "+5.4%",
+                    color: "rose",
+                  },
+                  {
+                    labelKey: "analytics.cardIntegrity" as const,
+                    key: "Integrity",
+                    trend: "99.9%",
+                    color: "blue",
+                  },
+                ].map((s, i) => {
+                  let val: string | number = 0;
+                  if (s.key === "Integrity") {
+                    val = `${stats.passRate}%`;
+                  } else {
+                    const count = stats.breakdown[s.key] || 0;
+                    val =
+                      count > 1000 ? `${(count / 1000).toFixed(1)}k` : count;
+                  }
+
+                  return (
+                    <div
+                      key={i}
+                      className={`border p-2 sm:p-3 rounded-none shadow-sm group hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden min-w-0 ${
+                        s.color === "indigo"
+                          ? "bg-indigo-50/40 border-indigo-100/50 hover:bg-indigo-50/60 dark:bg-indigo-950/20 dark:border-indigo-900/40"
+                          : s.color === "amber"
+                            ? "bg-amber-50/40 border-amber-100/50 hover:bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-900/40"
+                            : s.color === "emerald"
+                              ? "bg-emerald-50/40 border-emerald-100/50 hover:bg-emerald-50/60 dark:bg-emerald-950/20 dark:border-emerald-900/40"
+                              : s.color === "rose"
+                                ? "bg-rose-50/40 border-rose-100/50 hover:bg-rose-50/60 dark:bg-rose-950/20 dark:border-rose-900/40"
+                                : "bg-blue-50/40 border-blue-100/50 hover:bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-900/40"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <div
+                          className={`p-1 rounded-none ${
+                            s.color === "indigo"
+                              ? "bg-indigo-50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400"
+                              : s.color === "amber"
+                                ? "bg-amber-50 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400"
+                                : s.color === "emerald"
+                                  ? "bg-emerald-50 text-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                  : s.color === "rose"
+                                    ? "bg-rose-50 text-rose-500 dark:bg-rose-900/30 dark:text-rose-400"
+                                    : "bg-blue-50 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400"
+                          }`}
+                        >
+                          <FlaskConical className="w-3 h-3" />
+                        </div>
+                        <span
+                          className={`text-[7px] sm:text-[8px] font-bold uppercase tracking-widest z-10 ${
+                            s.color === "emerald"
+                              ? "text-emerald-500"
+                              : "text-slate-400"
+                          }`}
+                        >
+                          {s.trend}
+                        </span>
+                      </div>
+                      <div className="z-10 min-w-0">
+                        <p className="text-slate-400 dark:text-slate-500 text-[6px] sm:text-[8px] font-bold uppercase tracking-[0.12em] mb-0.5 truncate">
+                          {t(s.labelKey)}
+                        </p>
+                        <p className="text-sm sm:text-lg lg:text-xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tighter truncate">
+                          {val}
+                        </p>
+                      </div>
+                      <div className="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none">
+                        <FlaskConical className="w-8 h-8" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Chart — min-height prevents collapse */}
+              <div
+                className="w-full mt-3 border-t border-slate-100 dark:border-slate-800 pt-3"
+                style={{ minHeight: 160, height: "clamp(160px, 25vw, 220px)" }}
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={timeSeriesData}>
+                    <CartesianGrid
+                      strokeDasharray="0"
+                      vertical={false}
+                      stroke={theme === "dark" ? "#1e293b" : "#f1f5f9"}
+                    />
+                    <XAxis
+                      dataKey="label"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{
+                        fontSize: 8,
+                        fill: theme === "dark" ? "#64748b" : "#94a3b8",
+                        fontWeight: 700,
+                      }}
+                      dy={8}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{
+                        fontSize: 8,
+                        fill: theme === "dark" ? "#64748b" : "#94a3b8",
+                        fontWeight: 700,
+                      }}
+                      dx={-4}
+                      width={36}
+                    />
+                    <Tooltip
+                      content={<ChartTooltip />}
+                      cursor={{
+                        stroke: theme === "dark" ? "#334155" : "#f1f5f9",
+                        strokeWidth: 1,
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="avgCfu"
+                      stroke="#3b82f6"
+                      strokeWidth={1.5}
+                      dot={false}
+                      activeDot={{ r: 4, fill: "#3b82f6", strokeWidth: 0 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="testCount"
+                      stroke="#f59e0b"
+                      strokeWidth={1.5}
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="passRate"
+                      stroke="#10b981"
+                      strokeWidth={1.5}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              <p className="text-[8px] text-center text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-2">
+                {t("overview.queryTimeFrame")}
+              </p>
+            </div>
+
+            {/* Query Statistics */}
+            <div className="px-3 sm:px-4 md:px-5 py-3 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800">
+              <h3 className="text-[9px] sm:text-[10px] font-bold text-slate-900 dark:text-white mb-2 uppercase tracking-widest">
+                {t("analytics.queryStats")}
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="space-y-0.5 border-l-2 border-slate-200 dark:border-slate-700 pl-3 min-w-0">
+                  <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 dark:text-slate-400 truncate">
+                    {t("overview.totalNeuralQueries")}
+                  </p>
+                  <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tabular-nums">
+                    {stats.total > 1000
+                      ? `${(stats.total / 1000).toFixed(2)}k`
+                      : stats.total}
                   </p>
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left whitespace-nowrap">
-                    <thead>
-                      <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                        {[
-                          t("analytics.colDiagnosticCycle"),
-                          t("analytics.colTotalSequences"),
-                          t("analytics.colDensityMedian"),
-                          t("analytics.colComplianceIntegrity"),
-                          t("analytics.colAuthorizedPersonnel"),
-                        ].map((h) => (
-                          <th
-                            key={h}
-                            className="px-8 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest"
-                          >
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                      {monthlySummaries.map((row) => (
-                        <tr
-                          key={row.month}
-                          className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
-                        >
-                          <td className="px-8 py-6 text-sm font-bold text-slate-900 dark:text-white">
-                            {row.month}
-                          </td>
-                          <td className="px-8 py-6 text-sm font-bold text-slate-700 dark:text-slate-300">
-                            {row.tests}
-                          </td>
-                          <td className="px-8 py-6">
-                            <span className="text-[11px] font-bold text-blue-600">
-                              {formatCFU(row.avgCfu)} {t("analytics.cfuMlUnit")}
-                            </span>
-                          </td>
-                          <td className="px-8 py-6">
-                            <div className="flex items-center gap-4">
-                              <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full ${row.passRate >= 85 ? "bg-emerald-500" : "bg-amber-500"}`}
-                                  style={{ width: `${row.passRate}%` }}
-                                />
-                              </div>
-                              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
-                                {row.passRate}%
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-8 py-6 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">
-                            {row.analysts}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="space-y-0.5 border-l-2 border-slate-200 dark:border-slate-700 pl-3 min-w-0">
+                  <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 dark:text-slate-400 truncate">
+                    {t("overview.avgQps")}
+                  </p>
+                  <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tabular-nums">
+                    0.035
+                  </p>
                 </div>
-              )}
+                <div className="space-y-0.5 border-l-2 border-slate-200 dark:border-slate-700 pl-3 col-span-2 sm:col-span-1 min-w-0">
+                  <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 dark:text-slate-400 truncate">
+                    {t("overview.processingTime")}
+                  </p>
+                  <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tabular-nums">
+                    42ms
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Right: Documentation Sidebar - FIXED TO RIGHT */}
-        <div className="hidden lg:block">
-          <DocumentationSidebar
-            showDocs={showDocs}
-            setShowDocs={setShowDocs}
-            directory={t("analytics.docsDirectory")}
-            title={t("analytics.docsTitle")}
-            description={t("analytics.docsDescription")}
-            rawText={`MATRIKS ANALITIK COLONYAI - SOP ISO-17025
+          {/* ── MONTHLY SUMMARY TABLE ──────────────────────────────────────── */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none shadow-sm overflow-hidden transition-colors w-full min-w-0">
+            <div className="px-3 sm:px-4 md:px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+              <h2 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white min-w-0 truncate">
+                {t("analytics.intelligenceLedger")}
+              </h2>
+              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap flex-shrink-0">
+                {monthlySummaries.length} {t("analytics.cyclesLogged")}
+              </span>
+            </div>
+
+            {monthlySummaries.length === 0 ? (
+              <div className="py-16 text-center">
+                <FlaskConical className="w-12 h-12 text-slate-100 mx-auto mb-4" />
+                <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">
+                  {t("analytics.noMonthlyArchived")}
+                </p>
+              </div>
+            ) : (
+              /* Scrollable wrapper — table never clips content */
+              <div className="overflow-x-auto w-full [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700">
+                <table className="w-full text-left" style={{ minWidth: 540 }}>
+                  <thead>
+                    <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                      {[
+                        t("analytics.colDiagnosticCycle"),
+                        t("analytics.colTotalSequences"),
+                        t("analytics.colDensityMedian"),
+                        t("analytics.colComplianceIntegrity"),
+                        t("analytics.colAuthorizedPersonnel"),
+                      ].map((h) => (
+                        <th
+                          key={h}
+                          className="px-4 sm:px-5 md:px-6 py-3 text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap"
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                    {monthlySummaries.map((row) => (
+                      <tr
+                        key={row.month}
+                        className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
+                      >
+                        <td className="px-4 sm:px-5 md:px-6 py-4 text-xs sm:text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                          {row.month}
+                        </td>
+                        <td className="px-4 sm:px-5 md:px-6 py-4 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                          {row.tests}
+                        </td>
+                        <td className="px-4 sm:px-5 md:px-6 py-4 whitespace-nowrap">
+                          <span className="text-[10px] sm:text-[11px] font-bold text-blue-600">
+                            {formatCFU(row.avgCfu)} {t("analytics.cfuMlUnit")}
+                          </span>
+                        </td>
+                        <td className="px-4 sm:px-5 md:px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="w-14 sm:w-20 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden flex-shrink-0">
+                              <div
+                                className={`h-full rounded-full ${row.passRate >= 85 ? "bg-emerald-500" : "bg-amber-500"}`}
+                                style={{ width: `${row.passRate}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                              {row.passRate}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 sm:px-5 md:px-6 py-4 text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase max-w-[160px] truncate">
+                          {row.analysts}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+        {/* /inner px wrapper */}
+      </div>
+      {/* /main content */}
+
+      {/* Documentation Sidebar — rendered as overlay/aside by DocumentationSidebar itself */}
+      <div className="hidden lg:block">
+        <DocumentationSidebar
+          showDocs={showDocs}
+          setShowDocs={setShowDocs}
+          directory={t("analytics.docsDirectory")}
+          title={t("analytics.docsTitle")}
+          description={t("analytics.docsDescription")}
+          rawText={`MATRIKS ANALITIK COLONYAI - SOP ISO-17025
 ==========================================
 
 1. OVERVIEW
@@ -808,146 +850,144 @@ Modul Analytics berfungsi sebagai pusat intelijen data ColonyAI. Ini menyajikan 
 
 STATUS: ANALYTICS READY
 INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
-          >
-            <section className="space-y-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
-                  01
-                </span>
-                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
-                  {t("analytics.docsSectionOverviewTitle")}
-                </h2>
-              </div>
-              <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-none border border-slate-100 dark:border-slate-700/50">
-                {t("analytics.docsSectionOverviewText")}
-              </p>
-            </section>
+        >
+          <section className="space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
+                01
+              </span>
+              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
+                {t("analytics.docsSectionOverviewTitle")}
+              </h2>
+            </div>
+            <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-none border border-slate-100 dark:border-slate-700/50">
+              {t("analytics.docsSectionOverviewText")}
+            </p>
+          </section>
 
-            <section className="space-y-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
-                  02
-                </span>
-                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
-                  {t("analytics.docsSectionComponentsTitle")}
-                </h2>
-              </div>
-              <div className="space-y-3 ml-0.5">
-                {[
-                  {
-                    id: "1",
-                    titleKey:
-                      "analytics.docsComponentQueryOverviewTitle" as const,
-                    descKey:
-                      "analytics.docsComponentQueryOverviewDesc" as const,
-                  },
-                  {
-                    id: "2",
-                    titleKey: "analytics.docsComponentTimeSeriesTitle" as const,
-                    descKey: "analytics.docsComponentTimeSeriesDesc" as const,
-                  },
-                  {
-                    id: "3",
-                    titleKey: "analytics.docsComponentQueryStatsTitle" as const,
-                    descKey: "analytics.docsComponentQueryStatsDesc" as const,
-                  },
-                  {
-                    id: "4",
-                    titleKey: "analytics.docsComponentLedgerTitle" as const,
-                    descKey: "analytics.docsComponentLedgerDesc" as const,
-                  },
-                ].map((step) => (
-                  <div key={step.id} className="flex gap-2.5 group">
-                    <span className="flex-shrink-0 w-4.5 h-4.5 rounded bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                      {step.id}
-                    </span>
-                    <div className="space-y-0.5">
-                      <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">
-                        {t(step.titleKey)}
-                      </h4>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                        {t(step.descKey)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
-                  03
-                </span>
-                <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
-                  {t("analytics.docsSectionExportTitle")}
-                </h2>
-              </div>
-              <div className="space-y-2">
-                {[
-                  {
-                    labelKey: "analytics.docsExportFormatLabel" as const,
-                    valKey: "analytics.docsExportFormatVal" as const,
-                  },
-                  {
-                    labelKey: "analytics.docsExportValidityLabel" as const,
-                    valKey: "analytics.docsExportValidityVal" as const,
-                  },
-                  {
-                    labelKey: "analytics.docsExportSecurityLabel" as const,
-                    valKey: "analytics.docsExportSecurityVal" as const,
-                  },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex flex-col gap-0.5 pb-2 border-b border-slate-100 dark:border-slate-800 last:border-0"
-                  >
-                    <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                      {t(item.labelKey)}
-                    </span>
-                    <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300">
-                      {t(item.valKey)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <div className="space-y-3 pt-4">
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-none flex gap-3 shadow-sm">
-                <div className="w-4 h-4 flex-shrink-0 mt-0.5">
-                  <div className="w-full h-full rounded-full bg-blue-600 flex items-center justify-center">
-                    <BarChart3 className="w-2.5 h-2.5 text-white" />
+          <section className="space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
+                02
+              </span>
+              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
+                {t("analytics.docsSectionComponentsTitle")}
+              </h2>
+            </div>
+            <div className="space-y-3 ml-0.5">
+              {[
+                {
+                  id: "1",
+                  titleKey:
+                    "analytics.docsComponentQueryOverviewTitle" as const,
+                  descKey: "analytics.docsComponentQueryOverviewDesc" as const,
+                },
+                {
+                  id: "2",
+                  titleKey: "analytics.docsComponentTimeSeriesTitle" as const,
+                  descKey: "analytics.docsComponentTimeSeriesDesc" as const,
+                },
+                {
+                  id: "3",
+                  titleKey: "analytics.docsComponentQueryStatsTitle" as const,
+                  descKey: "analytics.docsComponentQueryStatsDesc" as const,
+                },
+                {
+                  id: "4",
+                  titleKey: "analytics.docsComponentLedgerTitle" as const,
+                  descKey: "analytics.docsComponentLedgerDesc" as const,
+                },
+              ].map((step) => (
+                <div key={step.id} className="flex gap-2.5 group">
+                  <span className="flex-shrink-0 w-4 h-4 rounded bg-slate-900 text-white text-[8px] font-bold flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    {step.id}
+                  </span>
+                  <div className="space-y-0.5 min-w-0">
+                    <h4 className="text-[10px] font-bold text-slate-900 dark:text-white">
+                      {t(step.titleKey)}
+                    </h4>
+                    <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                      {t(step.descKey)}
+                    </p>
                   </div>
                 </div>
-                <div className="space-y-0.5">
-                  <p className="text-[10px] font-black text-blue-900 dark:text-blue-300 uppercase tracking-widest">
-                    {t("analytics.docsStatusReadyTitle")}
-                  </p>
-                  <p className="text-[9px] text-blue-700 dark:text-blue-400 leading-relaxed font-semibold">
-                    {t("analytics.docsStatusReadyText")}
-                  </p>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">
+                03
+              </span>
+              <h2 className="text-[11px] font-bold text-slate-900 dark:text-white tracking-tight">
+                {t("analytics.docsSectionExportTitle")}
+              </h2>
+            </div>
+            <div className="space-y-2">
+              {[
+                {
+                  labelKey: "analytics.docsExportFormatLabel" as const,
+                  valKey: "analytics.docsExportFormatVal" as const,
+                },
+                {
+                  labelKey: "analytics.docsExportValidityLabel" as const,
+                  valKey: "analytics.docsExportValidityVal" as const,
+                },
+                {
+                  labelKey: "analytics.docsExportSecurityLabel" as const,
+                  valKey: "analytics.docsExportSecurityVal" as const,
+                },
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col gap-0.5 pb-2 border-b border-slate-100 dark:border-slate-800 last:border-0"
+                >
+                  <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                    {t(item.labelKey)}
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300">
+                    {t(item.valKey)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <div className="space-y-3 pt-4">
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-none flex gap-3 shadow-sm">
+              <div className="w-4 h-4 flex-shrink-0 mt-0.5">
+                <div className="w-full h-full rounded-full bg-blue-600 flex items-center justify-center">
+                  <BarChart3 className="w-2.5 h-2.5 text-white" />
                 </div>
               </div>
-
-              <div className="p-3 bg-slate-900 border border-slate-800 rounded-none flex gap-3 shadow-xl">
-                <div className="w-4 h-4 flex-shrink-0 mt-0.5">
-                  <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
-                    <Lock className="w-2.5 h-2.5 text-white" />
-                  </div>
-                </div>
-                <div className="space-y-0.5">
-                  <p className="text-[10px] font-black text-white uppercase tracking-widest">
-                    {t("analytics.docsVaultTitle")}
-                  </p>
-                  <p className="text-[9px] text-slate-400 leading-relaxed font-medium">
-                    {t("analytics.docsVaultText")}
-                  </p>
-                </div>
+              <div className="space-y-0.5 min-w-0">
+                <p className="text-[10px] font-black text-blue-900 dark:text-blue-300 uppercase tracking-widest">
+                  {t("analytics.docsStatusReadyTitle")}
+                </p>
+                <p className="text-[9px] text-blue-700 dark:text-blue-400 leading-relaxed font-semibold">
+                  {t("analytics.docsStatusReadyText")}
+                </p>
               </div>
             </div>
-          </DocumentationSidebar>
-        </div>
+
+            <div className="p-3 bg-slate-900 border border-slate-800 rounded-none flex gap-3 shadow-xl">
+              <div className="w-4 h-4 flex-shrink-0 mt-0.5">
+                <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
+                  <Lock className="w-2.5 h-2.5 text-white" />
+                </div>
+              </div>
+              <div className="space-y-0.5 min-w-0">
+                <p className="text-[10px] font-black text-white uppercase tracking-widest">
+                  {t("analytics.docsVaultTitle")}
+                </p>
+                <p className="text-[9px] text-slate-400 leading-relaxed font-medium">
+                  {t("analytics.docsVaultText")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </DocumentationSidebar>
       </div>
     </div>
   );

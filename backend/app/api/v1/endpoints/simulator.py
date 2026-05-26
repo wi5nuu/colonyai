@@ -40,6 +40,10 @@ class ComparisonCreate(BaseModel):
     manual_dust_debris: int = 0
     manual_media_crack: int = 0
     notes: Optional[str] = None
+    # Sandbox mode: client supplies AI breakdown when analysis is transient (not in DB)
+    ai_class_breakdown: Optional[dict] = None
+    ai_total_valid: Optional[int] = None
+    overall_accuracy: Optional[float] = None
 
 
 class ComparisonResponse(BaseModel):
@@ -95,15 +99,20 @@ async def save_comparison(
     - Analyst: own comparisons only
     - Manager/Admin: comparisons within their organization
     - Super Admin: any comparison
+
+    SANDBOX MODE: If analysis_id is a transient simulation UUID (not in DB),
+    the client can supply ai_class_breakdown directly and the comparison is saved
+    as a sandbox entry without requiring a persisted analysis record.
     """
     try:
         analysis_uuid = uuid.UUID(body.analysis_id)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid analysis ID")
 
-    # Verify analysis exists with role-based scoping
-    analysis_query = select(Analysis).where(Analysis.id == analysis_uuid)
     user_role = current_user.get("role")
+
+    # Try to find persisted analysis with role-based scoping
+    analysis_query = select(Analysis).where(Analysis.id == analysis_uuid)
 
     if user_role == "analyst":
         analysis_query = analysis_query.where(
@@ -119,24 +128,39 @@ async def save_comparison(
 
     result = await db.execute(analysis_query)
     analysis = result.scalars().first()
-    if not analysis:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found")
 
-    # Get AI class breakdown from analysis
-    ai_breakdown = analysis.class_breakdown or {}
-    ai_single = ai_breakdown.get("colony_single", 0)
-    ai_merged = ai_breakdown.get("colony_merged", 0)
-    ai_total_valid = ai_single + ai_merged
+    # ── SANDBOX MODE ──
+    # If analysis not in DB (transient simulation), use client-supplied breakdown
+    if analysis is None:
+        if body.ai_class_breakdown is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Analysis not found. For simulation mode, supply ai_class_breakdown in the request body."
+            )
+        # Use data supplied by client (from the /simulate response)
+        ai_breakdown = body.ai_class_breakdown
+        ai_single = ai_breakdown.get("colony_single", 0)
+        ai_merged = ai_breakdown.get("colony_merged", 0)
+        ai_total_valid = body.ai_total_valid if body.ai_total_valid is not None else (ai_single + ai_merged)
+    else:
+        # Use AI breakdown stored in DB
+        ai_breakdown = analysis.class_breakdown or {}
+        ai_single = ai_breakdown.get("colony_single", 0)
+        ai_merged = ai_breakdown.get("colony_merged", 0)
+        ai_total_valid = ai_single + ai_merged
 
-    # Calculate agreements
+    # Calculate agreements per class
     agreement_single = calculate_agreement(ai_single, body.manual_colony_single)
     agreement_merged = calculate_agreement(ai_merged, body.manual_colony_merged)
     agreement_bubble = calculate_agreement(ai_breakdown.get("bubble", 0), body.manual_bubble)
     agreement_dust = calculate_agreement(ai_breakdown.get("dust_debris", 0), body.manual_dust_debris)
     agreement_crack = calculate_agreement(ai_breakdown.get("media_crack", 0), body.manual_media_crack)
 
-    # Overall accuracy = average of all 5 class agreements
-    overall_accuracy = (agreement_single + agreement_merged + agreement_bubble + agreement_dust + agreement_crack) / 5
+    # Use spatial overall_accuracy if provided by client (from spatial matching algorithm)
+    if body.overall_accuracy is not None:
+        overall_accuracy = body.overall_accuracy
+    else:
+        overall_accuracy = (agreement_single + agreement_merged + agreement_bubble + agreement_dust + agreement_crack) / 5
 
     comparison = SimulatorComparison(
         id=uuid.uuid4(),
@@ -168,7 +192,11 @@ async def save_comparison(
     await write_audit_log(
         db, current_user["user_id"], "save_comparison",
         "simulator_comparison", str(comparison.id),
-        details={"analysis_id": str(analysis_uuid), "overall_accuracy": comparison.overall_accuracy},
+        details={
+            "analysis_id": str(analysis_uuid),
+            "overall_accuracy": comparison.overall_accuracy,
+            "sandbox_mode": analysis is None
+        },
         ip_address=ip, user_agent=ua,
     )
 

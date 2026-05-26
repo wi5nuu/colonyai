@@ -102,17 +102,14 @@ export default function DashboardPage() {
     stats?.weekly_trend.map((d) => ({ name: d.day, val: d.analyses })) || [];
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] dark:bg-slate-950 px-4 sm:px-0 pt-0 pb-6">
-      <div className="max-w-[1500px] mx-auto px-6 space-y-6 pt-0">
-        {/* HEADER SECTION */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-none bg-slate-900 flex items-center justify-center">
-                <Activity className="h-4 w-4 text-primary" />
-              </div>
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
+      <div className="flex relative min-h-[calc(100vh-200px)]">
+        <div className="flex-1 transition-all duration-300">
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-8 py-0 sm:py-0 space-y-4 sm:space-y-6">
+            {/* HEADER SECTION */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
               <div>
-                <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">
+                <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
                   {isId
                     ? "Pusat Komando Strategis"
                     : "Strategic Command Center"}
@@ -128,8 +125,6 @@ export default function DashboardPage() {
                     : "Operational Status: Active"}
                 </p>
               </div>
-            </div>
-          </div>
 
           {user?.role && ["analyst", "admin"].includes(user.role) && (
             <div className="flex flex-wrap items-center gap-3">
@@ -307,7 +302,7 @@ export default function DashboardPage() {
                     Validated Analysis Records
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => router.push("/dashboard/history")}
                   className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline flex items-center gap-1 cursor-pointer"
                 >
@@ -405,8 +400,8 @@ export default function DashboardPage() {
                   color: "text-amber-500",
                   roles: ["analyst", "manager", "auditor", "admin"],
                 },
-              ].filter(item => !user?.role || item.roles.includes(user.role)).length <= 2 
-                ? "grid-cols-2" 
+              ].filter(item => !user?.role || item.roles.includes(user.role)).length <= 2
+                ? "grid-cols-2"
                 : "grid-cols-2"
             } gap-4`}>
               {[
@@ -535,6 +530,8 @@ export default function DashboardPage() {
                 analysis latency by 92% compared to manual counting methods.
               </p>
             </div>
+          </div>
+        </div>
           </div>
         </div>
       </div>

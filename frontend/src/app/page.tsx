@@ -39,6 +39,7 @@ export default function LandingPage() {
               alt="Lab Background"
               fill
               priority
+              sizes="(max-width: 1024px) 100vw, 65vw"
               className="object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
@@ -50,6 +51,7 @@ export default function LandingPage() {
               alt="Neural Specialist"
               fill
               priority
+              sizes="(max-width: 1024px) 100vw, 40vw"
               className="object-cover"
             />
             <div className="absolute inset-0 bg-[#1a237e]/10" />
@@ -143,10 +145,10 @@ export default function LandingPage() {
             style={{ width: "42%" }}
           >
             <div className="relative z-20 text-center">
-              <h3 className="text-[#1a237e] text-xs md:text-lg font-black leading-tight uppercase">
+              <h2 className="text-[#1a237e] text-xs md:text-lg font-black leading-tight uppercase">
                 {useTranslationStore.getState().language === "en" ? "Validate Colony Count" : "Validasi Jumlah Koloni"} <br className="hidden md:block" />
                 {useTranslationStore.getState().language === "en" ? "Before You Submit Results" : "Sebelum Anda Mengirim Hasil"}
-              </h3>
+              </h2>
               <p className="text-[#1a237e] text-[9px] md:text-sm font-bold mt-0.5">
                 {useTranslationStore.getState().language === "en" ? "ISO-17025 Compliant AI Accuracy Verification" : "Verifikasi Akurasi AI Sesuai Standar ISO-17025"}
               </p>
@@ -264,6 +266,7 @@ export default function LandingPage() {
                 src="/product_manager.jpeg"
                 alt="Neural Specialist"
                 fill
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-contain lg:object-cover"
                 priority
               />
@@ -276,9 +279,10 @@ export default function LandingPage() {
       {/* ── Holistic Approach ── */}
       <section className="relative py-32 bg-slate-900 overflow-hidden">
         <Image
-          src="https://images.unsplash.com/photo-1579152276503-68fe289075e8?q=80&w=2000&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1532094349884-543bc11b234d?q=80&w=2000&auto=format&fit=crop"
           alt="Lab Detail"
           fill
+          sizes="100vw"
           className="object-cover opacity-20"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent" />
@@ -571,6 +575,7 @@ export default function LandingPage() {
                 src="https://images.unsplash.com/photo-1551076805-e1869033e561?q=80&w=1000&auto=format&fit=crop"
                 alt="Career"
                 fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover transition-transform duration-1000 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-[#1a237e] via-[#1a237e]/40 to-transparent" />
@@ -595,6 +600,7 @@ export default function LandingPage() {
                 src="https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=1000&auto=format&fit=crop"
                 alt="Partnership"
                 fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover transition-transform duration-1000 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-[#f8faff] dark:from-slate-900 via-[#f8faff]/80 dark:via-slate-900/80 to-transparent" />
@@ -625,9 +631,9 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
             {/* An Initiative By */}
             <div className="flex flex-col items-center lg:items-start gap-3 flex-shrink-0">
-              <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em]">
+              <h3 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em]">
                 {useTranslationStore.getState().language === "en" ? "An Initiative By" : "Inisiasi Oleh"}
-              </h4>
+              </h3>
               <Image
                 src="https://ai-open.president.ac.id/assets/images/FOOTER KEMENKO.png"
                 alt="Kemenko"
@@ -641,9 +647,9 @@ export default function LandingPage() {
 
             {/* Organized By */}
             <div className="flex flex-col items-center lg:items-start gap-3 flex-shrink-0">
-              <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em]">
+              <h3 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em]">
                 {useTranslationStore.getState().language === "en" ? "Organized By" : "Penyelenggara"}
-              </h4>
+              </h3>
               <Image
                 src="https://ai-open.president.ac.id/assets/images/FOOTER%20LOGO%20PU.png"
                 alt="President University"
@@ -657,9 +663,9 @@ export default function LandingPage() {
 
             {/* Our Strategic Partners — Marquee */}
             <div className="flex-1 min-w-0 space-y-3">
-              <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] text-center lg:text-left">
+              <h3 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] text-center lg:text-left">
                 {useTranslationStore.getState().language === "en" ? "Our Strategic Partners" : "Mitra Strategis Kami"}
-              </h4>
+              </h3>
               <div className="relative flex overflow-x-hidden">
                 <div className="py-2 animate-marquee whitespace-nowrap flex items-center gap-12">
                   <Image
@@ -800,11 +806,11 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
       onClick={() => setIsOpen(!isOpen)}
     >
       <div className="flex items-center justify-between">
-        <h4
+        <h3
           className={`text-sm font-black uppercase tracking-wide transition-colors ${isOpen ? "text-primary dark:text-[#00f2ff]" : "text-[#1a237e] dark:text-[#00f2ff]/85"}`}
         >
           {question}
-        </h4>
+        </h3>
         <ChevronDown
           className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-180 text-primary" : "text-slate-400 group-hover:text-primary"}`}
         />

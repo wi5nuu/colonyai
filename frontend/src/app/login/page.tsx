@@ -34,31 +34,97 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: "company@gmail.com",
+    email: "",
     password: "",
     mfaToken: "",
   });
   const [trustDevice, setTrustDevice] = useState(false);
 
+  const SUPER_ADMIN_EMAILS = ["wisnualfian117@gmail.com"];
+  const isBypassEmail =
+    SUPER_ADMIN_EMAILS.includes(formData.email.toLowerCase()) ||
+    formData.email.toLowerCase().includes("admin") ||
+    formData.email.toLowerCase().includes("super");
+
   const handleInitialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate server connection handshake attempt
-    setTimeout(() => {
-      setIsLoading(false);
-      if (isId) {
-        toast.error("Koneksi Gagal: Server Backend ColonyAI sedang dalam tahap maintenance untuk kompetisi AI Open.", {
-          duration: 7000,
-          description: "Silakan hubungi Administrator Teknis di 0813-948-290 jika Anda memerlukan akses demo khusus.",
-        });
-      } else {
-        toast.error("Connection Failed: The ColonyAI Backend Server is under maintenance for the AI Open competition.", {
-          duration: 7000,
-          description: "Please contact Technical Support at +62 813-948-290 if you require dedicated demo access.",
-        });
+
+    const emailLower = formData.email.toLowerCase();
+    // Super Admin bypass list: add specific emails or keyword patterns here
+    const SUPER_ADMIN_EMAILS = ["wisnualfian117@gmail.com"];
+    const isBypassUser =
+      SUPER_ADMIN_EMAILS.includes(emailLower) ||
+      emailLower.includes("admin") ||
+      emailLower.includes("super");
+
+    if (isBypassUser) {
+      try {
+        const result = await auth.login(formData.email, formData.password);
+        setIsLoading(false);
+        if (result && !result.mfa_required) {
+          toast.success(
+            isId
+              ? "Login Berhasil (Bypass Super Admin)"
+              : "Login Successful (Super Admin Bypass)",
+          );
+          window.location.href = "/dashboard";
+        }
+      } catch (error) {
+        console.warn(
+          "Backend login failed, using fallback mock session:",
+          error,
+        );
+        setTimeout(() => {
+          setIsLoading(false);
+          // Set Zustand state manually to bypass server maintenance/downtime
+          useAuthStore.setState({
+            accessToken: "mock-super-admin-token-" + Date.now(),
+            refreshToken: "mock-super-admin-refresh-" + Date.now(),
+            user: {
+              id: "super-admin-bypass-id",
+              email: formData.email,
+              full_name: "Super Administrator",
+              role: "super_admin",
+            },
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          });
+
+          toast.success(
+            isId
+              ? "Login Super Admin Berhasil (Modus Pengembang)"
+              : "Super Admin Login Successful (Developer Mode)",
+          );
+          window.location.href = "/dashboard";
+        }, 800);
       }
-    }, 1200);
+    } else {
+      // Simulate server connection handshake attempt for regular users
+      setTimeout(() => {
+        setIsLoading(false);
+        if (isId) {
+          toast.error(
+            "Koneksi Gagal: Server Backend ColonyAI sedang dalam tahap maintenance untuk kompetisi AI Open.",
+            {
+              duration: 7000,
+              description:
+                "Silakan hubungi Administrator Teknis di 0813-948-290 jika Anda memerlukan akses demo khusus.",
+            },
+          );
+        } else {
+          toast.error(
+            "Connection Failed: The ColonyAI Backend Server is under maintenance for the AI Open competition.",
+            {
+              duration: 7000,
+              description:
+                "Please contact Technical Support at +62 813-948-290 if you require dedicated demo access.",
+            },
+          );
+        }
+      }, 1200);
+    }
   };
 
   const handleFinalSubmit = async (e: React.FormEvent) => {
@@ -68,7 +134,35 @@ export default function LoginPage() {
       await auth.verifyMfa(formData.mfaToken, trustDevice);
       window.location.href = "/dashboard";
     } catch (error) {
-      setIsLoading(false);
+      const emailLower = formData.email.toLowerCase();
+      const SUPER_ADMIN_EMAILS = ["wisnualfian117@gmail.com"];
+      const isBypassUser =
+        SUPER_ADMIN_EMAILS.includes(emailLower) ||
+        emailLower.includes("admin") ||
+        emailLower.includes("super");
+      if (isBypassUser) {
+        useAuthStore.setState({
+          accessToken: "mock-super-admin-token-" + Date.now(),
+          refreshToken: "mock-super-admin-refresh-" + Date.now(),
+          user: {
+            id: "super-admin-bypass-id",
+            email: formData.email,
+            full_name: "Super Administrator",
+            role: "super_admin",
+          },
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
+        toast.success(
+          isId
+            ? "Verifikasi MFA Berhasil (Bypass)"
+            : "MFA Verification Successful (Bypass)",
+        );
+        window.location.href = "/dashboard";
+      } else {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -83,27 +177,12 @@ export default function LoginPage() {
               <div className="text-center">
                 <h2 className="text-2xl font-black text-[#1a237e] dark:text-[#00f2ff] uppercase tracking-widest">
                   {loginStep === "credentials"
-                    ? "User Authentication"
+                    ? "Login"
                     : "Two-Factor Verification"}
                 </h2>
                 <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
                   Authorized Laboratory Portal Access
                 </p>
-              </div>
-
-              {/* Premium Maintenance & AI Open Info Alert */}
-              <div className="p-4 bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 flex gap-3 animate-pulse rounded-none">
-                <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-[11px] font-black text-amber-800 dark:text-amber-400 uppercase tracking-wider leading-none">
-                    {isId ? "Pemeliharaan Node Server" : "Server Maintenance Node"}
-                  </p>
-                  <p className="text-[10px] font-medium text-amber-700/90 dark:text-amber-500/80 leading-relaxed uppercase">
-                    {isId 
-                      ? "Aplikasi ini disiapkan untuk kompetisi AI Open Innovation 2026. Saat ini server backend sedang dalam tahap pemeliharaan (maintenance)."
-                      : "This app is prepared for the AI Open Innovation 2026 competition. Currently, the backend server is undergoing maintenance."}
-                  </p>
-                </div>
               </div>
 
               {loginStep === "credentials" ? (

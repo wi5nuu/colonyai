@@ -146,31 +146,22 @@ export default function SettingsPage() {
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden bg-[#f4f7f6] dark:bg-slate-950 transition-colors duration-300">
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
       <div className="flex relative min-h-[calc(100vh-200px)]">
         <div
           className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
         >
-          <div className="max-w-[1500px] mx-auto px-6 py-0 pt-0 sm:px-6 sm:py-0 sm:pt-0">
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 mb-6">
-              <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-none bg-slate-900 flex items-center justify-center">
-                    <Settings2 className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">
-                      {t("settings.title")}
-                    </h1>
-                    <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
-                      {t("settings.subtitle")}
-                    </p>
-                  </div>
-                </div>
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-8 py-0 sm:py-0 space-y-4 sm:space-y-6 pb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
+              <div>
+                <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+                  {t("settings.title")}
+                </h1>
+                <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
+                  {t("settings.subtitle")}
+                </p>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-
-                
+              <div className="flex items-center gap-3">
                 <div className="hidden lg:block">
                   <DocumentationToggle
                     showDocs={showDocs}

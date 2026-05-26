@@ -364,20 +364,15 @@ export default function AdministrationPage() {
               {/* Header Administration */}
               <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div className="flex items-center justify-center shrink-0">
-                      <Lock className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
-                    </div>
-                    <div>
-                      <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
-                        {isId ? "Kontrol Sistem" : "System Control"}
-                      </h1>
-                      <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
-                        {isId
-                          ? "Otorisasi Node & Matriks Tata Kelola"
-                          : "Node Authorization & Governance Matrix"}
-                      </p>
-                    </div>
+                  <div>
+                    <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+                      {isId ? "Kontrol Sistem" : "System Control"}
+                    </h1>
+                    <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
+                      {isId
+                        ? "Otorisasi Node & Matriks Tata Kelola"
+                        : "Node Authorization & Governance Matrix"}
+                    </p>
                   </div>
                 </div>
 
@@ -490,7 +485,7 @@ export default function AdministrationPage() {
               {/* Personnel Registry */}
               <div className="lg:col-span-12">
                 <div className="dashboard-card overflow-hidden !p-0 rounded-none border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 transition-colors">
-                  <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
                         <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
@@ -575,22 +570,22 @@ export default function AdministrationPage() {
                     <table className="w-full text-left">
                       <thead className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
                         <tr>
-                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                          <th className="px-4 py-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                             Analyst Node
                           </th>
-                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                          <th className="px-4 py-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                             Company
                           </th>
-                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                          <th className="px-4 py-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                             Clearance
                           </th>
-                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                          <th className="px-4 py-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                             Status
                           </th>
-                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                          <th className="px-4 py-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                             Last Pulse
                           </th>
-                          <th className="px-5 py-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">
+                          <th className="px-4 py-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">
                             Actions
                           </th>
                         </tr>
@@ -627,7 +622,7 @@ export default function AdministrationPage() {
                                 <tr>
                                   <td
                                     colSpan={6}
-                                    className="px-5 py-8 text-center text-xs text-slate-400 dark:text-slate-600"
+                                    className="px-4 py-6 text-center text-xs text-slate-400 dark:text-slate-600"
                                   >
                                     {isId
                                       ? "Tidak ada data yang cocok dengan filter."
@@ -640,9 +635,9 @@ export default function AdministrationPage() {
                                     key={a.id}
                                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group border-b border-slate-100 dark:border-slate-800 last:border-0"
                                   >
-                                    <td className="px-5 py-2.5">
-                                      <div className="flex items-center gap-2.5">
-                                        <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0">
+                                    <td className="px-4 py-2">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[9px] font-black text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0">
                                           {a.name.charAt(0)}
                                         </div>
                                         <div>
@@ -672,7 +667,7 @@ export default function AdministrationPage() {
                                         </div>
                                       </div>
                                     </td>
-                                    <td className="px-5 py-2.5">
+                                    <td className="px-4 py-2">
                                       <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
                                         {a.organizationName || (
                                           <span className="text-slate-300 dark:text-slate-700 italic">
@@ -681,12 +676,12 @@ export default function AdministrationPage() {
                                         )}
                                       </span>
                                     </td>
-                                    <td className="px-5 py-2.5">
+                                    <td className="px-4 py-2">
                                       <span className="px-2 py-0.5 rounded-none bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 uppercase">
                                         {a.clearance}
                                       </span>
                                     </td>
-                                    <td className="px-5 py-2.5">
+                                    <td className="px-4 py-2">
                                       <div className="flex items-center gap-1.5">
                                         <div
                                           className={`w-1.5 h-1.5 rounded-full ${a.status === "active" ? "bg-emerald-500" : "bg-rose-500"}`}
@@ -698,7 +693,7 @@ export default function AdministrationPage() {
                                         </span>
                                       </div>
                                     </td>
-                                    <td className="px-5 py-2.5">
+                                    <td className="px-4 py-2">
                                       <span
                                         className={`text-[10px] font-bold uppercase tracking-tighter ${
                                           a.lastActive === "Online"
@@ -709,7 +704,7 @@ export default function AdministrationPage() {
                                         {a.lastActive}
                                       </span>
                                     </td>
-                                    <td className="px-5 py-2.5 text-right">
+                                    <td className="px-4 py-2 text-right">
                                       <div className="flex items-center justify-end gap-1">
                                         <button
                                           onClick={() => {

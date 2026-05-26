@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -38,9 +38,9 @@ import {
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { useTranslationStore } from "@/lib/i18n/store";
-import { 
-  DocumentationSidebar, 
-  DocumentationToggle 
+import {
+  DocumentationSidebar,
+  DocumentationToggle
 } from "@/components/DocumentationSidebar";
 import { GlobalPersonnelPanel } from "@/components/GlobalPersonnelPanel";
 
@@ -251,7 +251,7 @@ export default function SuperAdminRealTimeDashboard() {
   const handleResetAdminPassword = async () => {
     const { adminId, adminName, newPassword } = passwordResetModal;
     const rules = validatePasswordRules(newPassword);
-    
+
     if (!rules.length || !rules.upper || !rules.number || !rules.symbol) {
       toast.error("Password does not meet Nexus Security Standards", {
         description: "Must include 8+ chars, uppercase, number, and symbol."
@@ -279,7 +279,7 @@ export default function SuperAdminRealTimeDashboard() {
   const handleToggleOrgStatus = async () => {
     const { orgId, orgName, currentStatus } = confirmModal;
     const action = currentStatus === 'active' ? 'suspend' : 'activate';
-    
+
     setConfirmModal({ ...confirmModal, isOpen: false });
 
     try {
@@ -315,17 +315,12 @@ export default function SuperAdminRealTimeDashboard() {
           <div className="max-w-[1500px] mx-auto px-4 sm:px-8 py-0 sm:py-0">
             {/* Global Master Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
-              <div className="flex items-center gap-3 sm:gap-4">
-                <div className="flex items-center justify-center shrink-0">
-                  <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">{isId ? "Kontrol Global" : "Global Control"}</h1>
+                  <span className="px-1.5 py-0.5 bg-primary/10 border border-primary/20 rounded-none text-[7px] sm:text-[8px] font-bold text-primary uppercase tracking-[0.2em] hidden xs:inline-block">Master</span>
                 </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">{isId ? "Kontrol Global" : "Global Control"}</h1>
-                    <span className="px-1.5 py-0.5 bg-primary/10 border border-primary/20 rounded-none text-[7px] sm:text-[8px] font-bold text-primary uppercase tracking-[0.2em] hidden xs:inline-block">Master</span>
-                  </div>
-                  <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5">{isId ? "OS Laboratorium Multi-Tenant" : "Multi-Tenant Laboratory OS"}</p>
-                </div>
+                <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5">{isId ? "OS Laboratorium Multi-Tenant" : "Multi-Tenant Laboratory OS"}</p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 sm:gap-4">
@@ -336,7 +331,7 @@ export default function SuperAdminRealTimeDashboard() {
                     text={isId ? "Protokol Nexus" : "Nexus Protocol"}
                   />
                 </div>
-                <button 
+                <button
                   onClick={fetchData}
                   className={`p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors outline-none ${isRefreshing ? 'animate-spin' : ''}`}
                 >
@@ -351,7 +346,7 @@ export default function SuperAdminRealTimeDashboard() {
                     <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => router.push("/dashboard/super/provision")}
                    className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-primary text-white rounded-none text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary/90 transition-all shadow-md active:scale-95 group"
                 >
@@ -368,8 +363,8 @@ export default function SuperAdminRealTimeDashboard() {
                 { label: isId ? "Kesehatan Sistem" : "System Health", value: stats?.system_health || "100%", sub: isId ? "Status Klaster" : "Cluster Status", icon: Server, trend: "stable", color: "emerald" },
                 { label: isId ? "Skor Kepatuhan" : "Compliance Score", value: stats?.compliance_score || "A+", sub: "ISO-17025", icon: ShieldCheck, trend: "up", color: "amber" },
               ].map((stat, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className={`backdrop-blur-sm border p-2 sm:p-4 rounded-none shadow-sm group hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden ${
                     stat.color === 'indigo' ? 'bg-indigo-50/40 border-indigo-100/50 dark:bg-indigo-950/20 dark:border-indigo-900/40' :
                     stat.color === 'blue' ? 'bg-blue-50/40 border-blue-100/50 dark:bg-blue-950/20 dark:border-blue-900/40' :
@@ -411,11 +406,11 @@ export default function SuperAdminRealTimeDashboard() {
                 <div className="flex items-center gap-2">
                   <div className="relative group/search">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 dark:text-slate-500" />
-                    <input 
+                    <input
                       type="text"
                       value={searchOrg}
                       onChange={(e) => setSearchOrg(e.target.value)}
-                      placeholder={isId ? `Cari ${organizations.length} organisasi...` : `Search ${organizations.length} orgs...`} 
+                      placeholder={isId ? `Cari ${organizations.length} organisasi...` : `Search ${organizations.length} orgs...`}
                       className="pl-8 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[10px] font-bold w-40 sm:w-48 outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-colors shadow-sm"
                     />
                   </div>
@@ -439,11 +434,11 @@ export default function SuperAdminRealTimeDashboard() {
                   </div>
                 ) : (
                   organizations.filter(o => o.name.toLowerCase().includes(searchOrg.toLowerCase()) || o.location?.toLowerCase().includes(searchOrg.toLowerCase())).map((org) => (
-                    <div 
-                      key={org.id} 
+                    <div
+                      key={org.id}
                       className={`transition-all duration-300 border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 ${expandedOrg === org.id ? 'bg-slate-50/50 dark:bg-slate-800/30' : 'bg-white dark:bg-slate-900'}`}
                     >
-                      <div 
+                      <div
                         className="p-2 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 cursor-pointer"
                         onClick={() => setExpandedOrg(expandedOrg === org.id ? null : org.id)}
                       >
@@ -492,13 +487,14 @@ export default function SuperAdminRealTimeDashboard() {
                       {/* Drill-down Admin Data */}
                       {expandedOrg === org.id && (
                         <div className="px-2 sm:px-3 pb-3 sm:pb-4 pt-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
-                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                            <div className="lg:col-span-2 space-y-3">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                            {/* Left: Authorized Personnel */}
+                            <div className="space-y-3">
                               <div className="flex items-center gap-2 mb-2 sm:mb-3">
                                 <Users className="w-3 h-3 text-primary" />
                                 <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{isId ? "Personel Resmi" : "Authorized Personnel"}</h4>
                               </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                              <div className="space-y-2 sm:space-y-3">
                                 {org.admins.length > 0 ? org.admins.map((admin, idx) => (
                                   <div key={idx} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none p-2 flex items-center justify-between group/admin hover:border-primary/30 shadow-sm transition-all">
                                     <div className="flex items-center gap-2 sm:gap-3">
@@ -512,9 +508,9 @@ export default function SuperAdminRealTimeDashboard() {
                                           <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-none border border-slate-100 dark:border-slate-800 group/pass">
                                              <Lock className="w-2.5 h-2.5 text-slate-300 dark:text-slate-600" />
                                              <span className="text-[9px] font-mono font-bold text-slate-600 dark:text-slate-400 tracking-tighter min-w-[60px]">
-                                               {revealedPasswords[admin.id] ? (admin.recovery_password || "No Key Saved") : "••••••••"}
+                                               {revealedPasswords[admin.id] ? (admin.recovery_password || "No Key Saved") : "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"}
                                              </span>
-                                             <button 
+                                             <button
                                               onClick={() => togglePasswordReveal(admin.id)}
                                               className="p-0.5 text-slate-300 hover:text-primary transition-all hover:scale-110 active:scale-95"
                                               title={revealedPasswords[admin.id] ? "Hide Password" : "Peek Current Password"}
@@ -527,7 +523,7 @@ export default function SuperAdminRealTimeDashboard() {
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                      <button 
+                                      <button
                                         onClick={() => setPasswordResetModal({
                                           isOpen: true,
                                           adminId: admin.id,
@@ -545,7 +541,9 @@ export default function SuperAdminRealTimeDashboard() {
                                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">No admins registered.</p>
                                 )}
                               </div>
-                                                {/* Org Settings Summary */}
+                            </div>
+
+                            {/* Right: Compliance */}
                             <div className="bg-white dark:bg-slate-950 rounded-none border border-slate-200 dark:border-slate-800 p-2 sm:p-2.5 shadow-sm transition-colors">
                               <div className="flex items-center gap-2 mb-3">
                                 <Activity className="w-3 h-3 text-amber-500" />
@@ -569,15 +567,15 @@ export default function SuperAdminRealTimeDashboard() {
                                   <span className="text-[9px] font-black text-indigo-500 uppercase truncate max-w-[150px]" title={org.lims_webhook_url}>{org.lims_webhook_url ? (org.lims_webhook_url.includes('mock-lims') ? 'Mock Link' : 'Live Uplink') : (isId ? 'Belum Dikonfigurasi' : 'Not Configured')}</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 mt-3">
-                                  <button 
+                                  <button
                                     onClick={(e) => { e.stopPropagation(); handleRemoteIntervention(org.name); }}
                                     className="py-2 bg-slate-900 dark:bg-slate-950 hover:bg-slate-800 dark:hover:bg-slate-900/80 text-[8px] font-black text-white uppercase tracking-widest rounded-none transition-all active:scale-95 shadow-md shadow-slate-900/20"
                                   >
                                     Remote
                                   </button>
-                                  <button 
-                                    onClick={(e) => { 
-                                      e.stopPropagation(); 
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       setConfirmModal({
                                         isOpen: true,
                                         orgId: org.id,
@@ -586,8 +584,8 @@ export default function SuperAdminRealTimeDashboard() {
                                       });
                                     }}
                                     className={`py-2 border rounded-none text-[8px] font-black uppercase tracking-widest transition-all active:scale-95 ${
-                                      org.status === 'active' 
-                                        ? 'bg-white dark:bg-slate-900 border-rose-100 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-500 shadow-sm' 
+                                      org.status === 'active'
+                                        ? 'bg-white dark:bg-slate-900 border-rose-100 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-500 shadow-sm'
                                         : 'bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600 shadow-emerald-500/20 shadow-lg'
                                     }`}
                                   >
@@ -595,7 +593,7 @@ export default function SuperAdminRealTimeDashboard() {
                                   </button>
                                 </div>
                               </div>
-                            </div>          </div>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -667,9 +665,9 @@ AUTHORITY: MASTER COMMAND`}
               </div>
               <div className="space-y-3 ml-0.5">
                 {[
-                  { 
-                    id: '1', 
-                    title: 'Nexus Provisioning', 
+                  {
+                    id: '1',
+                    title: 'Nexus Provisioning',
                     desc: 'Deploy infrastruktur baru dan inisialisasi akun Administrator utama untuk tenant baru.',
                     details: [
                       'Klik tombol \'Provision\' di panel utama.',
@@ -678,9 +676,9 @@ AUTHORITY: MASTER COMMAND`}
                       'Kredensial Admin lokal akan di-setup ke node tenant.'
                     ]
                   },
-                  { 
-                    id: '2', 
-                    title: 'Remote Shell (Terminal)', 
+                  {
+                    id: '2',
+                    title: 'Remote Shell (Terminal)',
                     desc: 'Buka terminal Remote untuk audit teknis jika terjadi anomali pada akurasi AI atau database lokal.',
                     details: [
                       'Pilih organisasi target pada Registry dan klik \'Remote\'.',
@@ -689,9 +687,9 @@ AUTHORITY: MASTER COMMAND`}
                       'Jalankan \'Deep Diagnostics\' untuk verifikasi model AI.'
                     ]
                   },
-                  { 
-                    id: '3', 
-                    title: 'Status Enforcement', 
+                  {
+                    id: '3',
+                    title: 'Status Enforcement',
                     desc: 'Kendali penuh atas status aktif/suspend organisasi untuk penegakan kebijakan lisensi.',
                     details: [
                       'Gunakan \'Suspend\' (merah) untuk isolasi darurat.',
@@ -700,9 +698,9 @@ AUTHORITY: MASTER COMMAND`}
                       'Log protokol mencatat perubahan untuk keperluan audit.'
                     ]
                   },
-                  { 
-                    id: '4', 
-                    title: 'Telemetry Sync', 
+                  {
+                    id: '4',
+                    title: 'Telemetry Sync',
                     desc: 'Data diperbarui otomatis setiap 10 detik untuk memastikan visibilitas real-time 24/7.',
                     details: [
                       'Throughput analitik dipantau secara terus menerus.',
@@ -728,7 +726,7 @@ AUTHORITY: MASTER COMMAND`}
                            <ul className="space-y-2 pl-1">
                               {step.details.map((detail, idx) => (
                                 <li key={idx} className="text-[8.5px] text-slate-500 dark:text-slate-400 font-bold leading-relaxed flex items-start gap-2">
-                                  <span className="text-primary mt-0.5 shrink-0">▹</span>
+                                  <span className="text-primary mt-0.5 shrink-0">â–¹</span>
                                   {detail}
                                 </li>
                               ))}
@@ -748,7 +746,7 @@ AUTHORITY: MASTER COMMAND`}
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-none w-full max-w-md overflow-hidden shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-300">
             <div className={`h-2 w-full ${confirmModal.currentStatus === 'active' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
-            
+
             <div className="p-8 text-center">
               <div className={`w-16 h-16 rounded-none flex items-center justify-center mx-auto mb-6 ${confirmModal.currentStatus === 'active' ? 'bg-rose-50' : 'bg-emerald-50'}`}>
                 {confirmModal.currentStatus === 'active' ? (
@@ -757,30 +755,30 @@ AUTHORITY: MASTER COMMAND`}
                   <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                 )}
               </div>
-              
+
               <h3 className="text-xl font-bold text-slate-900 mb-2 uppercase tracking-tight">
                 {confirmModal.currentStatus === 'active' ? 'Suspend Organization?' : 'Activate Organization?'}
               </h3>
-              
+
               <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8">
-                Anda akan mengubah status operasional untuk <span className="text-slate-900 font-bold">{confirmModal.orgName}</span>. 
-                {confirmModal.currentStatus === 'active' 
-                  ? ' Seluruh akses pengguna untuk tenant ini akan diblokir segera.' 
+                Anda akan mengubah status operasional untuk <span className="text-slate-900 font-bold">{confirmModal.orgName}</span>.
+                {confirmModal.currentStatus === 'active'
+                  ? ' Seluruh akses pengguna untuk tenant ini akan diblokir segera.'
                   : ' Seluruh layanan dan akses untuk tenant ini akan dipulihkan.'}
               </p>
 
               <div className="flex gap-3">
-                <button 
+                <button
                   onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
                   className="flex-1 py-3 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-none transition-all"
                 >
                   Batal
                 </button>
-                <button 
+                <button
                   onClick={handleToggleOrgStatus}
                   className={`flex-1 py-3 px-4 text-white text-xs font-bold uppercase tracking-widest rounded-none shadow-lg transition-all active:scale-95 ${
-                    confirmModal.currentStatus === 'active' 
-                      ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' 
+                    confirmModal.currentStatus === 'active'
+                      ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'
                       : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200'
                   }`}
                 >
@@ -813,7 +811,7 @@ AUTHORITY: MASTER COMMAND`}
                   <Cpu className="w-3 h-3 text-primary" /> Nexus Remote Shell // {remoteModal.orgName}
                 </h3>
               </div>
-              <button 
+              <button
                 onClick={() => setRemoteModal({ ...remoteModal, isOpen: false })}
                  className="p-1 hover:bg-white/10 rounded-none transition-all"
               >
@@ -829,7 +827,7 @@ AUTHORITY: MASTER COMMAND`}
                   <p className="animate-in slide-in-from-left-2 duration-300">{log}</p>
                 </div>
               ))}
-              
+
               {remoteModal.step < 4 && (
                 <div className="flex items-center gap-3 text-primary animate-pulse mt-4">
                   <RefreshCw className="w-3 h-3 animate-spin" />
@@ -847,7 +845,7 @@ AUTHORITY: MASTER COMMAND`}
                     <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Memory Matrix</p>
                     <p className="text-xl font-bold text-white">0.8 GB / 16 GB</p>
                   </div>
-                  <button 
+                  <button
                     onClick={handleExecuteDiagnostics}
                     disabled={remoteModal.step >= 5}
                      className="col-span-2 py-3 bg-primary text-white text-[10px] font-bold uppercase tracking-widest rounded-none hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -898,7 +896,7 @@ AUTHORITY: MASTER COMMAND`}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center ml-1">
                     <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">New Secure Password</label>
-                    <button 
+                    <button
                       onClick={generateSecurePass}
                       className="text-[8px] font-black text-primary uppercase tracking-widest hover:underline"
                     >
@@ -906,7 +904,7 @@ AUTHORITY: MASTER COMMAND`}
                     </button>
                   </div>
                   <div className="relative">
-                    <input 
+                    <input
                       type={showPass ? "text" : "password"}
                       autoFocus
                       placeholder="Min. 8 chars, 1 uppercase, 1 symbol"
@@ -914,23 +912,23 @@ AUTHORITY: MASTER COMMAND`}
                       value={passwordResetModal.newPassword}
                       onChange={(e) => setPasswordResetModal({ ...passwordResetModal, newPassword: e.target.value })}
                     />
-                    <button 
+                    <button
                       onClick={() => setShowPass(!showPass)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                     >
                       {showPass ? <Ban className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
                     </button>
                   </div>
-                  
+
                   {/* Strength Indicator */}
                   {passwordResetModal.newPassword && (
                     <div className="space-y-2">
                       <div className="flex gap-1 h-1 px-1">
                         {[25, 50, 75, 100].map((lvl) => (
-                          <div 
+                          <div
                             key={lvl}
                             className={`h-full flex-1 rounded-none transition-all duration-500 ${
-                              getPassStrength(passwordResetModal.newPassword) >= lvl 
+                              getPassStrength(passwordResetModal.newPassword) >= lvl
                                 ? lvl <= 25 ? 'bg-rose-400' : lvl <= 50 ? 'bg-amber-400' : 'bg-emerald-400'
                                 : 'bg-slate-100'
                             }`}
@@ -957,7 +955,7 @@ AUTHORITY: MASTER COMMAND`}
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <button 
+                  <button
                     onClick={() => {
                       setShowPass(false);
                       setPasswordResetModal({ ...passwordResetModal, isOpen: false });
@@ -966,7 +964,7 @@ AUTHORITY: MASTER COMMAND`}
                   >
                     Batal
                   </button>
-                  <button 
+                  <button
                     onClick={handleResetAdminPassword}
                     disabled={getPassStrength(passwordResetModal.newPassword) < 100}
                     className="flex-1 py-2.5 px-4 bg-primary hover:bg-primary/90 text-white text-[10px] font-bold uppercase tracking-widest rounded-none shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
@@ -987,6 +985,3 @@ AUTHORITY: MASTER COMMAND`}
     </div>
   );
 }
-
-
-

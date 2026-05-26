@@ -38,6 +38,10 @@ export const simulatorApi = {
     manual_dust_debris: number;
     manual_media_crack: number;
     notes?: string;
+    // Sandbox mode: send AI data when simulation is transient (not in DB)
+    ai_class_breakdown?: Record<string, number>;
+    ai_total_valid?: number;
+    overall_accuracy?: number;
   }): Promise<SimulatorComparison> => {
     const response = await api.post<SimulatorComparison>('/api/v1/simulator', data);
     return response.data;

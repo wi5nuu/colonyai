@@ -308,69 +308,11 @@ export default function SentinelPage() {
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 relative bg-white dark:bg-slate-950 transition-colors duration-300 min-h-[calc(100vh-64px)]">
-      {/* Documentation Sidebar Overlay */}
-      <DocumentationSidebar
-        showDocs={showDocs}
-        setShowDocs={setShowDocs}
-        directory={isId ? "Sistem / Sentinel" : "System / Sentinel"}
-        title={isId ? "Protokol Sentinel" : "Sentinel Protocol"}
-        description={
-          isId
-            ? "Pusat kendali pemantauan sistem global dan distribusi neural."
-            : "Global system monitoring and neural deployment control center."
-        }
-        rawText={logs.join("\n")}
-      >
-        <div className="space-y-6 text-[10px] sm:text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
-          <div>
-            <h4 className="text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800 pb-1">
-              01. {isId ? "Matriks Pelatihan Neural" : "Neural Training Matrix"}
-            </h4>
-            <p>
-              {isId
-                ? "Memvisualisasikan progres pelatihan otak AI (Epochs & mAP) secara real-time. Jika AI terindikasi mengalami overfitting atau deviasi akurasi, fitur 'Halt Training' bertindak sebagai tuas darurat."
-                : "Visualizes real-time AI training progress (Epochs & mAP). If the AI exhibits overfitting or accuracy deviation, the 'Halt Training' feature serves as an emergency kill-switch."}
-            </p>
-          </div>
-          <div>
-            <h4 className="text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800 pb-1">
-              02. {isId ? "Telemetri Perangkat keras" : "Hardware Telemetry"}
-            </h4>
-            <p>
-              {isId
-                ? "Memantau Suhu GPU, memori VRAM, dan bandwidth jaringan infrastruktur pusat. Tombol 'Run Node Benchmark' memicu stress-test 3 detik yang hasilnya dicetak langsung pada Terminal Live Sentinel."
-                : "Monitors GPU Core Temp, VRAM, and central network ingress. The 'Run Node Benchmark' triggers a 3-second stress test whose TFLOPS results are streamed directly to the Live Sentinel Terminal."}
-            </p>
-          </div>
-          <div>
-            <h4 className="text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800 pb-1">
-              03.{" "}
-              {isId
-                ? "Registri & Distribusi Model"
-                : "Model Registry & Deployment"}
-            </h4>
-            <p>
-              {isId
-                ? "Gudang penyimpanan versi AI (ISO-17025 verified). Menekan 'Deploy to Nodes' pada model berstatus READY akan menyuntikkan model tersebut ke seluruh laboratorium klien di seluruh dunia secara instan."
-                : "Storage vault for AI versions (ISO-17025 verified). Pressing 'Deploy to Nodes' on a READY model injects those precise neural weights to all global client laboratories instantly."}
-            </p>
-          </div>
-          <div>
-            <h4 className="text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800 pb-1">
-              04.{" "}
-              {isId
-                ? "Radar Bio-Hazard & Prediksi Kinetik"
-                : "Bio-Hazard Radar & Predictive Kinetics"}
-            </h4>
-            <p>
-              {isId
-                ? "AI tidak hanya menghitung bakteri, tapi juga mendeteksi indikasi filter HEPA bocor (debu berlebih). Fitur Proyeksi Rilis (Gompertz Model) memprediksi hasil 48 jam hanya dari analisis gambar 18 jam, menghemat rantai pasok hingga 30 jam."
-                : "AI not only counts colonies but detects early HEPA filter breaches via dust analysis. The Release Projection (Gompertz Model) predicts 48-hour bacterial load from 18-hour scans, saving 30 hours of supply chain holding time."}
-            </p>
-          </div>
-        </div>
-      </DocumentationSidebar>
+    <div className="flex flex-col animate-in fade-in duration-500 overflow-x-hidden relative">
+      <div className="flex relative min-h-[calc(100vh-200px)]">
+        <div
+          className={`flex-1 transition-all duration-300 ${showDocs ? "lg:mr-[350px]" : ""}`}
+        >
 
       {/* Model Detail Modal */}
       {selectedModel && (
@@ -508,72 +450,72 @@ export default function SentinelPage() {
           </div>
         </div>
       )}
+        a]
 
-      <div className="max-w-[1500px] mx-auto px-6 py-6 sm:py-10 w-full space-y-12">
-        {/* Header & Status Bar */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase flex items-center gap-3">
-              <ShieldCheck className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
-              {isId ? "Sentinel Sistem" : "Systems Sentinel"}
-            </h1>
-            <div className="flex items-center gap-4">
-              <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.3em]">
-                {isId
-                  ? "Pemantauan Infrastruktur Neural"
-                  : "Neural Infrastructure Monitoring"}{" "}
-                {"//"} V3.2.0-STABLE
-              </p>
-              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 text-emerald-500 rounded-full text-[8px] font-black uppercase tracking-widest border border-emerald-500/20">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                {isId ? "Sistem Normal" : "System Nominal"}
+          <div className="max-w-[1500px] mx-auto px-4 sm:px-8 py-0 sm:py-0 space-y-4 sm:space-y-6 pb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
+                    {isId ? "Sentinel Sistem" : "Systems Sentinel"}
+                  </h1>
+                  <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
+                    {isId
+                      ? "Pemantauan Infrastruktur Neural"
+                      : "Neural Infrastructure Monitoring"}{" "}
+                    {"//"} V3.2.0-STABLE
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-none">
+                  <Activity className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
+                  <div className="flex flex-col">
+                    <span className="text-[6px] sm:text-[8px] font-black text-slate-400 uppercase leading-none">
+                      {isId ? "Latensi Global" : "Global Latency"}
+                    </span>
+                    <span className="text-[10px] sm:text-xs font-mono font-bold text-slate-900 dark:text-white leading-none mt-0.5">
+                      42.8ms
+                    </span>
+                  </div>
+                </div>
+                <div className="hidden lg:block">
+                  <DocumentationToggle
+                    showDocs={showDocs}
+                    setShowDocs={setShowDocs}
+                    text={isId ? "Protokol Sentinel" : "Sentinel Protocol"}
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    setIsSyncing(true);
+                    setTimeout(() => {
+                      setIsSyncing(false);
+                      toast.success(
+                        isId
+                          ? "Sinkronisasi Node Global Selesai"
+                          : "Global Node Synchronization Complete",
+                      );
+                    }, 1500);
+                  }}
+                  className={`flex items-center gap-2 px-3 sm:px-6 py-1.5 sm:py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all ${isSyncing ? "animate-pulse" : ""}`}
+                >
+                  <RefreshCw
+                    className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isSyncing ? "animate-spin" : ""}`}
+                  />
+                  {isSyncing
+                    ? isId
+                      ? "Menyinkronkan..."
+                      : "Syncing..."
+                    : isId
+                      ? "Sinkronisasi"
+                      : "Sync"}
+                </button>
               </div>
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-none">
-              <Activity className="w-4 h-4 text-primary" />
-              <div className="flex flex-col">
-                <span className="text-[8px] font-black text-slate-400 uppercase leading-none">
-                  {isId ? "Latensi Global" : "Global Latency"}
-                </span>
-                <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">
-                  42.8ms
-                </span>
-              </div>
-            </div>
-            <DocumentationToggle
-              showDocs={showDocs}
-              setShowDocs={setShowDocs}
-              text={isId ? "Protokol Sentinel" : "Sentinel Protocol"}
-            />
-            <button
-              onClick={() => {
-                setIsSyncing(true);
-                setTimeout(() => {
-                  setIsSyncing(false);
-                  toast.success(
-                    isId
-                      ? "Sinkronisasi Node Global Selesai"
-                      : "Global Node Synchronization Complete",
-                  );
-                }, 1500);
-              }}
-              className={`flex items-center gap-2 px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all ${isSyncing ? "animate-pulse" : ""}`}
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`}
-              />
-              {isSyncing
-                ? isId
-                  ? "Menyinkronkan..."
-                  : "Syncing..."
-                : isId
-                  ? "Sinkronisasi Klaster"
-                  : "Sync Cluster"}
-            </button>
-          </div>
-        </div>
 
         {/* Top Section: Training Hub & Hardware Monitor */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -1425,6 +1367,67 @@ export default function SentinelPage() {
             </div>
           </div>
         </div>
+        <DocumentationSidebar
+          showDocs={showDocs}
+          setShowDocs={setShowDocs}
+          directory={isId ? "Sistem / Sentinel" : "System / Sentinel"}
+          title={isId ? "Protokol Sentinel" : "Sentinel Protocol"}
+          description={
+            isId
+              ? "Pusat kendali pemantauan sistem global dan distribusi neural."
+              : "Global system monitoring and neural deployment control center."
+          }
+          rawText={logs.join("\n")}
+        >
+          <div className="space-y-6 text-[10px] sm:text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
+            <div>
+              <h4 className="text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800 pb-1">
+                01. {isId ? "Matriks Pelatihan Neural" : "Neural Training Matrix"}
+              </h4>
+              <p>
+                {isId
+                  ? "Memvisualisasikan progres pelatihan otak AI (Epochs & mAP) secara real-time. Jika AI terindikasi mengalami overfitting atau deviasi akurasi, fitur 'Halt Training' bertindak sebagai tuas darurat."
+                  : "Visualizes real-time AI training progress (Epochs & mAP). If the AI exhibits overfitting or accuracy deviation, the 'Halt Training' feature serves as an emergency kill-switch."}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800 pb-1">
+                02. {isId ? "Telemetri Perangkat keras" : "Hardware Telemetry"}
+              </h4>
+              <p>
+                {isId
+                  ? "Memantau Suhu GPU, memori VRAM, dan bandwidth jaringan infrastruktur pusat. Tombol 'Run Node Benchmark' memicu stress-test 3 detik yang hasilnya dicetak langsung pada Terminal Live Sentinel."
+                  : "Monitors GPU Core Temp, VRAM, and central network ingress. The 'Run Node Benchmark' triggers a 3-second stress test whose TFLOPS results are streamed directly to the Live Sentinel Terminal."}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800 pb-1">
+                03.{" "}
+                {isId
+                  ? "Registri & Distribusi Model"
+                  : "Model Registry & Deployment"}
+              </h4>
+              <p>
+                {isId
+                  ? "Gudang penyimpanan versi AI (ISO-17025 verified). Menekan 'Deploy to Nodes' pada model berstatus READY akan menyuntikkan model tersebut ke seluruh laboratorium klien di seluruh dunia secara instan."
+                  : "Storage vault for AI versions (ISO-17025 verified). Pressing 'Deploy to Nodes' on a READY model injects those precise neural weights to all global client laboratories instantly."}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800 pb-1">
+                04.{" "}
+                {isId
+                  ? "Radar Bio-Hazard & Prediksi Kinetik"
+                  : "Bio-Hazard Radar & Predictive Kinetics"}
+              </h4>
+              <p>
+                {isId
+                  ? "AI tidak hanya menghitung bakteri, tapi juga mendeteksi indikasi filter HEPA bocor (debu berlebih). Fitur Proyeksi Rilis (Gompertz Model) memprediksi hasil 48 jam hanya dari analisis gambar 18 jam, menghemat rantai pasok hingga 30 jam."
+                  : "AI not only counts colonies but detects early HEPA filter breaches via dust analysis. The Release Projection (Gompertz Model) predicts 48-hour bacterial load from 18-hour scans, saving 30 hours of supply chain holding time."}
+              </p>
+            </div>
+          </div>
+        </DocumentationSidebar>
       </div>
     </div>
   );

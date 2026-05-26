@@ -68,14 +68,14 @@ const navigation = [
     name: "New Analysis",
     href: "/dashboard/upload",
     icon: Upload,
-    roles: ["analyst", "admin"],
+    roles: ["analyst", "admin", "super_admin"],
     tKey: "nav.newAnalysis",
   },
   {
     name: "History",
     href: "/dashboard/history",
     icon: History,
-    roles: ["analyst", "manager", "auditor", "admin"],
+    roles: ["analyst", "manager", "auditor", "admin", "super_admin"],
     tKey: "nav.history",
   },
   {
@@ -89,7 +89,7 @@ const navigation = [
     name: "Simulator",
     href: "/dashboard/simulator",
     icon: Scale,
-    roles: ["analyst", "admin"],
+    roles: ["analyst", "admin", "super_admin"],
     tKey: "nav.simulator",
   },
   {
@@ -121,6 +121,43 @@ const navigation = [
     tKey: "nav.settings",
   },
 ];
+
+const NavItem = ({
+  item,
+  isActive,
+  isCollapsed,
+  setSidebarOpen,
+  t,
+}: {
+  item: any;
+  isActive: boolean;
+  isCollapsed: boolean;
+  setSidebarOpen: (b: boolean) => void;
+  t: (k: string) => string;
+}) => (
+  <Link
+    href={item.href}
+    onClick={() => setSidebarOpen(false)}
+    className={`flex items-center gap-3 py-1.5 rounded-sm transition-all relative group ${
+      isActive
+        ? "bg-primary/5 text-primary"
+        : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+    } ${isCollapsed ? "justify-center px-0" : "px-2"}`}
+    title={isCollapsed ? t(item.tKey) : ""}
+  >
+    {isActive && !isCollapsed && (
+      <div className="absolute left-0 top-2 bottom-2 w-1 bg-primary rounded-r-full" />
+    )}
+    <item.icon
+      className={`transition-all ${isCollapsed ? "h-5 w-5" : "h-3.5 w-3.5"}`}
+    />
+    {!isCollapsed && (
+      <span className="text-[10px] font-bold tracking-wide animate-in fade-in slide-in-from-left-2 duration-300">
+        {t(item.tKey)}
+      </span>
+    )}
+  </Link>
+);
 
 export default function DashboardLayout({
   children,
@@ -342,37 +379,111 @@ export default function DashboardLayout({
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-hide px-3 mt-3">
-              {navigation
-                .filter((item) => item.roles.includes(user?.role || "analyst"))
-                .map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 py-1.5 rounded-sm transition-all relative group ${
-                        isActive
-                          ? "bg-primary/5 text-primary"
-                          : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                      } ${isCollapsed ? "justify-center px-0" : "px-2"}`}
-                      title={isCollapsed ? t(item.tKey) : ""}
-                    >
-                      {isActive && !isCollapsed && (
-                        <div className="absolute left-0 top-2 bottom-2 w-1 bg-primary rounded-r-full" />
-                      )}
-                      <item.icon
-                        className={`transition-all ${isCollapsed ? "h-5 w-5" : "h-3.5 w-3.5"}`}
-                      />
-                      {!isCollapsed && (
-                        <span className="text-[10px] font-bold tracking-wide animate-in fade-in slide-in-from-left-2 duration-300">
-                          {t(item.tKey)}
-                        </span>
-                      )}
-                    </Link>
+            <nav className="flex-1 space-y-4 overflow-y-auto scrollbar-hide px-3 mt-3">
+              {(() => {
+                const allowedItems = navigation.filter((item) =>
+                  item.roles.includes(user?.role || "analyst"),
+                );
+
+                if (user?.role === "super_admin") {
+                  const nexusItems = allowedItems.filter((i) =>
+                    ["Global Control", "Systems Sentinel", "Network Map"].includes(i.name),
                   );
-                })}
+                  const universalItems = allowedItems.filter((i) =>
+                    ["New Analysis", "Simulator", "History"].includes(i.name),
+                  );
+                  const coreItems = allowedItems.filter(
+                    (i) =>
+                      !nexusItems.includes(i) && !universalItems.includes(i),
+                  );
+
+                  return (
+                    <>
+                      {/* Nexus Control */}
+                      <div>
+                        {!isCollapsed && (
+                          <p className="text-[9px] font-black tracking-[0.2em] text-primary/70 uppercase mb-2 px-2">
+                            Nexus Control
+                          </p>
+                        )}
+                        <div className="space-y-1">
+                          {nexusItems.map((item) => (
+                            <NavItem
+                              key={item.name}
+                              item={item}
+                              isActive={pathname === item.href}
+                              isCollapsed={isCollapsed}
+                              setSidebarOpen={setSidebarOpen}
+                              t={t}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Universal Access (Bypass) */}
+                      <div>
+                        {!isCollapsed && (
+                          <div className="flex items-center gap-2 mb-2 px-2">
+                            <p className="text-[9px] font-black tracking-[0.2em] text-emerald-500/80 uppercase">
+                              Universal Access
+                            </p>
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          </div>
+                        )}
+                        <div className="space-y-1">
+                          {universalItems.map((item) => (
+                            <NavItem
+                              key={item.name}
+                              item={item}
+                              isActive={pathname === item.href}
+                              isCollapsed={isCollapsed}
+                              setSidebarOpen={setSidebarOpen}
+                              t={t}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Core Dashboard */}
+                      <div>
+                        {!isCollapsed && (
+                          <p className="text-[9px] font-black tracking-[0.2em] text-slate-400 uppercase mb-2 px-2">
+                            Core Features
+                          </p>
+                        )}
+                        <div className="space-y-1">
+                          {coreItems.map((item) => (
+                            <NavItem
+                              key={item.name}
+                              item={item}
+                              isActive={pathname === item.href}
+                              isCollapsed={isCollapsed}
+                              setSidebarOpen={setSidebarOpen}
+                              t={t}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  );
+                }
+
+                // Normal user rendering
+                return (
+                  <div className="space-y-1">
+                    {allowedItems.map((item) => (
+                      <NavItem
+                        key={item.name}
+                        item={item}
+                        isActive={pathname === item.href}
+                        isCollapsed={isCollapsed}
+                        setSidebarOpen={setSidebarOpen}
+                        t={t}
+                      />
+                    ))}
+                  </div>
+                );
+              })()}
             </nav>
 
             {/* Sidebar Bottom */}
@@ -423,16 +534,7 @@ export default function DashboardLayout({
                 )}
               </button>
 
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className={`hidden lg:flex items-center justify-center mt-4 p-2 rounded-sm bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-all text-slate-400 hover:text-slate-600 ${isCollapsed ? "mx-3" : ""}`}
-              >
-                {isCollapsed ? (
-                  <ChevronRight className="h-5 w-5" />
-                ) : (
-                  <ChevronLeft className="h-5 w-5" />
-                )}
-              </button>
+
             </div>
           </div>
         </aside>
@@ -672,7 +774,7 @@ export default function DashboardLayout({
                       </Link>
                     ))}
                   </div>
- 
+
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 py-1 px-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm scale-90">
                       <div className="flex">
@@ -757,7 +859,7 @@ export default function DashboardLayout({
         {/* Single Floating AI Trigger — Original Logo (bg removed) */}
         <button
           onClick={() => setAskAIOpen(!askAIOpen)}
-          className={`fixed bottom-20 right-4 z-[110] w-14 h-14 rounded-none shadow-2xl flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 hover:drop-shadow-[0_0_12px_rgba(99,102,241,0.6)] ${askAIOpen ? "rotate-12 scale-95" : ""}`}
+          className={`fixed bottom-16 right-4 z-[110] w-14 h-14 rounded-none shadow-2xl flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 hover:drop-shadow-[0_0_12px_rgba(16,185,129,0.6)] ${askAIOpen ? "rotate-12 scale-95" : ""}`}
         >
           {askAIOpen ? (
             <div className="w-14 h-14 bg-slate-900 rounded-none flex items-center justify-center shadow-xl">
@@ -771,12 +873,69 @@ export default function DashboardLayout({
             />
           )}
           {!askAIOpen && (
-            <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-none border-2 border-white dark:border-slate-900 animate-bounce" />
+            <>
+              <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-none border-2 border-white dark:border-slate-900 animate-pulse" />
+              <AITooltip />
+            </>
           )}
         </button>
 
         <AskAI isOpen={askAIOpen} onClose={() => setAskAIOpen(false)} />
       </div>
     </AuthGuard>
+  );
+}
+
+// AI Tooltip Component with Random Messages
+function AITooltip() {
+  const [message, setMessage] = useState("");
+  const [isVisible, setIsVisible] = useState(false);
+
+  const messages = [
+    "Ready to analyze your colony plates with 95%+ accuracy!",
+    "ISO-17025 compliant AI assistant at your service.",
+    "Need help? I can guide you through the analysis process.",
+    "Upload your plate image and let AI do the counting!",
+    "Fast, accurate, and reliable colony detection ready.",
+    "Your intelligent lab assistant is standing by.",
+    "Automated CFU counting in just 3 seconds per plate.",
+    "300× faster than manual counting - try me now!",
+    "AI-powered precision for your microbiology workflow.",
+    "Click to start your intelligent analysis session!",
+  ];
+
+  useEffect(() => {
+    // Show tooltip after 2 seconds
+    const showTimer = setTimeout(() => {
+      setMessage(messages[Math.floor(Math.random() * messages.length)]);
+      setIsVisible(true);
+    }, 2000);
+
+    // Change message every 8 seconds
+    const changeInterval = setInterval(() => {
+      setMessage(messages[Math.floor(Math.random() * messages.length)]);
+    }, 8000);
+
+    // Hide after 30 seconds
+    const hideTimer = setTimeout(() => {
+      setIsVisible(false);
+    }, 30000);
+
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+      clearInterval(changeInterval);
+    };
+  }, []);
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="absolute bottom-full right-0 mb-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="bg-emerald-500 text-white px-4 py-2.5 rounded-lg shadow-xl max-w-[280px] relative">
+        <p className="text-[10px] font-bold leading-relaxed">{message}</p>
+        <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-emerald-500 rotate-45" />
+      </div>
+    </div>
   );
 }
