@@ -1,50 +1,39 @@
-# 👥 Roles & Responsibilities — ColonyAI
+# 👥 ColonyAI - Team Structure
 
-This document outlines the core team structure and individual areas of focus for the ColonyAI project.
+**Institution:** President University
+**Competition:** AI Open Innovation Challenge 2026
 
----
+Our team operates using Agile Scrum methodologies to ensure rapid, secure, and regulatory-compliant development. We combine expertise in Software Engineering, Computer Vision, UI/UX, and Agile Management to deliver an enterprise-grade Laboratory Operating System.
 
-## 🏛️ Team Structure
+## Team Members & Core Responsibilities
 
-| Name | Role | Primary Focus |
-| :--- | :--- | :--- |
-| **Wisnu Alfian Nur Ashar** | Product Owner | **Frontend Lead** & UI/UX Vision. Responsible for the Dashboard OS, scientific nomenclature, and user experience. |
-| **Muhammad Faras** | Scrum Master | **AI/ML Lead**. Responsible for model training, dataset curation, inference optimization, and CI/CD pipelines. |
-| **Suci** | Developer | **UI/UX Designer**. Responsible for component styling, color-coded annotation systems, and marketing assets. |
-| **Steven** | Developer | **Backend Lead**. Responsible for API security, database architecture, ISO 17025 compliance, and report generation. |
+### 1. Wisnu Alfian Nur Ashar
+**Role:** Product Owner & Software Engineer
+**Responsibilities:**
+- Defining project vision, product strategy, and managing the product backlog.
+- Full-stack software engineering, including FastAPI backend architecture and Next.js frontend integration.
+- Ensuring the AI pipeline aligns with microbiological testing standards (ISO/FDA) and business requirements.
 
----
+### 2. Muhammad Faras
+**Role:** Scrum Master
+**Responsibilities:**
+- Facilitating Agile ceremonies (Sprint Planning, Daily Standups, Sprint Reviews, and Retrospectives).
+- Identifying and removing impediments (blockers) for the development team.
+- Coaching the team in Scrum practices and ensuring a high-velocity, sustainable development pace.
 
-## 📑 Detailed Responsibilities
+### 3. Suci Ramadhani
+**Role:** UI/UX Designer
+**Responsibilities:**
+- Designing intuitive, responsive, and accessible interfaces tailored specifically for laboratory analysts.
+- Creating wireframes, prototypes, and user flows using modern design tools.
+- Ensuring the frontend implementation accurately reflects the designed user experience and visual hierarchy.
 
-### Product Owner (Wisnu)
-- Ensuring the product meets microbiology laboratory standards.
-- Managing the sprint backlog and prioritizing high-value features.
-- Finalizing the presentation and defense strategy.
-
-### Scrum Master / AI Lead (Faras)
-- Facilitating daily standups and resolving technical blockers.
-- Fine-tuning YOLOv8 for 5-class detection.
-- Optimizing model performance for local and cloud environments.
-
-### Backend Engineer (Steven)
-- Implementing secure file upload protocols (EXIF stripping, magic bytes).
-- Developing the SA-001 CFU/ml calculation engine.
-- Managing the PostgreSQL/SQLite database and audit logging systems.
-
-### UI/UX Developer (Suci)
-- Developing responsive layouts using Tailwind CSS.
-- Creating intuitive data visualizations for laboratory analytics.
-- Ensuring the dashboard feels like a professional "Laboratory OS."
+### 4. Steven Anderson Siagian
+**Role:** Developer
+**Responsibilities:**
+- Implementing core system features, APIs, and database models.
+- Assisting in the deployment and integration of the AI/ML inference pipeline.
+- Collaborating on system reliability, code testing, and security implementations.
 
 ---
-
-## 🔐 Application Access Roles (RBAC)
-*Updated for Presentation Defense (April 30)*
-
-To ensure ISO 17025 compliance and separation of duties, ColonyAI implements a 4-tier access model:
-
-1.  **Laboratory Analyst**: Authorized for specimen imaging, executing AI diagnostics, and managing initial data entry.
-2.  **Laboratory Manager**: Authorized for results verification, final sign-offs, and generating accredited reports.
-3.  **Quality Auditor**: Authorized for viewing read-only audit trails, verifying cryptographic integrity chains, and monitoring compliance metrics.
-4.  **System Administrator**: Authorized for node governance, user provisioning, and real-time kernel health monitoring.
+*ColonyAI — Standardizing Microbiology with Computer Vision & Cryptographic Integrity*
