@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document provides comprehensive validation metrics and performance benchmarks for the ColonyAI YOLOv8 model, demonstrating compliance with the ≥92% accuracy target stated in our proposal.
+This document provides comprehensive validation metrics and performance benchmarks for the ColonyAI YOLOv8 model, demonstrating compliance with the 92% accuracy target stated in our proposal.
 
 ---
 
@@ -46,12 +46,12 @@ This document provides comprehensive validation metrics and performance benchmar
 
 | Technique | Parameter | Applied |
 |-----------|-----------|---------|
-| Mosaic | 100% probability | ✓ |
-| Horizontal Flip | 50% probability | ✓ |
-| HSV Color Jitter | H: 0.015, S: 0.7, V: 0.4 | ✓ |
-| Rotation | ±15° | ✓ |
-| Scaling | ±50% | ✓ |
-| Translation | ±10% | ✓ |
+| Mosaic | 100% probability | Yes |
+| Horizontal Flip | 50% probability | Yes |
+| HSV Color Jitter | H: 0.015, S: 0.7, V: 0.4 | Yes |
+| Rotation | ±15° | Yes |
+| Scaling | ±50% | Yes |
+| Translation | ±10% | Yes |
 
 **Effective Dataset Size After Augmentation:** ~5,000+ samples per epoch
 
@@ -63,11 +63,11 @@ This document provides comprehensive validation metrics and performance benchmar
 
 | Metric | YOLOv8n | YOLOv8s | Target |
 |--------|---------|---------|--------|
-| **mAP@0.5** | 0.923 | 0.941 | ≥0.92 |
-| **mAP@0.5:0.95** | 0.784 | 0.812 | ≥0.75 |
-| **Precision** | 0.931 | 0.947 | ≥0.90 |
-| **Recall** | 0.908 | 0.925 | ≥0.90 |
-| **F1 Score** | 0.919 | 0.936 | ≥0.90 |
+| **mAP@0.5** | 0.923 | 0.941 | >=0.92 |
+| **mAP@0.5:0.95** | 0.784 | 0.812 | >=0.75 |
+| **Precision** | 0.931 | 0.947 | >=0.90 |
+| **Recall** | 0.908 | 0.925 | >=0.90 |
+| **F1 Score** | 0.919 | 0.936 | >=0.90 |
 
 ### Per-Class Performance (YOLOv8s)
 
@@ -80,10 +80,10 @@ This document provides comprehensive validation metrics and performance benchmar
 | **media_crack** | 0.881 | 0.936 | 0.908 | 0.921 |
 
 **Key Insights:**
-- **colony_single** achieves highest accuracy (97.1% mAP) due to clear visual features
-- **colony_merged** slightly lower (92.4% mAP) due to overlapping complexity
-- **media_crack** has best recall (93.6%) but lower precision (88.1%) due to rare occurrence
-- All classes exceed 90% F1 score target
+- **colony_single** achieves highest accuracy (97.1% mAP) due to clear visual features.
+- **colony_merged** is slightly lower (92.4% mAP) due to overlapping complexity.
+- **media_crack** has best recall (93.6%) but lower precision (88.1%) due to rare occurrence.
+- All classes exceed the 90% F1 score target.
 
 ---
 
@@ -107,7 +107,7 @@ This document provides comprehensive validation metrics and performance benchmar
 | Google Colab T4 | 800×800 | 1 | 12.5 | 80 |
 | Google Colab T4 | 800×800 | 16 | 98.3 | 163 |
 
-**Target Achieved:** <50ms per image on CPU (proposal requirement: ✓)
+**Target Achieved:** <50ms per image on CPU (proposal requirement met).
 
 ---
 
@@ -132,7 +132,7 @@ This document provides comprehensive validation metrics and performance benchmar
 | **R2A** | 22 | 0.941 | 0.948 | 0.935 |
 | **MacConkey** | 18 | 0.919 | 0.925 | 0.908 |
 
-**All media types exceed 90% mAP target**
+**All media types exceed 90% mAP target.**
 
 ---
 
@@ -142,10 +142,10 @@ This document provides comprehensive validation metrics and performance benchmar
 
 | Method | Mean CV (%) | Range | Samples |
 |--------|-------------|-------|---------|
-| **Manual Counting (Human)** | 42.7% | 22.7% - 80% | 12 analysts × 50 plates |
+| **Manual Counting (Human)** | 42.7% | 22.7% - 80% | 12 analysts x 50 plates |
 | **ColonyAI (YOLOv8s)** | 3.2% | 1.8% - 5.1% | 148 test images |
 
-**Improvement:** 92.5% reduction in variability
+**Improvement:** 92.5% reduction in variability.
 
 ### Accuracy Comparison
 
@@ -194,23 +194,10 @@ This document provides comprehensive validation metrics and performance benchmar
 
 | Criterion | Required | Actual | Status |
 |-----------|----------|--------|--------|
-| mAP@0.5 improvement | ≥2% | 2.9% (v1.2 → v1.3) | ✓ |
-| All classes >90% F1 | Yes | All >90% | ✓ |
-| Inference <50ms CPU | Yes | 42ms (i7-12700K) | ✓ |
-| No regression on test set | Yes | Passed | ✓ |
-
----
-
-## Validation Against Proposal Requirements
-
-| Requirement | Target | Actual | Status |
-|-------------|--------|--------|--------|
-| **Colony detection accuracy** | ≥92% | 94.1% | ✅ Exceeds |
-| **Artifact rejection precision** | >90% | 93.8% | ✅ Exceeds |
-| **Analysis time** | <2 min | 42ms + overhead | ✅ Exceeds |
-| **5-class classification** | Required | Implemented | ✅ Complete |
-| **TNTC/TFTC flagging** | Required | Working | ✅ Complete |
-| **Media-agnostic design** | 8+ types | 8 types tested | ✅ Complete |
+| mAP@0.5 improvement | >=2% | 2.9% (v1.2 -> v1.3) | Passed |
+| All classes >90% F1 | Yes | All >90% | Passed |
+| Inference <50ms CPU | Yes | 42ms (i7-12700K) | Passed |
+| No regression on test set | Yes | Passed | Passed |
 
 ---
 
@@ -242,7 +229,7 @@ python train.py --mode export --model runs/train/exp/weights/best.pt
 
 ### Random Seed
 
-All training runs use fixed seed for reproducibility:
+All training runs use a fixed seed for reproducibility:
 ```python
 import random
 import numpy as np
@@ -271,15 +258,14 @@ torch.cuda.manual_seed_all(SEED)
 
 ## Conclusion
 
-The ColonyAI YOLOv8 model **exceeds all proposal requirements**:
+The ColonyAI YOLOv8 model exceeds all proposal requirements:
+*   **mAP@0.5: 94.1%** (target: >=92%)
+*   **All 5 classes >90% F1** (target: >90%)
+*   **Inference <50ms on CPU** (target: <50ms)
+*   **92.5% reduction in variability** vs manual counting
+*   **Media-agnostic across 8+ types**
 
-- ✅ **mAP@0.5: 94.1%** (target: ≥92%)
-- ✅ **All 5 classes >90% F1** (target: >90%)
-- ✅ **Inference <50ms on CPU** (target: <50ms)
-- ✅ **92.5% reduction in variability** vs manual counting
-- ✅ **Media-agnostic across 8+ types**
-
-The model is **production-ready** and suitable for deployment in accredited microbiology laboratories.
+The model is production-ready and suitable for deployment in accredited microbiology laboratories.
 
 ---
 
