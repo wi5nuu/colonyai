@@ -691,7 +691,7 @@ erDiagram
 
     user_preferences {
         uuid id PK
-        uuid user_id FK UK
+        uuid user_id FK "Unique Key"
         boolean notify_analysis_complete "default: true"
         boolean notify_boundary_alerts "default: true"
         boolean notify_weekly_summary "default: false"
