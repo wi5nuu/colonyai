@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     MODEL_PATH: str = str(Path(__file__).parent.parent.parent / "models" / "colony_best_new.pt")
     MODEL_CONFIDENCE_THRESHOLD: float = 0.35  # Lower default to allow more detections before per-class filtering
     MODEL_IOU_THRESHOLD: float = 0.45
-    MODEL_IMG_SIZE: int = 512
+    MODEL_IMG_SIZE: int = 640
 
     # Image Processing
     IMAGE_MAX_SIZE: int = 10485760  # 10MB

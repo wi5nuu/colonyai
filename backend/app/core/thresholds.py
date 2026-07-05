@@ -204,6 +204,3 @@ def is_detection_above_threshold(
     """
     threshold = get_threshold(media_type, class_name)
     return confidence >= threshold
-
-    threshold = get_threshold(media_type, class_name)
-    return confidence >= threshold

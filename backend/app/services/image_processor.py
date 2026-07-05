@@ -4,14 +4,15 @@ from PIL import Image
 import io
 from typing import Tuple
 
-from app.services.colony_detector import VALID_COLONY_CLASSES
+from app.core.config import settings
+from app.services.colony_detector_optimized import VALID_COLONY_CLASSES
 
 
 class ImageProcessor:
     """Image preprocessing pipeline for agar plate images"""
 
-    def __init__(self, target_size: Tuple[int, int] = (640, 640)):
-        self.target_size = target_size
+    def __init__(self, target_size: Tuple[int, int] = None):
+        self.target_size = target_size or (settings.MODEL_IMG_SIZE, settings.MODEL_IMG_SIZE)
 
     def preprocess(self, image_path: str) -> Tuple[np.ndarray, dict]:
         """

@@ -4,44 +4,45 @@ Untuk akurasi maksimal pada kompetisi
 """
 
 # THRESHOLD PER-CLASS (Prioritas Tertinggi)
-# Berdasarkan analisis confidence distribution dari training data
+# Diturunkan untuk menangkap lebih banyak koloni valid.
+# Model sudah melakukan filtering lanjutan (size, aspect ratio, NMS).
 CLASS_THRESHOLDS = {
-    'colony_single': 0.55,  # High confidence - objek jelas
-    'colony_merged': 0.45,  # Medium - overlap bisa menurunkan confidence
-    'bubble': 0.40,         # Lower - objek kecil, kadang blur
-    'dust_debris': 0.35,    # Lowest - sangat kecil, sulit dideteksi
-    'media_crack': 0.40,    # Medium - garis tipis
+    'colony_single': 0.25,  # Turun agar tangkap lebih banyak
+    'colony_merged': 0.15,  # Diturunkan drastis — merged colony confidence rendah
+    'bubble': 0.25,         # Turun sedikit
+    'dust_debris': 0.15,    # Diturunkan — class minoritas
+    'media_crack': 0.15,    # Diturunkan — class minoritas
 }
 
 # THRESHOLD PER-MEDIA TYPE (Untuk adaptasi berbagai jenis agar)
 MEDIA_TYPE_THRESHOLDS = {
     'PCA': {
-        'colony_single': 0.60,
-        'colony_merged': 0.50,
-        'bubble': 0.45,
-        'dust_debris': 0.40,
-        'media_crack': 0.45,
-    },
-    'MacConkey': {
-        'colony_single': 0.55,
-        'colony_merged': 0.45,
-        'bubble': 0.40,
-        'dust_debris': 0.35,
-        'media_crack': 0.40,
-    },
-    'TSA': {
-        'colony_single': 0.55,
-        'colony_merged': 0.45,
-        'bubble': 0.40,
-        'dust_debris': 0.35,
-        'media_crack': 0.40,
-    },
-    'Blood': {
-        'colony_single': 0.50,  # Lower karena background merah
-        'colony_merged': 0.40,
+        'colony_single': 0.35,
+        'colony_merged': 0.30,
         'bubble': 0.35,
         'dust_debris': 0.30,
         'media_crack': 0.35,
+    },
+    'MacConkey': {
+        'colony_single': 0.30,
+        'colony_merged': 0.25,
+        'bubble': 0.30,
+        'dust_debris': 0.25,
+        'media_crack': 0.30,
+    },
+    'TSA': {
+        'colony_single': 0.30,
+        'colony_merged': 0.25,
+        'bubble': 0.30,
+        'dust_debris': 0.25,
+        'media_crack': 0.30,
+    },
+    'Blood': {
+        'colony_single': 0.25,
+        'colony_merged': 0.20,
+        'bubble': 0.25,
+        'dust_debris': 0.20,
+        'media_crack': 0.25,
     },
     'default': CLASS_THRESHOLDS  # Fallback
 }

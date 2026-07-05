@@ -202,13 +202,60 @@ class ColonyDetectorOptimized:
         return merged
 
     def _merge_tta_detections(self, detections: List[Dict], weights: List[float]) -> List[Dict]:
-        """Merge TTA detections dengan weighted voting"""
+        """Merge TTA detections dengan weighted voting via IoU clustering"""
         if not detections:
             return []
 
-        # Simple approach: keep all and let NMS handle duplicates
-        # Boost confidence for detections that appear in multiple augmentations
-        return detections
+        # Assign weight per detection (setiap augmentation dapat weight berbeda)
+        n_per_aug = len(detections) // len(weights) if weights else len(detections)
+        weighted_dets = []
+        for i, det in enumerate(detections):
+            aug_idx = min(i // max(n_per_aug, 1), len(weights) - 1)
+            det['_tta_weight'] = weights[aug_idx] if aug_idx < len(weights) else 1.0
+            weighted_dets.append(det)
+
+        # Group overlapping detections per class
+        merged = []
+        used = set()
+        for i, det in enumerate(weighted_dets):
+            if i in used:
+                continue
+            # Find all detections with IoU > 0.45 of same class
+            cluster = [i]
+            used.add(i)
+            for j, other in enumerate(weighted_dets):
+                if j in used or det['class_name'] != other['class_name']:
+                    continue
+                if self._iou(det['bbox'], other['bbox']) > 0.45:
+                    cluster.append(j)
+                    used.add(j)
+
+            if len(cluster) == 1:
+                # Single detection — tetap pakai confidence asli
+                merged.append(det)
+            else:
+                # Weighted average of cluster
+                total_w = sum(weighted_dets[k]['_tta_weight'] for k in cluster)
+                if total_w == 0:
+                    merged.append(det)
+                    continue
+
+                avg_conf = sum(
+                    weighted_dets[k]['confidence'] * weighted_dets[k]['_tta_weight']
+                    for k in cluster
+                ) / total_w
+
+                # Ambil bbox dari detection dengan confidence tertinggi
+                best_k = max(cluster, key=lambda k: weighted_dets[k]['confidence'])
+                best = weighted_dets[best_k].copy()
+
+                # Boost confidence jika muncul di >1 augmentation
+                boost = min(1.0 + (len(cluster) - 1) * 0.05, 1.15)
+                best['confidence'] = min(avg_conf * boost, 1.0)
+                best.pop('_tta_weight', None)
+                merged.append(best)
+
+        return merged
 
     def _nms_per_class(self, detections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Non-Maximum Suppression per-class"""

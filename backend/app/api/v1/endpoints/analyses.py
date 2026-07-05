@@ -390,7 +390,8 @@ async def create_analysis(
         detections = colony_detector.detect(
             processed_image,
             media_type=media_type,
-            aggressive=False
+            aggressive=False,
+            use_tta=True
         )
         inference_time_ms = (time.time() - start_time) * 1000
 
@@ -464,15 +465,15 @@ async def create_analysis(
             logger.warning("Gagal load original image, fallback ke processed image untuk annotation")
             image_processor.save_annotated_image(processed_image, detections, annotated_path)
         else:
-            # Scale bounding box coordinates dari ROI (640x640) ke original size dengan offset
+            # Scale bounding box coordinates dari processed image ke original size
             orig_h, orig_w = original_img_bgr.shape[:2]
+            proc_h, proc_w = processed_image.shape[:2]
             
             roi_x, roi_y = roi_info['x_offset'], roi_info['y_offset']
             roi_w, roi_h = roi_info['roi_w'], roi_info['roi_h']
-            proc_size = settings.MODEL_IMG_SIZE # Default 640
             
-            scale_x = roi_w / proc_size
-            scale_y = roi_h / proc_size
+            scale_x = roi_w / proc_w
+            scale_y = roi_h / proc_h
 
             scaled_detections = []
             for det in detections:
