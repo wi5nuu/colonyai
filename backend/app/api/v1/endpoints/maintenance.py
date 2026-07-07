@@ -16,7 +16,7 @@ router = APIRouter()
 @router.delete("/retention")
 async def apply_data_retention_policy(
     # BUG-017: UU PDP Administrator only
-    current_user: dict = Depends(require_role("admin")),
+    current_user: dict = Depends(require_role("admin", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """
