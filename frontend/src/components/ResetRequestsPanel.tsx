@@ -53,8 +53,7 @@ function detectDevice(ua: string): string {
 
 export function ResetRequestsPanel() {
   const { accessToken } = useAuthStore();
-  const { language } = useTranslationStore();
-  const isId = language === "id";
+  const { t } = useTranslationStore();
   const [requests, setRequests] = useState<ResetRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -213,11 +212,11 @@ export function ResetRequestsPanel() {
               {pendingCount > 0 ? (
                 <span className="text-amber-500">
                   {pendingCount}{" "}
-                  {isId ? "Menunggu Persetujuan" : "Pending Approval"}
+                  {t("resetRequests.pendingApproval")}
                 </span>
               ) : (
                 <span className="text-slate-400">
-                  {isId ? "Semua bersih ✓" : "All clear ✓"}
+                  {t("resetRequests.allClear")}
                 </span>
               )}
             </p>
@@ -232,7 +231,7 @@ export function ResetRequestsPanel() {
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
-            <option value="all">{isId ? "Semua" : "All"}</option>
+            <option value="all">{t("resetRequests.all")}</option>
           </select>
           <button
             onClick={fetchRequests}
@@ -254,12 +253,8 @@ export function ResetRequestsPanel() {
             )}
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
               {selectedIds.size === pendingCount
-                ? isId
-                  ? "Batal Pilih Semua"
-                  : "Deselect All"
-                : isId
-                  ? `Pilih Semua (${pendingCount})`
-                  : `Select All (${pendingCount})`}
+                ? t("resetRequests.deselectAll")
+                : t("resetRequests.selectAll", { count: pendingCount })}
             </span>
           </button>
 
@@ -267,7 +262,7 @@ export function ResetRequestsPanel() {
             <>
               <div className="w-px h-4 bg-white/10" />
               <span className="text-[10px] font-black text-primary uppercase">
-                {selectedIds.size} {isId ? "dipilih" : "selected"}
+                {selectedIds.size} {t("resetRequests.selected")}
               </span>
               <div className="flex gap-2 ml-auto">
                 <button
@@ -280,7 +275,7 @@ export function ResetRequestsPanel() {
                   ) : (
                     <Zap className="w-3 h-3" />
                   )}
-                  {isId ? "Approve Semua" : "Approve All"}
+                  {t("resetRequests.approveAll")}
                 </button>
                 <button
                   onClick={handleBulkReject}
@@ -288,7 +283,7 @@ export function ResetRequestsPanel() {
                   className="flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
                 >
                   <XCircle className="w-3 h-3" />{" "}
-                  {isId ? "Tolak Semua" : "Reject All"}
+                  {t("resetRequests.rejectAll")}
                 </button>
               </div>
             </>
@@ -299,22 +294,10 @@ export function ResetRequestsPanel() {
       {/* Info Banner */}
       <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-xl flex items-start gap-2">
         <AlertTriangle className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
-        <p className="text-[10px] text-blue-600 dark:text-blue-400 leading-relaxed font-medium">
-          {isId ? (
-            <>
-              Setelah <strong>Approve</strong>, token 1-jam muncul di sini.
-              Salin & sampaikan via <strong>WhatsApp/Teams internal</strong>.
-              Volume tinggi? Gunakan{" "}
-              <strong>Pilih Semua → Approve Semua</strong>.
-            </>
-          ) : (
-            <>
-              Once <strong>Approved</strong>, a 1-hour token will appear here.
-              Copy & share via <strong>internal WhatsApp/Teams</strong>. High
-              volume? Use <strong>Select All → Approve All</strong>.
-            </>
-          )}
-        </p>
+        <p
+          className="text-[10px] text-blue-600 dark:text-blue-400 leading-relaxed font-medium"
+          dangerouslySetInnerHTML={{ __html: t("resetRequests.infoBanner") }}
+        />
       </div>
 
       {/* List */}
@@ -322,7 +305,7 @@ export function ResetRequestsPanel() {
         <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl">
           <CheckCircle2 className="w-8 h-8 text-slate-100 dark:text-slate-800 mx-auto mb-2" />
           <p className="text-xs font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">
-            {isId ? "Tidak Ada Permintaan" : "No Requests"}
+            {t("resetRequests.noRequests")}
           </p>
         </div>
       ) : (
@@ -436,7 +419,7 @@ export function ResetRequestsPanel() {
                           className="px-3 py-1.5 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 disabled:opacity-40"
                         >
                           <XCircle className="w-2.5 h-2.5" />{" "}
-                          {isId ? "Tolak" : "Reject"}
+                          {t("resetRequests.reject")}
                         </button>
                       </div>
                     )}
@@ -487,9 +470,7 @@ export function ResetRequestsPanel() {
                   <ShieldAlert className="w-5 h-5 text-emerald-400" />
                 </div>
                 <h3 className="text-base font-black uppercase tracking-widest">
-                  {isId
-                    ? "Token Reset Berhasil Dibuat"
-                    : "Reset Token Generated Successfully"}
+                  {t("resetRequests.modalTitle")}
                 </h3>
                 <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-1">
                   {showTokenModal.email}
@@ -506,9 +487,7 @@ export function ResetRequestsPanel() {
               <div className="p-6 space-y-6">
                 <div className="space-y-2">
                   <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">
-                    {isId
-                      ? "Sampaikan Token Ini Secara Aman"
-                      : "Deliver This Token Securely"}
+                    {t("resetRequests.deliverTokenLabel")}
                   </label>
                   <div className="flex items-center gap-2 p-4 bg-slate-50 dark:bg-slate-950 border-b-2 border-slate-200 dark:border-slate-800 rounded-none">
                     <code className="flex-1 font-mono font-black text-slate-900 dark:text-white text-base tracking-widest break-all">
@@ -532,9 +511,7 @@ export function ResetRequestsPanel() {
                 <div className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-none flex gap-3">
                   <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                   <p className="text-[9px] text-amber-800 dark:text-amber-400 font-bold uppercase leading-relaxed tracking-wider">
-                    {isId
-                      ? "Token ini bersifat rahasia dan hanya berlaku selama 1 jam. Harap sampaikan melalui saluran komunikasi internal yang terenkripsi."
-                      : "This token is confidential and valid for only 1 hour. Please deliver it via an encrypted internal communication channel."}
+                    {t("resetRequests.tokenConfidentialWarning")}
                   </p>
                 </div>
 
@@ -542,7 +519,7 @@ export function ResetRequestsPanel() {
                   onClick={() => setShowTokenModal(null)}
                   className="w-full h-12 bg-[#1a237e] text-white rounded-none text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[#0055ff] transition-all shadow-xl shadow-[#1a237e]/10"
                 >
-                  {isId ? "Tutup & Selesai" : "Close & Finish"}
+                  {t("resetRequests.closeFinish")}
                 </button>
               </div>
             </div>
