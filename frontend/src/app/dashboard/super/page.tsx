@@ -78,8 +78,7 @@ interface GlobalStats {
 
 export default function SuperAdminRealTimeDashboard() {
   const router = useRouter();
-  const { language } = useTranslationStore();
-  const isId = language === "id";
+  const { t } = useTranslationStore();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [stats, setStats] = useState<GlobalStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -301,7 +300,7 @@ export default function SuperAdminRealTimeDashboard() {
       <div className="flex items-center justify-center py-20">
         <div className="text-center space-y-4">
           <div className="w-8 h-8 sm:w-12 sm:h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isId ? "Menghubungkan ke Global Nexus..." : "Connecting to Global Nexus..."}</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("super.connecting")}</p>
         </div>
       </div>
     );
@@ -317,10 +316,10 @@ export default function SuperAdminRealTimeDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">{isId ? "Kontrol Global" : "Global Control"}</h1>
+                  <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">{t("super.globalControl")}</h1>
                   <span className="px-1.5 py-0.5 bg-primary/10 border border-primary/20 rounded-none text-[7px] sm:text-[8px] font-bold text-primary uppercase tracking-[0.2em] hidden xs:inline-block">Master</span>
                 </div>
-                <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5">{isId ? "OS Laboratorium Multi-Tenant" : "Multi-Tenant Laboratory OS"}</p>
+                <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5">{t("super.multitenantOs")}</p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 sm:gap-4">
@@ -328,7 +327,7 @@ export default function SuperAdminRealTimeDashboard() {
                   <DocumentationToggle
                     showDocs={showDocs}
                     setShowDocs={setShowDocs}
-                    text={isId ? "Protokol Nexus" : "Nexus Protocol"}
+                    text={t("super.nexusProtocol")}
                   />
                 </div>
                 <button
@@ -358,10 +357,10 @@ export default function SuperAdminRealTimeDashboard() {
             {/* Global Statistics Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
               {[
-                { label: isId ? "Total Organisasi" : "Total Organizations", value: stats?.total_organizations?.toString() || "0", sub: isId ? "Tenant Terdaftar" : "Registered Tenants", icon: Building2, trend: "up", color: "indigo" },
-                { label: isId ? "Node Aktif" : "Active Nodes", value: stats?.active_nodes?.toLocaleString() || "0", sub: isId ? "Registri Global" : "Global Registry", icon: Users, trend: "up", color: "blue" },
-                { label: isId ? "Kesehatan Sistem" : "System Health", value: stats?.system_health || "100%", sub: isId ? "Status Klaster" : "Cluster Status", icon: Server, trend: "stable", color: "emerald" },
-                { label: isId ? "Skor Kepatuhan" : "Compliance Score", value: stats?.compliance_score || "A+", sub: "ISO-17025", icon: ShieldCheck, trend: "up", color: "amber" },
+                { label: t("super.totalOrganizations"), value: stats?.total_organizations?.toString() || "0", sub: t("super.registeredTenants"), icon: Building2, trend: "up", color: "indigo" },
+                { label: t("super.activeNodes"), value: stats?.active_nodes?.toLocaleString() || "0", sub: t("super.globalRegistry"), icon: Users, trend: "up", color: "blue" },
+                { label: t("super.systemHealth"), value: stats?.system_health || "100%", sub: t("super.clusterStatus"), icon: Server, trend: "stable", color: "emerald" },
+                { label: t("super.complianceScore"), value: stats?.compliance_score || "A+", sub: "ISO-17025", icon: ShieldCheck, trend: "up", color: "amber" },
               ].map((stat, i) => (
                 <div
                   key={i}
@@ -401,7 +400,7 @@ export default function SuperAdminRealTimeDashboard() {
               <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex items-center justify-between">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-1.5 h-1.5 bg-primary rounded-none animate-ping" />
-                  <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">{isId ? "Registri Master" : "Master Registry"}</h2>
+                  <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">{t("super.masterRegistry")}</h2>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="relative group/search">
@@ -410,7 +409,7 @@ export default function SuperAdminRealTimeDashboard() {
                       type="text"
                       value={searchOrg}
                       onChange={(e) => setSearchOrg(e.target.value)}
-                      placeholder={isId ? `Cari ${organizations.length} organisasi...` : `Search ${organizations.length} orgs...`}
+                      placeholder={t("super.searchPlaceholder", { count: organizations.length })}
                       className="pl-8 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[10px] font-bold w-40 sm:w-48 outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-colors shadow-sm"
                     />
                   </div>
@@ -424,13 +423,13 @@ export default function SuperAdminRealTimeDashboard() {
                     <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-none flex items-center justify-center mx-auto border border-slate-100 dark:border-slate-700 mb-3">
                       <Building2 className="w-5 h-5 text-slate-300 dark:text-slate-600" />
                     </div>
-                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase">{isId ? "Tidak Ada Organisasi Terdeteksi" : "No Organizations Detected"}</h3>
-                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">{isId ? "Gunakan tombol provision untuk mendaftarkan tenant." : "Use provision button to onboard tenants."}</p>
+                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase">{t("super.noOrgsDetected")}</h3>
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">{t("super.noOrgsDesc")}</p>
                   </div>
                 ) : organizations.filter(o => o.name.toLowerCase().includes(searchOrg.toLowerCase()) || o.location?.toLowerCase().includes(searchOrg.toLowerCase())).length === 0 ? (
                   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none p-8 text-center shadow-sm transition-colors">
-                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase">{isId ? "Pencarian Tidak Ditemukan" : "Search Not Found"}</h3>
-                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">{isId ? `Tidak ada organisasi dengan kata kunci "${searchOrg}"` : `No organizations found matching "${searchOrg}"`}</p>
+                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase">{t("super.searchNotFound")}</h3>
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">{t("super.searchNotFoundDesc", { query: searchOrg })}</p>
                   </div>
                 ) : (
                   organizations.filter(o => o.name.toLowerCase().includes(searchOrg.toLowerCase()) || o.location?.toLowerCase().includes(searchOrg.toLowerCase())).map((org) => (
@@ -458,7 +457,7 @@ export default function SuperAdminRealTimeDashboard() {
 
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-6 items-center">
                           <div className="hidden sm:block">
-                            <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{isId ? "Analisis" : "Analyses"}</p>
+                            <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t("super.analyses")}</p>
                             <div className="flex items-center gap-1">
                               <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{org.analyses_count.toLocaleString()}</p>
                               <span className={`text-[8px] font-bold ${org.growth_rate.startsWith('+') ? 'text-emerald-500' : 'text-rose-500'}`}>{org.growth_rate}</span>
@@ -466,8 +465,8 @@ export default function SuperAdminRealTimeDashboard() {
                           </div>
 
                           <div>
-                            <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{isId ? "Pengguna" : "Users"}</p>
-                            <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{org.users_count} {isId ? "Node" : "Nodes"}</p>
+                            <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t("super.users")}</p>
+                            <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{org.users_count} {t("super.nodes")}</p>
                           </div>
 
                           <div>
@@ -492,7 +491,7 @@ export default function SuperAdminRealTimeDashboard() {
                             <div className="space-y-3">
                               <div className="flex items-center gap-2 mb-2 sm:mb-3">
                                 <Users className="w-3 h-3 text-primary" />
-                                <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{isId ? "Personel Resmi" : "Authorized Personnel"}</h4>
+                                <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t("super.authorizedPersonnel")}</h4>
                               </div>
                               <div className="space-y-2 sm:space-y-3">
                                 {org.admins.length > 0 ? org.admins.map((admin, idx) => (
@@ -547,24 +546,24 @@ export default function SuperAdminRealTimeDashboard() {
                             <div className="bg-white dark:bg-slate-950 rounded-none border border-slate-200 dark:border-slate-800 p-2 sm:p-2.5 shadow-sm transition-colors">
                               <div className="flex items-center gap-2 mb-3">
                                 <Activity className="w-3 h-3 text-amber-500" />
-                                <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{isId ? "Kepatuhan" : "Compliance"}</h4>
+                                <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t("super.compliance")}</h4>
                               </div>
                               <div className="space-y-2.5">
                                 <div className="flex justify-between items-center">
-                                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{isId ? "Lisensi" : "License"}</span>
-                                  <span className="text-[9px] font-black text-emerald-500 uppercase">{org.license_expiry ? new Date(org.license_expiry).toLocaleDateString() : (isId ? 'Tidak Terbatas' : 'Infinite')}</span>
+                                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t("super.license")}</span>
+                                  <span className="text-[9px] font-black text-emerald-500 uppercase">{org.license_expiry ? new Date(org.license_expiry).toLocaleDateString() : t("super.infinite")}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{isId ? "ID Klaster" : "Cluster ID"}</span>
+                                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t("super.clusterId")}</span>
                                   <span className="text-[9px] font-mono text-primary font-bold truncate max-w-[80px]">{org.id}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{isId ? "Lokalitas" : "Locality"}</span>
+                                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t("super.locality")}</span>
                                   <span className="text-[9px] font-black text-slate-900 dark:text-white uppercase">{org.location || 'Global'}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{isId ? "Bridge LIMS" : "LIMS Bridge"}</span>
-                                  <span className="text-[9px] font-black text-indigo-500 uppercase truncate max-w-[150px]" title={org.lims_webhook_url}>{org.lims_webhook_url ? (org.lims_webhook_url.includes('mock-lims') ? 'Mock Link' : 'Live Uplink') : (isId ? 'Belum Dikonfigurasi' : 'Not Configured')}</span>
+                                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t("super.limsBridge")}</span>
+                                  <span className="text-[9px] font-black text-indigo-500 uppercase truncate max-w-[150px]" title={org.lims_webhook_url}>{org.lims_webhook_url ? (org.lims_webhook_url.includes('mock-lims') ? 'Mock Link' : 'Live Uplink') : t("super.notConfigured")}</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 mt-3">
                                   <button
@@ -589,7 +588,7 @@ export default function SuperAdminRealTimeDashboard() {
                                         : 'bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600 shadow-emerald-500/20 shadow-lg'
                                     }`}
                                   >
-                                    {org.status === 'active' ? (isId ? 'Tangguhkan' : 'Suspend') : (isId ? 'Aktifkan' : 'Activate')}
+                                    {org.status === 'active' ? t("super.suspend") : t("super.activate")}
                                   </button>
                                 </div>
                               </div>
@@ -608,7 +607,7 @@ export default function SuperAdminRealTimeDashboard() {
                   Master Access Only // ColonyAI Global Nexus v2.0
                 </span>
                 <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500">
-                  {organizations.length} {isId ? "Node Aktif" : "Active Nodes"}
+                  {organizations.length} {t("super.activeNodes")}
                 </span>
               </div>
 
