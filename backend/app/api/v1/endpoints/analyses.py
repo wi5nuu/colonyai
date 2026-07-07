@@ -290,7 +290,7 @@ async def create_analysis(
     incubator_id: Optional[str] = Form(None),
     request: Request = None,
     background_tasks: BackgroundTasks = None,
-    current_user: dict = Depends(require_role("analyst", "manager", "admin")),
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """
