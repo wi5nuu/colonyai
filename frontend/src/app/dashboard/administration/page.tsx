@@ -44,8 +44,7 @@ interface Analyst {
 }
 
 export default function AdministrationPage() {
-  const { t, language } = useTranslationStore();
-  const isId = language === "id";
+  const { t } = useTranslationStore();
   const currentUser = useAuthStore((s) => s.user);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("");
@@ -100,7 +99,8 @@ export default function AdministrationPage() {
         const mappedUsers = usersRes.data.map((u) => {
           const roleStr = u.role === "system_admin" ? "admin" : u.role;
           let clearanceLevel = "Level-01";
-          if (roleStr === "admin") clearanceLevel = "Level-04";
+          if (roleStr === "super_admin") clearanceLevel = "Level-05";
+          else if (roleStr === "admin") clearanceLevel = "Level-04";
           else if (roleStr === "manager") clearanceLevel = "Level-03";
           else if (roleStr === "auditor") clearanceLevel = "Level-02";
           else if (roleStr === "analyst") clearanceLevel = "Level-01";
@@ -366,12 +366,10 @@ export default function AdministrationPage() {
                 <div className="space-y-1">
                   <div>
                     <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
-                      {isId ? "Kontrol Sistem" : "System Control"}
+                      {t("administration.systemControl")}
                     </h1>
                     <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
-                      {isId
-                        ? "Otorisasi Node & Matriks Tata Kelola"
-                        : "Node Authorization & Governance Matrix"}
+                      {t("administration.nodeAuthorization")}
                     </p>
                   </div>
                 </div>
@@ -380,22 +378,20 @@ export default function AdministrationPage() {
                   <div className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none flex items-center gap-2 shadow-sm">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest">
-                      {isId
-                        ? "Node Utama: Operasional"
-                        : "Master Node: Operational"}
+                      {t("administration.masterNodeOperational")}
                     </span>
                   </div>
                   <DocumentationToggle
                     showDocs={showDocs}
                     setShowDocs={setShowDocs}
-                    text={isId ? "SOP Kontrol" : "Control SOP"}
+                    text={t("administration.controlSop")}
                   />
                   <button
                     onClick={() => setAddUserModalOpen(true)}
                     className="flex items-center gap-1.5 px-4 py-2 bg-primary text-slate-900 dark:text-slate-950 font-bold rounded-none text-[10px] uppercase tracking-widest hover:bg-primary/90 transition-all shadow-md shadow-primary/10"
                   >
                     <Plus className="w-3.5 h-3.5" />{" "}
-                    {isId ? "Buat Staf Baru" : "Provision New Staff"}
+                    {t("administration.provisionNewStaff")}
                   </button>
                 </div>
               </div>
@@ -404,30 +400,30 @@ export default function AdministrationPage() {
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
                   {
-                    label: isId ? "Kluster Aktif" : "Active Clusters",
+                    label: t("administration.activeClusters"),
                     value: "12/12",
                     sub: "Optimal",
                     icon: Activity,
                     color: "emerald",
                   },
                   {
-                    label: isId ? "Tingkat Keamanan" : "Security Clearance",
+                    label: t("administration.securityClearance"),
                     value: "Level-04",
-                    sub: isId ? "Akses Root" : "Root Access",
+                    sub: t("administration.rootAccess"),
                     icon: ShieldCheck,
                     color: "primary",
                   },
                   {
-                    label: isId ? "Waktu Aktif Sistem" : "System Uptime",
+                    label: t("administration.systemUptime"),
                     value: `${performance.uptime}%`,
                     sub: "Real-time",
                     icon: Database,
                     color: "purple",
                   },
                   {
-                    label: isId ? "Total Node" : "Total Nodes",
+                    label: t("administration.totalNodes"),
                     value: analysts.length.toString(),
-                    sub: isId ? "Terotorisasi" : "Authorized",
+                    sub: t("administration.authorized"),
                     icon: Users,
                     color: "blue",
                   },
@@ -489,14 +485,10 @@ export default function AdministrationPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
                         <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                          {isId
-                            ? "Registri Personel Resmi"
-                            : "Authorized Personnel Registry"}
+                          {t("administration.authorizedPersonnelRegistry")}
                         </h3>
                         <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
-                          {isId
-                            ? "Analis & Administrator Laboratorium Terverifikasi"
-                            : "Verified Laboratory Analysts & Administrators"}
+                          {t("administration.verifiedAnalysts")}
                         </p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
@@ -510,11 +502,7 @@ export default function AdministrationPage() {
                               setSearchQuery(e.target.value);
                               setCurrentPage(1);
                             }}
-                            placeholder={
-                              isId
-                                ? "Cari nama / email..."
-                                : "Search name / email..."
-                            }
+                            placeholder={t("administration.searchNameEmail")}
                             className="pl-7 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-none text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-primary/10 outline-none w-44"
                           />
                         </div>
@@ -528,7 +516,7 @@ export default function AdministrationPage() {
                           className="py-1.5 px-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-none text-xs font-medium text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/10 outline-none"
                         >
                           <option value="">
-                            {isId ? "Semua Role" : "All Roles"}
+                            {t("administration.allRoles")}
                           </option>
                           <option value="super_admin">Super Admin</option>
                           <option value="admin">Admin</option>
@@ -546,7 +534,7 @@ export default function AdministrationPage() {
                           className="py-1.5 px-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-none text-xs font-medium text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/10 outline-none max-w-[180px]"
                         >
                           <option value="">
-                            {isId ? "Semua Company" : "All Companies"}
+                            {t("administration.allCompanies")}
                           </option>
                           {Array.from(
                             new Set(
@@ -624,9 +612,7 @@ export default function AdministrationPage() {
                                     colSpan={6}
                                     className="px-4 py-6 text-center text-xs text-slate-400 dark:text-slate-600"
                                   >
-                                    {isId
-                                      ? "Tidak ada data yang cocok dengan filter."
-                                      : "No data matching the filters."}
+                                    {t("administration.noDataMatchingFilters")}
                                   </td>
                                 </tr>
                               ) : (
@@ -842,14 +828,10 @@ export default function AdministrationPage() {
                       </div>
                       <div>
                         <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">
-                          {isId
-                            ? "Pusat Ekspor Data Administrator"
-                            : "Administrator Data Export Center"}
+                          {t("administration.adminDataExportCenter")}
                         </h3>
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                          {isId
-                            ? "Protokol Ekstraksi Data Resmi Laboratorium"
-                            : "Official Laboratory Data Extraction Protocol"}
+                          {t("administration.dataExtractionProtocol")}
                         </p>
                       </div>
                     </div>
@@ -872,21 +854,15 @@ export default function AdministrationPage() {
                         </div>
                         <div>
                           <h4 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
-                            {isId
-                              ? "Buku Besar Tata Kelola Master"
-                              : "Master Governance Ledger"}
+                            {t("administration.masterGovernanceLedger")}
                           </h4>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                            {isId
-                              ? "Dokumen PDF Komprehensif"
-                              : "Comprehensive PDF Document"}
+                            {t("administration.comprehensivePdf")}
                           </p>
                         </div>
                       </div>
                       <p className="text-xs text-slate-500 leading-relaxed font-medium relative z-10">
-                        {isId
-                          ? "Laporan resmi untuk keperluan audit eksternal. Berisi seluruh rekam jejak spesimen, breakdown performa analis, dan tren kepatuhan laboratorium."
-                          : "Official reports for external audit purposes. Contains the entire specimen trail, analyst performance breakdown, and laboratory compliance trends."}
+                        {t("administration.pdfDescription")}
                       </p>
 
                       <div className="flex flex-wrap gap-2 mb-2 relative z-10">
@@ -909,18 +885,7 @@ export default function AdministrationPage() {
                         disabled={downloadingPdf}
                         className="w-fit self-start px-5 flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white rounded-none text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-red-500/20 relative z-10 mt-1"
                       >
-                        {downloadingPdf ? (
-                          isId ? (
-                            "Membangun Laporan..."
-                          ) : (
-                            "Building Ledger..."
-                          )
-                        ) : (
-                          <>
-                            <Download className="w-3.5 h-3.5" />{" "}
-                            {isId ? "Unduh Master PDF" : "Download Master PDF"}
-                          </>
-                        )}
+                        {downloadingPdf ? t("administration.buildingLedger") : <><Download className="w-3.5 h-3.5" /> {t("administration.downloadMasterPdf")}</>}
                       </button>
                     </div>
 
@@ -932,21 +897,15 @@ export default function AdministrationPage() {
                         </div>
                         <div>
                           <h4 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
-                            {isId
-                              ? "Dataset Analitik Mentah"
-                              : "Raw Analytics Dataset"}
+                            {t("administration.rawAnalyticsDataset")}
                           </h4>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                            {isId
-                              ? "Ekspor Excel Multi-Sheet"
-                              : "Multi-Sheet Excel Export"}
+                            {t("administration.multiSheetExcel")}
                           </p>
                         </div>
                       </div>
                       <p className="text-xs text-slate-500 leading-relaxed font-medium relative z-10">
-                        {isId
-                          ? "Dataset mentah untuk sinkronisasi sistem informasi laboratorium. Mencakup distribusi data CFU, riwayat audit, dan metrik performa analis."
-                          : "Raw datasets for laboratory information system synchronization. Includes CFU data distribution, audit history, and analyst performance metrics."}
+                        {t("administration.excelDescription")}
                       </p>
 
                       <div className="flex flex-wrap gap-2 mb-2 relative z-10">
@@ -967,20 +926,7 @@ export default function AdministrationPage() {
                         disabled={downloadingXls}
                         className="w-fit self-start px-5 flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-none text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 relative z-10 mt-1"
                       >
-                        {downloadingXls ? (
-                          isId ? (
-                            "Membangun Matriks..."
-                          ) : (
-                            "Building Matrix..."
-                          )
-                        ) : (
-                          <>
-                            <Download className="w-3.5 h-3.5" />{" "}
-                            {isId
-                              ? "Unduh Analitik Excel"
-                              : "Download Analytics Excel"}
-                          </>
-                        )}
+                        {downloadingXls ? t("administration.buildingMatrix") : <><Download className="w-3.5 h-3.5" /> {t("administration.downloadAnalyticsExcel")}</>}
                       </button>
                     </div>
                   </div>
