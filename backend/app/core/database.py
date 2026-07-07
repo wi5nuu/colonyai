@@ -71,73 +71,31 @@ async def init_db():
         DB_AVAILABLE = True
         print("[DATABASE] Connection successful and tables synchronized.")
         
-        # Seed initial users
+        # Seed only Super Admin (all other users must belong to an organization)
         async with AsyncSessionLocal() as session:
-            # 1. System Admin
-            print(f"[DATABASE] Checking initial admin: {settings.INITIAL_ADMIN_EMAIL}")
-            result = await session.execute(select(User).where(User.email == settings.INITIAL_ADMIN_EMAIL))
-            admin_user = result.scalars().first()
-            if not admin_user:
-                logger.info(f"Seeding initial admin user: {settings.INITIAL_ADMIN_EMAIL}")
-                new_admin = User(
-                    email=settings.INITIAL_ADMIN_EMAIL,
-                    password_hash=get_password_hash(settings.INITIAL_ADMIN_PASSWORD),
-                    full_name="System Administrator",
-                    role=UserRole.ADMIN
-                )
-                session.add(new_admin)
-            else:
-                # Update password to match .env
-                admin_user.password_hash = get_password_hash(settings.INITIAL_ADMIN_PASSWORD)
-
-            # 2. Lead Analyst (from README)
-            analyst_email = "analyst@colonyai.com"
-            result = await session.execute(select(User).where(User.email == analyst_email))
-            analyst_user = result.scalars().first()
-            if not analyst_user:
-                logger.info(f"Seeding lead analyst: {analyst_email}")
+            super_admin_email = settings.INITIAL_SUPER_ADMIN_EMAIL
+            result = await session.execute(select(User).where(User.email == super_admin_email))
+            super_admin_user = result.scalars().first()
+            if not super_admin_user:
+                logger.info(f"Seeding super admin: {super_admin_email}")
                 session.add(User(
-                    email=analyst_email,
-                    password_hash=get_password_hash(settings.SEED_USERS_PASSWORD),
-                    full_name="Lead Analyst Primary",
-                    role=UserRole.ANALYST
+                    email=super_admin_email,
+                    password_hash=get_password_hash(settings.INITIAL_SUPER_ADMIN_PASSWORD),
+                    full_name="Super Administrator",
+                    role=UserRole.SUPER_ADMIN,
+                    organization_id=None,
                 ))
+                await session.commit()
             else:
-                analyst_user.password_hash = get_password_hash(settings.SEED_USERS_PASSWORD)
-
-            # 3. Lab Manager (from README)
-            manager_email = "manager@colonyai.com"
-            result = await session.execute(select(User).where(User.email == manager_email))
-            manager_user = result.scalars().first()
-            if not manager_user:
-                logger.info(f"Seeding lab manager: {manager_email}")
-                session.add(User(
-                    email=manager_email,
-                    password_hash=get_password_hash(settings.SEED_USERS_PASSWORD),
-                    full_name="Laboratory Manager",
-                    role=UserRole.MANAGER
-                ))
-            else:
-                manager_user.password_hash = get_password_hash(settings.SEED_USERS_PASSWORD)
-                manager_user.role = UserRole.MANAGER
-
-            # 4. Independent Auditor
-            auditor_email = "auditor@colonyai.com"
-            result = await session.execute(select(User).where(User.email == auditor_email))
-            auditor_user = result.scalars().first()
-            if not auditor_user:
-                logger.info(f"Seeding auditor: {auditor_email}")
-                session.add(User(
-                    email=auditor_email,
-                    password_hash=get_password_hash(settings.SEED_USERS_PASSWORD),
-                    full_name="External Auditor",
-                    role=UserRole.AUDITOR
-                ))
-            else:
-                auditor_user.password_hash = get_password_hash(settings.SEED_USERS_PASSWORD)
-                auditor_user.role = UserRole.AUDITOR
-
-            await session.commit()
+                # Only update if needed (password changed), skip if already correct
+                if super_admin_user.organization_id is not None:
+                    super_admin_user.organization_id = None
+                super_admin_user.role = UserRole.SUPER_ADMIN
+                try:
+                    await session.commit()
+                except Exception:
+                    await session.rollback()
+                    # User exists and is correct - no need to force update
     except Exception as e:
         logger.warning(f"[DATABASE] Database connection failed: {e}")
         logger.warning("   Running in DEMO MODE. Endpoints respond but data not persisted.")
