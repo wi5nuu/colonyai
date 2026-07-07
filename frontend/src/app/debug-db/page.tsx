@@ -6,8 +6,8 @@ export const dynamic = "force-dynamic";
 export default function DebugDbPage() {
   let output = "";
   try {
-    execSync("python d:\\lombapuai\\scratch\\query_json.py");
-    output = fs.readFileSync("d:\\lombapuai\\scratch\\json_log.txt", "utf-8");
+    execSync("python /mnt/d/lombapuai/scratch/query_json.py");
+    output = fs.readFileSync("/mnt/d/lombapuai/scratch/json_log.txt", "utf-8");
   } catch (error: any) {
     output = `Error: ${error.message}`;
   }
