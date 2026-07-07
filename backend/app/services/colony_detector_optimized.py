@@ -2,9 +2,16 @@
 COLONY DETECTOR OPTIMIZED - Untuk Akurasi Maksimal
 Dengan threshold per-class, post-processing, dan confidence boosting
 """
-from ultralytics import YOLO
 import numpy as np
-import cv2
+
+try:
+    from ultralytics import YOLO
+    import cv2
+    YOLO_AVAILABLE = True
+except ImportError:
+    YOLO_AVAILABLE = False
+    cv2 = None
+    YOLO = None
 from typing import List, Dict, Any, Tuple
 import os
 from app.core.config import settings
@@ -48,6 +55,11 @@ class ColonyDetectorOptimized:
         self.model_path = model_path or settings.MODEL_PATH
         self.img_size = settings.MODEL_IMG_SIZE
 
+        if not YOLO_AVAILABLE:
+            raise RuntimeError(
+                "YOLO/ultralytics not installed. Run: pip install ultralytics"
+            )
+
         if os.path.exists(self.model_path):
             self.model = YOLO(self.model_path)
             print(f"✓ Loaded optimized model from {self.model_path}")
@@ -86,8 +98,9 @@ class ColonyDetectorOptimized:
         if h > MAX_DIM or w > MAX_DIM:
             scale = MAX_DIM / max(h, w)
             new_w, new_h = int(w * scale), int(h * scale)
-            image = cv2.resize(image, (new_w, new_h))
-            print(f"Resized from {w}x{h} to {new_w}x{new_h}")
+            if cv2 is not None:
+                image = cv2.resize(image, (new_w, new_h))
+                print(f"Resized from {w}x{h} to {new_w}x{new_h}")
 
         # Gunakan threshold SANGAT RENDAH untuk inference awal
         # Filtering per-class dilakukan setelahnya
@@ -180,14 +193,14 @@ class ColonyDetectorOptimized:
         dets_original = self._detect_single(image, conf_threshold)
 
         # Horizontal flip
-        img_hflip = cv2.flip(image, 1)
+        img_hflip = cv2.flip(image, 1) if cv2 is not None else image
         dets_hflip = self._detect_single(img_hflip, conf_threshold)
         # Flip boxes back
         for det in dets_hflip:
             det['bbox']['x'] = w - det['bbox']['x'] - det['bbox']['width']
 
         # Vertical flip
-        img_vflip = cv2.flip(image, 0)
+        img_vflip = cv2.flip(image, 0) if cv2 is not None else image
         dets_vflip = self._detect_single(img_vflip, conf_threshold)
         # Flip boxes back
         for det in dets_vflip:
