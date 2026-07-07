@@ -159,11 +159,7 @@ export function GlobalSearch() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={
-              language === "en"
-                ? "Search specimens, labs, or accreditation records..."
-                : "Cari sampel, lab, atau catatan akreditasi..."
-            }
+            placeholder={t("common.searchPlaceholder")}
             className="w-full bg-transparent outline-none text-slate-850 dark:text-white text-base font-medium placeholder-slate-400"
           />
           
@@ -187,7 +183,7 @@ export function GlobalSearch() {
                   : "border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}
             >
-              {t === "all" ? (language === "en" ? "All Results" : "Semua") : t}
+              {t === "all" ? t("common.allResults") : t}
             </button>
           ))}
         </div>
@@ -242,12 +238,10 @@ export function GlobalSearch() {
             <div className="py-12 text-center space-y-2">
               <Sparkles className="w-8 h-8 text-slate-300 dark:text-slate-700 mx-auto" />
               <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                {language === "en" ? "No records found" : "Data tidak ditemukan"}
+                {t("common.noRecords")}
               </p>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                {language === "en"
-                  ? "Try checking spellings or look for other parameters"
-                  : "Coba periksa kembali ejaan atau gunakan parameter lain"}
+                {t("common.noRecordsDesc")}
               </p>
             </div>
           )}
