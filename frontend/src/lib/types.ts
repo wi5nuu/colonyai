@@ -9,13 +9,14 @@ export interface User {
   email: string;
   full_name: string;
   /**
-   * 4-role Streamlined RBAC for ColonyAI:
-   * - analyst: Perform tests, upload samples, use simulator.
+   * 5-role RBAC for ColonyAI:
+   * - super_admin: Global system management, manage organizations, licenses, and global audit.
+   * - admin: Full system management, user administration, and settings.
    * - manager: Technical review, approve results, view analytics & reports.
    * - auditor: Read-only access to records, reports, and audit trails.
-   * - admin: Full system management, user administration, and settings.
+   * - analyst: Perform tests, upload samples, use simulator.
    */
-  role: "analyst" | "manager" | "auditor" | "admin";
+  role: "analyst" | "manager" | "auditor" | "admin" | "super_admin";
   laboratory_id?: string;
   created_at: string;
   updated_at: string;
