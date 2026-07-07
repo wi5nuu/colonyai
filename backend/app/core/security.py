@@ -77,17 +77,6 @@ async def get_current_user(
     
     token = credentials.credentials
     
-    # ── MOCK TOKEN INTERCEPT FOR SUPER ADMIN BYPASS ──
-    if token.startswith("mock-super-admin-token"):
-        return {
-            "user_id": "00000000-0000-0000-0000-000000000000",
-            "email": "bypass@colonyai.com",
-            "role": "super_admin",
-            "organization_id": None,
-            "jti": "mock-jti",
-            "exp": None
-        }
-        
     payload = decode_token(token)
     
     jti = payload.get("jti")
@@ -117,6 +106,13 @@ async def get_current_user(
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User no longer exists"
+            )
+
+        # ── Enforce Organization Membership ──
+        if user.role.value != "super_admin" and not user.organization_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Akun tidak terdaftar pada perusahaan mana pun. Hubungi Super Admin."
             )
 
     return {
