@@ -2,23 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   Mail,
-  Lock,
   Eye,
   EyeOff,
-  ShieldCheck,
   ArrowRight,
   Loader2,
-  Activity,
-  ClipboardCheck,
-  ShieldAlert,
-  FlaskConical,
-  Phone,
-  Globe,
-  Clock,
-  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/auth-store";
@@ -27,8 +16,7 @@ import { useTranslationStore } from "@/lib/i18n/store";
 import { Footer } from "@/components/Footer";
 
 export default function LoginPage() {
-  const { t, language } = useTranslationStore();
-  const isId = language === "id";
+  const { t } = useTranslationStore();
   const auth = useAuthStore();
   const loginStep = auth.loginStep;
   const [showPassword, setShowPassword] = useState(false);
@@ -40,90 +28,22 @@ export default function LoginPage() {
   });
   const [trustDevice, setTrustDevice] = useState(false);
 
-  const SUPER_ADMIN_EMAILS = ["wisnualfian117@gmail.com"];
-  const isBypassEmail =
-    SUPER_ADMIN_EMAILS.includes(formData.email.toLowerCase()) ||
-    formData.email.toLowerCase().includes("admin") ||
-    formData.email.toLowerCase().includes("super");
-
   const handleInitialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const emailLower = formData.email.toLowerCase();
-    // Super Admin bypass list: add specific emails or keyword patterns here
-    const SUPER_ADMIN_EMAILS = ["wisnualfian117@gmail.com"];
-    const isBypassUser =
-      SUPER_ADMIN_EMAILS.includes(emailLower) ||
-      emailLower.includes("admin") ||
-      emailLower.includes("super");
-
-    if (isBypassUser) {
-      try {
-        const result = await auth.login(formData.email, formData.password);
-        setIsLoading(false);
-        if (result && !result.mfa_required) {
-          toast.success(
-            isId
-              ? "Login Berhasil (Bypass Super Admin)"
-              : "Login Successful (Super Admin Bypass)",
-          );
-          window.location.href = "/dashboard";
-        }
-      } catch (error) {
-        console.warn(
-          "Backend login failed, using fallback mock session:",
-          error,
-        );
-        setTimeout(() => {
-          setIsLoading(false);
-          // Set Zustand state manually to bypass server maintenance/downtime
-          useAuthStore.setState({
-            accessToken: "mock-super-admin-token-" + Date.now(),
-            refreshToken: "mock-super-admin-refresh-" + Date.now(),
-            user: {
-              id: "super-admin-bypass-id",
-              email: formData.email,
-              full_name: "Super Administrator",
-              role: "super_admin",
-            },
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
-
-          toast.success(
-            isId
-              ? "Login Super Admin Berhasil (Modus Pengembang)"
-              : "Super Admin Login Successful (Developer Mode)",
-          );
-          window.location.href = "/dashboard";
-        }, 800);
+    try {
+      const result = await auth.login(formData.email, formData.password);
+      setIsLoading(false);
+      if (result && !result.mfa_required) {
+        toast.success(t("auth.loginSuccess"));
+        window.location.href = "/dashboard";
       }
-    } else {
-      // Simulate server connection handshake attempt for regular users
+    } catch (error) {
+      console.warn("Backend login failed:", error);
       setTimeout(() => {
         setIsLoading(false);
-        if (isId) {
-          toast.error(
-            "Koneksi Gagal: Server Backend ColonyAI sedang dalam tahap maintenance untuk kompetisi AI Open.",
-            {
-              duration: 7000,
-              description:
-                "Silakan hubungi Administrator Teknis di 0813-948-290 jika Anda memerlukan akses demo khusus.",
-            },
-          );
-        } else {
-          toast.error(
-            "Connection Failed: The ColonyAI Backend Server is under maintenance for the AI Open competition.",
-            {
-              duration: 7000,
-              description:
-                "Please contact Technical Support at +62 813-948-290 if you require dedicated demo access.",
-            },
-          );
-        }
-      }, 1200);
+      }, 800);
     }
   };
 
@@ -134,35 +54,7 @@ export default function LoginPage() {
       await auth.verifyMfa(formData.mfaToken, trustDevice);
       window.location.href = "/dashboard";
     } catch (error) {
-      const emailLower = formData.email.toLowerCase();
-      const SUPER_ADMIN_EMAILS = ["wisnualfian117@gmail.com"];
-      const isBypassUser =
-        SUPER_ADMIN_EMAILS.includes(emailLower) ||
-        emailLower.includes("admin") ||
-        emailLower.includes("super");
-      if (isBypassUser) {
-        useAuthStore.setState({
-          accessToken: "mock-super-admin-token-" + Date.now(),
-          refreshToken: "mock-super-admin-refresh-" + Date.now(),
-          user: {
-            id: "super-admin-bypass-id",
-            email: formData.email,
-            full_name: "Super Administrator",
-            role: "super_admin",
-          },
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
-        toast.success(
-          isId
-            ? "Verifikasi MFA Berhasil (Bypass)"
-            : "MFA Verification Successful (Bypass)",
-        );
-        window.location.href = "/dashboard";
-      } else {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }
   };
 
@@ -177,11 +69,13 @@ export default function LoginPage() {
               <div className="text-center">
                 <h2 className="text-2xl font-black text-[#1a237e] dark:text-[#00f2ff] uppercase tracking-widest">
                   {loginStep === "credentials"
-                    ? "Login"
-                    : "Two-Factor Verification"}
+                    ? t("auth.loginTitle")
+                    : t("auth.mfaTitle")}
                 </h2>
                 <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
-                  Authorized Laboratory Portal Access
+                  {loginStep === "credentials"
+                    ? t("auth.loginSubtitle")
+                    : t("auth.mfaBadge")}
                 </p>
               </div>
 
@@ -190,14 +84,14 @@ export default function LoginPage() {
                   <div className="space-y-5">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">
-                        Email Address
+                        {t("auth.email")}
                       </label>
                       <div className="relative">
                         <input
                           type="email"
                           required
                           className="w-full h-14 bg-slate-50 dark:bg-slate-900 border-b-2 border-slate-200 dark:border-slate-800 px-4 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0055ff] dark:focus:border-[#00f2ff] transition-all"
-                          placeholder="company@gmail.com"
+                          placeholder={t("auth.emailPlaceholder")}
                           value={formData.email}
                           onChange={(e) =>
                             setFormData({ ...formData, email: e.target.value })
@@ -209,14 +103,14 @@ export default function LoginPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center px-1">
                         <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                          Security Password
+                          {t("auth.password")}
                         </label>
                         <Link
                           href="/forgot-password"
-                          title="Reset your security password"
+                          title={t("auth.forgotPassword")}
                           className="text-[9px] font-black text-[#0055ff] dark:text-[#00f2ff] uppercase tracking-widest hover:underline"
                         >
-                          Forgot?
+                          {t("auth.forgotPassword")}
                         </Link>
                       </div>
                       <div className="relative">
@@ -224,7 +118,7 @@ export default function LoginPage() {
                           type={showPassword ? "text" : "password"}
                           required
                           className="w-full h-14 bg-slate-50 dark:bg-slate-900 border-b-2 border-slate-200 dark:border-slate-800 px-4 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0055ff] dark:focus:border-[#00f2ff] transition-all"
-                          placeholder="••••••••••••••••••••••••••"
+                          placeholder={t("auth.passwordPlaceholder")}
                           value={formData.password}
                           onChange={(e) =>
                             setFormData({
@@ -256,7 +150,7 @@ export default function LoginPage() {
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <>
-                        Login Portal <ArrowRight className="w-4 h-4" />
+                        {t("auth.loginButton")} <ArrowRight className="w-4 h-4" />
                       </>
                     )}
                   </button>
@@ -265,7 +159,7 @@ export default function LoginPage() {
                 <form onSubmit={handleFinalSubmit} className="space-y-8">
                   <div className="space-y-4">
                     <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] block text-center">
-                      Enter 6-Digit MFA Token
+                      {t("auth.mfaLabel")}
                     </label>
                     <input
                       type="tel"
@@ -286,18 +180,15 @@ export default function LoginPage() {
                     {isLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      "Verify Identity"
+                      t("auth.mfaSubmit")
                     )}
                   </button>
                 </form>
               )}
 
-              {/* ── Security Info (Inside Box) ── */}
               <div className="pt-8 border-t border-slate-100 dark:border-slate-900 space-y-4">
                 <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-relaxed text-center lg:text-center">
-                  This portal is protected by encryption and ISO-17025 security
-                  protocols. Unauthorized access attempts will be logged and
-                  reported to the system sentinel.
+                  {t("auth.portalBadge")}
                 </p>
               </div>
             </div>
