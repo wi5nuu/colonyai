@@ -4,6 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Globe } from 'lucide-react'
+import { useTranslationStore } from '@/lib/i18n/store'
 
 interface SecurityHeaderProps {
   region?: string
@@ -11,19 +12,14 @@ interface SecurityHeaderProps {
 }
 
 export function SecurityHeader({ region = 'ID-WEST-01', ip = '10.142.0.8' }: SecurityHeaderProps) {
-  const [currentLang, setCurrentLang] = React.useState('ID')
+  const language = useTranslationStore((s) => s.language)
+  const setLanguage = useTranslationStore((s) => s.setLanguage)
 
   const toggleLanguage = (lang: string) => {
-    setCurrentLang(lang)
-    document.documentElement.lang = lang.toLowerCase()
-    localStorage.setItem('colony_lang', lang)
-    window.dispatchEvent(new Event('langChange'))
-    
-    // Simulate system-wide language force
+    setLanguage(lang.toLowerCase())
     const body = document.body
     body.style.opacity = '0.4'
     body.style.filter = 'blur(4px)'
-    
     setTimeout(() => {
       body.style.opacity = '1'
       body.style.filter = 'none'
@@ -50,15 +46,15 @@ export function SecurityHeader({ region = 'ID-WEST-01', ip = '10.142.0.8' }: Sec
           <Globe className="w-3.5 h-3.5 text-slate-400" />
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
             <button 
-              onClick={() => toggleLanguage('ID')}
-              className={`${currentLang === 'ID' ? 'text-[#0055ff]' : 'text-slate-400'} hover:text-slate-900 transition-colors`}
+              onClick={() => toggleLanguage('id')}
+              className={`${language === 'id' ? 'text-[#0055ff]' : 'text-slate-400'} hover:text-slate-900 transition-colors`}
             >
               ID
             </button>
             <span className="text-slate-300">|</span>
             <button 
-              onClick={() => toggleLanguage('EN')}
-              className={`${currentLang === 'EN' ? 'text-[#0055ff]' : 'text-slate-400'} hover:text-slate-900 transition-colors`}
+              onClick={() => toggleLanguage('en')}
+              className={`${language === 'en' ? 'text-[#0055ff]' : 'text-slate-400'} hover:text-slate-900 transition-colors`}
             >
               EN
             </button>
