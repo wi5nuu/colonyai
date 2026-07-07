@@ -42,8 +42,7 @@ import { useThemeStore } from "@/lib/theme-store";
 const POLLING_INTERVAL = 10000;
 
 export default function DashboardPage() {
-  const { t, language } = useTranslationStore();
-  const isId = language === "id";
+  const { t } = useTranslationStore();
   const { theme } = useThemeStore();
   const [mounted, setMounted] = useState(false);
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -110,9 +109,7 @@ export default function DashboardPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
               <div>
                 <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
-                  {isId
-                    ? "Pusat Komando Strategis"
-                    : "Strategic Command Center"}
+                  {t("dashboard.strategicCommandCenter")}
                 </h1>
                 <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
                   Welcome Back,{" "}
@@ -120,20 +117,18 @@ export default function DashboardPage() {
                     {user?.full_name?.split(" ")[0]}!
                   </span>{" "}
                   {"//"}{" "}
-                  {isId
-                    ? "Status Operasional: Aktif"
-                    : "Operational Status: Active"}
+                  {t("dashboard.operationalStatus")}
                 </p>
               </div>
 
-          {user?.role && ["analyst", "admin"].includes(user.role) && (
+          {user?.role && ["analyst", "admin", "super_admin"].includes(user.role) && (
             <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={() => router.push("/dashboard/upload")}
                 className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-4 py-2 rounded-none font-black text-[9px] uppercase tracking-widest flex items-center gap-2 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95"
               >
                 <Plus className="w-3.5 h-3.5 text-primary" />
-                {isId ? "Analisis Baru" : "New Analysis"}
+                {t("dashboard.newAnalysis")}
               </button>
             </div>
           )}
@@ -373,7 +368,7 @@ export default function DashboardPage() {
             <div className={`grid ${
               [
                 {
-                  label: isId ? "Laporan" : "Reports",
+                  label: t("dashboard.reports"),
                   icon: FileText,
                   href: "/dashboard/reports",
                   color: "text-blue-500",
@@ -384,21 +379,21 @@ export default function DashboardPage() {
                   icon: Beaker,
                   href: "/dashboard/simulator",
                   color: "text-rose-500",
-                  roles: ["analyst", "admin"],
+                  roles: ["analyst", "admin", "super_admin"],
                 },
                 {
-                  label: isId ? "Catatan Audit" : "Audit Ledger",
+                  label: t("dashboard.auditLedger"),
                   icon: Shield,
                   href: "/dashboard/audit",
                   color: "text-purple-500",
                   roles: ["manager", "auditor", "admin", "super_admin"],
                 },
                 {
-                  label: isId ? "Riwayat" : "History",
+                  label: t("dashboard.history"),
                   icon: HistoryIcon,
                   href: "/dashboard/history",
                   color: "text-amber-500",
-                  roles: ["analyst", "manager", "auditor", "admin"],
+                  roles: ["analyst", "manager", "auditor", "admin", "super_admin"],
                 },
               ].filter(item => !user?.role || item.roles.includes(user.role)).length <= 2
                 ? "grid-cols-2"
@@ -406,7 +401,7 @@ export default function DashboardPage() {
             } gap-4`}>
               {[
                 {
-                  label: isId ? "Laporan" : "Reports",
+                  label: t("dashboard.reports"),
                   icon: FileText,
                   href: "/dashboard/reports",
                   color: "text-blue-500",
@@ -417,21 +412,21 @@ export default function DashboardPage() {
                   icon: Beaker,
                   href: "/dashboard/simulator",
                   color: "text-rose-500",
-                  roles: ["analyst", "admin"],
+                  roles: ["analyst", "admin", "super_admin"],
                 },
                 {
-                  label: isId ? "Catatan Audit" : "Audit Ledger",
+                  label: t("dashboard.auditLedger"),
                   icon: Shield,
                   href: "/dashboard/audit",
                   color: "text-purple-500",
                   roles: ["manager", "auditor", "admin", "super_admin"],
                 },
                 {
-                  label: isId ? "Riwayat" : "History",
+                  label: t("dashboard.history"),
                   icon: HistoryIcon,
                   href: "/dashboard/history",
                   color: "text-amber-500",
-                  roles: ["analyst", "manager", "auditor", "admin"],
+                  roles: ["analyst", "manager", "auditor", "admin", "super_admin"],
                 },
               ]
                 .filter((item) => !user?.role || item.roles.includes(user.role))
