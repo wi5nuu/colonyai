@@ -32,7 +32,7 @@ interface GeneratedReport {
 }
 
 export default function ReportsPage() {
-  const { t, language } = useTranslationStore();
+  const { t } = useTranslationStore();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isLoadingAnalyses, setIsLoadingAnalyses] = useState(true);
@@ -437,40 +437,26 @@ export default function ReportsPage() {
                   {/* Executive Summary — AI vs Manual Efficiency */}
                   <div className="border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 p-3">
                     <p className="text-[7.5px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-3">
-                      {language === "id"
-                        ? "Ringkasan Eksekutif — Efisiensi AI vs Manual"
-                        : "Executive Summary — AI vs Manual Efficiency"}
+                      {t("reports.executiveSummary")}
                     </p>
                     <div className="space-y-2">
                       {[
                         {
-                          label:
-                            language === "id"
-                              ? "Waktu Analisis AI"
-                              : "AI Analysis Time",
+                          label: t("reports.aiAnalysisTime"),
                           val: "~3s",
-                          sub: language === "id" ? "per pelat" : "per plate",
+                          sub: t("reports.perPlate"),
                           color: "text-emerald-600 dark:text-emerald-400",
                         },
                         {
-                          label:
-                            language === "id"
-                              ? "Waktu Analisis Manual"
-                              : "Manual Analysis Time",
+                          label: t("reports.manualAnalysisTime"),
                           val: "~15m",
-                          sub: language === "id" ? "per pelat" : "per plate",
+                          sub: t("reports.perPlate"),
                           color: "text-slate-500",
                         },
                         {
-                          label:
-                            language === "id"
-                              ? "Peningkatan Efisiensi"
-                              : "Efficiency Gain",
+                          label: t("reports.efficiencyGain"),
                           val: "300×",
-                          sub:
-                            language === "id"
-                              ? "lebih cepat dengan AI"
-                              : "faster with AI",
+                          sub: t("reports.fasterWithAi"),
                           color: "text-[#1a237e] dark:text-blue-400",
                         },
                       ].map((m, i) => (
@@ -489,19 +475,13 @@ export default function ReportsPage() {
                     </div>
                     <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-900/30 space-y-1">
                       <p className="text-[6.5px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
-                        {language === "id"
-                          ? "✓ Kepatuhan ISO-17025"
-                          : "✓ ISO-17025 Compliant"}
+                        {t("reports.isoCompliant")}
                       </p>
                       <p className="text-[6.5px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
-                        {language === "id"
-                          ? "✓ Akurasi >95% mAP50"
-                          : "✓ Accuracy >95% mAP50"}
+                        {t("reports.accuracyMap")}
                       </p>
                       <p className="text-[6.5px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
-                        {language === "id"
-                          ? "✓ Dataset 97K+ instans"
-                          : "✓ Dataset 97K+ instances"}
+                        {t("reports.datasetInstances")}
                       </p>
                     </div>
                   </div>
@@ -790,40 +770,26 @@ export default function ReportsPage() {
             {/* Executive Summary — AI vs Manual Efficiency */}
             <div className="border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 p-2.5">
               <p className="text-[7.5px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-2">
-                {language === "id"
-                  ? "Ringkasan Eksekutif — Efisiensi AI vs Manual"
-                  : "Executive Summary — AI vs Manual Efficiency"}
+                {t("reports.executiveSummary")}
               </p>
               <div className="space-y-1.5">
                 {[
                   {
-                    label:
-                      language === "id"
-                        ? "Waktu Analisis AI"
-                        : "AI Analysis Time",
+                    label: t("reports.aiAnalysisTime"),
                     val: "~3s",
-                    sub: language === "id" ? "per pelat" : "per plate",
+                    sub: t("reports.perPlate"),
                     color: "text-emerald-600 dark:text-emerald-400",
                   },
                   {
-                    label:
-                      language === "id"
-                        ? "Waktu Analisis Manual"
-                        : "Manual Analysis Time",
+                    label: t("reports.manualAnalysisTime"),
                     val: "~15m",
-                    sub: language === "id" ? "per pelat" : "per plate",
+                    sub: t("reports.perPlate"),
                     color: "text-slate-500",
                   },
                   {
-                    label:
-                      language === "id"
-                        ? "Peningkatan Efisiensi"
-                        : "Efficiency Gain",
+                    label: t("reports.efficiencyGain"),
                     val: "300×",
-                    sub:
-                      language === "id"
-                        ? "lebih cepat dengan AI"
-                        : "faster with AI",
+                    sub: t("reports.fasterWithAi"),
                     color: "text-[#1a237e] dark:text-blue-400",
                   },
                 ].map((m, i) => (
@@ -842,19 +808,13 @@ export default function ReportsPage() {
               </div>
               <div className="mt-2 pt-2 border-t border-emerald-200 dark:border-emerald-900/30 space-y-0.5">
                 <p className="text-[7px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
-                  {language === "id"
-                    ? "✓ Kepatuhan ISO-17025"
-                    : "✓ ISO-17025 Compliant"}
+                  {t("reports.isoCompliant")}
                 </p>
                 <p className="text-[7px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
-                  {language === "id"
-                    ? "✓ Akurasi >95% mAP50"
-                    : "✓ Accuracy >95% mAP50"}
+                  {t("reports.accuracyMap")}
                 </p>
                 <p className="text-[7px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
-                  {language === "id"
-                    ? "✓ Dataset 97K+ instans"
-                    : "✓ Dataset 97K+ instances"}
+                  {t("reports.datasetInstances")}
                 </p>
               </div>
             </div>
