@@ -26,8 +26,7 @@ import { toast } from "sonner";
 import { useTranslationStore } from "@/lib/i18n/store";
 
 export default function SentinelPage() {
-  const { t, language } = useTranslationStore();
-  const isId = language === "id";
+  const { t } = useTranslationStore();
   const [isSyncing, setIsSyncing] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
   const [showDocs, setShowDocs] = useState(false);
@@ -238,16 +237,9 @@ export default function SentinelPage() {
           clearInterval(interval);
           setIsScanning(false);
           setScanResult(true);
-          toast.success(
-            isId
-              ? "Audit Integritas Weights Sukses!"
-              : "Weights Integrity Audit Success!",
-            {
-              description: isId
-                ? "Weights Node-04 terverifikasi 100% otentik."
-                : "Weights of Node-04 verified 100% authentic.",
-            },
-          );
+        toast.success(t("sentinel.weightsIntegrityAuditSuccess"), {
+          description: t("sentinel.weightsVerifiedAuthentic"),
+        });
           setAuditHistory((prev) => [
             {
               node: "NODE-04 (Compute Blackwell)",
@@ -442,7 +434,7 @@ export default function SentinelPage() {
                     onClick={() => setSelectedModel(null)}
                     className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all rounded-none"
                   >
-                    {isId ? "Tutup Detail Registri" : "Close Registry Detail"}
+                    {t("sentinel.closeRegistryDetail")}
                   </button>
                 </div>
               </div>
@@ -459,12 +451,10 @@ export default function SentinelPage() {
                 </div>
                 <div>
                   <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
-                    {isId ? "Sentinel Sistem" : "Systems Sentinel"}
+                    {t("sentinel.title")}
                   </h1>
                   <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
-                    {isId
-                      ? "Pemantauan Infrastruktur Neural"
-                      : "Neural Infrastructure Monitoring"}{" "}
+                    {t("sentinel.neuralInfrastructureMonitoring")}{" "}
                     {"//"} V3.2.0-STABLE
                   </p>
                 </div>
@@ -474,7 +464,7 @@ export default function SentinelPage() {
                   <Activity className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
                   <div className="flex flex-col">
                     <span className="text-[6px] sm:text-[8px] font-black text-slate-400 uppercase leading-none">
-                      {isId ? "Latensi Global" : "Global Latency"}
+                      {t("sentinel.globalLatency")}
                     </span>
                     <span className="text-[10px] sm:text-xs font-mono font-bold text-slate-900 dark:text-white leading-none mt-0.5">
                       42.8ms
@@ -485,7 +475,7 @@ export default function SentinelPage() {
                   <DocumentationToggle
                     showDocs={showDocs}
                     setShowDocs={setShowDocs}
-                    text={isId ? "Protokol Sentinel" : "Sentinel Protocol"}
+                    text={t("sentinel.protocol")}
                   />
                 </div>
                 <button
@@ -493,11 +483,7 @@ export default function SentinelPage() {
                     setIsSyncing(true);
                     setTimeout(() => {
                       setIsSyncing(false);
-                      toast.success(
-                        isId
-                          ? "Sinkronisasi Node Global Selesai"
-                          : "Global Node Synchronization Complete",
-                      );
+                      toast.success(t("sentinel.globalNodeSyncComplete"));
                     }, 1500);
                   }}
                   className={`flex items-center gap-2 px-3 sm:px-6 py-1.5 sm:py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all ${isSyncing ? "animate-pulse" : ""}`}
@@ -506,12 +492,8 @@ export default function SentinelPage() {
                     className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isSyncing ? "animate-spin" : ""}`}
                   />
                   {isSyncing
-                    ? isId
-                      ? "Menyinkronkan..."
-                      : "Syncing..."
-                    : isId
-                      ? "Sinkronisasi"
-                      : "Sync"}
+                    ? t("sentinel.syncing")
+                    : t("sentinel.sync")}
                 </button>
               </div>
             </div>
@@ -524,18 +506,16 @@ export default function SentinelPage() {
               <div>
                 <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
                   <TrendingUp className="w-5 h-5 text-primary" />
-                  {isId ? "Matriks Pelatihan Neural" : "Neural Training Matrix"}
+                  {t("sentinel.neuralTrainingMatrix")}
                 </h2>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
-                  {isId
-                    ? "Fine-tuning untuk Akurasi Standar Kompetisi"
-                    : "Fine-tuning for Competition-Grade Accuracy"}
+                  {t("sentinel.fineTuningCompetitionGrade")}
                 </p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
                   <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                    {isId ? "Sesi Aktif" : "Active Session"}
+                    {t("sentinel.activeSession")}
                   </span>
                   <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">
                     FT_COLONY_V3_NIGHTLY
@@ -546,25 +526,15 @@ export default function SentinelPage() {
                     const next = !trainingActive;
                     setTrainingActive(next);
                     if (!next) {
-                      toast.error(
-                        isId ? "Pelatihan Dihentikan" : "Training Halted",
-                        {
-                          description: isId
-                            ? `Epoch ${epoch}/80 — mAP@50: ${map50.toFixed(4)} — Sesi FT_COLONY_V3_NIGHTLY dijeda paksa.`
-                            : `Epoch ${epoch}/80 — mAP@50: ${map50.toFixed(4)} — Session FT_COLONY_V3_NIGHTLY forcefully paused.`,
-                          duration: 6000,
-                        },
-                      );
+                      toast.error(t("sentinel.trainingHalted"), {
+                        description: t("sentinel.trainingHaltedDesc", { epoch: String(epoch), map: map50.toFixed(4) }),
+                        duration: 6000,
+                      });
                     } else {
-                      toast.success(
-                        isId ? "Pelatihan Dilanjutkan" : "Training Resumed",
-                        {
-                          description: isId
-                            ? `Melanjutkan dari Epoch ${epoch}/80 — mAP@50: ${map50.toFixed(4)}`
-                            : `Resuming from Epoch ${epoch}/80 — mAP@50: ${map50.toFixed(4)}`,
-                          duration: 4000,
-                        },
-                      );
+                      toast.success(t("sentinel.trainingResumed"), {
+                        description: t("sentinel.trainingResumedDesc", { epoch: String(epoch), map: map50.toFixed(4) }),
+                        duration: 4000,
+                      });
                     }
                   }}
                   className={`px-4 py-1.5 rounded text-[9px] font-black uppercase tracking-widest border transition-all ${
@@ -574,12 +544,8 @@ export default function SentinelPage() {
                   }`}
                 >
                   {trainingActive
-                    ? isId
-                      ? "Hentikan Pelatihan"
-                      : "Halt Training"
-                    : isId
-                      ? "Lanjutkan Pelatihan"
-                      : "Resume Training"}
+                    ? t("sentinel.haltTraining")
+                    : t("sentinel.resumeTraining")}
                 </button>
               </div>
             </div>
@@ -590,7 +556,7 @@ export default function SentinelPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-end">
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                      {isId ? "Progres Pelatihan" : "Training Progress"}
+                      {t("sentinel.trainingProgress")}
                     </span>
                     <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">
                       {epoch}/80 Epochs
@@ -627,20 +593,14 @@ export default function SentinelPage() {
                   <Zap className="w-5 h-5 text-primary" />
                   <div>
                     <span className="block text-[8px] font-black text-primary uppercase">
-                      {isId ? "Estimasi Selesai" : "Estimated Completion"}
+                      {t("sentinel.estimatedCompletion")}
                     </span>
                     <span className="text-xs font-bold text-slate-900 dark:text-white uppercase">
                       {trainingActive
                         ? minutesRemaining > 0
-                          ? isId
-                            ? `~${minutesRemaining} Menit Tersisa`
-                            : `~${minutesRemaining} Minutes Remaining`
-                          : isId
-                            ? "Hampir Selesai..."
-                            : "Almost Done..."
-                        : isId
-                          ? "Pelatihan Dijeda"
-                          : "Training Paused"}
+                          ? t("sentinel.minutesRemaining", { minutes: minutesRemaining })
+                          : t("sentinel.almostDone")
+                        : t("sentinel.trainingPaused")}
                     </span>
                   </div>
                 </div>
@@ -650,16 +610,16 @@ export default function SentinelPage() {
               <div className="md:col-span-2 space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                    {isId ? "Kurva Konvergensi mAP" : "mAP Convergence Curve"}
+                    {t("sentinel.mapConvergenceCurve")}
                   </h3>
                   <div className="flex gap-4 text-[8px] font-black uppercase tracking-widest">
                     <span className="flex items-center gap-1.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-primary" />{" "}
-                      {isId ? "Pelatihan" : "Training"}
+                      {t("sentinel.training")}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{" "}
-                      {isId ? "Validasi" : "Validation"}
+                      {t("sentinel.validation")}
                     </span>
                   </div>
                 </div>
@@ -696,31 +656,31 @@ export default function SentinelPage() {
             <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 rounded-none shadow-sm space-y-6">
               <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-primary" />
-                {isId ? "Telemetri Perangkat Keras" : "Hardware Telemetry"}
+                {t("sentinel.hardwareTelemetry")}
               </h3>
 
               <div className="space-y-4">
                 {[
                   {
-                    label: isId ? "Suhu GPU" : "GPU Temperature",
+                    label: t("sentinel.gpuTemperature"),
                     value: "64°C",
                     progress: 64,
                     color: "rose",
                   },
                   {
-                    label: isId ? "Penggunaan VRAM" : "VRAM Usage",
+                    label: t("sentinel.vramUsage"),
                     value: "4.2GB / 8GB",
                     progress: 52,
                     color: "blue",
                   },
                   {
-                    label: isId ? "Frekuensi Inti" : "Core Frequency",
+                    label: t("sentinel.coreFrequency"),
                     value: "2.1 GHz",
                     progress: 85,
                     color: "amber",
                   },
                   {
-                    label: isId ? "Jaringan Masuk" : "Network Ingress",
+                    label: t("sentinel.networkIngress"),
                     value: "1.2 GB/s",
                     progress: 30,
                     color: "emerald",
@@ -747,7 +707,7 @@ export default function SentinelPage() {
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-none flex items-center justify-between">
                   <div>
                     <span className="block text-[8px] font-black text-slate-400 uppercase">
-                      {isId ? "Node Komputasi" : "Compute Node"}
+                      {t("sentinel.computeNode")}
                     </span>
                     <span className="text-[10px] font-bold text-slate-900 dark:text-white">
                       NODE-04-BLACKWELL
@@ -763,12 +723,8 @@ export default function SentinelPage() {
                   className="w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[8px] font-black uppercase tracking-widest hover:opacity-90 transition-all rounded disabled:opacity-50"
                 >
                   {benchmarking
-                    ? isId
-                      ? "Menguji..."
-                      : "Benchmarking..."
-                    : isId
-                      ? "Jalankan Uji Node"
-                      : "Run Node Benchmark"}
+                    ? t("sentinel.benchmarking")
+                    : t("sentinel.runNodeBenchmark")}
                 </button>
               </div>
             </div>
@@ -776,23 +732,23 @@ export default function SentinelPage() {
             <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 rounded-none shadow-sm">
               <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2 mb-4">
                 <Database className="w-4 h-4 text-primary" />
-                {isId ? "Kesehatan Registri" : "Registry Health"}
+                {t("sentinel.registryHealth")}
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-[10px] font-bold uppercase">
                   <span className="text-slate-500">
-                    {isId ? "Pemeriksaan Integritas" : "Integrity Check"}
+                    {t("sentinel.integrityCheck")}
                   </span>
                   <span className="text-emerald-500">
-                    {isId ? "100% Lulus" : "100% Passed"}
+                    {t("sentinel.oneHundredPercentPassed")}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-[10px] font-bold uppercase">
                   <span className="text-slate-500">
-                    {isId ? "Redundansi Audit" : "Audit Redundancy"}
+                    {t("sentinel.auditRedundancy")}
                   </span>
                   <span className="text-blue-500">
-                    {isId ? "Tautan Ganda Tiga" : "Triple Linked"}
+                    {t("sentinel.tripleLinked")}
                   </span>
                 </div>
               </div>
@@ -807,12 +763,12 @@ export default function SentinelPage() {
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                 <Terminal className="w-3.5 h-3.5" />
-                {isId ? "Streaming Sentinel Langsung" : "Live Sentinel Stream"}
+                {t("sentinel.liveSentinelStream")}
               </h3>
               <div className="flex gap-2">
                 <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-none text-[8px] font-black uppercase tracking-widest border border-emerald-500/20">
                   <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                  {isId ? "Uplink Aman Aktif" : "Secure Uplink Active"}
+                  {t("sentinel.secureUplinkActive")}
                 </div>
               </div>
             </div>
@@ -869,10 +825,10 @@ export default function SentinelPage() {
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                {isId ? "Registri Model Neural" : "Neural Model Registry"}
+                {t("sentinel.neuralModelRegistry")}
               </h3>
               <span className="text-[9px] font-black text-slate-400 uppercase">
-                {isId ? "3 Model Ditemukan" : "3 Models Found"}
+                {t("sentinel.modelsFound")}
               </span>
             </div>
 
@@ -928,7 +884,7 @@ export default function SentinelPage() {
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[8px] font-black text-slate-400 uppercase">
-                          {isId ? "Presisi mAP" : "Precision mAP"}
+                          {t("sentinel.precisionMap")}
                         </span>
                         <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">
                           {model.map}
@@ -950,12 +906,8 @@ export default function SentinelPage() {
                           className={`w-3 h-3 ${isDeploying ? "animate-spin" : ""}`}
                         />
                         {isDeploying
-                          ? isId
-                            ? "Men-deploy..."
-                            : "Deploying..."
-                          : isId
-                            ? "Deploy"
-                            : "Deploy"}
+                          ? t("sentinel.deploying")
+                          : t("sentinel.deploy")}
                       </button>
                     )}
                   </div>
@@ -972,15 +924,13 @@ export default function SentinelPage() {
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-rose-500" />
-                {isId
-                  ? "Radar Kontaminasi Bio-Hazard"
-                  : "Bio-Hazard Contamination Radar"}
+                {t("sentinel.bioHazardContaminationRadar")}
               </h3>
               <div className="flex items-center gap-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">
                 <span>ISO-14644 Cleanroom Compliance</span>
                 <span className="text-rose-500 flex items-center gap-1.5 animate-pulse">
                   <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />{" "}
-                  {isId ? "Aktif" : "Live"}
+                  {t("sentinel.live")}
                 </span>
               </div>
             </div>
@@ -994,20 +944,18 @@ export default function SentinelPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight mb-1">
-                      {isId ? "Anomali Lingkungan" : "Environmental Anomalies"}
+                      {t("sentinel.environmentalAnomalies")}
                     </h4>
                     <p className="text-[10px] text-slate-500 font-bold uppercase">
-                      {isId
-                        ? "Mendeteksi kegagalan fasilitas melalui klasifikasi artefak AI"
-                        : "Detecting infrastructural failures via AI Artifact classification"}
+                      {t("sentinel.detectingInfrastructuralFailures")}
                     </p>
                   </div>
                   <div className="bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded text-rose-500 flex flex-col items-end">
                     <span className="text-[8px] font-black uppercase tracking-widest">
-                      {isId ? "Status Fasilitas" : "Facility Status"}
+                      {t("sentinel.facilityStatus")}
                     </span>
                     <span className="text-[10px] font-bold uppercase">
-                      {isId ? "Peringatan Level 2" : "Warning Level 2"}
+                      {t("sentinel.warningLevel2")}
                     </span>
                   </div>
                 </div>
@@ -1017,37 +965,27 @@ export default function SentinelPage() {
                 {[
                   {
                     class: "dust_debris",
-                    label: isId ? "Debu & Partikulat" : "Dust & Particulates",
+                    label: t("sentinel.dustParticulates"),
                     count: 124,
                     limit: 50,
                     color: "rose",
-                    issue: isId
-                      ? "Kebocoran Filter HEPA Terdeteksi (Jalur B)"
-                      : "HEPA Filter Breach Detected (Line B)",
+                    issue: t("sentinel.hepaFilterBreach"),
                   },
                   {
                     class: "media_crack",
-                    label: isId
-                      ? "Kegagalan Integritas Agar"
-                      : "Agar Integrity Failure",
+                    label: t("sentinel.agarIntegrityFailure"),
                     count: 12,
                     limit: 20,
                     color: "amber",
-                    issue: isId
-                      ? "Fluktuasi Suhu Inkubator (-2.1°C)"
-                      : "Incubator Temp Fluctuation (-2.1°C)",
+                    issue: t("sentinel.incubatorTempFluctuation"),
                   },
                   {
                     class: "bubble",
-                    label: isId
-                      ? "Gelembung Gas Preparasi"
-                      : "Preparation Gas Pockets",
+                    label: t("sentinel.preparationGasPockets"),
                     count: 45,
                     limit: 100,
                     color: "blue",
-                    issue: isId
-                      ? "Normal dalam batas toleransi"
-                      : "Nominal within tolerance",
+                    issue: t("sentinel.nominalWithinTolerance"),
                   },
                 ].map((anomaly) => (
                   <div key={anomaly.class} className="space-y-2">
@@ -1092,13 +1030,13 @@ export default function SentinelPage() {
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-emerald-500" />
-                {isId ? "Proyeksi Rilis Awal" : "Early-Release Trajectory"}
+                {t("sentinel.earlyReleaseTrajectory")}
               </h3>
               <div className="flex items-center gap-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">
                 <span>Gompertz Growth Model</span>
                 <span className="text-emerald-500 flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{" "}
-                  {isId ? "Aktif" : "Active"}
+                  {t("sentinel.active")}
                 </span>
               </div>
             </div>
@@ -1117,9 +1055,7 @@ export default function SentinelPage() {
                     Batch #441-A (PCA)
                   </h4>
                   <p className="text-[10px] text-slate-500 font-bold uppercase">
-                    {isId
-                      ? "Cuplikan 18 Jam ➔ Proyeksi 48 Jam"
-                      : "18H Snapshot ➔ 48H Prediction"}
+                    {t("sentinel.hourSnapshotPrediction")}
                   </p>
                 </div>
               </div>
@@ -1127,28 +1063,24 @@ export default function SentinelPage() {
               <div className="grid grid-cols-2 gap-6 relative z-10 mb-6">
                 <div>
                   <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                    {isId ? "Status Saat Ini (18j)" : "Current State (18h)"}
+                    {t("sentinel.currentState")}
                   </span>
                   <div className="text-3xl font-mono font-bold text-slate-900 dark:text-white">
                     12 <span className="text-xs text-slate-500">CFU/ml</span>
                   </div>
                   <p className="text-[9px] text-emerald-500 font-bold uppercase mt-1">
-                    {isId
-                      ? "Mikro-koloni tak kasat mata terdeteksi"
-                      : "Sub-visual micro-colonies detected"}
+                    {t("sentinel.subVisualMicroColonies")}
                   </p>
                 </div>
                 <div>
                   <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                    {isId ? "Proyeksi AI (48j)" : "AI Projection (48h)"}
+                    {t("sentinel.aiProjection")}
                   </span>
                   <div className="text-3xl font-mono font-bold text-emerald-500">
                     45 <span className="text-xs text-slate-500">CFU/ml</span>
                   </div>
                   <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">
-                    {isId
-                      ? "Batas Maksimal: 250 CFU/ml"
-                      : "Max Threshold: 250 CFU/ml"}
+                    {t("sentinel.maxThreshold")}
                   </p>
                 </div>
               </div>
@@ -1157,17 +1089,13 @@ export default function SentinelPage() {
                 <div className="flex items-center gap-3 mb-2">
                   <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                   <span className="text-xs font-black text-emerald-500 uppercase tracking-widest">
-                    {isId ? "Izin Rilis Diberikan" : "Clearance Authorized"}
+                    {t("sentinel.clearanceAuthorized")}
                   </span>
                 </div>
                 <p className="text-[10px] text-slate-600 dark:text-slate-400 font-bold leading-relaxed">
-                  {isId
-                    ? "Berdasarkan proyeksi lintasan pembelahan sel AI, Batch #441-A dijamin lulus batas keamanan 48 jam."
-                    : "Based on AI cellular division trajectory, Batch #441-A is guaranteed to pass the 48h safety threshold."}
+                  {t("sentinel.clearanceAuthorizedDesc")}
                   <span className="text-slate-900 dark:text-white block mt-1">
-                    {isId
-                      ? "Dampak Logistik: Menghemat 30 jam waktu tunggu gudang."
-                      : "Supply Chain Impact: Save 30 hours of holding time."}
+                    {t("sentinel.supplyChainImpact")}
                   </span>
                 </p>
               </div>
@@ -1181,14 +1109,10 @@ export default function SentinelPage() {
             <div>
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
                 <BrainCircuit className="w-5 h-5 text-primary animate-pulse" />
-                {isId
-                  ? "Buku Besar Audit Kepatuhan & Kriptografi ISO-17025"
-                  : "ISO-17025 Cryptographic & Compliance Audit Ledger"}
+                {t("sentinel.isoComplianceAuditLedger")}
               </h3>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
-                {isId
-                  ? "Verifikasi integritas weights model & pencatatan kepatuhan rantai pasok secara real-time"
-                  : "Real-time verification of model weights integrity & supply chain compliance logging"}
+                {t("sentinel.isoAuditLedgerSubtitle")}
               </p>
             </div>
             <div className="flex items-center gap-2.5">
@@ -1203,49 +1127,29 @@ export default function SentinelPage() {
             {/* Column 1: Compliance Status Checklist */}
             <div className="space-y-6">
               <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">
-                {isId ? "Status Kepatuhan Audit" : "Audit Compliance Status"}
+                {t("sentinel.auditComplianceStatus")}
               </h4>
               <div className="space-y-4">
                 {[
                   {
-                    label: isId
-                      ? "Kalibrasi Drift Detektor"
-                      : "Detector Drift Calibration",
+                    label: t("sentinel.detectorDriftCalibration"),
                     status: "0.02% (Optimal)",
-                    desc: isId
-                      ? "Batas toleransi maksimal: 0.5%"
-                      : "Max allowable drift: 0.5%",
+                    desc: t("sentinel.maxAllowableDrift"),
                   },
                   {
-                    label: isId
-                      ? "Validasi Sampel Kontrol"
-                      : "Control Sample Validation",
-                    status: isId
-                      ? "LULUS (100 CFU target)"
-                      : "PASSED (100 CFU target)",
-                    desc: isId
-                      ? "Akurasi pencocokan: 99.85%"
-                      : "Matching accuracy: 99.85%",
+                    label: t("sentinel.controlSampleValidation"),
+                    status: t("sentinel.passedCfuTarget"),
+                    desc: t("sentinel.matchingAccuracy"),
                   },
                   {
-                    label: isId
-                      ? "Cadangan Peninjauan Sejawat"
-                      : "Peer-Review Node Backup",
-                    status: isId
-                      ? "TERHUBUNG (Node-12)"
-                      : "CONNECTED (Node-12)",
-                    desc: isId
-                      ? "Sinkronisasi otomatis setiap 12 jam"
-                      : "Auto-sync every 12 hours",
+                    label: t("sentinel.peerReviewNodeBackup"),
+                    status: t("sentinel.connectedNode12"),
+                    desc: t("sentinel.autoSyncEvery12Hours"),
                   },
                   {
-                    label: isId
-                      ? "Enkripsi Hasil Audit"
-                      : "Audit Ledger Encryption",
+                    label: t("sentinel.auditLedgerEncryption"),
                     status: "AES-GCM 256",
-                    desc: isId
-                      ? "Tanda tangan digital valid"
-                      : "Digital signature valid",
+                    desc: t("sentinel.digitalSignatureValid"),
                   },
                 ].map((item, idx) => (
                   <div
@@ -1277,14 +1181,12 @@ export default function SentinelPage() {
             {/* Column 2: Simulated Weights Scan Tool */}
             <div className="space-y-6">
               <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">
-                {isId
-                  ? "Pemindai Integritas Neural"
-                  : "Neural Integrity Scanner"}
+                {t("sentinel.neuralIntegrityScanner")}
               </h4>
               <div className="p-6 bg-slate-950 border border-slate-800 rounded-none space-y-6">
                 <div className="space-y-2">
                   <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                    {isId ? "Pilih Node Target" : "Select Target Node"}
+                    {t("sentinel.selectTargetNode")}
                   </label>
                   <select
                     className="w-full bg-slate-900 border border-slate-800 rounded-none px-3 py-2 text-[10px] font-bold uppercase text-white outline-none focus:border-primary"
@@ -1299,7 +1201,7 @@ export default function SentinelPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-[8px] font-black text-slate-400 uppercase tracking-widest">
                     <span>
-                      {isId ? "Status Pemindaian" : "Scanning Integrity"}
+                      {t("sentinel.scanningIntegrity")}
                     </span>
                     <span className="text-primary">{scanProgress}%</span>
                   </div>
@@ -1316,7 +1218,7 @@ export default function SentinelPage() {
                     <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5 animate-bounce" />
                     <div className="min-w-0 flex-1">
                       <span className="block text-[8px] font-black text-emerald-500 uppercase">
-                        {isId ? "HASIL SCAN: NOMINAL" : "SCAN RESULT: NOMINAL"}
+                        {t("sentinel.scanResultNominal")}
                       </span>
                       <p className="text-[9px] font-mono text-slate-300 mt-1 leading-snug break-all truncate">
                         SHA-256: 8f9a2b7c4d5e...5f7a
@@ -1331,12 +1233,8 @@ export default function SentinelPage() {
                   className="w-full py-3 bg-primary text-slate-950 text-[9px] font-black uppercase tracking-widest hover:bg-primary/95 transition-all disabled:opacity-50"
                 >
                   {isScanning
-                    ? isId
-                      ? "Memindai..."
-                      : "Scanning Weights..."
-                    : isId
-                      ? "Jalankan Audit Weights"
-                      : "Run Weights Audit"}
+                    ? t("sentinel.scanningWeights")
+                    : t("sentinel.runWeightsAudit")}
                 </button>
               </div>
             </div>
@@ -1344,7 +1242,7 @@ export default function SentinelPage() {
             {/* Column 3: Cryptographic Audit Logs */}
             <div className="space-y-6">
               <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">
-                {isId ? "Log Audit Kriptografi" : "Cryptographic Audit Logs"}
+                {t("sentinel.cryptographicAuditLogs")}
               </h4>
               <div className="bg-slate-950 border border-slate-800 p-4 h-[290px] overflow-y-auto font-mono text-[9px] space-y-3 [&::-webkit-scrollbar]:hidden">
                 {auditHistory.map((h, i) => (
@@ -1371,60 +1269,44 @@ export default function SentinelPage() {
       <DocumentationSidebar
           showDocs={showDocs}
           setShowDocs={setShowDocs}
-          directory={isId ? "Sistem / Sentinel" : "System / Sentinel"}
-          title={isId ? "Protokol Sentinel" : "Sentinel Protocol"}
-          description={
-            isId
-              ? "Pusat kendali pemantauan sistem global dan distribusi neural."
-              : "Global system monitoring and neural deployment control center."
-          }
+          directory={t("sentinel.docsDirectory")}
+          title={t("sentinel.protocol")}
+          description={t("sentinel.docsDescription")}
           rawText={logs.join("\n")}
         >
           <div className="space-y-6 text-[10px] sm:text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
             <div>
               <h4 className="text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800 pb-1">
-                01. {isId ? "Matriks Pelatihan Neural" : "Neural Training Matrix"}
+                01. {t("sentinel.neuralTrainingMatrix")}
               </h4>
               <p>
-                {isId
-                  ? "Memvisualisasikan progres pelatihan otak AI (Epochs & mAP) secara real-time. Jika AI terindikasi mengalami overfitting atau deviasi akurasi, fitur 'Halt Training' bertindak sebagai tuas darurat."
-                  : "Visualizes real-time AI training progress (Epochs & mAP). If the AI exhibits overfitting or accuracy deviation, the 'Halt Training' feature serves as an emergency kill-switch."}
+                {t("sentinel.docTrainingMatrix")}
               </p>
             </div>
             <div>
               <h4 className="text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800 pb-1">
-                02. {isId ? "Telemetri Perangkat keras" : "Hardware Telemetry"}
+                02. {t("sentinel.hardwareTelemetry")}
               </h4>
               <p>
-                {isId
-                  ? "Memantau Suhu GPU, memori VRAM, dan bandwidth jaringan infrastruktur pusat. Tombol 'Run Node Benchmark' memicu stress-test 3 detik yang hasilnya dicetak langsung pada Terminal Live Sentinel."
-                  : "Monitors GPU Core Temp, VRAM, and central network ingress. The 'Run Node Benchmark' triggers a 3-second stress test whose TFLOPS results are streamed directly to the Live Sentinel Terminal."}
+                {t("sentinel.docHardwareTelemetry")}
               </p>
             </div>
             <div>
               <h4 className="text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800 pb-1">
                 03.{" "}
-                {isId
-                  ? "Registri & Distribusi Model"
-                  : "Model Registry & Deployment"}
+                {t("sentinel.modelRegistryDeployment")}
               </h4>
               <p>
-                {isId
-                  ? "Gudang penyimpanan versi AI (ISO-17025 verified). Menekan 'Deploy to Nodes' pada model berstatus READY akan menyuntikkan model tersebut ke seluruh laboratorium klien di seluruh dunia secara instan."
-                  : "Storage vault for AI versions (ISO-17025 verified). Pressing 'Deploy to Nodes' on a READY model injects those precise neural weights to all global client laboratories instantly."}
+                {t("sentinel.docModelRegistry")}
               </p>
             </div>
             <div>
               <h4 className="text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800 pb-1">
                 04.{" "}
-                {isId
-                  ? "Radar Bio-Hazard & Prediksi Kinetik"
-                  : "Bio-Hazard Radar & Predictive Kinetics"}
+                {t("sentinel.bioHazardRadarPredictiveKinetics")}
               </h4>
               <p>
-                {isId
-                  ? "AI tidak hanya menghitung bakteri, tapi juga mendeteksi indikasi filter HEPA bocor (debu berlebih). Fitur Proyeksi Rilis (Gompertz Model) memprediksi hasil 48 jam hanya dari analisis gambar 18 jam, menghemat rantai pasok hingga 30 jam."
-                  : "AI not only counts colonies but detects early HEPA filter breaches via dust analysis. The Release Projection (Gompertz Model) predicts 48-hour bacterial load from 18-hour scans, saving 30 hours of supply chain holding time."}
+                {t("sentinel.docBioHazardRadar")}
               </p>
             </div>
           </div>
