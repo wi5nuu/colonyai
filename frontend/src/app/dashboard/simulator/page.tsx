@@ -111,9 +111,8 @@ const CLASS_CONFIG: Record<string, { color: string; text: string; border: string
 };
 
 export default function SimulatorPage() {
-  const { t, language } = useTranslationStore();
+  const { t } = useTranslationStore();
   const { accessToken } = useAuthStore();
-  const isId = language === "id";
   const [mounted, setMounted] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
   const [detections, setDetections] = useState<Detection[]>([]);
@@ -184,7 +183,7 @@ export default function SimulatorPage() {
 
   const startSimulation = async () => {
     if (!file) {
-      toast.error(isId ? "Pilih gambar plate terlebih dahulu" : "Select a plate image first");
+      toast.error(t("simulator.selectPlateFirst"));
       return;
     }
 
@@ -220,7 +219,7 @@ export default function SimulatorPage() {
           size: Math.max(8, (d.bbox.width / 640) * 100),
         }))
       );
-      toast.success(isId ? "Analisis AI Selesai" : "AI Analysis Complete");
+      toast.success(t("simulator.aiAnalysisComplete"));
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -309,7 +308,7 @@ export default function SimulatorPage() {
       // Remove the marker!
       setManualClicks((prev) => prev.filter((_, idx) => idx !== nearestClickIndex));
       playTickSound(cognitiveFatigue, true);
-      toast.success(isId ? "Tanda koloni dihapus" : "Colony marker removed", { duration: 1000 });
+      toast.success(t("simulator.colonyMarkerRemoved"), { duration: 1000 });
       return;
     }
 
@@ -360,12 +359,12 @@ export default function SimulatorPage() {
     if (manualClicks.length === 0) return;
     setManualClicks((prev) => prev.slice(0, -1));
     playTickSound(cognitiveFatigue, true);
-    toast.success(isId ? "Langkah terakhir dibatalkan" : "Last mark undone");
+    toast.success(t("simulator.lastMarkUndone"));
   };
 
   const startManualSimulation = () => {
     if (!previewUrl) {
-      toast.error(isId ? "Unggah berkas gambar terlebih dahulu!" : "Please upload an image first!");
+      toast.error(t("simulator.uploadImageFirst"));
       return;
     }
     setIsManualCountingMode(true);
@@ -373,14 +372,14 @@ export default function SimulatorPage() {
     setManualClicks([]);
     setTimeSpent(0);
     setIsTimerRunning(true);
-    toast.success(isId ? "Simulator Manual Aktif. Silakan klik koloni pada cawan petri." : "Manual Simulator Active. Click colonies on the petri dish.");
+    toast.success(t("simulator.manualSimulatorActive"));
   };
 
   const finishManualSimulation = () => {
     setIsTimerRunning(false);
     setIsManualCountingMode(false);
     setHasFinishedManualCount(true);
-    toast.success(isId ? "Simulasi manual selesai! Memproses perbandingan spasial..." : "Manual simulation finished! Processing spatial comparison...");
+    toast.success(t("simulator.manualSimulationFinished"));
   };
 
   const resetManualSimulation = () => {
@@ -551,9 +550,9 @@ export default function SimulatorPage() {
         overall_accuracy: spatialResult.agreement,
       });
 
-      toast.success(isId ? "Hasil komparasi berhasil disimpan ke database!" : "Comparison successfully locked to audit registry!");
+      toast.success(t("simulator.comparisonSaved"));
     } catch (err) {
-      toast.error(isId ? "Gagal menyimpan hasil komparasi." : "Failed to record comparison log to database.");
+      toast.error(t("simulator.comparisonFailed"));
       console.error(err);
     } finally {
       setIsSaving(false);
@@ -571,7 +570,7 @@ export default function SimulatorPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
               <div>
                 <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">
-                  {isId ? "Simulator Komparatif Spasial" : "Spatial Comparative Simulator"}
+                  {t("simulator.spatialComparativeSimulator")}
                 </h1>
                 <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5 sm:mt-1">
                   ColonyAI Sandbox // <span className="text-emerald-500 font-black">FATIGUE & SPATIAL PRECISION PROTOCOL</span>
@@ -582,7 +581,7 @@ export default function SimulatorPage() {
                 <label className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-none border border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition-all cursor-pointer">
                   <Beaker className="w-3.5 h-3.5 text-slate-400" />
                   <span className="text-[9px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest">
-                    {isId ? "Unggah Plate" : "Upload Plate"}
+                    {t("simulator.uploadPlate")}
                   </span>
                   <input type="file" className="hidden" onChange={handleFileChange} accept="image/*" />
                 </label>
@@ -593,7 +592,7 @@ export default function SimulatorPage() {
                   className="flex items-center gap-2 bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 px-4 py-2 rounded-none font-black text-[9px] uppercase tracking-widest hover:scale-[1.02] transition-all disabled:opacity-50"
                 >
                   {isSimulating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                  {isSimulating ? (isId ? "Memproses AI..." : "AI Processing...") : (isId ? "Mulai Analisis AI" : "Run AI Analysis")}
+                  {isSimulating ? t("simulator.aiProcessing") : t("simulator.runAiAnalysis")}
                 </button>
               </div>
             </div>
@@ -666,7 +665,7 @@ export default function SimulatorPage() {
                   <div className="w-full h-full flex flex-col items-center justify-center text-slate-700 space-y-4">
                     <Layers className="w-12 h-12 opacity-10 animate-pulse" />
                     <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30">
-                      {isId ? "Menunggu Sampel Plate" : "Awaiting Specimen Plate"}
+                      {t("simulator.awaitingSpecimenPlate")}
                     </p>
                   </div>
                 )}
@@ -814,7 +813,7 @@ export default function SimulatorPage() {
                 <div className="flex items-center gap-2">
                   <LayoutGrid className="w-4 h-4 text-emerald-500" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                    {isId ? "Grid Penghitung Laboratorium:" : "Laboratory Counter Grid:"}
+                    {t("simulator.laboratoryCounterGrid")}
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -828,7 +827,7 @@ export default function SimulatorPage() {
                           : "bg-transparent text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                       }`}
                     >
-                      {type === 'none' ? (isId ? "Tanpa Grid" : "No Grid") : type === 'rectangular' ? "Wolfhuegel" : (isId ? "Radial/Sektor" : "Radial Wedges")}
+                      {type === 'none' ? t("simulator.noGrid") : type === 'rectangular' ? "Wolfhuegel" : t("simulator.radialWedges")}
                     </button>
                   ))}
                 </div>
@@ -839,21 +838,21 @@ export default function SimulatorPage() {
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-4 gap-4">
             <div className="bg-white dark:bg-slate-900 p-4 rounded-none border border-slate-200 dark:border-slate-800 shadow-sm">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isId ? "Waktu AI" : "AI Latency"}</p>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{t("simulator.aiLatency")}</p>
               <p className="text-lg font-black text-slate-900 dark:text-white tracking-tight">0.82s <span className="text-[9px] text-emerald-500 font-bold tracking-normal">Real-time</span></p>
             </div>
             <div className="bg-white dark:bg-slate-900 p-4 rounded-none border border-slate-200 dark:border-slate-800 shadow-sm">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isId ? "Tally Manual" : "Human Tally"}</p>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{t("simulator.humanTally")}</p>
               <p className="text-lg font-black text-slate-900 dark:text-white tracking-tight">{manualClicks.length} <span className="text-[9px] text-blue-500 font-bold tracking-normal">{timeSpent.toFixed(1)}s</span></p>
             </div>
             <div className="bg-white dark:bg-slate-900 p-4 rounded-none border border-slate-200 dark:border-slate-800 shadow-sm">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isId ? "Spatial Agreement" : "Spatial Match"}</p>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{t("simulator.spatialMatch")}</p>
               <p className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
                 {detections.length > 0 || manualClicks.length > 0 ? `${spatialResult.agreement}%` : "--"}
               </p>
             </div>
             <div className="bg-white dark:bg-slate-900 p-4 rounded-none border border-slate-200 dark:border-slate-800 shadow-sm">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{isId ? "Objek Dideteksi AI" : "AI Objects"}</p>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{t("simulator.aiObjects")}</p>
               <p className="text-lg font-black text-slate-900 dark:text-white tracking-tight">{detections.length}</p>
             </div>
           </div>
@@ -870,7 +869,7 @@ export default function SimulatorPage() {
               <div className="flex items-center gap-2">
                 <Crosshair className="w-5 h-5 text-emerald-500" />
                 <h2 className="text-[11px] font-black uppercase tracking-[0.2em]">
-                  {isId ? "Pusat Kontrol Simulator" : "Simulator Control Center"}
+                  {t("simulator.simulatorControlCenter")}
                 </h2>
               </div>
               <span className="text-[8px] font-mono bg-white/10 px-2 py-0.5 border border-white/10 text-emerald-400">
@@ -882,9 +881,7 @@ export default function SimulatorPage() {
             {!isManualCountingMode && !hasFinishedManualCount && (
               <div className="space-y-5">
                 <p className="text-[10.5px] text-slate-400 leading-relaxed font-medium">
-                  {isId
-                    ? "Uji ketelitian dan kecepatan Anda melawan sistem AI Vision. Lakukan penghitungan manual di cawan petri interaktif. Sistem akan melacak performa, waktu reaksi, dan mendokumentasikan kelelahan visual analis secara spasial."
-                    : "Test your focus and coordination against computer vision. Perform a manual count on the interactive petri dish, the system will track your performance, click latency, and fatigue drift spatially."}
+                  {t("simulator.focusTestDescription")}
                 </p>
 
                 {/* Lab difficulty selector (Fatigue Presets) */}
@@ -892,7 +889,7 @@ export default function SimulatorPage() {
                   <div className="flex items-center gap-1.5">
                     <Sparkles className="w-4 h-4 text-amber-500" />
                     <span className="text-[9.5px] font-black uppercase tracking-widest text-slate-300">
-                      {isId ? "Pilih Skenario Shift Laboratorium:" : "Select Shift Workload Preset:"}
+                      {t("simulator.selectShiftWorkloadPreset")}
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
@@ -906,14 +903,14 @@ export default function SimulatorPage() {
                             : "bg-transparent border-white/5 text-slate-400 hover:border-white/10"
                         }`}
                       >
-                        {mode === 'standard' ? (isId ? "Shift Standar" : "Standard Shift") : mode === 'double' ? (isId ? "Double Shift" : "Double Shift") : (isId ? "Minim Cahaya" : "Dim Lighting")}
+                        {mode === 'standard' ? t("simulator.standardShift") : mode === 'double' ? t("simulator.doubleShift") : t("simulator.dimLighting")}
                       </button>
                     ))}
                   </div>
                   <p className="text-[8px] text-slate-500 italic">
-                    {difficulty === 'standard' && (isId ? "*Shift standar: Kelelahan dan pergeseran mata berjalan normal." : "*Standard fatigue progression with regular coordinate accuracy.")}
-                    {difficulty === 'double' && (isId ? "*Double shift: Kelelahan 2x lebih cepat, merangsang degradasi konsentrasi analis." : "*2.0x fatigue multiplier. Concentration decreases twice as fast.")}
-                    {difficulty === 'dim' && (isId ? "*Minim cahaya: Kelelahan mata 3.5x lebih cepat, plate cawan petri disimulasikan lebih gelap." : "*3.5x eye strain. Low light camera capture makes colonies harder to trace.")}
+                    {difficulty === 'standard' && t("simulator.standardShiftDescription")}
+                    {difficulty === 'double' && t("simulator.doubleShiftDescription")}
+                    {difficulty === 'dim' && t("simulator.dimLightingDescription")}
                   </p>
                 </div>
 
@@ -923,7 +920,7 @@ export default function SimulatorPage() {
                   className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-slate-950 font-black text-[10px] py-3.5 tracking-widest uppercase hover:opacity-90 transition-all disabled:opacity-30 shadow-lg"
                 >
                   <Play className="w-4 h-4 fill-slate-950" />
-                  {isId ? "Mulai Simulasi Manual" : "Start Manual Count"}
+                  {t("simulator.startManualCount")}
                 </button>
               </div>
             )}
@@ -933,7 +930,7 @@ export default function SimulatorPage() {
               <div className="space-y-5">
                 <div>
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">
-                    {isId ? "Pilih Kelas Koloni untuk Ditandai" : "Select Colony Class to Mark"}
+                    {t("simulator.selectColonyClass")}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     {Object.entries(CLASS_CONFIG).map(([key, cfg]) => (
@@ -955,15 +952,15 @@ export default function SimulatorPage() {
 
                 <div className="bg-white/5 p-4 border border-white/5 space-y-2">
                   <div className="flex justify-between text-[10px]">
-                    <span className="text-slate-400">{isId ? "Kecepatan Interval Click:" : "Avg Click Interval:"}</span>
+                    <span className="text-slate-400">{t("simulator.avgClickInterval")}</span>
                     <span className="font-mono text-emerald-400 font-bold">{reactionTime}s</span>
                   </div>
                   <div className="flex justify-between text-[10px]">
-                    <span className="text-slate-400">{isId ? "Koordinasi Motorik Jitter:" : "Hand Coordination Jitter:"}</span>
+                    <span className="text-slate-400">{t("simulator.handCoordinationJitter")}</span>
                     <span className="font-mono text-amber-400 font-bold">+{jitterDrift}px</span>
                   </div>
                   <div className="flex justify-between text-[10px]">
-                    <span className="text-slate-400">{isId ? "CPM (Clicks per Minute):" : "CPM Throughput:"}</span>
+                    <span className="text-slate-400">{t("simulator.cpmThroughput")}</span>
                     <span className="font-mono text-blue-400 font-bold">{cpm} cpm</span>
                   </div>
                 </div>
@@ -974,14 +971,14 @@ export default function SimulatorPage() {
                     className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 py-3 border border-white/5 transition-all text-[10px] font-bold uppercase tracking-widest text-rose-400"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    {isId ? "Mulai Ulang" : "Reset"}
+                    {t("simulator.reset")}
                   </button>
                   <button
                     onClick={finishManualSimulation}
                     className="flex items-center justify-center gap-2 bg-emerald-500 text-slate-950 py-3 font-black transition-all hover:opacity-90 text-[10px] uppercase tracking-widest"
                   >
                     <Square className="w-3.5 h-3.5 fill-slate-950" />
-                    {isId ? "Selesai" : "Finish Count"}
+                    {t("simulator.finishCount")}
                   </button>
                 </div>
               </div>
@@ -993,14 +990,14 @@ export default function SimulatorPage() {
                 <div className="bg-white/5 rounded-none p-4 border border-white/5 grid grid-cols-2 gap-4">
                   <div className="text-center border-r border-white/5">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                      {isId ? "MANUAL COUNT" : "MANUAL COUNT"}
+                      {t("simulator.manualCount")}
                     </p>
                     <p className="text-3xl font-black text-white font-mono">{manualClicks.length}</p>
                     <p className="text-[8px] text-slate-400 mt-1">in {formatTime(timeSpent)}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                      {isId ? "AI TOTAL COUNT" : "AI TOTAL COUNT"}
+                      {t("simulator.aiTotalCount")}
                     </p>
                     <p className="text-3xl font-black text-emerald-400 font-mono">{aiCount}</p>
                     <p className="text-[8px] text-slate-400 mt-1">in 0.82s</p>
@@ -1010,22 +1007,22 @@ export default function SimulatorPage() {
                 {detections.length > 0 && (
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between text-[10.5px] border-b border-white/5 pb-2">
-                      <span className="text-slate-400 font-bold">{isId ? "Tingkat Keselarasan Spasial:" : "Spatial Overlap Agreement:"}</span>
+                      <span className="text-slate-400 font-bold">{t("simulator.spatialOverlapAgreement")}</span>
                       <span className="font-black text-emerald-400 font-mono text-sm">{spatialResult.agreement}%</span>
                     </div>
 
                     <div className="flex items-center justify-between text-[10px] border-b border-white/5 pb-2">
-                      <span className="text-slate-400">{isId ? "Sesuai AI (True Positives):" : "True Positives (TP):"}</span>
+                      <span className="text-slate-400">{t("simulator.truePositives")}</span>
                       <span className="font-bold text-white font-mono">{spatialResult.tp} matches</span>
                     </div>
 
                     <div className="flex items-center justify-between text-[10px] border-b border-white/5 pb-2">
-                      <span className="text-slate-400">{isId ? "AI Deteksi, Analis Terlewat (AI FP):" : "AI Detections (AI FP):"}</span>
+                      <span className="text-slate-400">{t("simulator.aiFalsePositives")}</span>
                       <span className="font-bold text-rose-400 font-mono">{spatialResult.fp} artifacts</span>
                     </div>
 
                     <div className="flex items-center justify-between text-[10px] border-b border-white/5 pb-2">
-                      <span className="text-slate-400">{isId ? "Analis Klik, AI Terlewat (AI FN):" : "Human Clicks (AI FN):"}</span>
+                      <span className="text-slate-400">{t("simulator.aiFalseNegatives")}</span>
                       <span className="font-bold text-amber-400 font-mono">{spatialResult.fn} colonies</span>
                     </div>
 
@@ -1034,7 +1031,7 @@ export default function SimulatorPage() {
                       <div className="flex items-center gap-2">
                         <Eye className="w-4 h-4 text-emerald-500" />
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-200">
-                          {isId ? "Tampilkan Hubungan Spasial" : "Visualize Spatial Mapping"}
+                          {t("simulator.visualizeSpatialMapping")}
                         </span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -1056,7 +1053,7 @@ export default function SimulatorPage() {
                     className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 py-3 border border-white/5 transition-all text-[10px] font-bold uppercase tracking-widest"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    {isId ? "Mulai Ulang" : "Reset Sim"}
+                    {t("simulator.resetSim")}
                   </button>
                   <button
                     onClick={saveComparisonToDb}
@@ -1064,7 +1061,7 @@ export default function SimulatorPage() {
                     className="flex items-center justify-center gap-2 bg-emerald-500 text-slate-950 py-3 font-black transition-all hover:opacity-90 text-[10px] uppercase tracking-widest disabled:opacity-30"
                   >
                     {isSaving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                    {isSaving ? (isId ? "Menyimpan..." : "Saving...") : (isId ? "Simpan Perbandingan" : "Save Comparison")}
+                    {isSaving ? t("simulator.saving") : t("simulator.saveComparison")}
                   </button>
                 </div>
               </div>
@@ -1076,7 +1073,7 @@ export default function SimulatorPage() {
             <div className="flex items-center gap-2 mb-4">
               <Activity className="w-5 h-5 text-amber-500" />
               <h3 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
-                {isId ? "Human Fatigue Analyzer" : "Human Fatigue Analyzer"}
+                {t("simulator.humanFatigueAnalyzer")}
               </h3>
             </div>
 
@@ -1119,12 +1116,10 @@ export default function SimulatorPage() {
                   <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5 animate-bounce" />
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 leading-none">
-                      {isId ? "Kelelahan Kognitif Tingkat Kritis" : "Critical Fatigue Alarm"}
+                      {t("simulator.criticalFatigueAlarm")}
                     </p>
                     <p className="text-[9.5px] italic mt-1 leading-relaxed">
-                      {isId
-                        ? `Akurasi motorik analis terdegradasi parah (+${jitterDrift}px jitter drift). Diperlukan masa istirahat (Cooling period) untuk mencegah bias verifikasi.`
-                        : `Hand-eye coordination deterioration observed. Motor delay latency drift introduced +${jitterDrift}px click jitter. Visual fatigue requires recovery period.`}
+                      {t("simulator.fatigueDiagnosis", { jitterDrift })}
                     </p>
                   </div>
                 </div>
@@ -1133,9 +1128,7 @@ export default function SimulatorPage() {
               {/* Fatigue math explainer */}
               <div className="p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400">
                 <p className="text-[9px] leading-relaxed italic">
-                  {isId
-                    ? "*Simulasi didasarkan pada degradasi kognitif analis riil. Plate dengan koloni padat (>150 CFU) memicu keletihan saraf visual eksponensial di bawah skenario shift berat."
-                    : "*Fatigue indexes simulate physical human limitations. High-density plate counts (>150 CFU) trigger cognitive degradation and coordinate drift under extended laboratory workloads."}
+                  {t("simulator.fatigueMathExplainer")}
                 </p>
               </div>
             </div>
@@ -1148,7 +1141,7 @@ export default function SimulatorPage() {
             <div className="flex items-center gap-2 mb-4">
               <Gauge className="w-5 h-5 text-emerald-400" />
               <h3 className="text-[11px] font-black text-emerald-400 uppercase tracking-[0.2em]">
-                {isId ? "Rasio Nilai ROI & Efisiensi" : "LIMS ROI & Accuracy Benchmarks"}
+                {t("simulator.roiEfficiency")}
               </h3>
             </div>
 
@@ -1156,10 +1149,10 @@ export default function SimulatorPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
-                    {isId ? "Waktu Hemat Per-Tahun" : "Estimated Lab Hours Saved / Year"}
+                    {t("simulator.labHoursSavedPerYear")}
                   </p>
                   <p className="text-[8.5px] text-slate-500 mt-0.5">
-                    {isId ? "*Berdasarkan rata-rata 1,000 plate cawan per-bulan" : "*Based on a throughput of 1,000 petri dishes / month"}
+                    {t("simulator.hoursSavedDisclaimer")}
                   </p>
                 </div>
                 <div className="text-right">
@@ -1172,11 +1165,11 @@ export default function SimulatorPage() {
 
               <div className="grid grid-cols-2 gap-4 text-[9.5px]">
                 <div className="bg-slate-900/60 p-3 border border-white/5">
-                  <span className="text-slate-400 block mb-1 uppercase font-black">{isId ? "CPM Throughput" : "CPM Throughput"}</span>
+                  <span className="text-slate-400 block mb-1 uppercase font-black">{t("simulator.cpmThroughputLabel")}</span>
                   <span className="font-mono text-sm text-white font-bold">{cpm} cpm</span>
                 </div>
                 <div className="bg-slate-900/60 p-3 border border-white/5">
-                  <span className="text-slate-400 block mb-1 uppercase font-black">{isId ? "Waktu LIMS AI" : "AI LIMS Process"}</span>
+                  <span className="text-slate-400 block mb-1 uppercase font-black">{t("simulator.aiLimsProcess")}</span>
                   <span className="font-mono text-sm text-emerald-400 font-bold">0.82s</span>
                 </div>
               </div>
@@ -1189,28 +1182,28 @@ export default function SimulatorPage() {
               <div className="flex items-center gap-2 mb-4">
                 <Award className="w-5 h-5 text-emerald-500" />
                 <h3 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
-                  {isId ? "Metrik Komparatif Akademis" : "Academic Comparative Metrics"}
+                  {t("simulator.academicComparativeMetrics")}
                 </h3>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-3 border border-slate-100 dark:border-slate-800/50">
                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                    {isId ? "Presisi AI (Precision)" : "AI Precision"}
+                    {t("simulator.aiPrecision")}
                   </p>
                   <p className="text-xl font-black text-emerald-500 font-mono">{spatialResult.precision}%</p>
                   <p className="text-[6.5px] text-slate-400 mt-1 uppercase tracking-tighter">Matches / AI Detections</p>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-3 border border-slate-100 dark:border-slate-800/50">
                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                    {isId ? "Sensitivitas (Recall)" : "AI Recall"}
+                    {t("simulator.aiRecall")}
                   </p>
                   <p className="text-xl font-black text-blue-500 font-mono">{spatialResult.recall}%</p>
                   <p className="text-[6.5px] text-slate-400 mt-1 uppercase tracking-tighter">Matches / Human Clicks</p>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-3 border border-slate-100 dark:border-slate-800/50">
                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                    {isId ? "Skor F1 (F1-Score)" : "F1-Score"}
+                    {t("simulator.f1Score")}
                   </p>
                   <p className="text-xl font-black text-amber-500 font-mono">{spatialResult.f1}%</p>
                   <p className="text-[6.5px] text-slate-400 mt-1 uppercase tracking-tighter">Harmonic Mean Precision/Recall</p>
