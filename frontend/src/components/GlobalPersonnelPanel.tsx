@@ -52,8 +52,7 @@ function OrgPersonnelRow({
   const [personnel, setPersonnel] = useState<OrgPersonnel[]>([]);
   const [loading, setLoading] = useState(false);
   const [revealedIds, setRevealedIds] = useState<Record<string, boolean>>({});
-  const { language } = useTranslationStore();
-  const isId = language === "id";
+  const { t } = useTranslationStore();
 
   const loadPersonnel = useCallback(async () => {
     if (personnel.length > 0) {
@@ -68,17 +67,17 @@ function OrgPersonnelRow({
       );
       setPersonnel(res.data);
     } catch {
-      toast.error(isId ? `Gagal memuat personel ${org.name}` : `Failed to load personnel for ${org.name}`);
+      toast.error(t("globalPersonnel.failedLoadingPersonnel") + org.name);
       setExpanded(false);
     } finally {
       setLoading(false);
     }
-  }, [org.id, org.name, personnel.length, isId]);
+  }, [org.id, org.name, personnel.length]);
 
   const toggleReveal = (id: string) =>
     setRevealedIds((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const roleOrder = ["admin", "manager", "auditor", "analyst"];
+  const roleOrder = ["super_admin", "admin", "manager", "auditor", "analyst"];
   const sorted = [...personnel].sort(
     (a, b) => roleOrder.indexOf(a.role) - roleOrder.indexOf(b.role)
   );
@@ -130,14 +129,14 @@ function OrgPersonnelRow({
           {/* Sub-header with "Open Admin Panel" button */}
           <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-              {sorted.length} {isId ? "Personnel Terdaftar" : "Registered Personnel"}
+              {sorted.length} {t("globalPersonnel.registeredPersonnel")}
             </p>
             <a
               href={`/dashboard/administration`}
               className="flex items-center gap-1 px-3 py-1 bg-slate-900 dark:bg-primary/20 hover:bg-primary dark:hover:bg-primary text-white dark:text-primary dark:hover:text-white border border-transparent dark:border-primary/30 text-[9px] font-black uppercase tracking-widest rounded-none transition-all"
             >
               <Shield className="w-3 h-3" />
-              {isId ? "Buka Panel Admin" : "Open Admin Panel"}
+              {t("globalPersonnel.openAdminPanel")}
               <ArrowRight className="w-3 h-3" />
             </a>
           </div>
@@ -146,7 +145,7 @@ function OrgPersonnelRow({
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800">
                 <th className="px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                  {isId ? "Nama" : "Name"}
+                  {t("globalPersonnel.name")}
                 </th>
                 <th className="px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">
                   Role
@@ -221,7 +220,7 @@ function OrgPersonnelRow({
 
       {expanded && !loading && personnel.length === 0 && (
         <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 text-center">
-          <p className="text-[10px] text-slate-400">{isId ? "Tidak ada personel terdaftar." : "No personnel registered."}</p>
+          <p className="text-[10px] text-slate-400">{t("globalPersonnel.noPersonnelRegistered")}</p>
         </div>
       )}
     </div>
@@ -232,8 +231,7 @@ export function GlobalPersonnelPanel() {
   const [orgs, setOrgs] = useState<OrgSummary[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const { language } = useTranslationStore();
-  const isId = language === "id";
+  const { t } = useTranslationStore();
 
   const fetchOrgs = useCallback(async () => {
     setLoading(true);
@@ -249,11 +247,11 @@ export function GlobalPersonnelPanel() {
         }))
       );
     } catch {
-      toast.error(isId ? "Gagal memuat daftar organisasi." : "Failed to load organization list.");
+      toast.error(t("globalPersonnel.failedLoadingOrgList"));
     } finally {
       setLoading(false);
     }
-  }, [isId]);
+    }, []);
 
   useEffect(() => {
     fetchOrgs();
@@ -273,11 +271,11 @@ export function GlobalPersonnelPanel() {
           <div className="flex items-center gap-2">
             <Key className="w-4 h-4 text-primary" />
             <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-              {isId ? "Komando Personel Global" : "Global Personnel Command"}
+              {t("globalPersonnel.globalPersonnelCommand")}
             </h3>
           </div>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-            {orgs.length} {isId ? "Organisasi · Klik untuk ekspansi roster" : "Organizations · Click to expand roster"}
+            {orgs.length} {t("globalPersonnel.orgClickExpand")}
           </p>
         </div>
 
@@ -288,7 +286,7 @@ export function GlobalPersonnelPanel() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={isId ? "Cari organisasi..." : "Search organization..."}
+              placeholder={t("globalPersonnel.searchOrganization")}
               className="pl-7 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 outline-none w-44"
             />
           </div>
@@ -307,11 +305,11 @@ export function GlobalPersonnelPanel() {
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-5 h-5 text-primary animate-spin" />
-            <span className="ml-2 text-xs text-slate-400">{isId ? "Memuat data organisasi…" : "Loading organization data..."}</span>
+            <span className="ml-2 text-xs text-slate-400">{t("globalPersonnel.loadingOrgData")}</span>
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-xs text-slate-400">{isId ? `Tidak ada hasil untuk "${search}"` : `No results for "${search}"`}</p>
+            <p className="text-xs text-slate-400">{t("globalPersonnel.noResultsFor") + '"' + search + '"'}</p>
           </div>
         ) : (
           <div>
@@ -328,7 +326,7 @@ export function GlobalPersonnelPanel() {
           Nexus Global Personnel Registry · Super Admin Eyes Only
         </span>
         <span className="text-[9px] font-medium text-slate-300 dark:text-slate-500">
-          {filtered.length} / {orgs.length} {isId ? "org ditampilkan" : "orgs displayed"}
+          {filtered.length} / {orgs.length} {t("globalPersonnel.orgsDisplayed")}
         </span>
       </div>
     </div>
