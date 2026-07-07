@@ -256,7 +256,7 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         <button 
           onClick={onClose} 
           className="p-3 lg:p-2 bg-white/5 hover:bg-white/10 rounded-full transition-all active:scale-90 text-white"
-          aria-label={language === 'id' ? 'Tutup Chatbot' : 'Close Chatbot'}
+          aria-label={t('chatbot.closeChatbot')}
         >
           <X className="w-6 h-6 lg:w-5 lg:h-5" aria-hidden="true" />
         </button>
@@ -331,7 +331,7 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       {/* Input */}
       <div className="p-4 border-t border-slate-100 bg-white shrink-0">
         <div className="flex gap-2">
-          <label htmlFor="chat-input" className="sr-only">{language === 'id' ? 'Ketik pertanyaan' : 'Type a question'}</label>
+          <label htmlFor="chat-input" className="sr-only">{t('chatbot.inputLabel')}</label>
           <input 
             id="chat-input"
             type="text" 
@@ -346,7 +346,7 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             onClick={() => handleSend(input)}
             disabled={isTyping}
             className={`w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center transition-all ${isTyping ? "opacity-50 cursor-not-allowed" : "hover:bg-[#0055ff]"}`}
-            aria-label={language === 'id' ? 'Kirim Pesan' : 'Send Message'}
+            aria-label={t('chatbot.sendMessage')}
           >
             <Send className="w-4 h-4" aria-hidden="true" />
           </button>
