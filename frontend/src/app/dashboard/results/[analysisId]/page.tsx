@@ -129,7 +129,7 @@ export default function ResultsPage() {
   const router = useRouter();
   const analysisId = params.analysisId as string;
   const { user } = useAuthStore();
-  const canApprove = user?.role === "manager" || user?.role === "admin";
+  const canApprove = user?.role === "manager" || user?.role === "admin" || user?.role === "super_admin";
   const { t } = useTranslationStore();
 
   // i18n-aware class label resolver
