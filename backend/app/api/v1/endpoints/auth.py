@@ -109,6 +109,13 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
             detail="Incorrect email or password"
         )
 
+    # ── Enforce Organization Membership ──
+    if user.role != UserRole.SUPER_ADMIN and not user.organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Akun ini tidak terdaftar pada perusahaan manapun. Hubungi Super Admin."
+        )
+
     # ── Check Organization Status ──
     if user.organization_id:
         from app.models import Organization
@@ -193,7 +200,7 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
         
         # Write MFA code to static file for easy developer access
         try:
-            with open("d:/lombapuai/mfa_token.txt", "w", encoding="utf-8") as token_file:
+            with open("/tmp/mfa_token.txt", "w", encoding="utf-8") as token_file:
                 token_file.write(f"MFA CODE: {mfa_code}\nGenerated At: {datetime.utcnow().isoformat()} UTC\n")
         except Exception as e:
             print(f"⚠️ Error writing MFA token to file: {e}")
@@ -334,13 +341,18 @@ async def register(
     if current_user.get("role") == "super_admin":
         target_org_id = request.organization_id
     else:
-        # Get from current_user (the Admin)
         admin_org_id = current_user.get("organization_id")
         if admin_org_id:
             target_org_id = uuid.UUID(admin_org_id)
         else:
-            # Admin with no org? (Shouldn't happen in professional setup)
             raise HTTPException(status_code=403, detail="Admin has no organization assigned")
+
+    # ── Enforce Organization for Non-Super Admin roles ──
+    if request.role != UserRole.SUPER_ADMIN and not target_org_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Non-super-admin users wajib memiliki perusahaan (organization_id)."
+        )
 
     # Create new user
     new_user = User(
