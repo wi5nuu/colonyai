@@ -212,9 +212,6 @@ export default function DashboardLayout({
     },
   ]);
 
-  const { language } = useTranslationStore();
-  const isId = language === "id";
-
   const playNotificationSound = () => {
     const audio = new Audio(
       "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
@@ -229,23 +226,19 @@ export default function DashboardLayout({
       const newNotify = {
         id: Date.now(),
         type: "approval",
-        title: isId ? "PERSETUJUAN DIBUTUHKAN" : "APPROVAL REQUIRED",
-        message: isId
-          ? "Permintaan Reset Password baru dari Analyst-04"
-          : "New Reset Password request from Analyst-04",
-        time: isId ? "Baru Saja" : "Just Now",
+        title: t("dashboardLayout.approvalRequired"),
+        message: t("dashboardLayout.resetPasswordRequest"),
+        time: t("dashboardLayout.justNow"),
         read: false,
       };
       setNotifications((prev) => [newNotify, ...prev]);
       playNotificationSound();
       toast.info(
-        isId ? "Sinyal Sistem Baru Terdeteksi" : "New System Signal Detected",
+        t("dashboardLayout.newSystemSignal"),
         {
-          description: isId
-            ? "Persetujuan dibutuhkan untuk reset node keamanan."
-            : "Approval required for security node reset.",
+          description: t("dashboardLayout.approvalRequiredDesc"),
           action: {
-            label: isId ? "Lihat" : "View",
+            label: t("dashboardLayout.view"),
             onClick: () => router.push("/dashboard/administration"),
           },
         },
@@ -253,7 +246,7 @@ export default function DashboardLayout({
     }, 8000);
 
     return () => clearTimeout(timer);
-  }, [router, isId]);
+  }, [router, t]);
 
   // Fetch real password reset requests and push to notifications
   useEffect(() => {
