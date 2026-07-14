@@ -56,7 +56,7 @@ def validate_password_complexity(password: str):
             detail="Password must contain at least one digit"
         )
     import re
-    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>\[\]\\/_\-+=~`]", password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Password must contain at least one special character"
@@ -134,8 +134,8 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
 
     # ── Check Account Lockout ──
     if user.is_locked_out == 'yes':
-        if user.locked_until and user.locked_until > datetime.utcnow():
-            remaining = (user.locked_until - datetime.utcnow()).seconds // 60
+        if user.locked_until and user.locked_until > datetime.now(timezone.utc):
+            remaining = (user.locked_until - datetime.now(timezone.utc)).seconds // 60
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Account locked. Try again in {remaining} minutes."
@@ -149,11 +149,11 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
     if not verify_password(request.password, user.password_hash):
         # ── Increment Failed Attempts ──
         user.failed_login_attempts += 1
-        user.last_failed_login = datetime.utcnow()
+        user.last_failed_login = datetime.now(timezone.utc)
 
         if user.failed_login_attempts >= 5:
             user.is_locked_out = 'yes'
-            user.locked_until = datetime.utcnow() + timedelta(minutes=15)
+            user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
             await db.commit()
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -184,7 +184,7 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
         import secrets
         mfa_code = "".join([str(secrets.randbelow(10)) for _ in range(6)])
         user.mfa_code = mfa_code
-        user.mfa_expires = datetime.utcnow() + timedelta(minutes=5)
+        user.mfa_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
         await db.commit()
         
         # SEND REAL MFA EMAIL
@@ -200,8 +200,12 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
         
         # Write MFA code to static file for easy developer access
         try:
-            with open("/tmp/mfa_token.txt", "w", encoding="utf-8") as token_file:
-                token_file.write(f"MFA CODE: {mfa_code}\nGenerated At: {datetime.utcnow().isoformat()} UTC\n")
+            import tempfile
+            import os
+            temp_dir = tempfile.gettempdir()
+            token_file_path = os.path.join(temp_dir, "mfa_token.txt")
+            with open(token_file_path, "w", encoding="utf-8") as token_file:
+                token_file.write(f"MFA CODE: {mfa_code}\nGenerated At: {datetime.now(timezone.utc).isoformat()} UTC\n")
         except Exception as e:
             print(f"⚠️ Error writing MFA token to file: {e}")
         
@@ -257,7 +261,7 @@ async def verify_mfa(request: MFAVerifyRequest, http_request: Request = None, db
     if not user or not user.mfa_code:
         raise HTTPException(status_code=401, detail="Invalid verification request")
         
-    if user.mfa_expires < datetime.utcnow():
+    if user.mfa_expires < datetime.now(timezone.utc):
         raise HTTPException(status_code=401, detail="Verification code expired")
         
     if user.mfa_code != request.code:
@@ -584,7 +588,7 @@ async def forgot_password(
         requester_ip=ip,
         requester_ua=ua[:512],
         status="pending",
-        expires_at=datetime.utcnow() + timedelta(hours=24),
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
     )
     db.add(reset_request)
 
@@ -641,7 +645,7 @@ async def list_reset_requests(
         update(PasswordResetRequest)
         .where(
             PasswordResetRequest.status == "pending",
-            PasswordResetRequest.expires_at < datetime.utcnow()
+            PasswordResetRequest.expires_at < datetime.now(timezone.utc)
         )
         .values(status="expired")
     )
@@ -668,7 +672,7 @@ async def list_reset_requests(
     requests_list = []
     for req, user_obj in rows:
         # Auto-mark expired
-        is_expired = req.expires_at < datetime.utcnow() and req.status == "pending"
+        is_expired = req.expires_at < datetime.now(timezone.utc) and req.status == "pending"
         requests_list.append({
             "id": str(req.id),
             "user_name": user_obj.full_name,
@@ -707,7 +711,7 @@ async def approve_reset_request(
         raise HTTPException(status_code=404, detail="Request tidak ditemukan")
     if req.status != "pending":
         raise HTTPException(status_code=400, detail=f"Request sudah berstatus: {req.status}")
-    if req.expires_at < datetime.utcnow():
+    if req.expires_at < datetime.now(timezone.utc):
         req.status = "expired"
         await db.commit()
         raise HTTPException(status_code=400, detail="Request sudah kedaluwarsa (>24 jam)")
@@ -716,8 +720,8 @@ async def approve_reset_request(
     token = secrets.token_urlsafe(48)
     req.status = "approved"
     req.reset_token = token
-    req.token_expires_at = datetime.utcnow() + timedelta(hours=1)
-    req.reviewed_at = datetime.utcnow()
+    req.token_expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+    req.reviewed_at = datetime.now(timezone.utc)
     req.reviewed_by = uuid.UUID(current_user["user_id"])
     await db.commit()
 
@@ -771,7 +775,7 @@ async def reject_reset_request(
         raise HTTPException(status_code=400, detail=f"Request sudah berstatus: {req.status}")
 
     req.status = "rejected"
-    req.reviewed_at = datetime.utcnow()
+    req.reviewed_at = datetime.now(timezone.utc)
     req.reviewed_by = uuid.UUID(current_user["user_id"])
 
     # Notify user
@@ -811,7 +815,7 @@ async def reset_password(request: ResetPasswordRequest, db: AsyncSession = Depen
         .join(PasswordResetRequest, User.id == PasswordResetRequest.user_id)
         .where(
             PasswordResetRequest.reset_token == request.token,
-            PasswordResetRequest.token_expires_at > datetime.utcnow(),
+            PasswordResetRequest.token_expires_at > datetime.now(timezone.utc),
             PasswordResetRequest.status == "approved"
         )
     )
@@ -830,7 +834,7 @@ async def reset_password(request: ResetPasswordRequest, db: AsyncSession = Depen
 
     # Update password
     user.password_hash = get_password_hash(request.new_password)
-    user.updated_at = datetime.utcnow()
+    user.updated_at = datetime.now(timezone.utc)
     
     # Mark request as used
     req.status = "used"
