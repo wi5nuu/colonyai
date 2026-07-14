@@ -9,7 +9,7 @@ from app.core.database import get_db
 from app.core.security import require_role, get_password_hash
 from app.models import Organization, User, Analysis, UserRole
 from pydantic import BaseModel, EmailStr
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 router = APIRouter()
 
@@ -155,7 +155,7 @@ async def provision_new_organization(
         slug=slug,
         location=request.location,
         license_key=license_key,
-        license_expires_at=datetime.utcnow() + timedelta(days=365), # 1 year default
+        license_expires_at=datetime.now(timezone.utc) + timedelta(days=365), # 1 year default
         is_active='active',
         institution_type=request.institution_type,
         compliance_standard=request.compliance_standard,
