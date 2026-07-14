@@ -1,2 +1,0 @@
-Attempting to download from: https://unpkg.com/world-atlas@2/countries-110m.json
-Successfully saved to: d:/lombapuai/frontend/public/world-110m.json
