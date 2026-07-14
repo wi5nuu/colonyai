@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import os
 import csv
@@ -233,7 +233,7 @@ async def generate_pdf_report(
     elements.append(Paragraph("BPOM-Compliant Laboratory Report", subtitle_style))
     elements.append(Spacer(1, 6))
     elements.append(Paragraph(
-        f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}",
+        f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}",
         small_style,
     ))
     elements.append(Paragraph(
@@ -471,7 +471,7 @@ async def generate_pdf_report(
     doc.build(elements)
 
     url = f"{settings.BACKEND_URL}/uploads/reports/{filename}"
-    expires_at = datetime.utcnow().replace(hour=23, minute=59, second=59).isoformat()
+    expires_at = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59).isoformat()
 
     return ReportResponse(
         url=url,
@@ -610,7 +610,7 @@ async def generate_csv_report(
 
     # Generate URL
     url = f"{settings.BACKEND_URL}/uploads/reports/{filename}"
-    expires_at = datetime.utcnow().replace(hour=23, minute=59, second=59).isoformat()
+    expires_at = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59).isoformat()
 
     return ReportResponse(
         url=url,
@@ -705,7 +705,7 @@ async def admin_export_all_pdf(
         small_s  = ParagraphStyle("S",  parent=styles["Normal"],  fontName=base, fontSize=9,  spaceAfter=2)
 
         elems = []
-        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
         # ── Cover ──
         elems += [
