@@ -8,7 +8,7 @@ and appearance configuration.
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from pydantic import BaseModel
 
@@ -90,7 +90,7 @@ async def update_notification_preferences(
     prefs.notify_analysis_complete = data.analysis_complete
     prefs.notify_boundary_alerts = data.boundary_alerts
     prefs.notify_weekly_summary = data.weekly_summary
-    prefs.updated_at = datetime.utcnow()
+    prefs.updated_at = datetime.now(timezone.utc)
     
     await db.commit()
     await db.refresh(prefs)
@@ -127,7 +127,7 @@ async def update_laboratory_defaults(
     prefs.default_lab_name = data.lab_name
     prefs.default_media_type = data.default_media
     prefs.default_volume_ml = data.default_volume
-    prefs.updated_at = datetime.utcnow()
+    prefs.updated_at = datetime.now(timezone.utc)
     
     await db.commit()
     await db.refresh(prefs)
@@ -167,7 +167,7 @@ async def update_appearance_preferences(
     
     prefs.theme_preference = data.theme
     prefs.language_preference = data.language
-    prefs.updated_at = datetime.utcnow()
+    prefs.updated_at = datetime.now(timezone.utc)
     
     await db.commit()
     await db.refresh(prefs)
