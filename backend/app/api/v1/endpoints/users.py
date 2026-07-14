@@ -3,7 +3,7 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import uuid
 import secrets
 
@@ -285,7 +285,7 @@ async def issue_emergency_access(
     target_user.locked_until = None
 
     # Notify target user
-    expires_at = datetime.utcnow() + timedelta(hours=2)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=2)
     notif = Notification(
         id=uuid.uuid4(),
         user_id=target_user.id,
