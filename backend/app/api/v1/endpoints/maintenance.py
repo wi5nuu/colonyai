@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, func, and_
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 from pathlib import Path
 
@@ -23,7 +23,7 @@ async def apply_data_retention_policy(
     Menghapus data analisis dan gambar lokal/S3 yang melewati periode retensi.
     Diperuntukkan untuk UU PDP Indonesia compliance.
     """
-    cutoff_date = datetime.utcnow() - timedelta(days=settings.DATA_RETENTION_DAYS)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=settings.DATA_RETENTION_DAYS)
     
     # 1. Cari analisis yang obsolete
     stmt = select(Analysis).where(Analysis.created_at < cutoff_date)
