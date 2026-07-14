@@ -1,6 +1,6 @@
 import logging
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ class MessengerService:
         """
         Simulate sending a WhatsApp message via Business API (e.g., Twilio).
         """
-        timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M')
+        timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')
         
         message = (
             f"🔬 *ColonyAI ISO-17025 Automated Report*\n"
@@ -52,7 +52,7 @@ class MessengerService:
         """
         Simulate sending a Telegram message via Telegram Bot API.
         """
-        timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M')
+        timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')
         
         message = (
             f"🔬 <b>ColonyAI ISO-17025 Automated Report</b>\n"
@@ -85,7 +85,7 @@ class MessengerService:
         Send an immediate real-time alert after an analysis completes.
         Supports sending the annotated image along with the CFU results.
         """
-        timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
         status_icon = "🟢" if analysis_data.get('status') == "completed" else "🔴"
         
         message = (
