@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import json
 import httpx
@@ -55,7 +55,7 @@ async def sync_to_lims(
     # 3. Construct LIMS Payload (SampleManager 12.4 Compatible)
     payload = {
         "lims_version": "SampleManager 12.4",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "sample_id": analysis.sample_id,
         "test_method": analysis.method_standard or "ISO 4833-1:2013 Total Plate Count",
         "result": {
@@ -88,7 +88,7 @@ async def sync_to_lims(
         "status": "received",
         "lims_record_id": lims_record_id,
         "message": message,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "next_action": next_action
     }
 
@@ -142,7 +142,7 @@ async def sync_to_lims(
         success=True,
         lims_record_id=lims_record_id,
         message=message,
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         next_action=next_action
     )
 
