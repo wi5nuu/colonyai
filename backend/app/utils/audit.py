@@ -2,7 +2,7 @@
 import uuid
 import hashlib
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy import select, desc
 
@@ -26,7 +26,7 @@ async def write_audit_log(
     resource_uuid = uuid.UUID(resource_id) if resource_id else None
     user_uuid = uuid.UUID(user_id)
     org_uuid = uuid.UUID(organization_id) if organization_id else None
-    timestamp = datetime.utcnow()
+    timestamp = datetime.now(timezone.utc)
 
     previous_hash = None
     if db is not None:
