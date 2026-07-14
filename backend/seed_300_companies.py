@@ -3,7 +3,7 @@ Seed 300 perusahaan + 4 role user per perusahaan.
 Hanya superadmin yang TIDAK punya perusahaan.
 """
 import asyncio, uuid, secrets, enum, re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from argon2 import PasswordHasher
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -454,7 +454,7 @@ async def seed():
     async with AsyncSessionLocal() as db:
         orgs_to_insert = []
         users_to_insert = []
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         later = now + timedelta(days=365)
 
         for idx, (name, location, inst_type) in enumerate(COMPANIES, 1):
