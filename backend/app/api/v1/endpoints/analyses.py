@@ -72,7 +72,7 @@ async def simulate_analysis(
 
     # 3. Build a transient response (not saved to DB)
     temp_id = uuid.uuid4()
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     return {
         "id": str(temp_id),
