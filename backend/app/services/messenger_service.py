@@ -1,5 +1,4 @@
 import logging
-import asyncio
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -37,9 +36,6 @@ class MessengerService:
             f"🔗 View full ledger on the Neural Control Center."
         )
         
-        # Simulate Network Delay
-        await asyncio.sleep(1.5)
-        
         logger.info(f"[WHATSAPP API] Sent message to {phone_number}:\n{message}")
         return True
 
@@ -67,9 +63,6 @@ class MessengerService:
             f"✅ <b>Status</b>: All systems nominal.\n"
             f"🔗 View full ledger on the Neural Control Center."
         )
-        
-        # Simulate Network Delay
-        await asyncio.sleep(1.0)
         
         logger.info(f"[TELEGRAM API] Sent HTML message to {chat_id}:\n{message}")
         return True
@@ -104,9 +97,6 @@ class MessengerService:
         if image_url:
             message += f"\n📸 *Annotated Image*: {image_url}"
 
-        # Simulate Queue / Network Delay
-        await asyncio.sleep(0.5)
-        
         logger.info(f"[{platform.upper()} API] Instant Alert queued and sent to {target_id}:\n{message}")
         return True
 

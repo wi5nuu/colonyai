@@ -1,8 +1,11 @@
+import logging
 import cv2
 import numpy as np
 import os
 from pathlib import Path
 import glob
+
+logger = logging.getLogger(__name__)
 
 class DomainShiftAugmenter:
     """
@@ -53,7 +56,7 @@ class DomainShiftAugmenter:
         for ext in extensions:
             image_paths.extend(glob.glob(os.path.join(input_dir, ext)))
             
-        print(f"Found {len(image_paths)} images to augment.")
+        logger.info("Found %d images to augment.", len(image_paths))
         
         for p in image_paths:
             filename = os.path.basename(p)
@@ -90,4 +93,4 @@ if __name__ == "__main__":
     
     augmenter = DomainShiftAugmenter(args.output)
     augmenter.augment_dataset(args.input)
-    print("Augmentation completed successfully.")
+    logger.info("Augmentation completed successfully.")
