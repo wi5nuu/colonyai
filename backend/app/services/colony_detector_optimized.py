@@ -3,6 +3,7 @@ COLONY DETECTOR OPTIMIZED - Untuk Akurasi Maksimal
 Dengan threshold per-class, post-processing, dan confidence boosting
 """
 import numpy as np
+from pathlib import Path
 
 try:
     from ultralytics import YOLO
@@ -12,8 +13,12 @@ except ImportError:
     YOLO_AVAILABLE = False
     cv2 = None
     YOLO = None
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 import os
+import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from functools import lru_cache
 from app.core.config import settings
 from app.core.thresholds_optimized import (
     get_threshold,
@@ -28,20 +33,60 @@ from app.core.thresholds_optimized import (
 VALID_COLONY_CLASSES = {'colony_single', 'colony_merged'}
 ARTIFACT_CLASSES = {'bubble', 'dust_debris', 'media_crack'}
 ALL_CLASSES = VALID_COLONY_CLASSES | ARTIFACT_CLASSES
+logger = logging.getLogger(__name__)
 
-# Class colors (BGR for OpenCV)
+# Class colors — stored as BGR for OpenCV drawing.
+# cv2.imwrite saves BGR, browser reads as RGB → R and B are swapped when displayed.
+# To show the intended color in browser: swap R↔B here.
+# Intended display colors (RGB): single=green, merged=orange, bubble=blue, debris=red, crack=purple
 CLASS_COLORS_BGR = {
-    'colony_single': (50, 220, 80),      # Green
-    'colony_merged': (0, 140, 255),      # Orange
-    'bubble':        (255, 120, 30),     # Blue
-    'dust_debris':   (50, 50, 220),      # Red
-    'media_crack':   (200, 60, 160),     # Purple
+    'colony_single': (80, 220, 50),    # BGR → displayed as RGB (50,220,80) = green
+    'colony_merged': (0, 140, 255),    # BGR → displayed as RGB (255,140,0) = orange
+    'bubble':        (255, 120, 30),   # BGR → displayed as RGB (30,120,255) = blue
+    'dust_debris':   (50, 50, 220),    # BGR → displayed as RGB (220,50,50) = red
+    'media_crack':   (180, 60, 200),   # BGR → displayed as RGB (200,60,180) = purple
 }
+
+
+# Global thread pool for blocking operations (YOLO inference, cv2, etc.)
+_inference_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="yolo")
+
+# Global singleton cache (model loaded once at first use)
+_global_detector: Optional['ColonyDetectorOptimized'] = None
+
+
+def get_detector(model_path: str = None) -> 'ColonyDetectorOptimized':
+    global _global_detector
+    path = model_path or _get_active_model_path() or settings.MODEL_PATH
+    if _global_detector is None or _global_detector.model_path != path:
+        _global_detector = ColonyDetectorOptimized(path)
+    return _global_detector
+
+
+def _get_active_model_path() -> str:
+    """Check if an active model is set via the model management API."""
+    active_file = Path(settings.MODEL_PATH).parent / ".active"
+    if active_file.exists():
+        active_name = active_file.read_text().strip()
+        active_path = str(active_file.parent / active_name)
+        if os.path.exists(active_path):
+            return active_path
+    return ""
+
+
+def reset_detector():
+    """Force reload on next get_detector() call. Used after model activation."""
+    global _global_detector
+    _global_detector = None
+    logger.info("Detector singleton reset — will reload model on next request.")
 
 
 class ColonyDetectorOptimized:
     """
     YOLOv8-based colony detector dengan optimasi akurasi maksimal
+
+    Model loading is cached globally — hanya load 1x untuk semua request.
+    Gunakan get_detector() untuk mendapatkan instance singleton.
 
     Features:
     - Threshold per-class
@@ -62,12 +107,31 @@ class ColonyDetectorOptimized:
 
         if os.path.exists(self.model_path):
             self.model = YOLO(self.model_path)
-            print(f"✓ Loaded optimized model from {self.model_path}")
+            logger.info("Loaded optimized model from %s", self.model_path)
         else:
             raise RuntimeError(
                 f"Model not found at {self.model_path}. "
                 "Please ensure colony_best.pt exists in models/ folder."
             )
+
+    async def detect_async(
+        self,
+        image: np.ndarray,
+        media_type: str = None,
+        aggressive: bool = False,
+        use_tta: bool = False,
+        apply_filters: bool = True
+    ) -> List[Dict[str, Any]]:
+        """
+        Async version of detect() — runs blocking YOLO inference in thread pool.
+        Tidak blocking event loop, cocok untuk real-time.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            _inference_executor,
+            self.detect,
+            image, media_type, aggressive, use_tta, apply_filters
+        )
 
     def detect(
         self,
@@ -93,14 +157,16 @@ class ColonyDetectorOptimized:
         # Image size validation
         MAX_DIM = self.img_size * 2
         h, w = image.shape[:2]
-        original_shape = (h, w)
 
         if h > MAX_DIM or w > MAX_DIM:
             scale = MAX_DIM / max(h, w)
             new_w, new_h = int(w * scale), int(h * scale)
             if cv2 is not None:
                 image = cv2.resize(image, (new_w, new_h))
-                print(f"Resized from {w}x{h} to {new_w}x{new_h}")
+                logger.info("Resized from %dx%d to %dx%d", w, h, new_w, new_h)
+
+        # original_shape diambil SETELAH resize agar boost_confidence pakai koordinat yang benar
+        original_shape = image.shape[:2]
 
         # Gunakan threshold SANGAT RENDAH untuk inference awal
         # Filtering per-class dilakukan setelahnya
@@ -189,54 +255,45 @@ class ColonyDetectorOptimized:
         """
         h, w = image.shape[:2]
 
-        # Original
+        # Original — weight 1.0
         dets_original = self._detect_single(image, conf_threshold)
+        for det in dets_original:
+            det['_tta_weight'] = 1.0
 
-        # Horizontal flip
+        # Horizontal flip — weight 0.8
         img_hflip = cv2.flip(image, 1) if cv2 is not None else image
         dets_hflip = self._detect_single(img_hflip, conf_threshold)
-        # Flip boxes back
         for det in dets_hflip:
             det['bbox']['x'] = w - det['bbox']['x'] - det['bbox']['width']
+            det['_tta_weight'] = 0.8
 
-        # Vertical flip
+        # Vertical flip — weight 0.8
         img_vflip = cv2.flip(image, 0) if cv2 is not None else image
         dets_vflip = self._detect_single(img_vflip, conf_threshold)
-        # Flip boxes back
         for det in dets_vflip:
             det['bbox']['y'] = h - det['bbox']['y'] - det['bbox']['height']
+            det['_tta_weight'] = 0.8
 
-        # Merge all detections
+        # Merge all detections (weights already tagged per detection)
         all_dets = dets_original + dets_hflip + dets_vflip
+        return self._merge_tta_detections(all_dets)
 
-        # Weighted merge (original gets higher weight)
-        merged = self._merge_tta_detections(all_dets, weights=[1.0, 0.8, 0.8])
-
-        return merged
-
-    def _merge_tta_detections(self, detections: List[Dict], weights: List[float]) -> List[Dict]:
-        """Merge TTA detections dengan weighted voting via IoU clustering"""
+    def _merge_tta_detections(self, detections: List[Dict]) -> List[Dict]:
+        """Merge TTA detections dengan weighted voting via IoU clustering.
+        Weights must be pre-tagged as '_tta_weight' on each detection."""
         if not detections:
             return []
-
-        # Assign weight per detection (setiap augmentation dapat weight berbeda)
-        n_per_aug = len(detections) // len(weights) if weights else len(detections)
-        weighted_dets = []
-        for i, det in enumerate(detections):
-            aug_idx = min(i // max(n_per_aug, 1), len(weights) - 1)
-            det['_tta_weight'] = weights[aug_idx] if aug_idx < len(weights) else 1.0
-            weighted_dets.append(det)
 
         # Group overlapping detections per class
         merged = []
         used = set()
-        for i, det in enumerate(weighted_dets):
+        for i, det in enumerate(detections):
             if i in used:
                 continue
             # Find all detections with IoU > 0.45 of same class
             cluster = [i]
             used.add(i)
-            for j, other in enumerate(weighted_dets):
+            for j, other in enumerate(detections):
                 if j in used or det['class_name'] != other['class_name']:
                     continue
                 if self._iou(det['bbox'], other['bbox']) > 0.45:
@@ -245,22 +302,26 @@ class ColonyDetectorOptimized:
 
             if len(cluster) == 1:
                 # Single detection — tetap pakai confidence asli
-                merged.append(det)
+                best = det.copy()
+                best.pop('_tta_weight', None)
+                merged.append(best)
             else:
                 # Weighted average of cluster
-                total_w = sum(weighted_dets[k]['_tta_weight'] for k in cluster)
+                total_w = sum(detections[k]['_tta_weight'] for k in cluster)
                 if total_w == 0:
-                    merged.append(det)
+                    best = det.copy()
+                    best.pop('_tta_weight', None)
+                    merged.append(best)
                     continue
 
                 avg_conf = sum(
-                    weighted_dets[k]['confidence'] * weighted_dets[k]['_tta_weight']
+                    detections[k]['confidence'] * detections[k]['_tta_weight']
                     for k in cluster
                 ) / total_w
 
                 # Ambil bbox dari detection dengan confidence tertinggi
-                best_k = max(cluster, key=lambda k: weighted_dets[k]['confidence'])
-                best = weighted_dets[best_k].copy()
+                best_k = max(cluster, key=lambda k: detections[k]['confidence'])
+                best = detections[best_k].copy()
 
                 # Boost confidence jika muncul di >1 augmentation
                 boost = min(1.0 + (len(cluster) - 1) * 0.05, 1.15)

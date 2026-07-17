@@ -1,9 +1,12 @@
+import logging
 from ultralytics import YOLO
 import numpy as np
 import cv2
 from typing import List, Dict, Any, Tuple
 import os
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 # 5-class architecture per proposal
@@ -50,7 +53,7 @@ class ColonyDetector:
         # COCO model detects 'person/dog/cup' which would ruin CFU calculations
         if os.path.exists(self.model_path):
             self.model = YOLO(self.model_path)
-            print(f"Loaded model from {self.model_path}")
+            logger.info("Loaded model from %s", self.model_path)
         else:
             raise RuntimeError(
                 f"Critical: ColonyAI model not found at {self.model_path}. "
@@ -79,7 +82,7 @@ class ColonyDetector:
             scale = MAX_DIM / max(h, w)
             new_w, new_h = int(w * scale), int(h * scale)
             image = cv2.resize(image, (new_w, new_h))
-            print(f"Resized image from {w}x{h} to {new_w}x{new_h} to prevent OOM")
+            logger.info("Resized image from %dx%d to %dx%d to prevent OOM", w, h, new_w, new_h)
 
         conf = confidence_override if confidence_override is not None else self.confidence_threshold
 
