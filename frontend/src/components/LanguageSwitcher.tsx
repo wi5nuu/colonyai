@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslationStore } from "@/lib/i18n/store";
-import { Globe } from "lucide-react";
+
 
 export function LanguageSwitcher() {
   // Subscribe to language explicitly so the component re-renders on change

@@ -3,7 +3,7 @@ from typing import Optional
 from jose import JWTError, jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import uuid
 from app.core.config import settings

@@ -55,10 +55,7 @@ export const useAuthStore = create<AuthState>()(
           }
 
           const data = await authApi.login({ email, password, device_id: deviceId })
-          console.log("Raw Backend Login Data:", data);
-
           if (data.mfa_required) {
-            console.log("MFA is required according to backend");
             set({ isLoading: false, error: null, tempEmail: email, loginStep: 'mfa' })
             return { mfa_required: true }
           }

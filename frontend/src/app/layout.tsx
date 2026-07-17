@@ -4,7 +4,6 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { ConditionalNavbar } from "@/components/ConditionalNavbar";
 import { LanguageSync } from "./language-script";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import { GlobalSearch } from "@/components/GlobalSearch";
 
 const inter = Inter({
