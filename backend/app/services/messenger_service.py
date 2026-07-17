@@ -1,10 +1,10 @@
-import logging
+﻿import logging
 from datetime import datetime, timezone
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-class MessengerService:
+# Messenger notification service\nclass MessengerService:
     """
     Enterprise-grade Messenger Integration (WhatsApp/Telegram).
     For competition demo purposes, this simulates the connection and payload formatting
@@ -23,17 +23,17 @@ class MessengerService:
         timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')
         
         message = (
-            f"🔬 *ColonyAI ISO-17025 Automated Report*\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"ðŸ”¬ *ColonyAI ISO-17025 Automated Report*\n"
+            f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
             f"Generated: {timestamp} UTC\n"
             f"Analyst: {user_name}\n\n"
-            f"📊 *Summary:*\n"
-            f"• Total Analyses: {report_data.get('total', 0)}\n"
-            f"• Completed: {report_data.get('completed', 0)}\n"
-            f"• Total Colonies: {report_data.get('colonies', 0)}\n"
-            f"• Avg CFU/ml: {report_data.get('avg_cfu', 'N/A')}\n\n"
-            f"✅ *Status*: All systems nominal.\n"
-            f"🔗 View full ledger on the Neural Control Center."
+            f"ðŸ“Š *Summary:*\n"
+            f"â€¢ Total Analyses: {report_data.get('total', 0)}\n"
+            f"â€¢ Completed: {report_data.get('completed', 0)}\n"
+            f"â€¢ Total Colonies: {report_data.get('colonies', 0)}\n"
+            f"â€¢ Avg CFU/ml: {report_data.get('avg_cfu', 'N/A')}\n\n"
+            f"âœ… *Status*: All systems nominal.\n"
+            f"ðŸ”— View full ledger on the Neural Control Center."
         )
         
         logger.info(f"[WHATSAPP API] Sent message to {phone_number}:\n{message}")
@@ -51,17 +51,17 @@ class MessengerService:
         timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')
         
         message = (
-            f"🔬 <b>ColonyAI ISO-17025 Automated Report</b>\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"ðŸ”¬ <b>ColonyAI ISO-17025 Automated Report</b>\n"
+            f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
             f"Generated: <code>{timestamp} UTC</code>\n"
             f"Analyst: <b>{user_name}</b>\n\n"
-            f"📊 <b>Summary:</b>\n"
-            f"• Total Analyses: <b>{report_data.get('total', 0)}</b>\n"
-            f"• Completed: <b>{report_data.get('completed', 0)}</b>\n"
-            f"• Total Colonies: <b>{report_data.get('colonies', 0)}</b>\n"
-            f"• Avg CFU/ml: <b>{report_data.get('avg_cfu', 'N/A')}</b>\n\n"
-            f"✅ <b>Status</b>: All systems nominal.\n"
-            f"🔗 View full ledger on the Neural Control Center."
+            f"ðŸ“Š <b>Summary:</b>\n"
+            f"â€¢ Total Analyses: <b>{report_data.get('total', 0)}</b>\n"
+            f"â€¢ Completed: <b>{report_data.get('completed', 0)}</b>\n"
+            f"â€¢ Total Colonies: <b>{report_data.get('colonies', 0)}</b>\n"
+            f"â€¢ Avg CFU/ml: <b>{report_data.get('avg_cfu', 'N/A')}</b>\n\n"
+            f"âœ… <b>Status</b>: All systems nominal.\n"
+            f"ðŸ”— View full ledger on the Neural Control Center."
         )
         
         logger.info(f"[TELEGRAM API] Sent HTML message to {chat_id}:\n{message}")
@@ -79,25 +79,26 @@ class MessengerService:
         Supports sending the annotated image along with the CFU results.
         """
         timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-        status_icon = "🟢" if analysis_data.get('status') == "completed" else "🔴"
+        status_icon = "ðŸŸ¢" if analysis_data.get('status') == "completed" else "ðŸ”´"
         
         message = (
-            f"⚡ *REAL-TIME ANALYSIS ALERT* ⚡\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"âš¡ *REAL-TIME ANALYSIS ALERT* âš¡\n"
+            f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
             f"ID: `{analysis_data.get('sample_id')}`\n"
             f"Time: {timestamp} UTC\n\n"
-            f"🧪 *Result Data:*\n"
-            f"• Protocol: {analysis_data.get('media_type')}\n"
-            f"• Colonies Detected: {analysis_data.get('colony_count', 0)}\n"
-            f"• CFU/ml: {analysis_data.get('cfu_per_ml', 'N/A')}\n"
-            f"• Confidence: {analysis_data.get('confidence_score', 0) * 100:.1f}%\n\n"
+            f"ðŸ§ª *Result Data:*\n"
+            f"â€¢ Protocol: {analysis_data.get('media_type')}\n"
+            f"â€¢ Colonies Detected: {analysis_data.get('colony_count', 0)}\n"
+            f"â€¢ CFU/ml: {analysis_data.get('cfu_per_ml', 'N/A')}\n"
+            f"â€¢ Confidence: {analysis_data.get('confidence_score', 0) * 100:.1f}%\n\n"
             f"{status_icon} *Status*: {str(analysis_data.get('status')).upper()}\n"
         )
         
         if image_url:
-            message += f"\n📸 *Annotated Image*: {image_url}"
+            message += f"\nðŸ“¸ *Annotated Image*: {image_url}"
 
         logger.info(f"[{platform.upper()} API] Instant Alert queued and sent to {target_id}:\n{message}")
         return True
 
 messenger_service = MessengerService()
+
