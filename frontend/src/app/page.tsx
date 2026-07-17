@@ -530,7 +530,7 @@ export default function LandingPage() {
                 </p>
               </a>
               <a
-                href="https://wa.me/6281394829?text=Halo%20ColonyAI%2C%20saya%20ingin%20bertanya%20mengenai%20platform%20analisis%20mikrobiologi%20Anda."
+                href="https://wa.me/6281394829?text=Hello%20ColonyAI%2C%20I%20would%20like%20to%20ask%20about%20your%20microbiology%20analysis%20platform."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white dark:bg-slate-950 p-6 shadow-xl border border-slate-100 dark:border-slate-800 min-w-[280px] flex flex-col gap-4 hover:border-green-300 dark:hover:border-[#00f2ff] hover:shadow-2xl transition-all cursor-pointer group"

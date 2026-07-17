@@ -957,8 +957,8 @@ export default function ReportsPage() {
                 />
                 <span className="text-[8px] text-slate-400 dark:text-slate-600 font-bold uppercase tracking-wide block">
                   {sharePlatform === "whatsapp"
-                    ? "Harap masukkan nomor lengkap diawali kode negara (misal 62813948290)."
-                    : "Username tidak perlu diawali dengan tanda @."}
+                    ? "Please enter the full number prefixed with the country code (e.g. 62813948290)."
+                    : "Username does not need to be prefixed with @."}
                 </span>
               </div>
             </div>
