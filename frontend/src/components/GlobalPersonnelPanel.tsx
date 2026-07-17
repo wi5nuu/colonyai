@@ -274,7 +274,7 @@ export function GlobalPersonnelPanel() {
               {t("globalPersonnel.globalPersonnelCommand")}
             </h3>
           </div>
-          <p className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
+          <p className="text-[7px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
             {orgs.length} {t("globalPersonnel.orgClickExpand")}
           </p>
         </div>
