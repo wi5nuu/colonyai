@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -884,7 +884,7 @@ function AITooltip() {
   const [message, setMessage] = useState("");
   const [isVisible, setIsVisible] = useState(false);
 
-  const messages = [
+  const messages = useMemo(() => [
     "Ready to analyze your colony plates with 95%+ accuracy!",
     "ISO-17025 compliant AI assistant at your service.",
     "Need help? I can guide you through the analysis process.",
@@ -895,7 +895,7 @@ function AITooltip() {
     "300× faster than manual counting - try me now!",
     "AI-powered precision for your microbiology workflow.",
     "Click to start your intelligent analysis session!",
-  ];
+  ], []);
 
   useEffect(() => {
     // Show tooltip after 2 seconds
@@ -919,7 +919,7 @@ function AITooltip() {
       clearTimeout(hideTimer);
       clearInterval(changeInterval);
     };
-  }, []);
+  }, [messages]);
 
   if (!isVisible) return null;
 
