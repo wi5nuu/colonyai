@@ -1,4 +1,4 @@
-﻿# ColonyAI application configuration via pydantic-settings\nfrom pydantic_settings import BaseSettings
+# ColonyAI application configuration via pydantic-settings\nfrom pydantic_settings import BaseSettings
 from typing import List
 from pathlib import Path
 import os
