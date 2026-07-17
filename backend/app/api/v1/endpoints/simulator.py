@@ -17,7 +17,7 @@ from typing import Optional
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc, and_
+from sqlalchemy import select, desc, and_, func
 from sqlalchemy.orm import joinedload
 
 from app.core.security import get_current_user, require_role
@@ -164,6 +164,7 @@ async def save_comparison(
 
     comparison = SimulatorComparison(
         id=uuid.uuid4(),
+        organization_id=uuid.UUID(current_user["organization_id"]) if current_user.get("organization_id") else None,
         user_id=uuid.UUID(current_user["user_id"]),
         analysis_id=analysis_uuid,
         ai_class_breakdown=ai_breakdown,
@@ -277,7 +278,7 @@ async def list_comparisons(
         .limit(page_size)
     )
 
-    count_query = select(__import__('sqlalchemy').func.count()).select_from(SimulatorComparison)
+    count_query = select(func.count()).select_from(SimulatorComparison)
 
     if user_role == "analyst":
         user_id = uuid.UUID(current_user["user_id"])
