@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Activity,
   FileSpreadsheet,
+  X,
 } from "lucide-react";
 import { analysesApi } from "@/lib/analyses-api";
 import { reportsApi } from "@/lib/reports-api";
@@ -41,6 +42,8 @@ export default function HistoryPage() {
   const [page, setPage] = useState(1);
   const [showDocs, setShowDocs] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; sampleId: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const pageSize = 12;
 
   useEffect(() => {
@@ -95,12 +98,13 @@ export default function HistoryPage() {
     }
   };
 
-  const handleDelete = async (id: string, sampleId: string) => {
-    if (!window.confirm(t("history.confirmDelete", { id: sampleId })))
-      return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      await analysesApi.delete(id);
+      await analysesApi.delete(deleteTarget.id);
       toast.success(t("history.successDelete"));
+      setDeleteTarget(null);
       const result = await analysesApi.list({
         page,
         page_size: pageSize,
@@ -112,6 +116,8 @@ export default function HistoryPage() {
       setData(result);
     } catch (error: any) {
       toast.error(error.response?.data?.detail || t("history.errorDelete"));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -290,13 +296,16 @@ export default function HistoryPage() {
                         </div>
                       </td>
                       <td className="px-4 py-2 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded-none shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-all">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleViewAnalysis(a.id); }}
+                            className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded-none shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-all"
+                          >
                             <Eye className="w-3.5 h-3.5 text-slate-400" />
                           </button>
                           {user?.role !== "auditor" && (
                             <button
-                              onClick={(e) => { e.stopPropagation(); handleDelete(a.id, a.sample_id); }}
+                              onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: a.id, sampleId: a.sample_id }); }}
                               className="p-1 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-none transition-all"
                             >
                               <Trash2 className="w-3.5 h-3.5 text-rose-400" />
@@ -364,6 +373,64 @@ Semua data hasil analisis disimpan dalam ledger terenkripsi AES-256. Setiap bari
 Gunakan tombol 'Export Hub' untuk mengunduh seluruh repositori dalam format CSV untuk pelaporan eksternal.`}
         />
       </div>
+
+      {/* Delete Confirm Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-sm">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Trash2 className="w-4 h-4 text-rose-500" />
+                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                  Konfirmasi Hapus
+                </h3>
+              </div>
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {/* Modal body */}
+            <div className="px-5 py-5 space-y-3">
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Anda akan menghapus analisis berikut secara permanen:
+              </p>
+              <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-4 py-3">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Sample ID</p>
+                <p className="text-sm font-black text-slate-900 dark:text-white font-mono">{deleteTarget.sampleId}</p>
+              </div>
+              <p className="text-[9px] text-rose-500 font-bold uppercase tracking-widest">
+                Tindakan ini tidak dapat dibatalkan.
+              </p>
+            </div>
+            {/* Modal footer */}
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-slate-200 dark:border-slate-800">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={isDeleting}
+                className="px-4 py-2 text-[9px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-[9px] font-black uppercase tracking-widest bg-rose-500 hover:bg-rose-600 text-white transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3 h-3" />
+                )}
+                {isDeleting ? "Menghapus..." : "Hapus"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
