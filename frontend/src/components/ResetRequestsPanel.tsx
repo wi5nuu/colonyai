@@ -38,10 +38,10 @@ interface ResetRequest {
 
 function timeLeft(expiresAt: string): string {
   const diff = new Date(expiresAt).getTime() - Date.now();
-  if (diff <= 0) return "Kedaluwarsa";
+  if (diff <= 0) return "Expired";
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
-  return `${h}j ${m}m`;
+  return `${h}h ${m}m`;
 }
 
 function detectDevice(ua: string): string {
@@ -184,7 +184,7 @@ export function ResetRequestsPanel() {
   const handleCopyToken = async (token: string, id: string) => {
     await navigator.clipboard.writeText(token);
     setCopiedId(id);
-    toast.success("Token disalin! Sampaikan via saluran internal yang aman.");
+    toast.success("Token copied! Deliver via secure internal channel.");
     setTimeout(() => setCopiedId(null), 3000);
   };
 
@@ -394,7 +394,7 @@ export function ResetRequestsPanel() {
                       </div>
                       <div>
                         <p className="text-slate-400 dark:text-slate-500 font-black uppercase mb-0.5">
-                          Waktu
+                          Time
                         </p>
                         <p className="font-bold text-slate-700 dark:text-slate-300">
                           {new Date(req.requested_at).toLocaleTimeString(
@@ -427,8 +427,8 @@ export function ResetRequestsPanel() {
 
                   {req.status === "approved" && req.reset_token && (
                     <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl mt-3">
-                      <p className="text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase mb-1.5">
-                        🔑 Token — Berlaku s/d{" "}
+                          <p className="text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase mb-1.5">
+                        🔑 Token — Valid until {" "}
                         {new Date(req.token_expires_at!).toLocaleTimeString(
                           "id-ID",
                         )}

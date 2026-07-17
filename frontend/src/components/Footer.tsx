@@ -88,7 +88,7 @@ export function Footer() {
             </div>
           </div>
 
-          {/* ── Column 2: Tautan Terkait (Internal) ───────────────── */}
+          {/* ── Column 2: Related Links (Internal) ───────────────── */}
           <div className="space-y-6">
             <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
               {t("footer.relatedLinks")}
@@ -114,7 +114,7 @@ export function Footer() {
             </nav>
           </div>
 
-          {/* ── Column 3: Partner Eksternal ────────────────────────── */}
+          {/* ── Column 3: External Partners ────────────────────────── */}
           <div className="space-y-6">
             <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
               {t("footer.strategicEcosystem")}
@@ -139,7 +139,7 @@ export function Footer() {
             </nav>
           </div>
 
-          {/* ── Column 4: Tetap Terhubung ────────────────────────── */}
+          {/* ── Column 4: Stay Connected ────────────────────────── */}
           <div className="space-y-6">
             <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
               {t("footer.stayConnected")}

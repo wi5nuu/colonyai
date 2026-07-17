@@ -724,7 +724,7 @@ export default function AdministrationPage() {
                                       {filtered.length === 0
                                         ? "0"
                                         : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)}`}{" "}
-                                      dari {filtered.length} personel
+                                      of {filtered.length} personnel
                                     </span>
                                     <div className="flex items-center gap-1">
                                       <button

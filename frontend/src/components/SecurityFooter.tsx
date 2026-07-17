@@ -16,12 +16,12 @@ const translations = {
     col2_title: "Saluran Komunikasi",
     col2_subtitle1: "Pusat Layanan Teknis",
     col2_subtitle2: "Correspondence Email",
-    col3_title: "Bantuan & Legalitas",
+    col3_title: "Help & Legal",
     links: [
-      { name: "Pusat Bantuan Akun", href: "/troubleshoot" },
-      { name: "Kebijakan Privasi", href: "/privacy" },
-      { name: "Syarat dan Ketentuan", href: "/terms" },
-      { name: "Kepatuhan ISO-17025", href: "/compliance" }
+      { name: "Account Help Center", href: "/troubleshoot" },
+      { name: "Privacy Policy", href: "/privacy" },
+      { name: "Terms and Conditions", href: "/terms" },
+      { name: "ISO-17025 Compliance", href: "/compliance" }
     ],
     disclaimer: "ColonyAI Laboratory System is an automated microbiology analysis platform based on Computer Vision, developed as an innovative solution for the AI Open Innovation Challenge 2026 by President University and the Coordinating Ministry for Economic Affairs. This system is designed to meet ISO-17025 technical standards and implements military-grade data encryption to guarantee access security for every personnel registered in this digital laboratory infrastructure.",
     copyright: "© 2026 ColonyAI Technology Platform | All Rights Reserved.",
@@ -68,7 +68,7 @@ export function SecurityFooter() {
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-24 mb-16 border-b border-slate-100 pb-16">
           
-          {/* ── Column 1: PUSAT PENGEMBANGAN ────────────────────────── */}
+          {/* ── Column 1: DEVELOPMENT CENTER ────────────────────────── */}
           <div className="space-y-6">
             <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">{t.col1_title}</h4>
             <div className="space-y-4">
@@ -85,7 +85,7 @@ export function SecurityFooter() {
             </div>
           </div>
 
-          {/* ── Column 2: SALURAN KOMUNIKASI ────────────────────────── */}
+          {/* ── Column 2: COMMUNICATION CHANNELS ────────────────────────── */}
           <div className="space-y-6">
             <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">{t.col2_title}</h4>
             <div className="space-y-5">
@@ -110,7 +110,7 @@ export function SecurityFooter() {
             </div>
           </div>
 
-          {/* ── Column 3: BANTUAN ────────────────────────── */}
+          {/* ── Column 3: HELP ────────────────────────── */}
           <div className="space-y-6">
             <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">{t.col3_title}</h4>
             <nav className="flex flex-col gap-3">

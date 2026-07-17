@@ -693,18 +693,18 @@ AUTHORITY: MASTER COMMAND`}
                     details: [
                       'Use \'Suspend\' (red) for emergency isolation.',
                       'All staff access on that tenant will be blocked.',
-                      'Gunakan \'Activate\' (hijau) untuk memulihkan sesi.',
+                      'Use \'Activate\' (green) to restore the session.',
                       'Protocol log records changes for audit purposes.'
                     ]
                   },
                   {
                     id: '4',
                     title: 'Telemetry Sync',
-                    desc: 'Data diperbarui otomatis setiap 10 detik untuk memastikan visibilitas real-time 24/7.',
+                    desc: 'Data is automatically updated every 10 seconds to ensure 24/7 real-time visibility.',
                     details: [
-                      'Throughput analitik dipantau secara terus menerus.',
-                      'Sistem mendeteksi anomali keamanan lintas region.',
-                      'Lakukan \'Force Global Sync\' jika terlihat latensi.'
+                      'Analytical throughput is monitored continuously.',
+                      'System detects cross-region security anomalies.',
+                      'Perform \'Force Global Sync\' if latency is detected.'
                     ]
                   }
                 ].map((step) => (
@@ -760,10 +760,10 @@ AUTHORITY: MASTER COMMAND`}
               </h3>
 
               <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed mb-5 sm:mb-8">
-                Anda akan mengubah status operasional untuk <span className="text-slate-900 font-bold">{confirmModal.orgName}</span>.
+                You are about to change the operational status for <span className="text-slate-900 font-bold">{confirmModal.orgName}</span>.
                 {confirmModal.currentStatus === 'active'
-                  ? ' Seluruh akses pengguna untuk tenant ini akan diblokir segera.'
-                  : ' Seluruh layanan dan akses untuk tenant ini akan dipulihkan.'}
+                  ? ' All user access for this tenant will be blocked immediately.'
+                  : ' All services and access for this tenant will be restored.'}
               </p>
 
               <div className="flex gap-3">
@@ -781,7 +781,7 @@ AUTHORITY: MASTER COMMAND`}
                       : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200'
                   }`}
                 >
-                  Konfirmasi
+                  Confirm
                 </button>
               </div>
             </div>
@@ -962,7 +962,7 @@ AUTHORITY: MASTER COMMAND`}
                     }}
                     className="flex-1 py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-widest rounded-none transition-all"
                   >
-                    Batal
+                  Cancel
                   </button>
                   <button
                     onClick={handleResetAdminPassword}

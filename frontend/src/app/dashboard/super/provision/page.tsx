@@ -431,7 +431,7 @@ export default function ProvisionNodePage() {
                 </p>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-4 leading-relaxed font-medium">
-                Hubungkan kunci ini pada konfigurasi node primer penyewa untuk mengaktifkan lisensi.
+                Connect this key to the tenant's primary node configuration to activate the license.
               </p>
             </div>
 
@@ -458,7 +458,7 @@ export default function ProvisionNodePage() {
                 </p>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-4 leading-relaxed font-medium">
-                Kredensial sementara ini harus segera diganti oleh Administrator pada saat login pertama kali.
+                This temporary credential must be changed immediately by the Administrator upon first login.
               </p>
             </div>
           </div>

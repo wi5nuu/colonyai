@@ -383,7 +383,7 @@ Use the 'Export Hub' button to download the entire repository in CSV format for 
               <div className="flex items-center gap-2">
                 <Trash2 className="w-4 h-4 text-rose-500" />
                 <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                  Konfirmasi Hapus
+                  Confirm Delete
                 </h3>
               </div>
               <button
@@ -396,14 +396,14 @@ Use the 'Export Hub' button to download the entire repository in CSV format for 
             {/* Modal body */}
             <div className="px-5 py-5 space-y-3">
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                Anda akan menghapus analisis berikut secara permanen:
+                You are about to permanently delete the following analysis:
               </p>
               <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-4 py-3">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Sample ID</p>
                 <p className="text-sm font-black text-slate-900 dark:text-white font-mono">{deleteTarget.sampleId}</p>
               </div>
               <p className="text-[9px] text-rose-500 font-bold uppercase tracking-widest">
-                Tindakan ini tidak dapat dibatalkan.
+                This action cannot be undone.
               </p>
             </div>
             {/* Modal footer */}
@@ -413,7 +413,7 @@ Use the 'Export Hub' button to download the entire repository in CSV format for 
                 disabled={isDeleting}
                 className="px-4 py-2 text-[9px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
               >
-                Batal
+                Cancel
               </button>
               <button
                 onClick={handleDelete}
@@ -425,7 +425,7 @@ Use the 'Export Hub' button to download the entire repository in CSV format for 
                 ) : (
                   <Trash2 className="w-3 h-3" />
                 )}
-                {isDeleting ? "Menghapus..." : "Hapus"}
+                {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

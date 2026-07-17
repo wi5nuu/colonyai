@@ -299,12 +299,12 @@ export default function UploadPage() {
                   </div>
                   <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {[
-                      { file: 'single.jpg', label: 'Koloni Tunggal', badge: 'Single', color: '#059669' },
-                      { file: 'merged.jpg', label: 'Koloni Bertumpuk', badge: 'Merged', color: '#d97706' },
-                      { file: 'bubble_artifact.jpg', label: 'Gelembung', badge: 'Bubble', color: '#dc2626' },
-                      { file: 'crack.jpg', label: 'Retakan Media', badge: 'Crack', color: '#7c3aed' },
-                      { file: 'ecoli_dense.jpg', label: 'E. coli Padat', badge: 'E.coli', color: '#0891b2' },
-                      { file: 'dust.jpg', label: 'Cawan Kosong', badge: 'Empty', color: '#64748b' },
+                      { file: 'single.jpg', label: 'Single Colony', badge: 'Single', color: '#059669' },
+                      { file: 'merged.jpg', label: 'Stacked Colony', badge: 'Merged', color: '#d97706' },
+                      { file: 'bubble_artifact.jpg', label: 'Bubble', badge: 'Bubble', color: '#dc2626' },
+                      { file: 'crack.jpg', label: 'Media Crack', badge: 'Crack', color: '#7c3aed' },
+                      { file: 'ecoli_dense.jpg', label: 'Dense E. coli', badge: 'E.coli', color: '#0891b2' },
+                      { file: 'dust.jpg', label: 'Empty Dish', badge: 'Empty', color: '#64748b' },
                     ].map((sample, i) => (
                       <button
                         key={i}
@@ -690,7 +690,7 @@ PRECISION: 94.1% mAP@0.5 on 8+ media types.`}
                 {[
                   {
                     id: "1",
-                    title: "Pengidentifikasi Spesimen (Traceability)",
+                    title: "Specimen Identifier (Traceability)",
                     desc: `${t("upload.purposeLabel")} ${t("upload.descSampleIdPurpose")} ${t("upload.inputLabel")} ${t("upload.descSampleIdInput")} ${t("upload.resultLabel")} ${t("upload.descSampleIdResult")}`,
                   },
                   {
@@ -698,10 +698,10 @@ PRECISION: 94.1% mAP@0.5 on 8+ media types.`}
                     title: "Matriks Media Agar (Selectivity)",
                     desc: `${t("upload.purposeLabel")} ${t("upload.descMediaPurpose")} ${t("upload.inputLabel")} ${t("upload.descMediaInput")} ${t("upload.resultLabel")} ${t("upload.descMediaResult")}`,
                     list: [
-                      "PCA: Untuk Total Plate Count (TPC) umum.",
-                      "VRBA/BGBB: Spesifik untuk kelompok Coliform/E.coli.",
-                      "R2A: Khusus bakteri stres/heterotrofik pada air.",
-                      "TSA/MAC: Untuk pertumbuhan umum atau selektif Gram-negatif.",
+                      "PCA: For general Total Plate Count (TPC).",
+                      "VRBA/BGBB: Specific for Coliform/E.coli group.",
+                      "R2A: Specific for stressed/heterotrophic bacteria in water.",
+                      "TSA/MAC: For general growth or Gram-negative selective.",
                     ],
                   },
                   {
@@ -712,11 +712,11 @@ PRECISION: 94.1% mAP@0.5 on 8+ media types.`}
                   {
                     id: "4",
                     title: "Volume & Parameter Inkubasi",
-                    desc: `${t("upload.purposeLabel")} Normalisasi hitungan dan pencatatan kondisi fisik.`,
+                    desc: `${t("upload.purposeLabel")} Normalize count and record physical conditions.`,
                     list: [
                       `Volume: ${t("upload.descVolumeInput")} -> ${t("upload.descVolumeResult")}`,
-                      `Suhu: ${t("upload.descTempInput")} -> ${t("upload.descTempResult")}`,
-                      `Waktu: ${t("upload.descTimeInput")} -> ${t("upload.descTimeResult")}`,
+                      `Temperature: ${t("upload.descTempInput")} -> ${t("upload.descTempResult")}`,
+                      `Time: ${t("upload.descTimeInput")} -> ${t("upload.descTimeResult")}`,
                     ],
                   },
                   {
@@ -771,11 +771,11 @@ PRECISION: 94.1% mAP@0.5 on 8+ media types.`}
               <div className="space-y-3">
                 {[
                   {
-                    label: "Resolusi",
-                    val: "Minimal 300 DPI untuk akurasi optimal.",
+                    label: "Resolution",
+                    val: "Minimum 300 DPI for optimal accuracy.",
                   },
-                  { label: "Pencahayaan", val: "Sudut lampu LED 45 derajat." },
-                  { label: "Format", val: "PNG atau JPG (Max 10MB)." },
+                  { label: "Lighting", val: "45-degree LED lamp angle." },
+                  { label: "Format", val: "PNG or JPG (Max 10MB)." },
                 ].map((item, i) => (
                   <div
                     key={i}
