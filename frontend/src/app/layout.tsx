@@ -51,11 +51,9 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <LanguageSync />
         <Providers>
-          <ThemeProvider>
-            <ConditionalNavbar />
-            <main id="main-content">{children}</main>
-            <GlobalSearch />
-          </ThemeProvider>
+          <ConditionalNavbar />
+          <main id="main-content">{children}</main>
+          <GlobalSearch />
         </Providers>
       </body>
     </html>
