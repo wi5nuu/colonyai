@@ -212,7 +212,7 @@ export default function ReportsPage() {
       if (!targetId) {
         toast.error(
           sharePlatform === "whatsapp"
-            ? "Nomor WhatsApp tidak boleh kosong"
+            ? "WhatsApp number cannot be empty"
             : "Username Telegram tidak boleh kosong",
         );
         setIsSendingMessenger(false);

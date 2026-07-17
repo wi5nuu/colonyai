@@ -403,7 +403,7 @@ export default function ProvisionNodePage() {
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">Provisioning Successful</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-md mx-auto leading-relaxed">
-              Infrastruktur untuk <span className="text-slate-900 dark:text-white font-bold">{provisionResult.organization_name || newOrgData.name}</span> telah berhasil di-deploy pada node Jakarta.
+              Infrastructure for <span className="text-slate-900 dark:text-white font-bold">{provisionResult.organization_name || newOrgData.name}</span> has been successfully deployed on the Jakarta node.
             </p>
           </div>
 

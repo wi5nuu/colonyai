@@ -670,10 +670,10 @@ PRECISION: 94.1% mAP@0.5 on 8+ media types.`}
                 </h2>
               </div>
               <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-sm border border-slate-100">
-                Sistem Intelligence Intake adalah gerbang utama pemrosesan
-                spesimen biologis menggunakan mesin saraf ColonyAI. Protokol ini
-                dirancang untuk memenuhi standar akurasi tinggi yang
-                dipersyaratkan oleh ISO-17025.
+                The Intelligence Intake System is the main gateway for processing
+                biological specimens using the ColonyAI neural engine. This protocol
+                is designed to meet the high accuracy standards
+                required by ISO-17025.
               </p>
             </section>
 
@@ -683,7 +683,7 @@ PRECISION: 94.1% mAP@0.5 on 8+ media types.`}
                   02
                 </span>
                 <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
-                  Protokol Konfigurasi Detail
+                  Detailed Configuration Protocol
                 </h2>
               </div>
               <div className="space-y-4 ml-0.5">
@@ -721,8 +721,8 @@ PRECISION: 94.1% mAP@0.5 on 8+ media types.`}
                   },
                   {
                     id: "5",
-                    title: "Kepatuhan Audit (Batch & Method)",
-                    desc: "Menjamin ketertelusuran penuh (Full Traceability) sesuai standar audit ISO-17025.",
+                    title: "Audit Compliance (Batch & Method)",
+                    desc: "Ensures full traceability according to ISO-17025 audit standards.",
                     list: [
                       `Standard: ${t("upload.descMethodInput")} -> ${t("upload.descMethodResult")}`,
                       `Batch/Lot: ${t("upload.descBatchInput")} -> ${t("upload.descBatchResult")}`,

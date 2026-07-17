@@ -249,7 +249,7 @@ Layer ini menampilkan visualisasi deteksi objek biologis. Gunakan toggle 'Annota
 
 2. SPECTRAL DISTRIBUTION
 - Verified: Koloni yang diakui sebagai unit pembentuk koloni (CFU).
-- Filtered: Artefak (gelembung, debu, retakan) yang ditolak oleh sistem saraf untuk mencegah False Positive.
+- Filtered: Artifacts (bubbles, dust, cracks) rejected by the neural system to prevent False Positives.
 
 3. KEPATUHAN ISO-17025 (METRIK GUM)
 - Uncertainty (U): Nilai ketidakpastian yang dihitung berdasarkan protokol GUM (Guide to the Expression of Uncertainty in Measurement).

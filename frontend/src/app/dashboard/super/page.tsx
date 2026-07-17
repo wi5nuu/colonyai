@@ -694,7 +694,7 @@ AUTHORITY: MASTER COMMAND`}
                       'Use \'Suspend\' (red) for emergency isolation.',
                       'All staff access on that tenant will be blocked.',
                       'Gunakan \'Activate\' (hijau) untuk memulihkan sesi.',
-                      'Log protokol mencatat perubahan untuk keperluan audit.'
+                      'Protocol log records changes for audit purposes.'
                     ]
                   },
                   {
@@ -937,10 +937,10 @@ AUTHORITY: MASTER COMMAND`}
                       </div>
                       <div className="grid grid-cols-2 gap-x-2 gap-y-1 px-1">
                         {[
-                          { label: "8+ Karakter", met: validatePasswordRules(passwordResetModal.newPassword).length },
-                          { label: "Huruf Besar", met: validatePasswordRules(passwordResetModal.newPassword).upper },
-                          { label: "Angka", met: validatePasswordRules(passwordResetModal.newPassword).number },
-                          { label: "Simbol", met: validatePasswordRules(passwordResetModal.newPassword).symbol },
+                          { label: "8+ Characters", met: validatePasswordRules(passwordResetModal.newPassword).length },
+                          { label: "Uppercase Letter", met: validatePasswordRules(passwordResetModal.newPassword).upper },
+                          { label: "Number", met: validatePasswordRules(passwordResetModal.newPassword).number },
+                          { label: "Symbol", met: validatePasswordRules(passwordResetModal.newPassword).symbol },
                         ].map((rule, i) => (
                           <div key={i} className="flex items-center gap-1">
                             <div className={`w-1 h-1 rounded-none ${rule.met ? 'bg-emerald-500' : 'bg-slate-300'}`} />

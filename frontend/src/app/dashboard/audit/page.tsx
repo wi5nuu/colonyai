@@ -102,7 +102,7 @@ export default function AuditPage() {
         const msg =
           err?.response?.data?.detail ||
           err?.message ||
-          "Gagal memuat audit log.";
+          "Failed to load audit log.";
         setError(msg);
         toast.error(msg);
       } finally {

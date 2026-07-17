@@ -37,7 +37,7 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   const quickQuestions = useMemo(() => {
     if (language === 'id') {
       return [
-        { q: "Apa itu ColonyAI?", a: "ColonyAI adalah platform otomatisasi laboratorium berbasis AI Vision untuk analisis mikrobiologi dan monitoring kepatuhan APD." },
+        { q: "What is ColonyAI?", a: "ColonyAI is an AI Vision-based laboratory automation platform for microbiological analysis and PPE compliance monitoring." },
         { q: "Siapa provider kasus ini?", a: "Provider kasus ini adalah TUV NORD Indonesia untuk Healthcare Case 1: Automated Plate Count Reader." },
         { q: "Siapa penyelenggara kompetisi?", a: "Kompetisi AI Open Innovation Challenge 2026 diselenggarakan oleh President University bersama Kemenko Perekonomian." },
         { q: "Apa tujuan utama ColonyAI?", a: "Meningkatkan akurasi penghitungan koloni dan memastikan keselamatan analis melalui monitoring APD real-time." },
@@ -54,9 +54,9 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         { q: "Bagaimana cara validasi hasilnya?", a: "Hasil AI melewati tahap validasi human-in-the-loop oleh analis sebelum akhirnya dikunci dalam database." },
         { q: "Apakah ColonyAI patuh ISO?", a: "Ya, sistem kami dirancang sesuai standar ISO-17025 untuk kompetensi laboratorium pengujian dan kalibrasi." },
         { q: "Bagaimana enkripsi datanya?", a: "Kami menggunakan enkripsi AES-256 untuk data hasil uji lab dan dokumen kepatuhan." },
-        { q: "Apa itu Digital Audit Trail?", a: "Setiap langkah pemrosesan, dari upload hingga validasi, dicatat dalam log sistem yang tidak dapat diubah (immutable)." },
-        { q: "Apakah data saya aman?", a: "Sangat aman. Kami menerapkan arsitektur Zero-Trust dan protokol SSL/TLS Grade A+ untuk semua komunikasi data." },
-        { q: "Bagaimana manajemen hak aksesnya?", a: "Kami menggunakan sistem 4-role (Admin, Manager, Auditor, Analyst) dengan otentikasi berbasis JWT." },
+        { q: "What is a Digital Audit Trail?", a: "Every processing step, from upload to validation, is recorded in immutable system logs." },
+        { q: "Is my data secure?", a: "Highly secure. We implement Zero-Trust architecture and Grade A+ SSL/TLS protocols for all data communication." },
+        { q: "How is access rights managed?", a: "We use a 4-role system (Admin, Manager, Auditor, Analyst) with JWT-based authentication." },
         { q: "Apa itu Neural Vision Plate Reader?", a: "Layanan utama kami untuk menghitung koloni pada petri dish secara otomatis menggunakan visi komputer." },
         { q: "Apa itu PPE Compliance Monitoring?", a: "Sistem monitoring real-time untuk memastikan analis menggunakan Jas Lab, Masker, dan Sarung Tangan." },
         { q: "Apa itu AI Quality Analytics Hub?", a: "Dashboard analitik yang menyajikan visualisasi data kepatuhan dan tren hasil uji laboratorium." },
@@ -70,8 +70,8 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         { q: "Siapa pencipta ColonyAI?", a: "Tim pengembang di bawah koordinasi wi5nuu sebagai bagian dari AI Open Innovation Challenge 2026." },
         { q: "Kenapa memilih YOLOv8?", a: "Karena kecepatannya yang real-time dan kemampuannya menangkap fitur kecil (small objects) seperti koloni mikroba." },
         { q: "Apa rencana ke depan?", a: "Ekspansi ke deteksi jenis bakteri spesifik melalui analisis spektral gambar." },
-        { q: "Bagaimana cara menghubungi panitia?", a: "Silakan email ke committee-ai-open@president.ac.id atau hubungi hotline 150881." },
-        { q: "Apakah ada log perubahan data?", a: "Ya, setiap perubahan data dicatat lengkap dengan timestamp dan identitas user yang melakukan perubahan." },
+        { q: "How do I contact the committee?", a: "Please email committee-ai-open@president.ac.id or call hotline 150881." },
+        { q: "Is there a data change log?", a: "Yes, every data change is recorded with a timestamp and the identity of the user who made the change." },
         { q: "Apa itu mAP@.5:.95?", a: "Metrik yang mengukur rata-rata presisi model pada berbagai ambang batas IoU (Intersection over Union)." },
         { q: "Apa itu augmentasi data?", a: "Teknik manipulasi gambar (rotasi, blur, brightness) untuk memperkaya dataset dan mencegah overfitting." },
         { q: "Bagaimana sistem menangani noise?", a: "Kelas 'Dust/Debris' digunakan untuk mengklasifikasikan kotoran agar tidak terhitung sebagai koloni." },
@@ -79,7 +79,7 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         { q: "Apa itu JWT?", a: "JSON Web Token, standar industri untuk transmisi informasi identitas user secara aman antara client dan server." },
         { q: "Kenapa TUV NORD terlibat?", a: "TUV NORD sebagai case provider memberikan tantangan industri nyata yang harus diselesaikan oleh inovator AI." },
         { q: "Apa keuntungan bagi lab?", a: "Mengurangi human error hingga 95% dan mempercepat pelaporan hasil laboratorium secara signifikan." },
-        { q: "Apakah sistem ini open source?", a: "Bagian dari repositori sistem ini dapat diakses di GitHub wi5nuu/colonyai untuk keperluan transparansi audit." },
+        { q: "Is this system open source?", a: "Parts of this system's repository can be accessed on GitHub wi5nuu/colonyai for audit transparency purposes." },
         { q: "Bagaimana cara instalasi PWA?", a: "Cukup buka website colonyai.id di browser mobile dan pilih 'Add to Home Screen'." },
         { q: "Apakah butuh koneksi internet?", a: "Dibutuhkan koneksi untuk sinkronisasi data ke cloud, namun inferensi dapat dioptimasi untuk edge computing." },
         { q: "Apa visi 2026 ColonyAI?", a: "Menjadi standar emas OS Laboratorium Mikrobiologi di seluruh jaringan TUV NORD Global." },
@@ -161,7 +161,7 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     setTimeout(() => {
       const lowerInput = text.toLowerCase();
       let foundResponse = language === 'id' 
-        ? t('chatbot.noResults') || "Maaf, saya belum memiliki informasi spesifik mengenai hal tersebut."
+        ? t('chatbot.noResults') || "Sorry, I don't have specific information about that yet."
         : t('chatbot.noResults') || "Sorry, I don't have specific information regarding that yet.";
 
       // 1. Cek kecocokan persis

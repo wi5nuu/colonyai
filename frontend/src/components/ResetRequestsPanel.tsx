@@ -80,7 +80,7 @@ export function ResetRequestsPanel() {
       setRequests(res.data.reset_requests);
       setSelectedIds(new Set());
     } catch {
-      toast.error("Gagal memuat daftar permintaan reset");
+      toast.error("Failed to load reset request list");
     } finally {
       setIsLoading(false);
     }
@@ -121,7 +121,7 @@ export function ResetRequestsPanel() {
       const res = await api.post<{ reset_token: string }>(
         `/api/v1/auth/reset-requests/${id}/approve`,
       );
-      toast.success("✅ Disetujui! Token telah dibuat.");
+      toast.success("✅ Approved! Token has been created.");
       setShowTokenModal({ token: res.data.reset_token, email });
       fetchRequests();
     } catch (e: any) {
@@ -159,7 +159,7 @@ export function ResetRequestsPanel() {
       }
     }
     toast.success(
-      `✅ Bulk Approve: ${success} berhasil${failed > 0 ? `, ${failed} gagal` : ""}`,
+      `✅ Bulk Approve: ${success} succeeded${failed > 0 ? `, ${failed} failed` : ""}`,
     );
     setIsBulkProcessing(false);
     fetchRequests();
@@ -176,7 +176,7 @@ export function ResetRequestsPanel() {
         success++;
       } catch {}
     }
-    toast.success(`Bulk Reject: ${success} permintaan ditolak`);
+    toast.success(`Bulk Reject: ${success} request(s) rejected`);
     setIsBulkProcessing(false);
     fetchRequests();
   };

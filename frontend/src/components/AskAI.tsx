@@ -71,35 +71,35 @@ function parseBold(text: string) {
 // KNOWLEDGE BASE
 // ============================================================
 const KB_ID = {
-  team: `**Tim Pengembang ColonyAI (4 Orang):**\n\n- **Wisnu Alfian Nur Ashar** — Product Owner & Frontend Lead. Bertanggung jawab atas Dashboard OS, UI/UX Vision, dan scientific nomenclature.\n- **Muhammad Faras** — Scrum Master & AI/ML Lead. Bertanggung jawab atas training model, kurasi dataset, dan optimasi inferensi.\n- **Suci** — UI/UX Developer. Bertanggung jawab atas styling komponen, sistem anotasi, dan aset marketing.\n- **Steven** — Backend Lead. Bertanggung jawab atas keamanan API, arsitektur database, ISO 17025 compliance, dan laporan.\n\nUntuk bantuan teknis: **service.colonyai.com**`,
+  team: `**ColonyAI Development Team (4 Members):**\n\n- **Wisnu Alfian Nur Ashar** — Product Owner & Frontend Lead. Responsible for Dashboard OS, UI/UX Vision, and scientific nomenclature.\n- **Muhammad Faras** — Scrum Master & AI/ML Lead. Responsible for model training, dataset curation, and inference optimization.\n- **Suci** — UI/UX Developer. Responsible for component styling, annotation system, and marketing assets.\n- **Steven** — Backend Lead. Responsible for API security, database architecture, ISO 17025 compliance, and reports.\n\nFor technical assistance: **service.colonyai.com**`,
 
-  trainingHistory: `**Riwayat Training ColonyAI (8 Iterasi, v1–v8):**\n\n- **v1–v4:** Eksperimen awal, membangun pipeline deteksi dasar.\n- **v5–v6:** Peningkatan augmentasi dan kurasi dataset.\n- **v7 (PRODUKSI AKTIF):** colony_detection_full_v7 — Precision **87.6%**, mAP@50 **55.2%**, durasi training **~79.6 menit**. Ini adalah model yang saat ini digunakan.\n- **v8 (DEVELOPMENT):** colony_detection_full_v8 — Tahap finalisasi & optimalisasi, fokus pada peningkatan Recall dan deteksi koloni mikro.\n\nSemua data tersimpan di: \`ml-training/runs/detect/runs/detect/\``,
+  trainingHistory: `**ColonyAI Training History (8 Iterations, v1–v8):**\n\n- **v1–v4:** Early experiments, building basic detection pipeline.\n- **v5–v6:** Increased augmentation and dataset curation.\n- **v7 (ACTIVE PRODUCTION):** colony_detection_full_v7 — Precision **87.6%**, mAP@50 **55.2%**, training duration **~79.6 minutes**. This is the model currently in use.\n- **v8 (DEVELOPMENT):** colony_detection_full_v8 — Finalization & optimization stage, focusing on Recall improvement and micro colony detection.\n\nAll data is stored at: \`ml-training/runs/detect/runs/detect/\``,
 
-  v7detail: `**Detail Audit Model v7 (colony_detection_full_v7):**\n\n- **Status:** Produksi Aktif ✅\n- **Presisi:** 87.6%\n- **mAP@50:** 55.2%\n- **Durasi Training:** 79.6 menit\n- **Epoch:** 100\n- **Dataset:** colony_dataset (1,477 gambar)\n- **5 Kelas Deteksi:** colony_single, colony_merged, bubble, dust_debris, media_crack\n- **GPU:** RTX 5050\n\nv7 adalah standar produksi kami saat ini sebelum v8 siap dirilis.`,
+  v7detail: `**Audit Detail Model v7 (colony_detection_full_v7):**\n\n- **Status:** Active Production ✅\n- **Precision:** 87.6%\n- **mAP@50:** 55.2%\n- **Training Duration:** 79.6 minutes\n- **Epoch:** 100\n- **Dataset:** colony_dataset (1,477 images)\n- **5 Detection Classes:** colony_single, colony_merged, bubble, dust_debris, media_crack\n- **GPU:** RTX 5050\n\nv7 is our current production standard before v8 is ready for release.`,
 
-  v8detail: `**Detail Model v8 (v8-Enterprise Ready):**\n\n- **Status:** Latihan Strategis Aktif 🔄\n- **Fokus:** Akurasi ekstrem pada koloni mikro & pemisahan artefak (debu/gelembung).\n- **Dataset:** Balanced Merged Dataset (**1,3 Juta objek** teranotasi).\n- **Volume:** 116.654 gambar cawan petri yang telah diseimbangkan.\n- **Kecerdasan:** Menggunakan arsitektur YOLOv8s dengan resolusi 640px untuk detail maksimal.\n\nModel ini dirancang khusus untuk melewati standar audit ISO-17025 tanpa celah.`,
+  v8detail: `**Model v8 Detail (v8-Enterprise Ready):**\n\n- **Status:** Strategic Training Active 🔄\n- **Focus:** Extreme accuracy on micro colonies & artifact separation.\n- **Dataset:** Balanced Merged Dataset (**1.3 Million annotations**).\n- **Volume:** 116,654 balanced petri dish images.\n- **Intelligence:** Uses YOLOv8s architecture at 640px for maximum detail.\n\nThis model is specifically designed to pass ISO-17025 audit standards flawlessly.`,
 
-  datasets: `**Dataset Utama ColonyAI (\`colonyai_merged\`):**\n\n- **Total Data:** **1.303.078 bounding boxes**.\n- **Keseimbangan Kelas:** Telah melalui teknik *Strategic Oversampling*.\n- **Isi:**\n  - **Colony Single:** 715rb+\n  - **Colony Merged:** 269rb+\n  - **Bubble:** 184rb+\n  - **Dust/Debris:** 40rb+ (Kunci utama akurasi tinggi!)\n  - **Media Crack:** 94rb+\n\nDataset ini memastikan AI tidak lagi tertipu oleh kotoran atau retakan pada media agar.`,
+  datasets: `**Primary ColonyAI Dataset (\`colonyai_merged\`):**\n\n- **Total Data:** **1,303,078 bounding boxes**.\n- **Class Balance:** Processed via *Strategic Oversampling*.\n- **Contents:**\n  - **Colony Single:** 715k+\n  - **Colony Merged:** 269k+\n  - **Bubble:** 184k+\n  - **Dust/Debris:** 40k+ (Key to high accuracy!)\n  - **Media Crack:** 94k+\n\nThis dataset ensures the AI is no longer fooled by dirt or cracks on the agar media.`,
 
-  colonyMini: `**Detail Folder colony_mini:**\n\n- **Fungsi:** Sandbox Dataset untuk pengujian cepat algoritma.\n- **Isi:** Subset sampel dari \`colony_dataset\` utama.\n- **Kegunaan:** Memvalidasi perubahan kode/model tanpa menunggu training penuh (menghemat ~79 menit per iterasi).\n- **Status:** Digunakan eksekutif oleh tim Developer (Faras) untuk eksperimen awal.\n- **Penting:** Data ini TIDAK digunakan untuk training produksi.`,
+  colonyMini: `**Detail Folder colony_mini:**\n\n- **Function:** Sandbox Dataset for quick algorithm testing.\n- **Contents:** Sample subset from the main \`colony_dataset\`.\n- **Utility:** Validates code/model changes without waiting for full training (saves ~79 minutes per iteration).\n- **Status:** Used exclusively by the Dev team (Faras) for initial experiments.\n- **Important:** This data is NOT used for production training.`,
 
-  roadmap: `**Roadmap Kecerdasan ColonyAI (v7 → v10):**\n\n- **v7 (Saat Ini):** Presisi 87.6%. Model produksi stabil.\n- **v8 (Berikutnya):** Target Recall lebih tinggi, deteksi koloni mikro lebih baik.\n- **v9 (Masa Depan):** Ketahanan terhadap artefak cawan (gelembung, debu, retakan media). Integrasi multi-protokol (VRBA, TSA, R2A).\n- **v10 (Ultimate Target):** Akurasi sempurna untuk standarisasi industri global. Target presisi >99% untuk sertifikasi ISO penuh.\n\nSetiap versi divalidasi dengan standar ISO-17025 sebelum naik ke produksi.`,
+  roadmap: `**ColonyAI Intelligence Roadmap (v7 → v10):**\n\n- **v7 (Current):** 87.6% Precision. Stable production model.\n- **v8 (Next):** Higher Target Recall, better micro colony detection.\n- **v9 (Future):** Robustness against plate artifacts (bubbles, dust, media cracks). Multi-protocol integration (VRBA, TSA, R2A).\n- **v10 (Ultimate Target):** Perfect accuracy for global industry standardization. Target precision >99% for full ISO certification.\n\nEvery version is validated with ISO-17025 standards before going to production.`,
 
-  trainingDuration: `**Kenapa Training v8 Butuh ~3 Jam Per Epoch?**\n\n- **Volume Data:** Teknik Oversampling membuat AI harus memproses **97.638 objek (instances)** per putaran untuk mempelajari perbedaan tipis antara koloni vs debu/gelembung.\n- **Arsitektur:** YOLOv8 dengan kalkulasi presisi tingkat tinggi.\n- **Keamanan Hardware:** Mode Multi-threading dinonaktifkan (workers=0) untuk mencegah *memory crash* pada RTX 5050 selama proses augmentasi data raksasa ini.\n\nWaktu 3 jam adalah investasi untuk mendapatkan model yang 100% kebal terhadap jebakan kotoran cawan petri.`,
+  trainingDuration: `**Why Does v8 Training Take ~3 Hours Per Epoch?**\n\n- **Data Volume:** Oversampling technique forces AI to process **97,638 object instances** per iteration to distinguish colonies vs artifacts.\n- **Architecture:** YOLOv8 with high-precision calculation.\n- **Hardware Stability:** Multi-threading disabled (workers=0) to prevent *memory crashes* on RTX 5050 during massive data augmentation.\n\nThe 3-hour duration is an investment to achieve a model completely immune to petri dish artifacts.`,
 
-  iso: `**Kepatuhan ISO-17025 di ColonyAI:**\n\n- **Audit Trail:** Setiap analisis dicatat dengan timestamp, hash kriptografis, dan identitas pengguna.\n- **TNTC/TFTC:** Sistem otomatis menerapkan standar ISO 4833-1 (TNTC >300 koloni, TFTC <25 koloni).\n- **Uncertainty Quantification:** Setiap hasil dilengkapi dengan nilai ketidakpastian pengukuran.\n- **4-Role RBAC:** Analyst, Manager, Auditor, Admin — sesuai prinsip separation of duties.\n- **Laporan Terakreditasi:** Format laporan sesuai standar dokumentasi ISO 17025.\n- **Kalibrasi:** Sistem pengingat siklus kalibrasi otomatis.`,
+  iso: `**ISO-17025 Compliance in ColonyAI:**\n\n- **Audit Trail:** Every analysis is recorded with timestamp, cryptographic hash, and user identity.\n- **TNTC/TFTC:** System automatically applies ISO 4833-1 standards (TNTC >300 colonies, TFTC <25 colonies).\n- **Uncertainty Quantification:** Every result includes measurement uncertainty value.\n- **4-Role RBAC:** Analyst, Manager, Auditor, Admin — according to separation of duties principle.\n- **Accredited Reports:** Report format according to ISO 17025 documentation standards.\n- **Calibration:** Automatic calibration cycle reminder system.`,
 
-  rbac: `**Sistem Akses 4-Role ColonyAI (RBAC):**\n\n- **Laboratory Analyst:** Unggah specimen, jalankan AI diagnostik, entri data awal.\n- **Laboratory Manager:** Verifikasi hasil, tanda tangan akhir, generate laporan terakreditasi.\n- **Quality Auditor:** Lihat audit trail (read-only), verifikasi integritas kriptografis, monitor kepatuhan.\n- **System Administrator:** Kelola node, provisi pengguna, monitor kesehatan sistem real-time.\n\nModel ini memastikan separation of duties sesuai ISO-17025.`,
+  rbac: `**ColonyAI 4-Role Access System (RBAC):**\n\n- **Laboratory Analyst:** Upload specimen, run AI diagnostics, initial data entry.\n- **Laboratory Manager:** Verify results, final signature, generate accredited reports.\n- **Quality Auditor:** View audit trail (read-only), verify cryptographic integrity, monitor compliance.\n- **System Administrator:** Manage nodes, provision users, real-time system health monitoring.\n\nThis model ensures separation of duties according to ISO-17025.`,
 
-  contact: `**Hubungi Tim ColonyAI:**\n\n- **Support Teknis:** service.colonyai.com\n- **Respons:** Dalam 1x24 jam jam kerja.\n\n**Tim yang bisa dihubungi:**\n- Frontend/UI: **Wisnu** (Product Owner)\n- AI/ML Model: **Faras** (AI Lead)\n- Backend/API: **Steven** (Backend Lead)\n- UI/UX Design: **Suci** (UI Developer)`,
+  contact: `**Contact ColonyAI Team:**\n\n- **Technical Support:** service.colonyai.com\n- **Response:** Within 1x24 working hours.\n\n**Team to contact:**\n- Frontend/UI: **Wisnu** (Product Owner)\n- AI/ML Model: **Faras** (AI Lead)\n- Backend/API: **Steven** (Backend Lead)\n- UI/UX Design: **Suci** (UI Developer)`,
 
-  classes: `**5 Kelas Deteksi Model v7/v8:**\n\n- **colony_single** — Koloni tunggal yang terpisah jelas. Target deteksi utama untuk CFU count.\n- **colony_merged** — Koloni yang berdempetan/overlapping. Ditangani dengan algoritma separasi khusus.\n- **bubble** — Gelembung udara pada media agar. Diklasifikasikan sebagai artefak (bukan koloni).\n- **dust_debris** — Partikel debu atau kotoran. Diklasifikasikan sebagai artefak.\n- **media_crack** — Retakan pada media agar. Diklasifikasikan sebagai artefak.\n\nPemisahan 5 kelas ini memastikan akurasi CFU count yang tinggi sesuai ISO 4833-1.`,
+  classes: `**5 Detection Classes of Model v7/v8:**\n\n- **colony_single** — Clearly separated single colonies. Primary detection target for CFU count.\n- **colony_merged** — Adjacent/overlapping colonies. Handled with special separation algorithms.\n- **bubble** — Air bubbles on agar media. Classified as artifact (not colony).\n- **dust_debris** — Dust particles or dirt. Classified as artifact.\n- **media_crack** — Cracks on agar media. Classified as artifact.\n\nSeparating these 5 classes ensures high CFU count accuracy according to ISO 4833-1.`,
 
-  accuracy: `**Metrik Akurasi ColonyAI (v7 vs v8):**\n\n- **Model v7 (Produksi):** Presisi saat ini berada di **87.6%** dengan mAP50 di angka 55.2%.\n- **Model v8 (Sedang Training):** Menargetkan presisi **>95%** dan pengurangan *False Positive* pada debu/gelembung hingga mendekati 0% berkat teknik SMOTE Oversampling.\n- **Konsistensi Manusia vs AI:** Manusia memiliki variansi 25-40% antar analis, sedangkan ColonyAI memiliki konsistensi **100%** (0 variansi).`,
+  accuracy: `**ColonyAI Accuracy Metrics (v7 vs v8):**\n\n- **Model v7 (Production):** Current precision is at **87.6%** with mAP50 at 55.2%.\n- **Model v8 (In Training):** Targeting **>95%** precision and reducing *False Positives* on dust/bubbles to near 0% thanks to SMOTE Oversampling techniques.\n- **Human vs AI Consistency:** Human analysts have 25-40% variance, while ColonyAI maintains **100%** consistency (0 variance).`,
 
-  dataStats: `**Statistik Data Training ColonyAI:**\n\n- **Gambar Dasar:** 1.477 gambar cawan petri berlabel medis.\n- **Objek Teranotasi (Ground Truth):** Puluhan ribu titik koloni.\n- **Dataset Augmented (v8):** Diperbesar menggunakan algoritma SMOTE menjadi **97.638 instances** per epoch untuk menyeimbangkan kelas minoritas (debu & retakan).\n\nData ini menjadikan ColonyAI salah satu AI mikrobiologi dengan dataset paling robust di kelasnya.`,
+  dataStats: `**ColonyAI Training Data Statistics:**\n\n- **Base Images:** 1,477 medically labeled petri dish images.\n- **Annotated Objects (Ground Truth):** Tens of thousands of colony points.\n- **Augmented Dataset (v8):** Expanded using SMOTE algorithms to **97,638 instances** per epoch to balance minority classes (dust & cracks).\n\nThis makes ColonyAI one of the most robust microbiology AI datasets in its class.`,
 
-  clients: `**Jaringan Klien ColonyAI (Global Network):**\n\nSaat ini infrastruktur ColonyAI LIMS digunakan di:\n- **24 Enterprise Nodes** aktif di seluruh dunia.\n- **12 Rumah Sakit Terakreditasi** untuk uji klinis mikrobiologi.\n- **12 Pabrik Food/Pharma** untuk quality control (QC).\n- Tersebar di **5 Negara**.\n\nSistem dimonitor terpusat melalui *Global Network Map* oleh Nexus Master.`,
+  clients: `**ColonyAI Client Network (Global Network):**\n\nCurrently, the ColonyAI LIMS infrastructure is deployed across:\n- **24 Active Enterprise Nodes** worldwide.\n- **12 Accredited Hospitals** for clinical microbiology testing.\n- **12 Food/Pharma Factories** for quality control (QC).\n- Spanning across **5 Countries**.\n\nThe system is centrally monitored via the *Global Network Map* by the Nexus Master.`,
 };
 
 const KB_EN = {
@@ -142,9 +142,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/tim|team|siapa|who|anggota|developer|pengembang|wisnu|faras|suci|steven/)) {
     return { 
       content: KB.team, 
-      quickActions: language === 'id' 
-        ? ["Detail peran Faras?", "Detail peran Steven?", "Hubungi tim?", "Roadmap v10?"]
-        : ["Faras's role?", "Steven's role?", "Contact team?", "Roadmap v10?"]
+      quickActions: [
+        "Faras's role?", "Steven's role?", "Contact team?", "Roadmap v10?"
+      ]
     };
   }
 
@@ -152,9 +152,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/hubungi|kontak|contact|bantuan|support|masalah|service/)) {
     return { 
       content: KB.contact, 
-      quickActions: language === 'id'
-        ? ["Siapa tim pengembang?", "Detail v7?", "Status v8?"]
-        : ["Who is the dev team?", "Detail v7?", "Status v8?"]
+      quickActions: [
+        "Who is the dev team?", "Detail v7?", "Status v8?"
+      ]
     };
   }
 
@@ -162,9 +162,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/v7|akurasi v7|presisi v7|hasil v7|detail v7|audit v7/)) {
     return { 
       content: KB.v7detail, 
-      quickActions: language === 'id'
-        ? ["Detail v8?", "Kenapa 80 menit?", "5 Kelas deteksi?", "Roadmap v10?"]
-        : ["Detail v8?", "Why 80 minutes?", "5 Detection classes?", "Roadmap v10?"]
+      quickActions: [
+        "Detail v8?", "Why 80 minutes?", "5 Detection classes?", "Roadmap v10?"
+      ]
     };
   }
 
@@ -172,9 +172,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/v8|status v8|detail v8|kapan v8/)) {
     return { 
       content: KB.v8detail, 
-      quickActions: language === 'id'
-        ? ["Detail v7?", "Roadmap v10?", "Siapa yang training?", "Isi dataset?"]
-        : ["Detail v7?", "Roadmap v10?", "Who trained it?", "Dataset contents?"]
+      quickActions: [
+        "Detail v7?", "Roadmap v10?", "Who trained it?", "Dataset contents?"
+      ]
     };
   }
 
@@ -182,9 +182,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/riwayat|iterasi|history|training|hasil training|v1|v2|v3|v4|v5|v6/)) {
     return { 
       content: KB.trainingHistory, 
-      quickActions: language === 'id'
-        ? ["Detail v7?", "Detail v8?", "Kenapa 80 menit?", "Roadmap v10?"]
-        : ["Detail v7?", "Detail v8?", "Why 80 minutes?", "Roadmap v10?"]
+      quickActions: [
+        "Detail v7?", "Detail v8?", "Why 80 minutes?", "Roadmap v10?"
+      ]
     };
   }
 
@@ -192,9 +192,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/kenapa.*menit|80 menit|lama|duration|berapa lama/)) {
     return { 
       content: KB.trainingDuration, 
-      quickActions: language === 'id'
-        ? ["Detail v7?", "Isi dataset?", "colony_mini itu apa?", "Siapa yang training?"]
-        : ["Detail v7?", "Dataset contents?", "What is colony_mini?", "Who trained it?"]
+      quickActions: [
+        "Detail v7?", "Dataset contents?", "What is colony_mini?", "Who trained it?"
+      ]
     };
   }
 
@@ -202,9 +202,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/colony_mini|mini|sandbox/)) {
     return { 
       content: KB.colonyMini, 
-      quickActions: language === 'id'
-        ? ["Isi 3 folder dataset?", "Detail v7?", "Roadmap v8?"]
-        : ["3 Dataset folders?", "Detail v7?", "Roadmap v8?"]
+      quickActions: [
+        "3 Dataset folders?", "Detail v7?", "Roadmap v8?"
+      ]
     };
   }
 
@@ -212,9 +212,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/dataset|folder|isi dataset|berapa gambar|1477|data training|conteo/)) {
     return { 
       content: KB.datasets, 
-      quickActions: language === 'id'
-        ? ["colony_mini itu apa?", "Detail hasil v7?", "Siapa AI Lead?"]
-        : ["What is colony_mini?", "v7 result detail?", "Who is AI Lead?"]
+      quickActions: [
+        "What is colony_mini?", "v7 result detail?", "Who is AI Lead?"
+      ]
     };
   }
 
@@ -222,9 +222,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/roadmap|v9|v10|masa depan|rencana|plan|target/)) {
     return { 
       content: KB.roadmap, 
-      quickActions: language === 'id'
-        ? ["Detail v7?", "Status v8?", "Siapa tim pengembang?", "Hubungi tim?"]
-        : ["Detail v7?", "Status v8?", "Who is dev team?", "Contact team?"]
+      quickActions: [
+        "Detail v7?", "Status v8?", "Who is dev team?", "Contact team?"
+      ]
     };
   }
 
@@ -232,9 +232,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/iso|17025|tntc|tftc|audit|compliance|standar|kepatuhan/)) {
     return { 
       content: KB.iso, 
-      quickActions: language === 'id'
-        ? ["Sistem RBAC?", "Detail v7?", "Siapa Backend Lead?", "Roadmap v10?"]
-        : ["RBAC System?", "Detail v7?", "Who is Backend Lead?", "Roadmap v10?"]
+      quickActions: [
+        "RBAC System?", "Detail v7?", "Who is Backend Lead?", "Roadmap v10?"
+      ]
     };
   }
 
@@ -242,9 +242,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/rbac|role|akses|analyst|manager|auditor|admin|hak akses/)) {
     return { 
       content: KB.rbac, 
-      quickActions: language === 'id'
-        ? ["ISO-17025 di ColonyAI?", "Siapa tim pengembang?", "Hubungi tim?"]
-        : ["ISO-17025 in ColonyAI?", "Who is dev team?", "Contact team?"]
+      quickActions: [
+        "ISO-17025 in ColonyAI?", "Who is dev team?", "Contact team?"
+      ]
     };
   }
 
@@ -252,9 +252,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/kelas|class|koloni_single|colony_single|merged|bubble|dust|crack|5 kelas/)) {
     return { 
       content: KB.classes, 
-      quickActions: language === 'id'
-        ? ["Detail v7?", "Isi dataset?", "Roadmap v8?"]
-        : ["Detail v7?", "Dataset contents?", "Roadmap v8?"]
+      quickActions: [
+        "Detail v7?", "Dataset contents?", "Roadmap v8?"
+      ]
     };
   }
 
@@ -262,9 +262,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/akurat|akurasi|accurate|accuracy|presisi|precision/)) {
     return { 
       content: KB.accuracy, 
-      quickActions: language === 'id'
-        ? ["Statistik Data?", "Status v8?", "Jumlah klien?"]
-        : ["Data stats?", "Status v8?", "Client count?"]
+      quickActions: [
+        "Data stats?", "Status v8?", "Client count?"
+      ]
     };
   }
 
@@ -272,9 +272,9 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/berapa data|jumlah data|banyak data|how much data|data count/)) {
     return { 
       content: KB.dataStats, 
-      quickActions: language === 'id'
-        ? ["Seberapa akurat?", "Kenapa 3 jam?", "Isi 3 folder dataset?"]
-        : ["How accurate?", "Why 3 hours?", "3 Dataset folders?"]
+      quickActions: [
+        "How accurate?", "Why 3 hours?", "3 Dataset folders?"
+      ]
     };
   }
 
@@ -282,31 +282,27 @@ function getResponse(q: string, userName: string, language: string): { content: 
   if (query.match(/company|perusahaan|klien|client|rumah sakit|hospital|pabrik|factory|pengguna|user/)) {
     return { 
       content: KB.clients, 
-      quickActions: language === 'id'
-        ? ["Seberapa akurat?", "Sistem RBAC?", "ISO-17025 di ColonyAI?"]
-        : ["How accurate?", "RBAC System?", "ISO-17025 in ColonyAI?"]
+      quickActions: [
+        "How accurate?", "RBAC System?", "ISO-17025 in ColonyAI?"
+      ]
     };
   }
 
   // Who am I
   if (query.match(/siapa saya|who am i/)) {
     return {
-      content: language === 'id' 
-        ? `Anda adalah **${userName}** yang menggunakan **ColonyAI Laboratory OS v2.0**.\n\nSistem ini dikembangkan oleh tim **4 orang** untuk mendeteksi koloni bakteri secara otomatis menggunakan AI (YOLOv8) dengan standar **ISO-17025**.\n\nModel aktif saat ini: **v7** (Precision 87.6%)`
-        : `You are **${userName}** using **ColonyAI Laboratory OS v2.0**.\n\nThis system was developed by a **4-person team** to automatically detect bacterial colonies using AI (YOLOv8) with **ISO-17025** standards.\n\nActive model currently: **v7** (Precision 87.6%)`,
-      quickActions: language === 'id'
-        ? ["Siapa tim pengembang?", "Detail v7?", "Sistem RBAC?"]
-        : ["Who is the dev team?", "Detail v7?", "RBAC system?"]
+      content: `You are **${userName}** using **ColonyAI Laboratory OS v2.0**.\n\nThis system was developed by a **4-person team** to automatically detect bacterial colonies using AI (YOLOv8) with **ISO-17025** standards.\n\nActive model currently: **v7** (Precision 87.6%)`,
+      quickActions: [
+        "Who is the dev team?", "Detail v7?", "RBAC system?"
+      ]
     };
   }
 
   return { 
-    content: language === 'id'
-      ? "Maaf, saya tidak menemukan informasi spesifik mengenai hal tersebut dalam basis pengetahuan internal ColonyAI. Silakan coba tanyakan hal lain seputar training model v7/v8 atau ISO-17025."
-      : "Sorry, I couldn't find specific information regarding that in the ColonyAI internal knowledge base. Please try asking something else about model v7/v8 training or ISO-17025.",
-    quickActions: language === 'id'
-      ? ["Siapa tim pengembang?", "Detail v7 & v8?", "Isi 3 folder dataset?", "Roadmap v10?"]
-      : ["Who is the dev team?", "Detail v7 & v8?", "3 Dataset folders?", "Roadmap v10?"]
+    content: "Sorry, I couldn't find specific information regarding that in the ColonyAI internal knowledge base. Please try asking something else about model v7/v8 training or ISO-17025.",
+    quickActions: [
+      "Who is the dev team?", "Detail v7 & v8?", "3 Dataset folders?", "Roadmap v10?"
+    ]
   };
 }
 
@@ -324,13 +320,11 @@ export function AskAI({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
     if (isOpen && messages.length === 0) {
       setMessages([{
         role: "ai",
-        content: language === 'id' 
-          ? `Halo **${userName}**! Saya asisten internal **ColonyAI**.\n\nSaya dapat menjawab pertanyaan tentang tim, model AI v7–v8, dataset, roadmap, ISO-17025, dan semua hal teknis sistem ini.`
-          : `Hello **${userName}**! I am the **ColonyAI** internal assistant.\n\nI can answer questions about the team, AI models v7–v8, datasets, roadmap, ISO-17025, and all technical aspects of this system.`,
+        content: `Hello **${userName}**! I am the **ColonyAI** internal assistant.\n\nI can answer questions about the team, AI models v7–v8, datasets, roadmap, ISO-17025, and all technical aspects of this system.`,
         timestamp: new Date(),
-        quickActions: language === 'id' 
-          ? ["Siapa tim pengembang?", "Detail v7 & v8?", "Isi 3 folder dataset?", "Roadmap v10?"]
-          : ["Who is the dev team?", "Detail v7 & v8?", "3 Dataset folders?", "Roadmap v10?"],
+        quickActions: [
+          "Who is the dev team?", "Detail v7 & v8?", "3 Dataset folders?", "Roadmap v10?"
+        ],
       }]);
     }
   }, [isOpen, userName, language, messages.length]);

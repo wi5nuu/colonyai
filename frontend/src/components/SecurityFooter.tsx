@@ -15,7 +15,7 @@ const translations = {
     col1_title: "Pusat Pengembangan Platform",
     col2_title: "Saluran Komunikasi",
     col2_subtitle1: "Pusat Layanan Teknis",
-    col2_subtitle2: "Email Korespondensi",
+    col2_subtitle2: "Correspondence Email",
     col3_title: "Bantuan & Legalitas",
     links: [
       { name: "Pusat Bantuan Akun", href: "/troubleshoot" },
@@ -23,7 +23,7 @@ const translations = {
       { name: "Syarat dan Ketentuan", href: "/terms" },
       { name: "Kepatuhan ISO-17025", href: "/compliance" }
     ],
-    disclaimer: "ColonyAI Laboratory System merupakan platform analisis mikrobiologi otomatis berbasis Visi Komputer yang dikembangkan sebagai solusi inovatif untuk AI Open Innovation Challenge 2026 oleh President University dan Kemenko Perekonomian. Sistem ini dirancang untuk memenuhi standar teknis ISO-17025 dan menerapkan enkripsi data tingkat militer guna menjamin keamanan akses setiap personel yang terdaftar di dalam infrastruktur laboratorium digital ini.",
+    disclaimer: "ColonyAI Laboratory System is an automated microbiology analysis platform based on Computer Vision, developed as an innovative solution for the AI Open Innovation Challenge 2026 by President University and the Coordinating Ministry for Economic Affairs. This system is designed to meet ISO-17025 technical standards and implements military-grade data encryption to guarantee access security for every personnel registered in this digital laboratory infrastructure.",
     copyright: "© 2026 ColonyAI Technology Platform | All Rights Reserved.",
     iso_tag: "ISO-17025 Standard Compliant"
   },

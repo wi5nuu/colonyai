@@ -122,7 +122,7 @@ export default function AdministrationPage() {
       } catch (err) {
         console.error("Failed to fetch admin data:", err);
         toast.error(
-          "Gagal memuat data dari server. Pastikan backend berjalan.",
+          "Failed to load data from server. Make sure the backend is running.",
         );
       } finally {
         setLoading(false);
@@ -173,8 +173,8 @@ export default function AdministrationPage() {
       if (!res.ok) {
         const errorData = await res
           .json()
-          .catch(() => ({ detail: "Gagal mengunduh PDF" }));
-        throw new Error(errorData.detail || "Gagal mengunduh PDF");
+          .catch(() => ({ detail: "Failed to download PDF" }));
+        throw new Error(errorData.detail || "Failed to download PDF");
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -183,10 +183,10 @@ export default function AdministrationPage() {
       a.download = `colonyai-admin-report-${new Date().toISOString().slice(0, 10)}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success("PDF berhasil diunduh!");
+      toast.success("PDF downloaded successfully!");
     } catch (e: any) {
       console.error("PDF Download Error:", e);
-      toast.error(e.message || "Gagal mengunduh PDF");
+      toast.error(e.message || "Failed to download PDF");
     } finally {
       setDownloadingPdf(false);
     }
@@ -205,8 +205,8 @@ export default function AdministrationPage() {
       if (!res.ok) {
         const errorData = await res
           .json()
-          .catch(() => ({ detail: "Gagal mengunduh Excel" }));
-        throw new Error(errorData.detail || "Gagal mengunduh Excel");
+          .catch(() => ({ detail: "Failed to download Excel" }));
+        throw new Error(errorData.detail || "Failed to download Excel");
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -215,10 +215,10 @@ export default function AdministrationPage() {
       a.download = `colonyai-admin-analytics-${new Date().toISOString().slice(0, 10)}.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success("Data Excel berhasil diunduh!");
+      toast.success("Excel data downloaded successfully!");
     } catch (e: any) {
       console.error("Excel Download Error:", e);
-      toast.error(e.message || "Gagal mengunduh Excel");
+      toast.error(e.message || "Failed to download Excel");
     } finally {
       setDownloadingXls(false);
     }
@@ -309,7 +309,7 @@ export default function AdministrationPage() {
       });
       setAnalysts(mappedUsers);
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "Gagal membuat user.");
+      toast.error(err.response?.data?.detail || "Failed to create user.");
     } finally {
       setIsCreating(false);
     }
@@ -339,7 +339,7 @@ export default function AdministrationPage() {
       setNewPassword("");
       setShowResetPassword(false);
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "Gagal mereset password.");
+      toast.error(err.response?.data?.detail || "Failed to reset password.");
     } finally {
       setIsResetting(false);
     }
