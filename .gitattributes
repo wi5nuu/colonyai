@@ -1,0 +1,34 @@
+* text=auto
+
+# Python
+*.py text diff=python
+*.pyx text
+*.pxd text
+
+# JavaScript/TypeScript
+*.ts text diff=typescript
+*.tsx text
+*.js text
+*.jsx text
+*.json text
+
+# Images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+
+# YAML
+*.yml text
+*.yaml text
+
+# Markdown
+*.md text
+
+# Docker
+Dockerfile text
+Dockerfile.* text
+
+# Shell/Batch
+*.bat text eol=crlf
+*.ps1 text eol=crlf
