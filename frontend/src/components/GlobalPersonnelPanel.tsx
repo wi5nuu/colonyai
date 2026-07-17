@@ -10,7 +10,6 @@ import {
   Shield,
   Eye,
   EyeOff,
-  Key,
   ArrowRight,
   RefreshCw,
   Loader2,
@@ -83,138 +82,99 @@ function OrgPersonnelRow({
   );
 
   return (
-    <div className="border border-slate-100 dark:border-slate-800 rounded-none overflow-hidden mb-2 last:mb-0 bg-white dark:bg-slate-900/50">
-      {/* Org Header Row */}
-      <button
+    <div className={`transition-all duration-300 border border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 ${expanded ? 'bg-slate-50/50 dark:bg-slate-800/30' : 'bg-white dark:bg-slate-900'}`}>
+      {/* Org Header Row — compact like Registri Master */}
+      <div
+        className="p-2 flex items-center justify-between gap-3 cursor-pointer"
         onClick={loadPersonnel}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-none bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
-            <Building2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-none bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700 transition-colors shrink-0">
+            <Building2 className="w-3 h-3 text-slate-400 group-hover:text-primary transition-colors" />
           </div>
-          <div className="text-left">
-            <p className="text-xs font-black text-slate-900 dark:text-white">{org.name}</p>
-            <p className="text-[10px] text-slate-400 font-medium">{org.location}</p>
+          <div>
+            <h3 className="text-[9px] font-bold text-slate-900 dark:text-white">{org.name}</h3>
+            <div className="flex items-center gap-1 mt-0.5">
+              <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">{org.location}</span>
+              <div className="w-0.5 h-0.5 bg-slate-300 rounded-none" />
+              <span className="text-[7px] font-bold text-primary uppercase tracking-widest">{org.users_count} Users</span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span
-            className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-none border ${
-              org.status === "active"
-                ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800"
-                : "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800"
-            }`}
-          >
-            {org.status}
-          </span>
-          <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
-            <Users className="w-3 h-3" />
-            <span>{org.users_count}</span>
+        <div className="hidden sm:flex items-center gap-3">
+          <div>
+            <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
+            <div className="flex items-center gap-1">
+              <div className={`w-1.5 h-1.5 rounded-none ${org.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
+              <p className={`text-[8px] font-bold uppercase tracking-widest ${org.status === 'active' ? 'text-emerald-500' : 'text-rose-500'}`}>{org.status}</p>
+            </div>
           </div>
-          {loading ? (
+          <div>{loading ? (
             <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin" />
           ) : expanded ? (
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-300" />
           ) : (
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-          )}
+            <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+          )}</div>
         </div>
-      </button>
+      </div>
 
-      {/* Personnel Table */}
+      {/* Personnel Table — Registri Master drill-down style */}
       {expanded && !loading && personnel.length > 0 && (
-        <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900">
-          {/* Sub-header with "Open Admin Panel" button */}
-          <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-              {sorted.length} {t("globalPersonnel.registeredPersonnel")}
-            </p>
+        <div className="px-2 pb-3 pt-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Users className="w-3 h-3 text-primary" />
+              <h4 className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                {sorted.length} {t("globalPersonnel.registeredPersonnel")}
+              </h4>
+            </div>
             <a
               href={`/dashboard/administration`}
-              className="flex items-center gap-1 px-3 py-1 bg-slate-900 dark:bg-primary/20 hover:bg-primary dark:hover:bg-primary text-white dark:text-primary dark:hover:text-white border border-transparent dark:border-primary/30 text-[9px] font-black uppercase tracking-widest rounded-none transition-all"
+              className="flex items-center gap-1 px-2 py-1 bg-slate-900 dark:bg-primary/20 hover:bg-primary dark:hover:bg-primary text-white dark:text-primary dark:hover:text-white border border-transparent dark:border-primary/30 text-[8px] font-black uppercase tracking-widest rounded-none transition-all"
             >
-              <Shield className="w-3 h-3" />
+              <Shield className="w-2.5 h-2.5" />
               {t("globalPersonnel.openAdminPanel")}
-              <ArrowRight className="w-3 h-3" />
+              <ArrowRight className="w-2.5 h-2.5" />
             </a>
           </div>
-
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800">
-                <th className="px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                  {t("globalPersonnel.name")}
-                </th>
-                <th className="px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                  Role
-                </th>
-                <th className="px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                  Email
-                </th>
-                <th className="px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                  Recovery Pass
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {sorted.map((p) => {
-                const rc = ROLE_CONFIG[p.role] ?? ROLE_CONFIG.analyst;
-                return (
-                  <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="px-4 py-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-none bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[9px] font-black text-slate-600 dark:text-slate-300 shrink-0">
-                          {p.full_name.charAt(0)}
-                        </div>
-                        <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">
-                          {p.full_name}
+          <div className="space-y-2">
+            {sorted.map((p) => {
+              const rc = ROLE_CONFIG[p.role] ?? ROLE_CONFIG.analyst;
+              return (
+                <div key={p.id} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none p-2 flex items-center justify-between group/admin hover:border-primary/30 shadow-sm transition-all">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-none bg-primary/5 dark:bg-primary/10 flex items-center justify-center text-[9px] font-black text-primary border border-primary/10 dark:border-primary/20">
+                      {p.full_name.charAt(0)}
+                    </div>
+                    <div className="flex flex-col">
+                      <h4 className="text-[9px] font-bold text-slate-900 dark:text-white leading-none">{p.full_name}</h4>
+                      <p className="text-[8px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">{p.email}</p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded-none border ${rc.bg} ${rc.color}`}>
+                          {rc.label}
                         </span>
+                        {p.recovery_password ? (
+                          <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900 px-1.5 py-0.5 rounded-none border border-slate-100 dark:border-slate-800 group/pass">
+                            <span className="text-[7px] font-mono font-bold text-slate-600 dark:text-slate-400 tracking-tighter min-w-[60px]">
+                              {revealedIds[p.id] ? p.recovery_password : "••••••••"}
+                            </span>
+                            <button
+                              onClick={() => toggleReveal(p.id)}
+                              className="p-0.5 text-slate-300 hover:text-primary transition-all hover:scale-110 active:scale-95"
+                            >
+                              {revealedIds[p.id] ? <EyeOff className="w-2 h-2" /> : <Eye className="w-2 h-2" />}
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
-                    </td>
-                    <td className="px-4 py-2">
-                      <span
-                        className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-none border ${rc.bg} ${rc.color}`}
-                      >
-                        {rc.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2">
-                      <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                        {p.email}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2">
-                      {p.recovery_password ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-mono text-slate-700 dark:text-slate-300">
-                            {revealedIds[p.id]
-                              ? p.recovery_password
-                              : "••••••••••••"}
-                          </span>
-                          <button
-                            onClick={() => toggleReveal(p.id)}
-                            className="text-slate-300 dark:text-slate-500 hover:text-slate-600 dark:hover:text-white transition-colors"
-                          >
-                            {revealedIds[p.id] ? (
-                              <EyeOff className="w-3 h-3" />
-                            ) : (
-                              <Eye className="w-3 h-3" />
-                            )}
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-[9px] text-slate-300 dark:text-slate-600 italic">
-                          —
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -265,54 +225,55 @@ export function GlobalPersonnelPanel() {
 
   return (
     <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none overflow-hidden shadow-sm">
-      {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <Key className="w-4 h-4 text-primary" />
-            <h3 className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
+      {/* Header — matches Registri Master style */}
+      <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 bg-primary rounded-none animate-ping" />
+          <div>
+            <h2 className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
               {t("globalPersonnel.globalPersonnelCommand")}
-            </h3>
+            </h2>
+            <p className="text-[7px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+              {t("globalPersonnel.orgClickExpand", { count: orgs.length })}
+            </p>
           </div>
-          <p className="text-[7px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
-            {orgs.length} {t("globalPersonnel.orgClickExpand")}
-          </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative group/search w-full sm:w-auto">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 dark:text-slate-500" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("globalPersonnel.searchOrganization")}
-              className="pl-7 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 outline-none w-44"
+              className="pl-7 pr-2 py-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[9px] font-bold w-full sm:w-40 outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-colors shadow-sm"
             />
           </div>
           <button
             onClick={fetchOrgs}
-            className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-none transition-all"
+            className="p-1 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-none transition-all"
             title="Refresh"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className="w-3 h-3" />
           </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4 max-h-[600px] overflow-y-auto scrollbar-hide">
+      <div className="p-3 max-h-[600px] overflow-y-auto scrollbar-hide bg-slate-50/20 dark:bg-slate-900/20">
         {loading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none shadow-sm">
             <Loader2 className="w-5 h-5 text-primary animate-spin" />
             <span className="ml-2 text-xs text-slate-400">{t("globalPersonnel.loadingOrgData")}</span>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-xs text-slate-400">{t("globalPersonnel.noResultsFor") + '"' + search + '"'}</p>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none p-8 text-center shadow-sm">
+            <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase">{t("super.searchNotFound")}</h3>
+            <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">{t("globalPersonnel.noResultsFor", { query: search })}</p>
           </div>
         ) : (
-          <div>
+          <div className="space-y-1">
             {filtered.map((org) => (
               <OrgPersonnelRow key={org.id} org={org} />
             ))}
@@ -321,12 +282,12 @@ export function GlobalPersonnelPanel() {
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900 flex items-center justify-between">
-        <span className="text-[9px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">
+      <div className="px-3 py-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900 flex items-center justify-between">
+        <span className="text-[8px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">
           Nexus Global Personnel Registry · Super Admin Eyes Only
         </span>
-        <span className="text-[9px] font-medium text-slate-300 dark:text-slate-500">
-          {filtered.length} / {orgs.length} {t("globalPersonnel.orgsDisplayed")}
+        <span className="text-[8px] font-medium text-slate-300 dark:text-slate-500">
+          {t("globalPersonnel.orgsDisplayed", { filtered: filtered.length, total: orgs.length })}
         </span>
       </div>
     </div>
