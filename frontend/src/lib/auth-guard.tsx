@@ -23,6 +23,7 @@ const PUBLIC_PATHS = [
   '/layanan',
   '/career',
   '/partnership',
+  '/docs',
 ];
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {

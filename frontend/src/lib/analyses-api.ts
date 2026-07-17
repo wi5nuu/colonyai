@@ -4,6 +4,10 @@ import {
   AnalysisListResponse,
   AnalysisCreate,
   MediaType,
+  CorrectionSession,
+  Correction,
+  CorrectionReport,
+  CorrectionBBox,
 } from './types';
 
 export const analysesApi = {
@@ -81,5 +85,52 @@ export const analysesApi = {
   getLimsLogs: async (limit: number = 50): Promise<any[]> => {
     const response = await api.get('/api/v1/lims/logs', { params: { limit } });
     return response.data as any[];
+  },
+
+  // ── Continuous Learning: Corrections ──
+
+  startCorrectionSession: async (analysisId: string): Promise<CorrectionSession> => {
+    const response = await api.post<CorrectionSession>(
+      `/api/v1/analyses/${analysisId}/correction/start`,
+    );
+    return response.data;
+  },
+
+  saveCorrection: async (
+    analysisId: string,
+    data: {
+      detection_id?: string | null;
+      original_class?: string | null;
+      corrected_class: string;
+      bbox?: CorrectionBBox | null;
+      notes?: string | null;
+    },
+  ): Promise<CorrectionSession> => {
+    const response = await api.post<CorrectionSession>(
+      `/api/v1/analyses/${analysisId}/correction/save`,
+      data,
+    );
+    return response.data;
+  },
+
+  finishCorrectionSession: async (analysisId: string): Promise<CorrectionSession> => {
+    const response = await api.post<CorrectionSession>(
+      `/api/v1/analyses/${analysisId}/correction/finish`,
+    );
+    return response.data;
+  },
+
+  getCorrectionReport: async (analysisId: string): Promise<CorrectionReport> => {
+    const response = await api.get<CorrectionReport>(
+      `/api/v1/analyses/${analysisId}/correction/report`,
+    );
+    return response.data;
+  },
+
+  getActiveCorrectionSession: async (analysisId: string): Promise<CorrectionSession | null> => {
+    const response = await api.get<CorrectionSession | null>(
+      `/api/v1/analyses/${analysisId}/correction/session`,
+    );
+    return response.data;
   },
 };

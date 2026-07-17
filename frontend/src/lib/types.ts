@@ -215,6 +215,50 @@ export interface DashboardStats {
 }
 
 // ============================================================
+// CORRECTION TYPES (Continuous Learning)
+// ============================================================
+
+export interface CorrectionBBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface Correction {
+  id: string;
+  session_id: string;
+  analysis_id: string;
+  detection_id: string | null;
+  original_class: string | null;
+  corrected_class: string;
+  bbox: CorrectionBBox | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface CorrectionSession {
+  id: string;
+  analysis_id: string;
+  status: "active" | "completed";
+  total_corrections: number;
+  accuracy: number | null;
+  created_at: string;
+  completed_at: string | null;
+  corrections: Correction[];
+}
+
+export interface CorrectionReport {
+  session_id: string;
+  analysis_id: string;
+  total_corrections: number;
+  accuracy: number | null;
+  per_class_breakdown: Record<string, { tp: number; fp: number; fn: number; count: number }>;
+  created_at: string;
+  completed_at: string | null;
+}
+
+// ============================================================
 // API ERROR TYPES
 // ============================================================
 
