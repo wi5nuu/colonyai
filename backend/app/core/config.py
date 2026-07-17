@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+﻿# ColonyAI application configuration via pydantic-settings\nfrom pydantic_settings import BaseSettings
 from typing import List
 from pathlib import Path
 import os
@@ -44,9 +44,9 @@ class Settings(BaseSettings):
     # Initial Admin Seed
     INITIAL_ADMIN_EMAIL: str = "admin@colonyai.local"
     INITIAL_ADMIN_PASSWORD: str = "admin_secure_placeholder"
-    SEED_USERS_PASSWORD: str = os.getenv("SEED_USERS_PASSWORD", "ColonyAI2026!")
+    SEED_USERS_PASSWORD: str = os.getenv("SEED_USERS_PASSWORD") or ""
     INITIAL_SUPER_ADMIN_EMAIL: str = os.getenv("INITIAL_SUPER_ADMIN_EMAIL", "superadmin@colonyai.com")
-    INITIAL_SUPER_ADMIN_PASSWORD: str = os.getenv("INITIAL_SUPER_ADMIN_PASSWORD", "SuperAdmin2026!")
+    INITIAL_SUPER_ADMIN_PASSWORD: str = os.getenv("INITIAL_SUPER_ADMIN_PASSWORD") or ""
 
     # JWT Security
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY") or secrets.token_urlsafe(32)
@@ -106,3 +106,4 @@ class Settings(BaseSettings):
             Path(f"{self.UPLOAD_DIR}/reports").mkdir(parents=True, exist_ok=True)
 
 settings = Settings()
+

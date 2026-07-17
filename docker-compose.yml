@@ -13,7 +13,7 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://colonyai:password@postgres:5432/colonyai
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-colonyai-jwt-secret-key-2026}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
     volumes:
       - ./backend/models:/app/models
       - ./backend/logs:/app/logs
