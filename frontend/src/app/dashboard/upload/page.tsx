@@ -621,44 +621,44 @@ export default function UploadPage() {
             directory={t("upload.docsToggle")}
             title={t("upload.docsTitle")}
             description={t("upload.docsDescription")}
-            rawText={`PROTOKOL SARAF COLONYAI - SOP ISO-17025
+            rawText={`COLONYAI NEURAL PROTOCOL - SOP ISO-17025
 ==========================================
 
 1. OVERVIEW: INTELLIGENCE INTAKE
-Gerbang utama pemrosesan spesimen biologis menggunakan mesin saraf ColonyAI. Dirancang untuk akurasi tinggi ISO-17025.
+Primary gateway for processing biological specimens using the ColonyAI neural engine. Designed for ISO-17025 high-accuracy standards.
 
-2. TATA CARA PEMASUKAN GAMBAR
-- Klik area unggah atau seret file PNG/JPG (Max 10MB).
-- Pastikan cawan petri berada di tengah frame.
-- Pencahayaan LED 45 derajat sangat disarankan untuk deteksi koloni yang akurat.
-- Resolusi minimal 300 DPI.
+2. IMAGE UPLOAD PROCEDURE
+- Click the upload area or drag and drop PNG/JPG files (Max 10MB).
+- Ensure the petri dish is centered in the frame.
+- 45-degree LED lighting is highly recommended for accurate colony detection.
+- Minimum resolution of 300 DPI.
 
-3. KONFIGURASI PARAMETER (PROTOKOL BIOLOGIS)
-A. PENGIDENTIFIKASI SPESIMEN: Kunci utama pelacakan (Traceability). Masukkan kode unik laboratorium (e.g., ISO-PCA-B2026-001).
-B. MATRIKS MEDIA AGAR: Menentukan target mikroba.
-   - PCA: Total mikroba umum.
-   - VRBA/BGBB: Kelompok Coliform.
-   - R2A: Bakteri air/stres.
-   - TSA/MAC: Pertumbuhan umum/Gram-negatif.
-C. FAKTOR PENGENCERAN: 10^-1 sampai 10^-6. Menjamin jumlah koloni 30-300 CFU untuk validitas statistik.
-D. VOLUME (ML): Volume sampel yang diplating.
-E. PARAMETER INKUBASI:
-   - Incubation Temp: Suhu ideal pertumbuhan mikroba (misal: 35°C). Cara isi: Masukkan angka suhu operasional inkubator.
-   - Time (Hours): Durasi inkubasi (misal: 48 jam). Cara isi: Hitung total waktu sejak spesimen masuk hingga pembacaan.
-F. KEPATUHAN & TRACEABILITY:
-   - Method Standard (ISO): Referensi metode resmi (e.g., ISO 4833-1:2013). Cara isi: Kode standar ISO yang digunakan sebagai acuan.
-   - Media Batch/Lot #: Nomor produksi media agar. Cara isi: Lihat pada label kemasan media. Penting untuk validasi kualitas media.
-   - Incubator ID: Identitas mesin inkubator (e.g., INC-001). Cara isi: Masukkan ID alat untuk audit distribusi suhu.
+3. PARAMETER CONFIGURATION (BIOLOGICAL PROTOCOL)
+A. SPECIMEN IDENTIFIER: Primary traceability key. Enter the unique laboratory code (e.g., ISO-PCA-B2026-001).
+B. AGAR MEDIA MATRIX: Determines microbial target.
+   - PCA: General total microbes.
+   - VRBA/BGBB: Coliform group.
+   - R2A: Water/stressed bacteria.
+   - TSA/MAC: General growth/Gram-negative.
+C. DILUTION FACTOR: 10^-1 to 10^-6. Ensures 30-300 CFU colony count for statistical validity.
+D. VOLUME (ML): Volume of plated sample.
+E. INCUBATION PARAMETERS:
+   - Incubation Temp: Ideal microbial growth temperature (e.g., 35°C). How to fill: Enter the incubator's operational temperature.
+   - Time (Hours): Incubation duration (e.g., 48 hours). How to fill: Calculate total time from specimen entry to reading.
+F. COMPLIANCE & TRACEABILITY:
+   - Method Standard (ISO): Official method reference (e.g., ISO 4833-1:2013). How to fill: ISO standard code used as reference.
+   - Media Batch/Lot #: Agar media production number. How to fill: Check the media packaging label. Important for media quality validation.
+   - Incubator ID: Incubator machine identity (e.g., INC-001). How to fill: Enter equipment ID for temperature distribution audit.
 
 4. AI DETECTION CLASSES (5-Class YOLOv8)
-- colony_single: Koloni tunggal terpisah (dihitung)
-- colony_merged: Koloni bertumpuk (estimasi area SA-001)
-- bubble: Gelembung udara (diabaikan)
-- dust_debris: Debu/partikel (diabaikan)
-- media_crack: Retakan agar (diabaikan)
+- colony_single: Single separate colony (counted)
+- colony_merged: Stacked colony (SA-001 area estimation)
+- bubble: Air bubble (ignored)
+- dust_debris: Dust/particle (ignored)
+- media_crack: Agar crack (ignored)
 
 STATUS: GA (General Availability)
-PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
+PRECISION: 94.1% mAP@0.5 on 8+ media types.`}
           >
             <section className="space-y-3">
               <div className="flex items-center gap-2 mb-1">
@@ -805,27 +805,27 @@ PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
                 {[
                   {
                     name: "colony_single",
-                    desc: "Koloni tunggal terpisah — dihitung dalam CFU/ml.",
+                    desc: "Single separate colony — counted in CFU/ml.",
                     color: "bg-emerald-500",
                   },
                   {
                     name: "colony_merged",
-                    desc: "Koloni bertumpuk — estimasi SA-001.",
+                    desc: "Stacked colony — SA-001 estimation.",
                     color: "bg-amber-500",
                   },
                   {
                     name: "bubble",
-                    desc: "Gelembung udara — diabaikan dari hitungan.",
+                    desc: "Air bubble — excluded from count.",
                     color: "bg-rose-500",
                   },
                   {
                     name: "dust_debris",
-                    desc: "Debu/partikel — diabaikan dari hitungan.",
+                    desc: "Dust/particle — excluded from count.",
                     color: "bg-slate-400",
                   },
                   {
                     name: "media_crack",
-                    desc: "Retakan media agar — diabaikan dari hitungan.",
+                    desc: "Agar media crack — excluded from count.",
                     color: "bg-violet-500",
                   },
                 ].map((cls, i) => (
@@ -856,8 +856,8 @@ PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
                     Protocol Status: GA
                   </p>
                   <p className="text-[9px] text-emerald-700 leading-relaxed font-semibold">
-                    Tingkat presisi saat ini mencapai 99.8 persen pada media PCA
-                    standar laboratorium.
+                    Current precision level reaches 99.8 percent on standard
+                    laboratory PCA media.
                   </p>
                 </div>
               </div>
@@ -873,8 +873,8 @@ PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
                     ColonyAI Vault
                   </p>
                   <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
-                    Seluruh data dienkripsi dan disimpan untuk kepatuhan data
-                    jangka panjang sesuai ISO-17025.
+                    All data is encrypted and stored for long-term data
+                    compliance per ISO-17025.
                   </p>
                 </div>
               </div>

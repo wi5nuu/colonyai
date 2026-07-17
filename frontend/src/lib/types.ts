@@ -65,9 +65,9 @@ export type MediaType =
   | "Other";
 
 /**
- * Status CFU/mL hasil kalkulasi.
- * - VALID: 25 <= count <= 250 (inklusif, sesuai ISO 4833-1:2013)
- * - TNTC : count > 250 — cfu_per_ml = null (FDA BAM: jangan laporkan nilai absolut)
+ * Calculated CFU/mL status.
+ * - VALID: 25 <= count <= 250 (inclusive, per ISO 4833-1:2013)
+ * - TNTC : count > 250 — cfu_per_ml = null (FDA BAM: do not report absolute value)
  * - TFTC : count < 25  — cfu_per_ml = null
  */
 export type CFUStatus = "VALID" | "TNTC" | "TFTC";
@@ -116,20 +116,20 @@ export interface Analysis {
   plated_volume_ml: number;
   original_image_url: string;
   annotated_image_url: string;
-  /** Total koloni = colony_single + estimasi(colony_merged) via SA-001 */
+  /** Total colonies = colony_single + estimate(colony_merged) via SA-001 */
   colony_count: number;
   /**
-   * BUG-003: null jika status TNTC atau TFTC.
-   * FDA BAM Chapter 3 melarang pelaporan nilai absolut dari plate TNTC.
+   * BUG-003: null if TNTC or TFTC status.
+   * FDA BAM Chapter 3 prohibits reporting absolute values from TNTC plates.
    */
   cfu_per_ml: number | null;
-  /** Status VALID/TNTC/TFTC — gunakan ini untuk logika display, BUKAN cfu_per_ml */
+  /** VALID/TNTC/TFTC status — use this for display logic, NOT cfu_per_ml */
   cfu_status?: CFUStatus;
-  /** Pesan deskriptif untuk analis dari backend */
+  /** Descriptive message for analyst from backend */
   cfu_message?: string;
-  /** Rekomendasi tindak lanjut (pengenceran ulang dll) */
+  /** Follow-up recommendation (re-dilution etc.) */
   cfu_recommendation?: string;
-  /** Estimasi orde besaran untuk TNTC, e.g. ">310,000" */
+  /** Estimated order of magnitude for TNTC, e.g. ">310,000" */
   estimated_cfu_order?: string;
   confidence_score: number;
   reliability: ReliabilityLevel;
@@ -138,9 +138,9 @@ export interface Analysis {
   detections: Detection[];
   warnings: string[];
   is_valid_for_reporting: boolean;
-  /** Metode estimasi colony_merged (SA-001): 'area_based' | 'fallback_*' */
+  /** colony_merged estimation method (SA-001): 'area_based' | 'fallback_*' */
   merged_estimation_method?: string;
-  /** Expanded measurement uncertainty U (k=2, ~95%) dalam CFU/mL */
+  /** Expanded measurement uncertainty U (k=2, ~95%) in CFU/mL */
   uncertainty_u?: number | null;
   /** ISO Compliance Fields */
   incubation_temp?: number | null;

@@ -954,7 +954,7 @@ export default function AdministrationPage() {
                       }
                       className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[9px] font-black uppercase tracking-widest rounded-none transition-all border border-white/5"
                     >
-                      Lihat Lengkap
+                      View Full
                     </button>
                   </div>
                   <div className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
@@ -1028,25 +1028,25 @@ export default function AdministrationPage() {
           showDocs={showDocs}
           setShowDocs={setShowDocs}
           directory="System Control"
-          title="Tata Kelola Node"
-          description="SOP Manajemen Personel dan Observasi Performa Sistem Real-time."
-          rawText={`TATA KELOLA NODE & SISTEM COLONYAI
+          title="Node Governance"
+          description="Personnel Management SOP and Real-time System Performance Monitoring."
+          rawText={`NODE GOVERNANCE & COLONYAI SYSTEM
 ==================================
 
 1. OVERVIEW
-Modul Node Governance adalah pusat komando untuk Administrator dalam mengelola otorisasi staf dan memantau kesehatan infrastruktur.
+The Node Governance module is the command center for Administrators to manage staff authorization and monitor infrastructure health.
 
 2. GOVERNANCE PROTOCOL
-A. ANALYST PROVISIONING: Pendaftaran akun analis baru dengan Clearance Level spesifik (Level 01-04).
-B. ACCESS REVOCATION: Pembekuan akses (Suspend) secara instan untuk mitigasi risiko keamanan.
-C. SYSTEM AUDITING: Pemantauan log aktivitas sistem secara real-time melalui Immutable Ledger.
+A. ANALYST PROVISIONING: Register new analyst accounts with specific Clearance Levels (Level 01-04).
+B. ACCESS REVOCATION: Instantly freeze (Suspend) access for security risk mitigation.
+C. SYSTEM AUDITING: Real-time monitoring of system activity logs via Immutable Ledger.
 
 3. MASTER EXPORT CENTER
-- Buku Besar Tata Kelola: Ekspor PDF komprehensif untuk audit eksternal ISO-17025.
-- Dataset Analitik: Ekspor Excel mentah untuk integrasi sistem informasi lab (LIMS).
+- Governance Ledger: Comprehensive PDF export for ISO-17025 external audits.
+- Analytical Dataset: Raw Excel export for laboratory information system (LIMS) integration.
 
 STATUS: GOVERNANCE ACTIVE
-AUTORITAS: MASTER ROOT`}
+AUTHORITY: MASTER ROOT`}
         >
           <section className="space-y-3">
             <div className="flex items-center gap-2 mb-1">
@@ -1058,9 +1058,9 @@ AUTORITAS: MASTER ROOT`}
               </h2>
             </div>
             <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-none border border-slate-100 dark:border-slate-800">
-              Modul Node Governance dirancang secara khusus untuk Administrator
-              sebagai pusat komando otorisasi staf dan pemantauan kesehatan
-              operasional server.
+              The Node Governance module is purpose-built for Administrators
+              as a command center for staff authorization and operational
+              server health monitoring.
             </p>
           </section>
 
@@ -1078,17 +1078,17 @@ AUTORITAS: MASTER ROOT`}
                 {
                   id: "1",
                   title: "Analyst Provisioning",
-                  desc: 'Gunakan "Provision New Node" untuk mendaftarkan akun analis baru dengan Clearance Level spesifik.',
+                  desc: 'Use "Provision New Node" to register new analyst accounts with specific Clearance Levels.',
                 },
                 {
                   id: "2",
                   title: "Access Revocation",
-                  desc: "Administrator dapat membekukan akses (Suspend) setiap analis melalui Action Toggle pada tabel Registry.",
+                  desc: "Administrators can freeze (Suspend) any analyst's access via the Action Toggle in the Registry table.",
                 },
                 {
                   id: "3",
                   title: "Master Export Center",
-                  desc: "Gunakan fitur ekspor PDF/Excel untuk menghasilkan laporan tata kelola resmi standar ISO-17025.",
+                  desc: "Use the PDF/Excel export feature to generate official governance reports compliant with ISO-17025 standards.",
                 },
               ].map((step) => (
                 <div key={step.id} className="flex gap-2.5 group">

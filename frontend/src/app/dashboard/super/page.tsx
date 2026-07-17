@@ -625,24 +625,24 @@ export default function SuperAdminRealTimeDashboard() {
             showDocs={showDocs}
             setShowDocs={setShowDocs}
             directory="Global Command"
-            title="Protokol Nexus Master"
-            description="Panduan operasional infrastruktur multi-tenant ColonyAI Global v2.0."
-            rawText={`PROTOKOL NEXUS MASTER COLONYAI
+            title="Nexus Master Protocol"
+            description="Multi-tenant ColonyAI Global v2.0 infrastructure operational guide."
+            rawText={`COLONYAI NEXUS MASTER PROTOCOL
 ================================
 
 1. GLOBAL COMMAND CENTER
-Pusat kontrol tertinggi untuk seluruh jaringan laboratorium. Master Admin memiliki otoritas penuh atas setiap tenant.
+Highest control center for the entire laboratory network. Master Admin has full authority over every tenant.
 
 2. MASTER REGISTRY GOVERNANCE
-- Node Provisioning: Membuat cluster organisasi baru melalui tombol 'Provision'.
-- Status Enforcement: Gunakan 'Suspend' untuk mematikan akses tenant seketika (Lisensi/Keamanan) dan 'Activate' untuk pemulihan.
+- Node Provisioning: Create new organization clusters via the 'Provision' button.
+- Status Enforcement: Use 'Suspend' to instantly disable tenant access (License/Security) and 'Activate' for restoration.
 
 3. REMOTE INTERVENTION TERMINAL
-- Klik 'Remote' untuk membuka Secure Tunnel (AES-256) ke node laboratorium.
-- Gunakan 'Deep Diagnostics' untuk audit otomatis pada model AI, Database, dan Enkripsi node lokal.
+- Click 'Remote' to open a Secure Tunnel (AES-256) to the laboratory node.
+- Use 'Deep Diagnostics' for automated audit of AI models, Database, and local node Encryption.
 
 4. GLOBAL TELEMETRY SYNC
-Data disinkronkan setiap 10 detik. Jika Throughput stagnan, lakukan manual refresh.
+Data is synchronized every 10 seconds. If throughput is stagnant, perform a manual refresh.
 
 STATUS: NEXUS LINK ESTABLISHED
 AUTHORITY: MASTER COMMAND`}
@@ -653,7 +653,7 @@ AUTHORITY: MASTER COMMAND`}
                 <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Overview</h2>
               </div>
               <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-none border border-slate-100 font-medium">
-                Nexus Master Control memungkinkan pemantauan kesehatan klaster dan intervensi keamanan langsung pada seluruh penyewa (tenants).
+                Nexus Master Control enables cluster health monitoring and direct security intervention on all tenants.
               </p>
             </section>
 
@@ -667,32 +667,32 @@ AUTHORITY: MASTER COMMAND`}
                   {
                     id: '1',
                     title: 'Nexus Provisioning',
-                    desc: 'Deploy infrastruktur baru dan inisialisasi akun Administrator utama untuk tenant baru.',
+                    desc: 'Deploy new infrastructure and initialize the primary Administrator account for new tenants.',
                     details: [
-                      'Klik tombol \'Provision\' di panel utama.',
-                      'Masukkan metadata institusi (Nama, Lokasi, Tingkat Lisensi).',
-                      'Sistem meng-generate ID Cluster unik (contoh: CLNY-B2026-X).',
-                      'Kredensial Admin lokal akan di-setup ke node tenant.'
+                      'Click the \'Provision\' button on the main panel.',
+                      'Enter institution metadata (Name, Location, License Level).',
+                      'System generates a unique Cluster ID (e.g., CLNY-B2026-X).',
+                      'Local Admin credentials will be set up on the tenant node.'
                     ]
                   },
                   {
                     id: '2',
                     title: 'Remote Shell (Terminal)',
-                    desc: 'Buka terminal Remote untuk audit teknis jika terjadi anomali pada akurasi AI atau database lokal.',
+                    desc: 'Open a Remote terminal for technical audit if anomalies occur in AI accuracy or local database.',
                     details: [
-                      'Pilih organisasi target pada Registry dan klik \'Remote\'.',
-                      'Tunggu otentikasi handshake Secure Tunnel (AES-256).',
-                      'Pantau utilitas CPU dan Memory node bersangkutan.',
-                      'Jalankan \'Deep Diagnostics\' untuk verifikasi model AI.'
+                      'Select the target organization in the Registry and click \'Remote\'.',
+                      'Wait for Secure Tunnel (AES-256) handshake authentication.',
+                      'Monitor CPU and Memory utilization of the relevant node.',
+                      'Run \'Deep Diagnostics\' for AI model verification.'
                     ]
                   },
                   {
                     id: '3',
                     title: 'Status Enforcement',
-                    desc: 'Kendali penuh atas status aktif/suspend organisasi untuk penegakan kebijakan lisensi.',
+                    desc: 'Full control over organization active/suspend status for license policy enforcement.',
                     details: [
-                      'Gunakan \'Suspend\' (merah) untuk isolasi darurat.',
-                      'Akses seluruh staf pada tenant tersebut akan diblokir.',
+                      'Use \'Suspend\' (red) for emergency isolation.',
+                      'All staff access on that tenant will be blocked.',
                       'Gunakan \'Activate\' (hijau) untuk memulihkan sesi.',
                       'Log protokol mencatat perubahan untuk keperluan audit.'
                     ]

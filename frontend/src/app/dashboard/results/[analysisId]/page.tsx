@@ -1433,9 +1433,9 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                 </h2>
               </div>
               <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-none border border-slate-100">
-                Halaman Intelligence Audit menyajikan bukti teknis mendalam atas
-                proses deteksi saraf. Auditor harus memastikan tidak ada koloni
-                yang terlewat atau artefak yang salah diklasifikasikan.
+                The Intelligence Audit page presents in-depth technical evidence of
+                the neural detection process. Auditors must ensure no colonies
+                are missed or artifacts misclassified.
               </p>
             </section>
 
@@ -1453,17 +1453,17 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                   {
                     id: "1",
                     title: t("results.neuralMappingLayer"),
-                    desc: "Tinjau kotak pembatas pada gambar. Klik objek untuk melihat detail skor kepercayaan individual.",
+                    desc: "Review bounding boxes on the image. Click objects to view individual confidence score details.",
                   },
                   {
                     id: "2",
                     title: t("results.spectralDistribution"),
-                    desc: "Bandingkan jumlah Verified vs Filtered untuk memastikan integritas data biologis.",
+                    desc: "Compare Verified vs Filtered counts to ensure biological data integrity.",
                   },
                   {
                     id: "3",
                     title: t("results.iso17025Metrics"),
-                    desc: "Periksa nilai Uncertainty (U). Nilai tinggi mungkin memerlukan pengujian ulang spesimen.",
+                    desc: "Check the Uncertainty (U) value. High values may require specimen retesting.",
                   },
                 ].map((step) => (
                   <div key={step.id} className="flex gap-2.5 group">

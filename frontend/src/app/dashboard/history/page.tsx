@@ -359,18 +359,18 @@ export default function HistoryPage() {
           directory={t("history.docsDirectory") || "Neural Repository Audit SOP"}
           title={t("history.docsTitle") || "Analytical History Ledger"}
           description={t("history.docsDescription") || "Comprehensive database of all biological specimens processed by the ColonyAI neural engine."}
-          rawText={`REPOSITORI ANALITIK NEURAL
+          rawText={`NEURAL ANALYTICAL REPOSITORY
 ==========================
 
-1. INTEGRITAS DATA
-Semua data hasil analisis disimpan dalam ledger terenkripsi AES-256. Setiap baris mewakili satu spesimen biologis yang divalidasi.
+1. DATA INTEGRITY
+All analysis result data is stored in an AES-256 encrypted ledger. Each row represents one validated biological specimen.
 
-2. STATUS AUDIT
-- Completed: Analisis selesai dan siap diekspor.
-- Pending: Memerlukan verifikasi manual dari analis senior.
+2. AUDIT STATUS
+- Completed: Analysis finished and ready for export.
+- Pending: Requires manual verification by senior analyst.
 
-3. EKSPOR DATA
-Gunakan tombol 'Export Hub' untuk mengunduh seluruh repositori dalam format CSV untuk pelaporan eksternal.`}
+3. DATA EXPORT
+Use the 'Export Hub' button to download the entire repository in CSV format for external reporting.`}
         />
       </div>
 

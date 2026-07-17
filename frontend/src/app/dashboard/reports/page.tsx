@@ -236,11 +236,11 @@ export default function ReportsPage() {
 
       // ── Generate Share Message ──
       const messageText =
-        `*ColonyAI - Laporan Diagnostik ISO-17025*\n\n` +
-        `• Total Spesimen Terpilih: *${selectedIds.size}* dari *${filteredAnalyses.length}* spesimen\n` +
-        `• Rentang Tanggal: *${dateFrom || "-"}* s/d *${dateTo || "-"}*\n` +
-        `• Protokol Media: *${mediaType === "all" ? "Semua Protokol" : mediaType}*\n\n` +
-        `Mohon diproses untuk keperluan audit sistem. Terima kasih!`;
+        `*ColonyAI - ISO-17025 Diagnostic Report*\n\n` +
+        `• Total Selected Specimens: *${selectedIds.size}* of *${filteredAnalyses.length}* specimens\n` +
+        `• Date Range: *${dateFrom || "-"}* to *${dateTo || "-"}*\n` +
+        `• Media Protocol: *${mediaType === "all" ? "All Protocols" : mediaType}*\n\n` +
+        `Please process for system audit purposes. Thank you!`;
 
       const encodedMsg = encodeURIComponent(messageText);
 
@@ -250,14 +250,14 @@ export default function ReportsPage() {
           `https://api.whatsapp.com/send?phone=${targetId}&text=${encodedMsg}`,
           "_blank",
         );
-        toast.success("Mengarahkan ke WhatsApp...");
+        toast.success("Redirecting to WhatsApp...");
       } else {
         window.open(`https://t.me/${targetId}?text=${encodedMsg}`, "_blank");
-        toast.success("Mengarahkan ke Telegram...");
+        toast.success("Redirecting to Telegram...");
       }
       setIsShareModalOpen(false);
     } catch (error: any) {
-      toast.error(`Gagal mengirim via ${sharePlatform.toUpperCase()}`);
+      toast.error(`Failed to send via ${sharePlatform.toUpperCase()}`);
     } finally {
       setIsSendingMessenger(false);
     }
@@ -836,22 +836,22 @@ export default function ReportsPage() {
                   {
                     id: "01",
                     title: "Overview",
-                    desc: "Modul pelaporan berfungsi untuk mengonversi data hasil analisis neural menjadi dokumen formal (PDF/CSV) yang siap diaudit.",
+                    desc: "The reporting module converts neural analysis result data into formal audit-ready documents (PDF/CSV).",
                   },
                   {
                     id: "02",
                     title: "Filter Rentang",
-                    desc: "Saring spesimen berdasarkan tanggal mulai dan akhir penerimaan specimen.",
+                    desc: "Filter specimens by start and end specimen receipt dates.",
                   },
                   {
                     id: "03",
                     title: "Matriks Media",
-                    desc: "Pisahkan laporan berdasarkan protokol media agar (PCA, VRBA, dll) untuk audit spesifik.",
+                    desc: "Separate reports by agar media protocol (PCA, VRBA, etc.) for specific audits.",
                   },
                   {
                     id: "04",
                     title: "Pipeline Queue",
-                    desc: "Laporan yang dihasilkan muncul di daftar unduhan sesi aktif secara otomatis.",
+                    desc: "Generated reports automatically appear in the active session download list.",
                   },
                 ].map((s) => (
                   <div key={s.id} className="flex gap-3">
@@ -914,8 +914,8 @@ export default function ReportsPage() {
               <div>
                 <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
                   {sharePlatform === "whatsapp"
-                    ? "Kirim Laporan via WhatsApp"
-                    : "Kirim Laporan via Telegram"}
+                    ? "Send Report via WhatsApp"
+                    : "Send Report via Telegram"}
                 </h3>
                 <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                   ISO-17025 Validated Share
@@ -927,22 +927,22 @@ export default function ReportsPage() {
             <div className="space-y-4">
               <div className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-none">
                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
-                  Pratinjau Pesan yang Akan Dikirim
+                  Message Preview
                 </p>
                 <div className="text-[10px] text-slate-600 dark:text-slate-300 font-mono space-y-1 whitespace-pre-line leading-relaxed">
-                  {`*ColonyAI - Laporan Diagnostik ISO-17025*\n\n` +
-                    `• Total Spesimen: *${selectedIds.size}* dari *${filteredAnalyses.length}* spesimen\n` +
-                    `• Rentang Tanggal: *${dateFrom || "-"}* s/d *${dateTo || "-"}*\n` +
-                    `• Protokol: *${mediaType === "all" ? "Semua Protokol" : mediaType}*\n\n` +
-                    `Mohon diproses untuk keperluan audit sistem. Terima kasih!`}
+                  {`*ColonyAI - ISO-17025 Diagnostic Report*\n\n` +
+                    `• Total Specimens: *${selectedIds.size}* of *${filteredAnalyses.length}* specimens\n` +
+                    `• Date Range: *${dateFrom || "-"}* to *${dateTo || "-"}*\n` +
+                    `• Protocol: *${mediaType === "all" ? "All Protocols" : mediaType}*\n\n` +
+                    `Please process for system audit purposes. Thank you!`}
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                   {sharePlatform === "whatsapp"
-                    ? "Nomor WhatsApp Tujuan (Dengan Kode Negara)"
-                    : "Username Telegram Tujuan"}
+                    ? "Target WhatsApp Number (With Country Code)"
+                    : "Target Telegram Username"}
                 </label>
                 <input
                   type="text"
@@ -950,8 +950,8 @@ export default function ReportsPage() {
                   onChange={(e) => setShareInput(e.target.value)}
                   placeholder={
                     sharePlatform === "whatsapp"
-                      ? "Contoh: 62813948290"
-                      : "Contoh: colonyai_support"
+                      ? "Example: 62813948290"
+                      : "Example: colonyai_support"
                   }
                   className="w-full px-3 py-2 text-[10px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none focus:border-primary transition-all"
                 />

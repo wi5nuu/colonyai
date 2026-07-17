@@ -135,7 +135,7 @@ export function ResetRequestsPanel() {
     setProcessingId(id);
     try {
       await api.post(`/api/v1/auth/reset-requests/${id}/reject`);
-      toast.success("Ditolak. Pengguna telah diberitahu.");
+          toast.success("Rejected. User has been notified.");
       fetchRequests();
     } catch (e: any) {
       toast.error(e.message);
