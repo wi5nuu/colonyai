@@ -16,9 +16,12 @@ class ImageProcessor:
 
     def preprocess(self, image_path: str) -> Tuple[np.ndarray, dict]:
         """
-        FIX: Simplified pipeline - normalize brightness then direct resize.
-        NO perspective correction or ROI crop. This makes coordinate mapping
-        trivially accurate: final_coord = det_coord * (orig_size / 640).
+        Full preprocessing pipeline:
+        1. Detect circular agar plate boundary (Hough Circle Transform)
+        2. Correct perspective distortion (homography warp)
+        3. Normalize brightness/contrast (CLAHE with auto-exposure)
+        4. Resize to target dimensions (640x640)
+
         Returns: (processed_image, roi_info)
         """
         image = cv2.imread(image_path)
@@ -27,24 +30,41 @@ class ImageProcessor:
 
         orig_h, orig_w = image.shape[:2]
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        normalized = self._normalize_brightness(image_rgb)
+
+        # Step 1: Detect plate boundary
+        mask, circle_info = self._detect_plate_boundary(image_rgb)
+
+        # Step 2: Correct perspective — also capture H for inverse mapping later
+        corrected, H = self._correct_perspective(image_rgb, circle_info)
+
+        # Step 3: Normalize brightness
+        normalized = self._normalize_brightness(corrected)
+
+        # Step 4: Resize
         resized = cv2.resize(normalized, self.target_size, interpolation=cv2.INTER_AREA)
 
-        # roi_info: full image, no offset
+        # ROI info for coordinate mapping
+        # H is the homography matrix used in perspective correction (src→dst).
+        # Store it so callers can apply H_inverse to map bbox coords back to original.
         roi_info = {
             'x_offset': 0,
             'y_offset': 0,
             'roi_w': orig_w,
             'roi_h': orig_h,
             'orig_w': orig_w,
-            'orig_h': orig_h
+            'orig_h': orig_h,
+            'plate_detected': circle_info is not None,
+            'plate_center_x': circle_info['x'] if circle_info else None,
+            'plate_center_y': circle_info['y'] if circle_info else None,
+            'plate_radius': circle_info['radius'] if circle_info else None,
+            'homography_matrix': H,  # None if no perspective correction was applied
         }
         return resized, roi_info
 
     def preprocess_from_bytes(self, image_bytes: bytes) -> Tuple[np.ndarray, dict]:
         """
-        FIX: Simplified pipeline - normalize brightness then direct resize.
-        Returns: (processed_image, roi_info)
+        Full preprocessing pipeline from raw bytes.
+        Same as preprocess() but accepts image bytes instead of file path.
         """
         image = Image.open(io.BytesIO(image_bytes))
         if image.mode != 'RGB':
@@ -52,7 +72,17 @@ class ImageProcessor:
 
         image_rgb = np.array(image)
         orig_h, orig_w = image_rgb.shape[:2]
-        normalized = self._normalize_brightness(image_rgb)
+
+        # Step 1: Detect plate boundary
+        mask, circle_info = self._detect_plate_boundary(image_rgb)
+
+        # Step 2: Correct perspective — also capture H for inverse mapping later
+        corrected, H = self._correct_perspective(image_rgb, circle_info)
+
+        # Step 3: Normalize brightness
+        normalized = self._normalize_brightness(corrected)
+
+        # Step 4: Resize
         resized = cv2.resize(normalized, self.target_size, interpolation=cv2.INTER_AREA)
 
         roi_info = {
@@ -61,7 +91,12 @@ class ImageProcessor:
             'roi_w': orig_w,
             'roi_h': orig_h,
             'orig_w': orig_w,
-            'orig_h': orig_h
+            'orig_h': orig_h,
+            'plate_detected': circle_info is not None,
+            'plate_center_x': circle_info['x'] if circle_info else None,
+            'plate_center_y': circle_info['y'] if circle_info else None,
+            'plate_radius': circle_info['radius'] if circle_info else None,
+            'homography_matrix': H,  # None if no perspective correction was applied
         }
         return resized, roi_info
 
@@ -148,7 +183,7 @@ class ImageProcessor:
 
         return mask, circle_info
 
-    def _correct_perspective(self, image: np.ndarray, circle_info: dict | None) -> np.ndarray:
+    def _correct_perspective(self, image: np.ndarray, circle_info: dict | None) -> tuple:
         """
         Correct perspective distortion of the agar plate using homography transform.
 
@@ -162,10 +197,12 @@ class ImageProcessor:
             circle_info: Dict with x, y, radius from Hough Circle detection
 
         Returns:
-            Perspective-corrected image (same size as input)
+            Tuple of (perspective-corrected image, H matrix or None).
+            H is the homography matrix used for the warp (src→dst).
+            H is None when no correction was applied (identity transform).
         """
         if circle_info is None:
-            return image  # No plate detected, skip correction
+            return image, None  # No plate detected, skip correction
 
         h, w = image.shape[:2]
         cx, cy, r = circle_info['x'], circle_info['y'], circle_info['radius']
@@ -199,14 +236,21 @@ class ImageProcessor:
         try:
             H, _ = cv2.findHomography(src_points, dst_points)
             if H is None:
-                return image
+                return image, None
 
             # Apply perspective warp
             corrected = cv2.warpPerspective(image, H, (w, h), flags=cv2.INTER_LINEAR)
-            return corrected
-        except cv2.error:
+            return corrected, H
+        except cv2.error as e:
             # If homography fails, return original image
-            return image
+            # Log warning so upstream callers know correction was skipped
+            import logging as _logging
+            _logging.getLogger(__name__).warning(
+                "_correct_perspective: homography failed (cx=%s cy=%s r=%s), "
+                "returning uncorrected image. cv2 error: %s",
+                circle_info.get('x'), circle_info.get('y'), circle_info.get('radius'), e
+            )
+            return image, None
 
     def _extract_roi_with_coords(self, image: np.ndarray, mask: np.ndarray) -> Tuple[np.ndarray, Tuple[int, int, int, int]]:
         """Extract ROI and return (roi_image, (x, y, w, h))"""
