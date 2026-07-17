@@ -7,61 +7,61 @@ Untuk akurasi maksimal pada kompetisi
 # Diturunkan untuk menangkap lebih banyak koloni valid.
 # Model sudah melakukan filtering lanjutan (size, aspect ratio, NMS).
 CLASS_THRESHOLDS = {
-    'colony_single': 0.25,  # Turun agar tangkap lebih banyak
-    'colony_merged': 0.15,  # Diturunkan drastis — merged colony confidence rendah
-    'bubble': 0.25,         # Turun sedikit
-    'dust_debris': 0.15,    # Diturunkan — class minoritas
-    'media_crack': 0.15,    # Diturunkan — class minoritas
+    'colony_single': 0.15,  # FIX: turun dari 0.25 — sejajar dengan colony_merged agar tidak terlalu banyak dibuang
+    'colony_merged': 0.15,
+    'bubble': 0.10,
+    'dust_debris': 0.15,
+    'media_crack': 0.15,
 }
 
 # THRESHOLD PER-MEDIA TYPE (Untuk adaptasi berbagai jenis agar)
 MEDIA_TYPE_THRESHOLDS = {
     'PCA': {
-        'colony_single': 0.35,
-        'colony_merged': 0.30,
-        'bubble': 0.35,
-        'dust_debris': 0.30,
-        'media_crack': 0.35,
+        'colony_single': 0.15,  # FIX: turun dari 0.25
+        'colony_merged': 0.15,
+        'bubble': 0.10,
+        'dust_debris': 0.20,
+        'media_crack': 0.20,
     },
     'MacConkey': {
-        'colony_single': 0.30,
-        'colony_merged': 0.25,
-        'bubble': 0.30,
-        'dust_debris': 0.25,
-        'media_crack': 0.30,
+        'colony_single': 0.15,  # FIX: turun dari 0.25
+        'colony_merged': 0.15,
+        'bubble': 0.10,
+        'dust_debris': 0.20,
+        'media_crack': 0.20,
     },
     'TSA': {
-        'colony_single': 0.30,
-        'colony_merged': 0.25,
-        'bubble': 0.30,
-        'dust_debris': 0.25,
-        'media_crack': 0.30,
+        'colony_single': 0.15,  # FIX: turun dari 0.25
+        'colony_merged': 0.15,
+        'bubble': 0.10,
+        'dust_debris': 0.20,
+        'media_crack': 0.20,
     },
     'Blood': {
-        'colony_single': 0.25,
-        'colony_merged': 0.20,
-        'bubble': 0.25,
-        'dust_debris': 0.20,
-        'media_crack': 0.25,
+        'colony_single': 0.15,  # FIX: turun dari 0.20
+        'colony_merged': 0.15,
+        'bubble': 0.10,
+        'dust_debris': 0.15,
+        'media_crack': 0.20,
     },
-    'default': CLASS_THRESHOLDS  # Fallback
+    'default': CLASS_THRESHOLDS
 }
 
 # AGGRESSIVE MODE - Untuk gambar sulit seperti kompetisi
 # Threshold sangat rendah untuk menangkap semua kemungkinan
 AGGRESSIVE_THRESHOLDS = {
-    'colony_single': 0.25,
-    'colony_merged': 0.20,
-    'bubble': 0.15,
-    'dust_debris': 0.10,
-    'media_crack': 0.15,
+    'colony_single': 0.10,  # FIX: turun dari 0.25 — mode agresif harus benar-benar sensitif
+    'colony_merged': 0.10,  # FIX: turun dari 0.20
+    'bubble': 0.08,
+    'dust_debris': 0.08,
+    'media_crack': 0.10,
 }
 
 # SIZE FILTERS (dalam pixels)
 # Buang deteksi yang terlalu kecil atau terlalu besar
 SIZE_FILTERS = {
     'colony_single': {'min': 8, 'max': 400},
-    'colony_merged': {'min': 15, 'max': 600},
+    'colony_merged': {'min': 5, 'max': 600},    # OPT-002: Turun dari 15 — merged colony bisa sangat kecil di gambar gelap
     'bubble': {'min': 5, 'max': 200},
     'dust_debris': {'min': 3, 'max': 100},
     'media_crack': {'min': 10, 'max': 800},

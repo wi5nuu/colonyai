@@ -22,50 +22,50 @@ ColonyClassName = Literal[
 MEDIA_CONFIDENCE_THRESHOLDS: dict[str, dict[str, float]] = {
     "PCA": {
         "colony_single": 0.20,
-        "colony_merged": 0.20,
-        "bubble":        0.20,
+        "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
+        "bubble":        0.10,
         "dust_debris":   0.20,
         "media_crack":   0.20,
     },
     "VRBA": {
         "colony_single": 0.20,
-        "colony_merged": 0.20,
-        "bubble":        0.15,
+        "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
+        "bubble":        0.10,
         "dust_debris":   0.15,
         "media_crack":   0.15,
     },
     "BGBB": {
         "colony_single": 0.20,
-        "colony_merged": 0.20,
-        "bubble":        0.20,
+        "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
+        "bubble":        0.10,
         "dust_debris":   0.20,
         "media_crack":   0.20,
     },
     "TGEA": {
         "colony_single": 0.20,
-        "colony_merged": 0.20,
-        "bubble":        0.20,
+        "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
+        "bubble":        0.10,
         "dust_debris":   0.20,
         "media_crack":   0.20,
     },
     "TSA": {
         "colony_single": 0.20,
-        "colony_merged": 0.20,
-        "bubble":        0.20,
+        "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
+        "bubble":        0.10,
         "dust_debris":   0.20,
         "media_crack":   0.20,
     },
     "MACCONKEY": {
         "colony_single": 0.20,
-        "colony_merged": 0.20,
-        "bubble":        0.15,
+        "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
+        "bubble":        0.10,
         "dust_debris":   0.15,
         "media_crack":   0.15,
     },
     "R2A": {
         "colony_single": 0.20,
-        "colony_merged": 0.20,
-        "bubble":        0.15,
+        "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
+        "bubble":        0.10,
         "dust_debris":   0.15,
         "media_crack":   0.15,
     },
