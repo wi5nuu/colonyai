@@ -1,24 +1,40 @@
+import logging
+import sys
+from pathlib import Path
+
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from contextlib import asynccontextmanager
-from pathlib import Path
 
 from app.core.config import settings
 from app.core.rate_limiter import RateLimitMiddleware
 from app.core.middleware import SecureHeadersMiddleware
 from app.api.v1 import auth_router, image_router, analysis_router, report_router, user_router, lims_router, maintenance_router, simulator_router, settings_router, audit_router, super_router
+from app.api.v1.endpoints.models import router as models_router
 from app.core.database import engine, Base
+
+# ── Logging Configuration ──
+logging.basicConfig(
+    level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
+    format="%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler(settings.LOG_FILE, mode="a") if settings.LOG_FILE else logging.StreamHandler(sys.stdout),
+    ],
+)
+logger = logging.getLogger("colonyai")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    print("[STARTUP] Initializing Laboratory OS Backend...")
+    logger.info("Initializing ColonyAI Backend...")
     from app.core.database import init_db
-    print("[STARTUP] Connecting to PostgreSQL Database...")
+    logger.info("Connecting to PostgreSQL Database...")
     await init_db()
-    print("[STARTUP] Database initialization complete.")
+    logger.info("Database initialization complete.")
 
     # Ensure upload directories exist
     for subdir in ["original", "annotated", "reports"]:
@@ -26,6 +42,7 @@ async def lifespan(app: FastAPI):
 
     yield
     # Shutdown
+    logger.info("ColonyAI Backend shutting down.")
 
 
 app = FastAPI(
@@ -35,13 +52,15 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS Middleware
+# CORS Middleware — restrict to known origins (production safety)
+cors_origins = settings.BACKEND_CORS_ORIGINS
+logger.info(f"CORS allowed origins: {cors_origins}")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
 )
 
 # ── Cyber Security Middleware (Secure Headers) ──
@@ -59,7 +78,7 @@ app.add_middleware(
 uploads_path = Path(settings.UPLOAD_DIR).resolve()
 # Ensure the directory exists before mounting to avoid errors
 uploads_path.mkdir(parents=True, exist_ok=True)
-print(f"[MOUNT] Serving static files from: {uploads_path}")
+logger.info(f"Serving static files from: {uploads_path}")
 app.mount("/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
 
 # Include routers
@@ -74,6 +93,7 @@ app.include_router(simulator_router, prefix=f"{settings.API_V1_PREFIX}/simulator
 app.include_router(settings_router, prefix=f"{settings.API_V1_PREFIX}/settings", tags=["User Settings"])
 app.include_router(audit_router, prefix=f"{settings.API_V1_PREFIX}/audit", tags=["Audit Logs"])
 app.include_router(super_router, prefix=f"{settings.API_V1_PREFIX}/super", tags=["Super Admin"])
+app.include_router(models_router, prefix=f"{settings.API_V1_PREFIX}/admin/models", tags=["Model Management"])
 
 
 @app.get("/")
