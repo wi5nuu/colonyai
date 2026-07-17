@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -103,7 +104,7 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
 
     if not user:
         # Avoid user enumeration by using a generic error and consistent time
-        time.sleep(0.1) # Subtle timing consistency
+        await asyncio.sleep(0.1) # Subtle timing consistency
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
@@ -191,12 +192,9 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
         from app.utils.email import send_mfa_email
         email_sent = await send_mfa_email(user.email, mfa_code)
         
-        # LOG SIMULASI PENGIRIMAN (Akan tetap muncul di terminal backend untuk backup)
-        print("\n" + "="*50)
-        print(f"🔐 SECURITY PROTOCOL: MFA CODE FOR {user.email}")
-        print(f"👉 CODE: {mfa_code}")
-        print(f"📡 DISPATCHED VIA: {'Real Email' if email_sent else 'Terminal Simulation'}")
-        print("="*50 + "\n")
+        logger.info("SECURITY PROTOCOL: MFA CODE FOR %s", user.email)
+        logger.info("CODE: %s", mfa_code)
+        logger.info("DISPATCHED VIA: %s", 'Real Email' if email_sent else 'Terminal Simulation')
         
         # Write MFA code to static file for easy developer access
         try:
@@ -207,7 +205,7 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
             with open(token_file_path, "w", encoding="utf-8") as token_file:
                 token_file.write(f"MFA CODE: {mfa_code}\nGenerated At: {datetime.now(timezone.utc).isoformat()} UTC\n")
         except Exception as e:
-            print(f"⚠️ Error writing MFA token to file: {e}")
+            logger.warning("Error writing MFA token to file: %s", e)
         
         return {
             "mfa_required": True,
