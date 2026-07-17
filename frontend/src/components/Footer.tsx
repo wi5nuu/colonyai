@@ -100,6 +100,7 @@ export function Footer() {
                 { name: t("footer.targetPengguna"), href: "/target-pengguna" },
                 { name: t("footer.teknologi"), href: "/teknologi" },
                 { name: t("footer.compliance"), href: "/compliance" },
+                { name: "Documentation", href: "/docs" },
               ].map((link) => (
                 <Link
                   key={link.name}

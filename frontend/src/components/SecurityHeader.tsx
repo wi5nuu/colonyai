@@ -16,7 +16,7 @@ export function SecurityHeader({ region = 'ID-WEST-01', ip = '10.142.0.8' }: Sec
   const setLanguage = useTranslationStore((s) => s.setLanguage)
 
   const toggleLanguage = (lang: string) => {
-    setLanguage(lang.toLowerCase())
+    setLanguage(lang.toLowerCase() as "en" | "id")
     const body = document.body
     body.style.opacity = '0.4'
     body.style.filter = 'blur(4px)'

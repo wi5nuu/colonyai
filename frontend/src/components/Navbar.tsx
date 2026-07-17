@@ -45,6 +45,7 @@ export function Navbar() {
     { nameKey: "public.targetPengguna", href: "/target-pengguna" },
     { nameKey: "public.tujuanManfaat", href: "/tujuan-manfaat" },
     { nameKey: "public.compliance", href: "/compliance" },
+    { nameKey: "public.docs", href: "/docs" },
   ];
 
   return (

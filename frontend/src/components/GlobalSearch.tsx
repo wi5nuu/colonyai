@@ -89,7 +89,7 @@ export function GlobalSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"all" | "specimen" | "laboratory">("all");
-  const language = useTranslationStore((state) => state.language);
+  const { language, t } = useTranslationStore();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Listen for keyboard shortcuts: Ctrl+K or /
@@ -173,17 +173,17 @@ export function GlobalSearch() {
 
         {/* Filters Tabs */}
         <div className="flex items-center gap-2 px-5 py-3 border-b border-slate-50 dark:border-slate-850 bg-slate-50/50 dark:bg-slate-950/20">
-          {(["all", "specimen", "laboratory"] as const).map((t) => (
+          {(["all", "specimen", "laboratory"] as const).map((tabType) => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
+              key={tabType}
+              onClick={() => setTab(tabType)}
               className={`px-3.5 py-1.5 text-xs font-black uppercase tracking-widest transition-all rounded-md border ${
-                tab === t
-                  ? "bg-gradient-to-r from-[#00f2ff] to-[#0055ff] border-transparent text-white shadow-md"
-                  : "border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                tab === tabType
+                  ? "bg-[#1a237e] dark:bg-[#00f2ff] text-white dark:text-slate-950 border-[#1a237e] dark:border-[#00f2ff]"
+                  : "bg-transparent text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-[#1a237e] dark:hover:border-[#00f2ff]"
               }`}
             >
-              {t === "all" ? t("common.allResults") : t}
+              {tabType === "all" ? t("common.allResults") : tabType}
             </button>
           ))}
         </div>
