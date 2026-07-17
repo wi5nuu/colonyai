@@ -940,10 +940,10 @@ export default function AdministrationPage() {
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
                       <div>
-                        <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">
+                        <h3 className="text-[9px] font-black text-white uppercase tracking-[0.2em]">
                           Recent System Audit Trail
                         </h3>
-                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+                        <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
                           Real-time Immutable Ledger Snapshot
                         </p>
                       </div>
