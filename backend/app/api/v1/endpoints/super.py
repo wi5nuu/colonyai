@@ -174,14 +174,11 @@ async def provision_new_organization(
         email=request.admin_email,
         full_name=request.admin_full_name,
         password_hash=get_password_hash(temp_password),
-        recovery_password=temp_password, # Save for Master Admin peek
+        recovery_password=temp_password,
         role=UserRole.ADMIN,
-        is_active=True if hasattr(User, 'is_active') else None 
+        is_active=True,
+        is_locked_out='no',
     )
-    
-    # Ensure is_locked_out is set correctly
-    if hasattr(new_admin, 'is_locked_out'):
-        new_admin.is_locked_out = 'no'
         
     db.add(new_admin)
     
