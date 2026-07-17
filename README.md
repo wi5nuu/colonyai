@@ -1,3 +1,11 @@
+<div align="center">
+  <img src="frontend/public/company_logo/fablab_jababeka.png" alt="FabLab Jababeka" height="70" style="margin: 0 20px;" />
+  <img src="frontend/public/company_logo/KEMENKO-upd.png" alt="KEMENKO" height="70" style="margin: 0 20px;" />
+  <img src="frontend/public/company_logo/tuvnord_indonesia.jpeg" alt="TUV Nord Indonesia" height="70" style="margin: 0 20px;" />
+</div>
+
+<br />
+
 # ColonyAI
 
 [![AI Open Innovation Challenge 2026](https://img.shields.io/badge/AI%20Open%20Innovation%20Challenge-2026-FF6B35?style=flat-square)](#)
