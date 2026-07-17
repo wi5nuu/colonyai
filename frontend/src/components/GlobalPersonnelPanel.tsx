@@ -72,7 +72,7 @@ function OrgPersonnelRow({
     } finally {
       setLoading(false);
     }
-  }, [org.id, org.name, personnel.length]);
+  }, [org.id, org.name, personnel.length, t]);
 
   const toggleReveal = (id: string) =>
     setRevealedIds((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -251,7 +251,7 @@ export function GlobalPersonnelPanel() {
     } finally {
       setLoading(false);
     }
-    }, []);
+    }, [t]);
 
   useEffect(() => {
     fetchOrgs();
@@ -270,11 +270,11 @@ export function GlobalPersonnelPanel() {
         <div>
           <div className="flex items-center gap-2">
             <Key className="w-4 h-4 text-primary" />
-            <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">
+            <h3 className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
               {t("globalPersonnel.globalPersonnelCommand")}
             </h3>
           </div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+          <p className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
             {orgs.length} {t("globalPersonnel.orgClickExpand")}
           </p>
         </div>
