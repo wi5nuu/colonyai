@@ -311,18 +311,18 @@ export default function SuperAdminRealTimeDashboard() {
       <div className="flex relative min-h-[calc(100vh-200px)]">
         {/* Main Content Area */}
         <div className={`flex-1 transition-all duration-300 ${showDocs ? 'lg:mr-[350px]' : ''}`}>
-          <div className="max-w-[1500px] mx-auto px-4 sm:px-8 py-0 sm:py-0">
+          <div className="max-w-[1500px] mx-auto px-3 py-0">
             {/* Global Master Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 sm:mb-6 pt-0">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2 pt-0">
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h1 className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">{t("super.globalControl")}</h1>
-                  <span className="px-1.5 py-0.5 bg-primary/10 border border-primary/20 rounded-none text-[7px] sm:text-[8px] font-bold text-primary uppercase tracking-[0.2em] hidden xs:inline-block">Master</span>
+                  <h1 className="text-[9px] font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">{t("super.globalControl")}</h1>
+                  <span className="px-1.5 py-0.5 bg-primary/10 border border-primary/20 rounded-none text-[7px] font-bold text-primary uppercase tracking-[0.2em]">Master</span>
                 </div>
-                <p className="text-[7px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5">{t("super.multitenantOs")}</p>
+                <p className="text-[7px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-0.5">{t("super.multitenantOs")}</p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+              <div className="flex flex-wrap items-center gap-2">
                 <div className="hidden lg:block">
                   <DocumentationToggle
                     showDocs={showDocs}
@@ -334,28 +334,28 @@ export default function SuperAdminRealTimeDashboard() {
                   onClick={fetchData}
                   className={`p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors outline-none ${isRefreshing ? 'animate-spin' : ''}`}
                 >
-                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <RefreshCw className="w-3.5 h-3.5" />
                 </button>
-                <div className="px-2 py-1.5 flex items-center gap-2 sm:gap-3">
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <p className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono tracking-tighter">{(stats?.global_throughput || 0).toLocaleString()}</p>
-                    <p className="text-[7px] sm:text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest pt-0.5">Throughput</p>
+                <div className="hidden sm:flex px-2 py-1 items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-black text-slate-900 dark:text-white font-mono tracking-tighter">{(stats?.global_throughput || 0).toLocaleString()}</p>
+                    <p className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest pt-0.5">Throughput</p>
                   </div>
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center shrink-0">
-                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
+                  <div className="w-4 h-4 flex items-center justify-center shrink-0">
+                    <TrendingUp className="w-3 h-3 text-emerald-500" />
                   </div>
                 </div>
                 <button
                   onClick={() => router.push("/dashboard/super/provision")}
-                   className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-primary text-white rounded-none text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary/90 transition-all shadow-md active:scale-95 group"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-none text-[9px] font-black uppercase tracking-[0.2em] hover:bg-primary/90 transition-all shadow-md active:scale-95 group"
                 >
-                  <Plus className="w-3 h-3 group-hover:rotate-90 transition-transform" /> <span className="hidden xs:inline">Provision</span>
+                  <Plus className="w-3 h-3 group-hover:rotate-90 transition-transform" /> <span>Provision</span>
                 </button>
               </div>
             </div>
 
             {/* Global Statistics Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
               {[
                 { label: t("super.totalOrganizations"), value: stats?.total_organizations?.toString() || "0", sub: t("super.registeredTenants"), icon: Building2, trend: "up", color: "indigo" },
                 { label: t("super.activeNodes"), value: stats?.active_nodes?.toLocaleString() || "0", sub: t("super.globalRegistry"), icon: Users, trend: "up", color: "blue" },
@@ -364,32 +364,32 @@ export default function SuperAdminRealTimeDashboard() {
               ].map((stat, i) => (
                 <div
                   key={i}
-                  className={`backdrop-blur-sm border p-2 sm:p-4 rounded-none shadow-sm group hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden ${
+                  className={`backdrop-blur-sm border p-2 rounded-none shadow-sm group hover:shadow-lg transition-all flex flex-col justify-between relative overflow-hidden ${
                     stat.color === 'indigo' ? 'bg-indigo-50/40 border-indigo-100/50 dark:bg-indigo-950/20 dark:border-indigo-900/40' :
                     stat.color === 'blue' ? 'bg-blue-50/40 border-blue-100/50 dark:bg-blue-950/20 dark:border-blue-900/40' :
                     stat.color === 'emerald' ? 'bg-emerald-50/40 border-emerald-100/50 dark:bg-emerald-950/20 dark:border-emerald-900/40' :
                     'bg-amber-50/40 border-amber-100/50 dark:bg-amber-950/20 dark:border-amber-900/40'
                   }`}
                 >
-                  <div className="flex justify-between items-start mb-1 sm:mb-2">
-                    <div className={`p-1 sm:p-1.5 rounded-none transition-colors z-10 ${
+                  <div className="flex justify-between items-start mb-1">
+                    <div className={`p-1 rounded-none transition-colors z-10 ${
                       stat.color === 'indigo' ? 'bg-indigo-100/50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-400' :
                       stat.color === 'blue' ? 'bg-blue-100/50 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400' :
                       stat.color === 'emerald' ? 'bg-emerald-100/50 text-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-400' :
                       'bg-amber-100/50 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400'
                     }`}>
-                      <stat.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      <stat.icon className="w-3 h-3" />
                     </div>
-                    <span className={`text-[7px] sm:text-[9px] font-bold z-10 ${stat.trend === 'up' ? 'text-emerald-500' : 'text-slate-400'} uppercase tracking-widest`}>
+                    <span className={`text-[7px] font-bold z-10 ${stat.trend === 'up' ? 'text-emerald-500' : 'text-slate-400'} uppercase tracking-widest`}>
                       {stat.trend === 'up' ? '+1' : 'OPT'}
                     </span>
                   </div>
                   <div className="z-10">
-                    <p className="text-slate-400 dark:text-slate-500 text-[6px] sm:text-[8px] font-bold uppercase tracking-[0.1em] mb-0.5">{stat.label}</p>
-                    <p className="text-base sm:text-xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tighter">{stat.value}</p>
+                    <p className="text-slate-400 dark:text-slate-500 text-[7px] font-bold uppercase tracking-[0.1em] mb-0.5">{stat.label}</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white tabular-nums tracking-tighter">{stat.value}</p>
                   </div>
                   <div className="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-                    <stat.icon className="w-8 h-8 sm:w-12 sm:h-12" />
+                    <stat.icon className="w-8 h-8" />
                   </div>
                 </div>
               ))}
@@ -397,26 +397,26 @@ export default function SuperAdminRealTimeDashboard() {
 
             {/* Live Multi-Tenant Registry */}
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none overflow-hidden shadow-sm">
-              <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex items-center justify-between">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-1.5 h-1.5 bg-primary rounded-none animate-ping" />
-                  <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">{t("super.masterRegistry")}</h2>
-                </div>
+              <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <div className="relative group/search">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 dark:text-slate-500" />
+                  <div className="w-1.5 h-1.5 bg-primary rounded-none animate-ping" />
+                  <h2 className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t("super.masterRegistry")}</h2>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="relative group/search w-full sm:w-auto">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 dark:text-slate-500" />
                     <input
                       type="text"
                       value={searchOrg}
                       onChange={(e) => setSearchOrg(e.target.value)}
                       placeholder={t("super.searchPlaceholder", { count: organizations.length })}
-                      className="pl-8 pr-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[10px] font-bold w-40 sm:w-48 outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-colors shadow-sm"
+                      className="pl-7 pr-2 py-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[9px] font-bold w-full sm:w-40 outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-colors shadow-sm"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 max-h-[600px] overflow-y-auto scrollbar-hide bg-slate-50/20 dark:bg-slate-900/20">
+              <div className="p-3 max-h-[600px] overflow-y-auto scrollbar-hide bg-slate-50/20 dark:bg-slate-900/20">
                 <div className="space-y-1">
                 {organizations.length === 0 ? (
                   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none p-8 text-center shadow-sm transition-colors">
@@ -438,76 +438,76 @@ export default function SuperAdminRealTimeDashboard() {
                       className={`transition-all duration-300 border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 ${expandedOrg === org.id ? 'bg-slate-50/50 dark:bg-slate-800/30' : 'bg-white dark:bg-slate-900'}`}
                     >
                       <div
-                        className="p-2 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 cursor-pointer"
+                        className="p-2 flex items-center justify-between gap-3 cursor-pointer"
                         onClick={() => setExpandedOrg(expandedOrg === org.id ? null : org.id)}
                       >
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-none bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700 transition-colors shrink-0">
-                            <Building2 className="w-4 h-4 text-slate-400 group-hover:text-primary transition-colors" />
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-none bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700 transition-colors shrink-0">
+                            <Building2 className="w-3 h-3 text-slate-400 group-hover:text-primary transition-colors" />
                           </div>
                           <div>
-                            <h3 className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{org.name}</h3>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest">{org.location || 'Remote'}</span>
+                            <h3 className="text-[9px] font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{org.name}</h3>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">{org.location || 'Remote'}</span>
                               <div className="w-0.5 h-0.5 bg-slate-300 rounded-none" />
-                              <span className="text-[8px] sm:text-[9px] font-bold text-primary uppercase tracking-widest">{org.license_tier} Tier</span>
+                              <span className="text-[7px] font-bold text-primary uppercase tracking-widest">{org.license_tier} Tier</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-6 items-center">
-                          <div className="hidden sm:block">
-                            <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t("super.analyses")}</p>
+                        <div className="hidden sm:grid grid-cols-4 gap-3 items-center">
+                          <div>
+                            <p className="text-[7px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t("super.analyses")}</p>
                             <div className="flex items-center gap-1">
-                              <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{org.analyses_count.toLocaleString()}</p>
-                              <span className={`text-[8px] font-bold ${org.growth_rate.startsWith('+') ? 'text-emerald-500' : 'text-rose-500'}`}>{org.growth_rate}</span>
+                              <p className="text-[9px] font-bold text-slate-900 dark:text-white">{org.analyses_count.toLocaleString()}</p>
+                              <span className={`text-[7px] font-bold ${org.growth_rate.startsWith('+') ? 'text-emerald-500' : 'text-rose-500'}`}>{org.growth_rate}</span>
                             </div>
                           </div>
 
                           <div>
-                            <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t("super.users")}</p>
-                            <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{org.users_count} {t("super.nodes")}</p>
+                            <p className="text-[7px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t("super.users")}</p>
+                            <p className="text-[9px] font-bold text-slate-900 dark:text-white">{org.users_count} {t("super.nodes")}</p>
                           </div>
 
                           <div>
-                            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
-                            <div className="flex items-center gap-1.5">
+                            <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
+                            <div className="flex items-center gap-1">
                               <div className={`w-1.5 h-1.5 rounded-none ${org.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
-                              <p className={`text-[9px] font-bold uppercase tracking-widest ${org.status === 'active' ? 'text-emerald-500' : 'text-rose-500'}`}>{org.status}</p>
+                              <p className={`text-[8px] font-bold uppercase tracking-widest ${org.status === 'active' ? 'text-emerald-500' : 'text-rose-500'}`}>{org.status}</p>
                             </div>
                           </div>
 
                           <div className="flex items-center justify-end">
-                            {expandedOrg === org.id ? <ChevronUp className="w-4 h-4 text-slate-300" /> : <ChevronDown className="w-4 h-4 text-slate-300" />}
+                            {expandedOrg === org.id ? <ChevronUp className="w-3.5 h-3.5 text-slate-300" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-300" />}
                           </div>
                         </div>
                       </div>
 
                       {/* Drill-down Admin Data */}
                       {expandedOrg === org.id && (
-                        <div className="px-2 sm:px-3 pb-3 sm:pb-4 pt-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                        <div className="px-2 pb-3 pt-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                             {/* Left: Authorized Personnel */}
-                            <div className="space-y-3">
-                              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 mb-2">
                                 <Users className="w-3 h-3 text-primary" />
-                                <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t("super.authorizedPersonnel")}</h4>
+                                <h4 className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t("super.authorizedPersonnel")}</h4>
                               </div>
-                              <div className="space-y-2 sm:space-y-3">
+                              <div className="space-y-2">
                                 {org.admins.length > 0 ? org.admins.map((admin, idx) => (
                                   <div key={idx} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none p-2 flex items-center justify-between group/admin hover:border-primary/30 shadow-sm transition-all">
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                      <div className="w-8 h-8 rounded-none bg-primary/5 dark:bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary border border-primary/10 dark:border-primary/20">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-7 h-7 rounded-none bg-primary/5 dark:bg-primary/10 flex items-center justify-center text-[9px] font-black text-primary border border-primary/10 dark:border-primary/20">
                                         {admin.full_name.charAt(0)}
                                       </div>
                                       <div className="flex flex-col">
-                                        <h4 className="text-[10px] font-bold text-slate-900 dark:text-white leading-none">{admin.full_name}</h4>
-                                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">{admin.email}</p>
-                                        <div className="flex items-center gap-2 mt-1.5">
-                                          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-none border border-slate-100 dark:border-slate-800 group/pass">
-                                             <Lock className="w-2.5 h-2.5 text-slate-300 dark:text-slate-600" />
-                                             <span className="text-[9px] font-mono font-bold text-slate-600 dark:text-slate-400 tracking-tighter min-w-[60px]">
-                                               {revealedPasswords[admin.id] ? (admin.recovery_password || "No Key Saved") : "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"}
+                                        <h4 className="text-[9px] font-bold text-slate-900 dark:text-white leading-none">{admin.full_name}</h4>
+                                        <p className="text-[8px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">{admin.email}</p>
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                          <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900 px-1.5 py-0.5 rounded-none border border-slate-100 dark:border-slate-800 group/pass">
+                                             <Lock className="w-2 h-2 text-slate-300 dark:text-slate-600" />
+                                             <span className="text-[8px] font-mono font-bold text-slate-600 dark:text-slate-400 tracking-tighter min-w-[60px]">
+                                               {revealedPasswords[admin.id] ? (admin.recovery_password || "No Key Saved") : "••••••••"}
                                              </span>
                                              <button
                                               onClick={() => togglePasswordReveal(admin.id)}
@@ -746,20 +746,20 @@ AUTHORITY: MASTER COMMAND`}
           <div className="bg-white rounded-none w-full max-w-md overflow-hidden shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-300">
             <div className={`h-2 w-full ${confirmModal.currentStatus === 'active' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
 
-            <div className="p-8 text-center">
-              <div className={`w-16 h-16 rounded-none flex items-center justify-center mx-auto mb-6 ${confirmModal.currentStatus === 'active' ? 'bg-rose-50' : 'bg-emerald-50'}`}>
+            <div className="p-4 sm:p-8 text-center">
+              <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-none flex items-center justify-center mx-auto mb-4 sm:mb-6 ${confirmModal.currentStatus === 'active' ? 'bg-rose-50' : 'bg-emerald-50'}`}>
                 {confirmModal.currentStatus === 'active' ? (
-                  <Ban className="w-8 h-8 text-rose-500" />
+                  <Ban className="w-6 h-6 sm:w-8 sm:h-8 text-rose-500" />
                 ) : (
-                  <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                  <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500" />
                 )}
               </div>
 
-              <h3 className="text-xl font-bold text-slate-900 mb-2 uppercase tracking-tight">
+              <h3 className="text-base sm:text-xl font-bold text-slate-900 mb-2 uppercase tracking-tight">
                 {confirmModal.currentStatus === 'active' ? 'Suspend Organization?' : 'Activate Organization?'}
               </h3>
 
-              <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8">
+              <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed mb-5 sm:mb-8">
                 Anda akan mengubah status operasional untuk <span className="text-slate-900 font-bold">{confirmModal.orgName}</span>.
                 {confirmModal.currentStatus === 'active'
                   ? ' Seluruh akses pengguna untuk tenant ini akan diblokir segera.'
@@ -798,32 +798,33 @@ AUTHORITY: MASTER COMMAND`}
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-500">
           <div className="bg-[#0a0c10] rounded-none w-full max-w-2xl overflow-hidden shadow-2xl border border-white/10 flex flex-col min-h-[400px] animate-in zoom-in-95 duration-300">
             {/* Terminal Header */}
-            <div className="px-6 py-4 bg-white/5 border-b border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1.5">
+            <div className="px-3 sm:px-6 py-3 sm:py-4 bg-white/5 border-b border-white/10 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="flex gap-1.5 shrink-0">
                   <div className="w-2.5 h-2.5 rounded-none bg-rose-500" />
                   <div className="w-2.5 h-2.5 rounded-none bg-amber-500" />
                   <div className="w-2.5 h-2.5 rounded-none bg-emerald-500" />
                 </div>
-                <div className="h-4 w-px bg-white/10 mx-2" />
-                <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em] flex items-center gap-2">
-                  <Cpu className="w-3 h-3 text-primary" /> Nexus Remote Shell // {remoteModal.orgName}
+                <div className="h-4 w-px bg-white/10 mx-1 sm:mx-2 shrink-0" />
+                <h3 className="text-[9px] sm:text-[10px] font-bold text-white uppercase tracking-[0.1em] sm:tracking-[0.2em] flex items-center gap-1 sm:gap-2 truncate">
+                  <Cpu className="w-3 h-3 text-primary shrink-0" />
+                  <span className="truncate">Nexus Remote Shell // {remoteModal.orgName}</span>
                 </h3>
               </div>
               <button
                 onClick={() => setRemoteModal({ ...remoteModal, isOpen: false })}
-                 className="p-1 hover:bg-white/10 rounded-none transition-all"
+                className="p-1 hover:bg-white/10 rounded-none transition-all shrink-0"
               >
                 <X className="w-4 h-4 text-white/40 hover:text-white" />
               </button>
             </div>
 
             {/* Terminal Body */}
-            <div className="flex-1 p-6 font-mono text-[11px] space-y-2 overflow-y-auto scrollbar-hide">
+            <div className="flex-1 p-3 sm:p-6 font-mono text-[10px] sm:text-[11px] space-y-2 overflow-y-auto scrollbar-hide">
               {remoteModal.logs.map((log, i) => (
-                <div key={i} className={`flex gap-3 ${log.startsWith('[READY]') ? 'text-emerald-400 font-bold' : log.startsWith('[ERROR]') ? 'text-rose-400' : 'text-slate-400'}`}>
-                  <span className="opacity-30 tracking-tighter">[{new Date().toLocaleTimeString()}]</span>
-                  <p className="animate-in slide-in-from-left-2 duration-300">{log}</p>
+                <div key={i} className={`flex gap-2 sm:gap-3 ${log.startsWith('[READY]') ? 'text-emerald-400 font-bold' : log.startsWith('[ERROR]') ? 'text-rose-400' : 'text-slate-400'}`}>
+                  <span className="opacity-30 tracking-tighter shrink-0">[{new Date().toLocaleTimeString()}]</span>
+                  <p className="animate-in slide-in-from-left-2 duration-300 break-all">{log}</p>
                 </div>
               ))}
 
@@ -835,14 +836,14 @@ AUTHORITY: MASTER COMMAND`}
               )}
 
               {remoteModal.step >= 4 && (
-                <div className="mt-8 pt-8 border-t border-white/5 grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="bg-white/5 rounded-none p-4 border border-white/10">
+                <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-white/5 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="bg-white/5 rounded-none p-3 sm:p-4 border border-white/10">
                     <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">CPU Utilization</p>
-                    <p className="text-xl font-bold text-white">12.4%</p>
+                    <p className="text-lg sm:text-xl font-bold text-white">12.4%</p>
                   </div>
-                  <div className="bg-white/5 rounded-none p-4 border border-white/10">
+                  <div className="bg-white/5 rounded-none p-3 sm:p-4 border border-white/10">
                     <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Memory Matrix</p>
-                    <p className="text-xl font-bold text-white">0.8 GB / 16 GB</p>
+                    <p className="text-lg sm:text-xl font-bold text-white">0.8 GB / 16 GB</p>
                   </div>
                   <button
                     onClick={handleExecuteDiagnostics}

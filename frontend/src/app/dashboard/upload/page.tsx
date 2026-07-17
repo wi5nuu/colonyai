@@ -201,7 +201,7 @@ export default function UploadPage() {
                 </div>
 
                 <div
-                  className={`flex-1 relative border-2 border-dashed rounded-none transition-all duration-300 overflow-hidden min-h-[140px] sm:min-h-[320px] flex items-center justify-center ${
+                  className={`relative border-2 border-dashed rounded-none transition-all duration-300 overflow-hidden min-h-[140px] h-[140px] sm:h-[320px] flex items-center justify-center ${
                     dragActive
                       ? "border-primary bg-primary/5 dark:bg-primary/10 scale-[0.99]"
                       : "border-slate-200 dark:border-slate-800 hover:border-primary/50 bg-slate-50/50 dark:bg-slate-900/50"
@@ -291,32 +291,44 @@ export default function UploadPage() {
                   <div className="flex items-center justify-between mb-2 px-1">
                     <h3 className="text-[8px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <ImageIcon className="w-3 h-3 text-primary" />
-                      Try with Samples (50 High-Res Data)
+                      Test Samples
                     </h3>
                     <span className="text-[7px] font-bold text-slate-400 uppercase tracking-tighter">
-                      Swipe to explore
+                      Tap to load
                     </span>
                   </div>
                   <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    {Array.from({ length: 50 }).map((_, i) => (
+                    {[
+                      { file: 'single.jpg', label: 'Koloni Tunggal', badge: 'Single', color: '#059669' },
+                      { file: 'merged.jpg', label: 'Koloni Bertumpuk', badge: 'Merged', color: '#d97706' },
+                      { file: 'bubble_artifact.jpg', label: 'Gelembung', badge: 'Bubble', color: '#dc2626' },
+                      { file: 'crack.jpg', label: 'Retakan Media', badge: 'Crack', color: '#7c3aed' },
+                      { file: 'ecoli_dense.jpg', label: 'E. coli Padat', badge: 'E.coli', color: '#0891b2' },
+                      { file: 'dust.jpg', label: 'Cawan Kosong', badge: 'Empty', color: '#64748b' },
+                    ].map((sample, i) => (
                       <button
                         key={i}
                         type="button"
-                        onClick={() => handleSampleClick(`/samples/sample_${i + 1}.jpg`, `sample_${i + 1}.jpg`)}
-                        className="flex-shrink-0 group relative w-16 h-16 rounded-none overflow-hidden border border-slate-200 dark:border-slate-800 hover:border-primary transition-all shadow-sm active:scale-95"
+                        onClick={() => handleSampleClick(`/samples/${sample.file}`, sample.file)}
+                        className="flex-shrink-0 group relative w-24 h-24 rounded-none overflow-hidden border border-slate-200 dark:border-slate-800 hover:border-primary transition-all shadow-sm active:scale-95"
+                        title={sample.label}
                       >
                         <img
-                          src={`/samples/sample_${i + 1}.jpg`}
-                          alt={`Sample ${i + 1}`}
+                          src={`/samples/${sample.file}`}
+                          alt={sample.label}
                           className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
                         />
-                        <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <span className="text-[7px] font-black text-white uppercase tracking-tighter">
-                            Load
-                          </span>
+                        <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                          <div className="text-center px-2">
+                            <span className="text-[7px] font-black text-white uppercase tracking-tighter block">
+                              Load
+                            </span>
+                          </div>
                         </div>
-                        <div className="absolute bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 py-0.5 text-[5px] font-black text-slate-900 dark:text-white uppercase text-center border-t border-slate-100 dark:border-slate-800">
-                          {i + 1}
+                        <div className="absolute top-0 left-0 right-0 py-0.5 text-[6px] font-black text-white uppercase text-center"
+                          style={{ background: sample.color }}
+                        >
+                          {sample.badge}
                         </div>
                       </button>
                     ))}
@@ -638,15 +650,15 @@ F. KEPATUHAN & TRACEABILITY:
    - Media Batch/Lot #: Nomor produksi media agar. Cara isi: Lihat pada label kemasan media. Penting untuk validasi kualitas media.
    - Incubator ID: Identitas mesin inkubator (e.g., INC-001). Cara isi: Masukkan ID alat untuk audit distribusi suhu.
 
-4. NEURAL DETECTION CLASSES
-- Common Bacteria: Koloni standar.
-- Yeast (Ragi): Cembung & opak.
-- Mold (Kapang): Berfilamen.
-- Spreader: Pertumbuhan meluas.
-- Artifacts: Partikel non-biologis diabaikan AI.
+4. AI DETECTION CLASSES (5-Class YOLOv8)
+- colony_single: Koloni tunggal terpisah (dihitung)
+- colony_merged: Koloni bertumpuk (estimasi area SA-001)
+- bubble: Gelembung udara (diabaikan)
+- dust_debris: Debu/partikel (diabaikan)
+- media_crack: Retakan agar (diabaikan)
 
 STATUS: GA (General Availability)
-PRESISI: 99.8% pada PCA Standard.`}
+PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
           >
             <section className="space-y-3">
               <div className="flex items-center gap-2 mb-1">
@@ -792,21 +804,29 @@ PRESISI: 99.8% pada PCA Standard.`}
               <div className="space-y-3">
                 {[
                   {
-                    name: "Common Bacteria",
-                    desc: "Koloni standar dengan batas jelas.",
-                  },
-                  { name: "Yeast (Ragi)", desc: "Koloni cembung dan opak." },
-                  {
-                    name: "Mold (Kapang)",
-                    desc: "Koloni berfilamen menyebar.",
+                    name: "colony_single",
+                    desc: "Koloni tunggal terpisah — dihitung dalam CFU/ml.",
+                    color: "bg-emerald-500",
                   },
                   {
-                    name: "Spreader Colonies",
-                    desc: "Pertumbuhan mikroba meluas.",
+                    name: "colony_merged",
+                    desc: "Koloni bertumpuk — estimasi SA-001.",
+                    color: "bg-amber-500",
                   },
                   {
-                    name: "Artifacts",
-                    desc: "Partikel non-biologis diabaikan.",
+                    name: "bubble",
+                    desc: "Gelembung udara — diabaikan dari hitungan.",
+                    color: "bg-rose-500",
+                  },
+                  {
+                    name: "dust_debris",
+                    desc: "Debu/partikel — diabaikan dari hitungan.",
+                    color: "bg-slate-400",
+                  },
+                  {
+                    name: "media_crack",
+                    desc: "Retakan media agar — diabaikan dari hitungan.",
+                    color: "bg-violet-500",
                   },
                 ].map((cls, i) => (
                   <div key={i} className="group">

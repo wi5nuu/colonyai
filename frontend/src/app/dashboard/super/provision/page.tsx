@@ -44,8 +44,8 @@ export default function ProvisionNodePage() {
     encryption_standard: "AES-256-GCM",
     audit_frequency: "Quarterly",
     bsl_level: "BSL-2",
-    network_restriction: "0.0.0.0/0 (Global Access)",
-    lims_webhook_url: "http://localhost:3000/api/mock-lims/receive",
+    network_restriction: "10.0.0.0/8 (Private Network)",
+    lims_webhook_url: "",
     admin_whatsapp: "",
     admin_telegram: ""
   });
@@ -198,7 +198,9 @@ export default function ProvisionNodePage() {
                       type="tel" 
                       value={newOrgData.admin_whatsapp}
                       onChange={(e) => setNewOrgData({...newOrgData, admin_whatsapp: e.target.value})}
-                      placeholder="e.g. 6281394829"
+                      placeholder="e.g. +6281394829000"
+                      pattern="[\+]?[0-9]{10,15}"
+                      title="Enter a valid phone number (10-15 digits, optional + prefix)"
                       className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-xs font-bold text-slate-900 dark:text-white focus:ring-1 focus:ring-amber-500/20 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-700"
                     />
                   </div>
@@ -363,7 +365,7 @@ export default function ProvisionNodePage() {
                       />
                     </div>
                     <p className="text-[8px] text-white/40 leading-relaxed font-bold group-hover:text-white/70 transition-colors uppercase">
-                      Confirm node binding and immutable audit log compliance.
+                      I confirm this tenant provisioning and authorize creation of a new organization node with immutable audit trail.
                     </p>
                   </label>
 
@@ -373,9 +375,9 @@ export default function ProvisionNodePage() {
                     className="w-full py-3 bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-none shadow-lg hover:bg-primary/90 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isProvisioning ? (
-                      <><RefreshCw className="w-3 h-3 animate-spin" /> ...</>
+                      <><RefreshCw className="w-3 h-3 animate-spin" /> Provisioning Tenant Node...</>
                     ) : (
-                      <><Zap className="w-3 h-3 text-amber-400" /> Execute Provisioning</>
+                      <><Zap className="w-3 h-3 text-amber-400" /> Provision Tenant Node</>
                     )}
                   </button>
                 </div>
@@ -465,7 +467,7 @@ export default function ProvisionNodePage() {
             <button 
               onClick={() => {
                 setProvisionResult(null);
-                setNewOrgData({ name: "", location: "", admin_email: "", admin_full_name: "", license_tier: "Enterprise", institution_type: "Clinical Laboratory", compliance_standard: "ISO-17025", server_node: "ap-southeast-1 (Jakarta)", storage_quota: "1 TB", data_retention: "5 Years", clearance_level: "Level 3 (High)", encryption_standard: "AES-256-GCM", audit_frequency: "Quarterly", bsl_level: "BSL-2", network_restriction: "0.0.0.0/0 (Global Access)", lims_webhook_url: "", admin_whatsapp: "", admin_telegram: "" });
+                setNewOrgData({ name: "", location: "", admin_email: "", admin_full_name: "", license_tier: "Enterprise", institution_type: "Clinical Laboratory", compliance_standard: "ISO-17025", server_node: "ap-southeast-1 (Jakarta)", storage_quota: "1 TB", data_retention: "5 Years", clearance_level: "Level 3 (High)", encryption_standard: "AES-256-GCM", audit_frequency: "Quarterly", bsl_level: "BSL-2", network_restriction: "10.0.0.0/8 (Private Network)", lims_webhook_url: "", admin_whatsapp: "", admin_telegram: "" });
                 setDigitalSignature(false);
               }}
               className="w-full sm:w-auto px-10 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-[11px] font-bold uppercase tracking-widest rounded-none hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95 shadow-sm"

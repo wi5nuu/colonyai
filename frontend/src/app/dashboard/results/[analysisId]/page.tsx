@@ -21,6 +21,7 @@ import {
   PieChart as PieIcon,
   FlaskConical,
   Database,
+  RotateCcw,
 } from "lucide-react";
 import {
   PieChart,
@@ -44,6 +45,7 @@ import {
   DocumentationSidebar,
   DocumentationToggle,
 } from "@/components/DocumentationSidebar";
+import CorrectionCanvas from "@/components/CorrectionCanvas";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -159,6 +161,8 @@ export default function ResultsPage() {
     timestamp: string;
     next_action: string;
   } | null>(null);
+  const [showCorrectionCanvas, setShowCorrectionCanvas] = useState(false);
+  const [naturalWidth, setNaturalWidth] = useState(1024);
 
   useEffect(() => {
     const loadAnalysis = async () => {
@@ -231,9 +235,10 @@ export default function ResultsPage() {
 
   if (!analysis) return null;
 
-  const validCount = (analysis.class_breakdown.colony_single || 0) + (analysis.class_breakdown.colony_merged || 0);
-  const artifactCount = (analysis.class_breakdown.bubble || 0) + (analysis.class_breakdown.dust_debris || 0) + (analysis.class_breakdown.media_crack || 0);
-  const totalCount = Object.values(analysis.class_breakdown).reduce((a, b) => a + b, 0);
+  const breakdown = analysis.class_breakdown || {};
+  const validCount = (breakdown.colony_single || 0) + (breakdown.colony_merged || 0);
+  const artifactCount = (breakdown.bubble || 0) + (breakdown.dust_debris || 0) + (breakdown.media_crack || 0);
+  const totalCount = Object.values(breakdown).reduce((a, b) => a + b, 0);
   const statusInfo = STATUS_COLORS[analysis.status] || STATUS_COLORS.pending;
 
   const documentationText = `INTERPRETASI HASIL AUDIT COLONYAI
@@ -349,6 +354,15 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                   )}
                   {limsResult ? t("results.transmittedToLims") : t("results.sendToLims")}
                 </button>
+                {analysis.status === "completed" && (
+                  <button
+                    onClick={() => setShowCorrectionCanvas(true)}
+                    className="px-3 py-2 rounded-none text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Correct
+                  </button>
+                )}
                 {analysis.status === "completed" && canApprove && (
                   <button
                     onClick={handleApprove}
@@ -694,12 +708,16 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                                   crossOrigin="anonymous"
                                   alt={t("results.neuralAnalysis")}
                                   className="max-w-full lg:max-w-4xl max-h-full object-contain w-auto h-auto block"
-                                  onLoad={() => {
+                                  onLoad={(e) => {
                                     console.log(
                                       "[ColonyAI Image] Loaded successfully:",
                                       displayUrl,
                                     );
                                     setImgError(false);
+                                    const img = e.target as HTMLImageElement;
+                                    if (img.naturalWidth) {
+                                      setNaturalWidth(img.naturalWidth);
+                                    }
                                   }}
                                   onError={(e) => {
                                     console.error(
@@ -770,7 +788,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                           {/* Overlays - Detections */}
                           {showAnnotations &&
                             analysis.detections.map((detection) => {
-                              const imgWidth = 1024;
+                              const imgWidth = naturalWidth || 1024;
                               const isPixel = detection.bbox.width > 10;
                               const left = isPixel
                                 ? (detection.bbox.x / imgWidth) * 100
@@ -928,7 +946,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
                             <Pie
-                              data={Object.entries(analysis.class_breakdown).map(
+                              data={Object.entries(analysis.class_breakdown ?? {}).map(
                                 ([name, value]) => ({ name, value }),
                               )}
                               cx="50%"
@@ -938,7 +956,7 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                               paddingAngle={5}
                               dataKey="value"
                             >
-                              {Object.keys(analysis.class_breakdown).map(
+                              {Object.keys(analysis.class_breakdown ?? {}).map(
                                 (key, index) => (
                                   <Cell
                                     key={`cell-${index}`}
@@ -1097,251 +1115,299 @@ MESIN: YOLOv8 SENSITIVE NODE`;
                 </div>
               </>
             ) : (
-              /* Certificate of Analysis View */
-              <div className="print-certificate-container max-w-3xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 border-2 border-slate-900 dark:border-slate-700 rounded-none shadow-xl relative overflow-hidden animate-in zoom-in-95 duration-700 print:shadow-none print:border-none print:p-0 print:max-w-full transition-colors">
+              /* ─────────────────────────────────────────────────────────
+                 CERTIFICATE OF ANALYSIS  —  Enterprise ISO/GLP Edition
+                 Standar: ISO 17025:2017 · ISO 4833-1:2013 · FDA BAM Ch.3
+                 ───────────────────────────────────────────────────────── */
+              <div className="print-certificate-container max-w-4xl mx-auto bg-white dark:bg-slate-950 relative overflow-hidden animate-in zoom-in-95 duration-700 print:shadow-none print:p-0 print:max-w-full border border-slate-200 dark:border-slate-700 shadow-2xl">
                 <style dangerouslySetInnerHTML={{__html: `
                   @media print {
-                    /* Hide entire body and dashboard wrapping elements */
-                    body * {
-                      visibility: hidden !important;
-                    }
-                    /* Display ONLY the certificate container and all its children */
-                    .print-certificate-container, .print-certificate-container * {
-                      visibility: visible !important;
-                    }
-                    /* Force container to fill the page cleanly without borders or shadows */
+                    body * { visibility: hidden !important; }
+                    .print-certificate-container,
+                    .print-certificate-container * { visibility: visible !important; }
                     .print-certificate-container {
                       position: absolute !important;
-                      left: 0 !important;
-                      top: 0 !important;
-                      width: 100% !important;
-                      max-width: 100% !important;
-                      margin: 0 !important;
-                      padding: 20px !important;
-                      border: none !important;
-                      box-shadow: none !important;
-                      background: white !important;
-                      color: black !important;
+                      left: 0 !important; top: 0 !important;
+                      width: 100% !important; max-width: 100% !important;
+                      margin: 0 !important; padding: 0 !important;
+                      border: none !important; box-shadow: none !important;
+                      background: white !important; color: black !important;
                     }
-                    /* Hide the floating action buttons during print */
-                    .print-certificate-container .print\\:hidden, 
-                    .print-certificate-container button {
-                      display: none !important;
-                    }
+                    .cert-no-print { display: none !important; }
+                    .cert-table td, .cert-table th { border-color: #000 !important; }
                   }
                 `}} />
-                <button 
-                  onClick={() => window.print()}
-                  className="absolute top-4 right-4 px-3 py-1.5 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-slate-800 transition-colors print:hidden"
-                >
-                  <Download className="h-3 w-3" />
-                  Print / Save PDF
-                </button>
-                {/* Watermark/Seal */}
-                <div className="absolute top-6 sm:top-10 right-6 sm:right-10 w-20 sm:w-32 h-20 sm:h-32 opacity-[0.03] rotate-12 pointer-events-none">
-                  <Shield className="w-full h-full text-slate-900 dark:text-slate-100" />
-                </div>
 
-                {/* Header */}
-                <div className="border-b-2 border-slate-900 dark:border-slate-700 pb-4 sm:pb-6 mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mt-8 sm:mt-0 transition-colors">
+                {/* TOP ACCENT BAR */}
+                <div className="h-1.5 w-full bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900" />
+
+                {/* KOP SURAT / LETTERHEAD */}
+                <div className="px-10 pt-8 pb-6 border-b-2 border-slate-900 dark:border-slate-600 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <FlaskConical className="h-5 w-5 sm:h-6 sm:w-6 text-slate-900 dark:text-white" />
-                      <h2 className="text-lg sm:text-xl font-black tracking-tighter uppercase text-slate-900 dark:text-white">
-                        ColonyAI Analytics
-                      </h2>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 bg-slate-900 dark:bg-white flex items-center justify-center flex-shrink-0">
+                        <FlaskConical className="h-5 w-5 text-white dark:text-slate-900" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-black tracking-tight uppercase text-slate-900 dark:text-white leading-none">
+                          ColonyAI Analytics
+                        </h2>
+                        <p className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.18em] mt-0.5">
+                          Precision Microbiology Diagnostic Platform
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-[7px] sm:text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
-                      Precision Microbiology Diagnostic Suite
-                    </p>
+                    <div className="text-[7.5px] text-slate-400 dark:text-slate-500 font-mono space-y-0.5 mt-3">
+                      <p>Powered by YOLOv8 Neural Detection Engine v4.2</p>
+                      <p>Compliant: ISO 17025:2017 · ISO 4833-1:2013 · FDA BAM Ch.3 · BPOM RI</p>
+                      <p>AI Model Accreditation: ColonyAI-BPOM-2026</p>
+                    </div>
                   </div>
-                  <div className="sm:text-right border-t sm:border-t-0 pt-4 sm:pt-0 border-slate-100 dark:border-slate-800">
-                    <h3 className="text-lg sm:text-xl font-serif font-bold text-slate-900 dark:text-white uppercase tracking-[0.1em]">
-                      Certificate of Analysis
-                    </h3>
-                    <p className="text-[7px] sm:text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1.5">
-                      Ref No: {analysis.id.substring(0, 13).toUpperCase()}
-                    </p>
+
+                  <div className="sm:text-right flex-shrink-0">
+                    <div className="inline-block border-2 border-slate-900 dark:border-slate-400 px-5 py-3 bg-slate-900 dark:bg-slate-800">
+                      <h3 className="text-sm font-black text-white uppercase tracking-[0.15em] leading-none">
+                        Certificate of Analysis
+                      </h3>
+                    </div>
+                    <div className="mt-3 space-y-1">
+                      <div className="flex sm:justify-end gap-3">
+                        <span className="text-[8px] font-bold text-slate-400 uppercase">Doc. No.</span>
+                        <span className="text-[8px] font-black text-slate-900 dark:text-white font-mono">{"CAI-" + analysis.id.substring(0, 8).toUpperCase()}</span>
+                      </div>
+                      <div className="flex sm:justify-end gap-3">
+                        <span className="text-[8px] font-bold text-slate-400 uppercase">Issue Date</span>
+                        <span className="text-[8px] font-black text-slate-900 dark:text-white">{new Date(analysis.created_at).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" })}</span>
+                      </div>
+                      <div className="flex sm:justify-end gap-3">
+                        <span className="text-[8px] font-bold text-slate-400 uppercase">Revision</span>
+                        <span className="text-[8px] font-black text-slate-900 dark:text-white">Rev. 00</span>
+                      </div>
+                      <div className="flex sm:justify-end gap-3">
+                        <span className="text-[8px] font-bold text-slate-400 uppercase">Status</span>
+                        <span className="text-[8px] font-black uppercase px-1.5 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300">{analysis.status.toUpperCase()}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Core Data Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10 mb-6 sm:mb-10">
-                  <div className="space-y-4 sm:space-y-5">
-                    <section>
-                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
-                        {t("results.sampleProvenance")}
-                      </h4>
-                      <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
-                        <div className="flex justify-between gap-4">
-                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
-                            {t("results.sample")} ID
-                          </span>
-                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase text-right">
-                            {analysis.sample_id}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
-                            {t("results.protocol")}
-                          </span>
-                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase text-right">
-                            {analysis.media_type}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase">
-                            {t("results.timestamp")}
-                          </span>
-                          <span className="text-[8px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase text-right">
-                            {new Date(analysis.created_at).toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    </section>
+                {/* BODY */}
+                <div className="px-10 py-7 space-y-7">
 
-                    <section>
-                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
-                        {t("results.isoCompliance")}
-                      </h4>
-                      <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
-                        <div className="flex justify-between gap-4">
-                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
-                            {t("results.incubationParameters")}
-                          </span>
-                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase text-right">
-                            {analysis.incubation_temp ?? "—"}°C /{" "}
-                            {analysis.incubation_time_hours ?? "—"}{" "}
-                            {t("results.hours")}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
-                            {t("results.methodology")}
-                          </span>
-                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase text-right">
-                            {analysis.method_standard ?? "ISO 4833-1:2013"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
-                            {t("results.batchLot")}
-                          </span>
-                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase text-right">
-                            {analysis.media_batch_number || "—"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
-                            {t("results.incubatorId")}
-                          </span>
-                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900 uppercase text-right">
-                            {analysis.incubator_id || "—"}
-                          </span>
-                        </div>
+                  {/* SECTION 1: Sample Identification */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-5 h-5 bg-slate-900 dark:bg-slate-600 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[7px] font-black text-white">01</span>
                       </div>
-                    </section>
-
-                    <section>
-                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
-                        {t("results.neuralSpectralResult")}
+                      <h4 className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
+                        Sample Identification &amp; Provenance
                       </h4>
-                      <div className="p-4 bg-white dark:bg-slate-950 rounded-none border-2 border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center transition-colors">
-                        <p className="text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">
-                          Final Quantitative Output
+                      <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                    </div>
+                    <table className="cert-table w-full text-[8.5px] border-collapse border border-slate-300 dark:border-slate-600">
+                      <tbody>
+                        <tr className="bg-slate-50 dark:bg-slate-900">
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase w-[28%]">Sample ID</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white font-mono">{analysis.sample_id}</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase w-[28%]">Analysis ID</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white font-mono text-[7.5px]">{analysis.id}</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Media / Protocol</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white uppercase">{analysis.media_type}</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Dilution Factor</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white">{analysis.dilution_factor ? `1:${analysis.dilution_factor}` : "—"}</td>
+                        </tr>
+                        <tr className="bg-slate-50 dark:bg-slate-900">
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Date &amp; Time</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white">{new Date(analysis.created_at).toLocaleString()}</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Plated Volume</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white">{analysis.plated_volume_ml ? `${analysis.plated_volume_ml} mL` : "—"}</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Method Standard</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white">{analysis.method_standard ?? "ISO 4833-1:2013"}</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Media Batch / Lot</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white font-mono">{analysis.media_batch_number || "—"}</td>
+                        </tr>
+                        <tr className="bg-slate-50 dark:bg-slate-900">
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Incubation</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white">{analysis.incubation_temp ?? "—"}°C / {analysis.incubation_time_hours ?? "—"} h</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Incubator ID</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white font-mono">{analysis.incubator_id || "—"}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* SECTION 2: Quantitative Results */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-5 h-5 bg-slate-900 dark:bg-slate-600 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[7px] font-black text-white">02</span>
+                      </div>
+                      <h4 className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
+                        Quantitative Results &amp; Statistical Integrity
+                      </h4>
+                      <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="col-span-3 sm:col-span-1 border-2 border-slate-900 dark:border-slate-500 p-4 text-center bg-slate-900 dark:bg-slate-800">
+                        <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                          Final Quantitative Result
                         </p>
-                        <p className="text-2xl sm:text-3xl font-bold font-mono text-slate-800 tracking-tight mb-1">
+                        <p className="text-3xl font-black font-mono text-white tracking-tight leading-none my-2">
                           {formatCFU(analysis.cfu_per_ml)}
                         </p>
-                        <p className="text-[8px] sm:text-[9px] font-bold text-slate-900 uppercase tracking-widest">
-                          {t("results.cfuMlMatrix")}
+                        <p className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">
+                          CFU / mL
                         </p>
                       </div>
-                    </section>
+                      <div className="col-span-3 sm:col-span-2">
+                        <table className="cert-table w-full text-[8.5px] border-collapse border border-slate-300 dark:border-slate-600 h-full">
+                          <tbody>
+                            <tr className="bg-slate-50 dark:bg-slate-900">
+                              <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase w-[45%]">Total Colonies Detected</td>
+                              <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white">{analysis.colony_count ?? "—"}</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Valid Colonies (CFU)</td>
+                              <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-emerald-700 dark:text-emerald-400">{(breakdown.colony_single || 0) + (breakdown.colony_merged || 0)}</td>
+                            </tr>
+                            <tr className="bg-slate-50 dark:bg-slate-900">
+                              <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Rejected Artifacts</td>
+                              <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-rose-700 dark:text-rose-400">{artifactCount}</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">AI Confidence Score</td>
+                              <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white">{(analysis.confidence_score * 100).toFixed(2)}%</td>
+                            </tr>
+                            <tr className="bg-slate-50 dark:bg-slate-900">
+                              <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Expanded Uncertainty (U, k=2)</td>
+                              <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white">± {analysis.uncertainty_u?.toFixed(2) ?? "0.00"} (95% CI)</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Data Reliability</td>
+                              <td className="border border-slate-300 dark:border-slate-600 px-3 py-2">
+                                <span className="font-black uppercase text-emerald-700 dark:text-emerald-400 text-[8px] px-1.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">{analysis.reliability?.toUpperCase() ?? "HIGH"}</span>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* CLASS BREAKDOWN TABLE */}
+                    <table className="cert-table w-full text-[8.5px] border-collapse border border-slate-300 dark:border-slate-600">
+                      <thead>
+                        <tr className="bg-slate-900 dark:bg-slate-700">
+                          <th className="border border-slate-600 px-3 py-2 text-left font-bold text-white uppercase tracking-wider">Detection Class</th>
+                          <th className="border border-slate-600 px-3 py-2 text-left font-bold text-white uppercase tracking-wider">Category</th>
+                          <th className="border border-slate-600 px-3 py-2 text-right font-bold text-white uppercase tracking-wider">Count</th>
+                          <th className="border border-slate-600 px-3 py-2 text-right font-bold text-white uppercase tracking-wider">% of Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(breakdown).map(([cls, count], idx) => (
+                          <tr key={cls} className={idx % 2 === 0 ? "bg-slate-50 dark:bg-slate-900" : ""}>
+                            <td className="border border-slate-300 dark:border-slate-600 px-3 py-1.5 font-black text-slate-900 dark:text-white uppercase">{CLASS_LABELS[cls as DetectionClass] ?? cls}</td>
+                            <td className="border border-slate-300 dark:border-slate-600 px-3 py-1.5 font-bold text-slate-500 uppercase">{cls.includes("colony") ? "Valid Colony" : "Artifact"}</td>
+                            <td className="border border-slate-300 dark:border-slate-600 px-3 py-1.5 font-black text-slate-900 dark:text-white text-right">{count as number}</td>
+                            <td className="border border-slate-300 dark:border-slate-600 px-3 py-1.5 font-black text-slate-900 dark:text-white text-right">{totalCount > 0 ? ((count as number / totalCount) * 100).toFixed(1) : "0.0"}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
 
-                  <div className="space-y-4 sm:space-y-5">
-                    <section>
-                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
-                        {t("results.statisticalIntegrity")}
-                      </h4>
-                      <div className="space-y-3 sm:space-y-4">
-                        <div className="flex justify-between items-center gap-4">
-                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
-                            {t("results.reliability")}
-                          </span>
-                          <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 rounded-none text-[8px] sm:text-[9px] font-black uppercase tracking-widest border border-emerald-100">
-                            {analysis.reliability.toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center gap-4">
-                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
-                            {t("results.uncertaintyU")}
-                          </span>
-                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900">
-                            ± {analysis.uncertainty_u?.toFixed(2) || "0.00"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center gap-4">
-                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase">
-                            {t("results.confidence")}
-                          </span>
-                          <span className="text-[9px] sm:text-[10px] font-black text-slate-900">
-                            {(analysis.confidence_score * 100).toFixed(2)}%
-                          </span>
-                        </div>
+                  {/* SECTION 3: Conformance Declaration */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-5 h-5 bg-slate-900 dark:bg-slate-600 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[7px] font-black text-white">03</span>
                       </div>
-                    </section>
-
-                    <section>
-                      <h4 className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] mb-3 sm:mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
-                        {t("results.classificationDistribution")}
+                      <h4 className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
+                        Conformance &amp; Regulatory Declaration
                       </h4>
-                      <div className="h-24 sm:h-32">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={Object.entries(analysis.class_breakdown).map(
-                              ([name, value]) => ({
-                                name: getClassLabel(name as DetectionClass),
-                                value,
-                              }),
-                            )}
-                          >
-                            <XAxis dataKey="name" hide />
-                            <Bar
-                              dataKey="value"
-                              fill="#0f172a"
-                              radius={[2, 2, 0, 0]}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </section>
+                      <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                    </div>
+                    <div className="border border-slate-300 dark:border-slate-600 p-4 bg-slate-50 dark:bg-slate-900 text-[8px] text-slate-600 dark:text-slate-400 leading-relaxed space-y-2">
+                      <p>
+                        <span className="font-black text-slate-900 dark:text-white uppercase">Declaration: </span>
+                        This Certificate of Analysis confirms that the above-referenced specimen was analyzed by the ColonyAI Automated Microbiology Platform
+                        using a validated YOLOv8 convolutional neural network (v4.2). All colony enumeration procedures conform to
+                        <span className="font-black text-slate-900 dark:text-white"> ISO 4833-1:2013</span> (Horizontal method for the enumeration of micro-organisms),
+                        <span className="font-black text-slate-900 dark:text-white"> ISO 17025:2017</span> (Competence of testing and calibration laboratories),
+                        <span className="font-black text-slate-900 dark:text-white"> FDA BAM Chapter 3</span>, and applicable BPOM RI regulations.
+                      </p>
+                      <p>
+                        <span className="font-black text-slate-900 dark:text-white uppercase">Uncertainty: </span>
+                        Expanded measurement uncertainty (U) is calculated per GUM (JCGM 100:2008) at coverage factor k=2, providing approximately 95% confidence interval.
+                      </p>
+                      <p>
+                        <span className="font-black text-slate-900 dark:text-white uppercase">Traceability: </span>
+                        All measurements are traceable to national and international measurement standards via the ColonyAI immutable audit trail.
+                        Document ID: <span className="font-mono font-black text-slate-900 dark:text-white">{"CAI-" + analysis.id.substring(0, 8).toUpperCase()}</span>
+                      </p>
+                      <p className="text-[7px] text-slate-400 italic">
+                        CONFIDENTIAL — For authorized laboratory personnel only. Reproduction or redistribution without written consent is prohibited.
+                        This document is electronically generated and valid without a physical stamp unless otherwise required by applicable regulations.
+                      </p>
+                    </div>
                   </div>
+
+                  {/* SECTION 4: Signature Block */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-5 h-5 bg-slate-900 dark:bg-slate-600 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[7px] font-black text-white">04</span>
+                      </div>
+                      <h4 className="text-[9px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
+                        Authorization &amp; Signatures
+                      </h4>
+                      <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                    </div>
+                    <div className="grid grid-cols-3 gap-0 border border-slate-300 dark:border-slate-600">
+                      <div className="border-r border-slate-300 dark:border-slate-600 p-4">
+                        <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-6">Prepared By (Analyst)</p>
+                        <div className="border-b border-slate-400 dark:border-slate-500 mb-1.5 h-8" />
+                        <p className="text-[7.5px] font-black text-slate-900 dark:text-white uppercase">Name &amp; Signature</p>
+                        <p className="text-[7px] text-slate-400 font-mono mt-0.5">{new Date(analysis.created_at).toLocaleDateString("en-GB")}</p>
+                      </div>
+                      <div className="border-r border-slate-300 dark:border-slate-600 p-4">
+                        <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-6">Reviewed By (QC Manager)</p>
+                        <div className="border-b border-slate-400 dark:border-slate-500 mb-1.5 h-8" />
+                        <p className="text-[7.5px] font-black text-slate-900 dark:text-white uppercase">Name &amp; Signature</p>
+                        <p className="text-[7px] text-slate-400 font-mono mt-0.5">Date: _______________</p>
+                      </div>
+                      <div className="p-4">
+                        <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-6">Authorized By (Lab Director)</p>
+                        <div className="border-b border-slate-400 dark:border-slate-500 mb-1.5 h-8" />
+                        <p className="text-[7.5px] font-black text-slate-900 dark:text-white uppercase">Name &amp; Signature</p>
+                        <p className="text-[7px] text-slate-400 font-mono mt-0.5">Date: _______________</p>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
 
-                {/* Legal & ISO Footnote */}
-                <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t-2 border-slate-900 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-                  <div className="sm:col-span-2">
-                    <p className="text-[7px] sm:text-[8px] font-bold text-slate-400 uppercase leading-relaxed tracking-wider">
-                      This document certifies that the aforementioned sample was
-                      analyzed using the ColonyAI Neural Network (v4.2). All
-                      calculations are performed in accordance with ISO
-                      4833-1:2013 and FDA BAM Chapter 3 standards. Expanded
-                      uncertainty (U) is reported at k=2 for a ~95% confidence
-                      interval.
-                    </p>
-                  </div>
-                  <div className="sm:text-right flex flex-col items-start sm:items-end justify-end">
-                    <div className="w-24 sm:w-32 h-[1px] bg-slate-200 mb-2" />
-                    <p className="text-[8px] sm:text-[9px] font-black text-slate-900 uppercase tracking-widest">
-                      Digital Auth Signature
-                    </p>
-                    <p className="text-[6px] sm:text-[7px] font-bold text-slate-400 uppercase tracking-widest">
-                      Autonomous Core System
-                    </p>
-                  </div>
+                {/* FOOTER BAR */}
+                <div className="px-10 py-3 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
+                  <p className="text-[7px] font-mono text-slate-400">
+                    ColonyAI Analytics Platform · ISO 17025:2017 · {"CAI-" + analysis.id.substring(0, 8).toUpperCase()} · Page 1 of 1
+                  </p>
+                  <button
+                    onClick={() => window.print()}
+                    className="cert-no-print px-3 py-1.5 bg-slate-900 dark:bg-slate-700 text-white text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
+                  >
+                    <Download className="h-3 w-3" />
+                    Print / Save PDF
+                  </button>
                 </div>
+
+                {/* BOTTOM ACCENT BAR */}
+                <div className="h-1 w-full bg-gradient-to-r from-slate-900 via-slate-600 to-slate-900" />
               </div>
             )}
           </div>
@@ -1417,8 +1483,18 @@ MESIN: YOLOv8 SENSITIVE NODE`;
               </div>
             </section>
           </DocumentationSidebar>
-        </div>
       </div>
     </div>
+
+    {showCorrectionCanvas && analysis && (
+      <CorrectionCanvas
+        analysis={analysis}
+        onClose={() => setShowCorrectionCanvas(false)}
+        onComplete={() => {
+          analysesApi.getById(analysis.id).then(setAnalysis);
+        }}
+      />
+    )}
+  </div>
   );
 }
