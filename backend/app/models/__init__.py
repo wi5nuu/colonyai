@@ -115,6 +115,7 @@ class User(Base):
     recovery_password = Column(String(255), nullable=True) # Plain text (or encrypted) for Super Admin recovery
     failed_login_attempts = Column(Integer, default=0, nullable=False)
     last_failed_login = Column(DateTime, nullable=True)
+    locked_until = Column(DateTime, nullable=True)
     is_locked_out = Column(SAEnum(enum.Enum('LockoutStatus', ['yes', 'no']), name='lockout_status'), nullable=False, default='no')
     is_active = Column(Boolean, default=True)
     
@@ -345,6 +346,56 @@ class LimsLog(Base):
     
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
 
+    user = relationship("User")
+    analysis = relationship("Analysis")
+
+
+class CorrectionSession(Base):
+    """
+    Groups corrections made during one analyst review session.
+    Enables per-session accuracy tracking for continuous learning.
+    """
+    __tablename__ = "correction_sessions"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    analysis_id = Column(GUID(), ForeignKey("analyses.id"), nullable=False, index=True)
+    user_id = Column(GUID(), ForeignKey("users.id"), nullable=False)
+    status = Column(String(20), nullable=False, default="active")  # active, completed
+    total_corrections = Column(Integer, default=0)
+    accuracy = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    completed_at = Column(DateTime, nullable=True)
+
+    user = relationship("User")
+    analysis = relationship("Analysis")
+    corrections = relationship("Correction", back_populates="session", cascade="all, delete-orphan")
+
+
+class Correction(Base):
+    """
+    Individual correction made by an analyst.
+    Records what the AI detected vs what the human corrected it to.
+    """
+    __tablename__ = "corrections"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    session_id = Column(GUID(), ForeignKey("correction_sessions.id"), nullable=False, index=True)
+    analysis_id = Column(GUID(), ForeignKey("analyses.id"), nullable=False, index=True)
+    detection_id = Column(GUID(), ForeignKey("colony_detections.id"), nullable=True)  # null = new annotation
+    user_id = Column(GUID(), ForeignKey("users.id"), nullable=False)
+
+    original_class = Column(String(50), nullable=True)  # null for new annotations
+    corrected_class = Column(String(50), nullable=False)  # "removed" for false positives
+
+    bbox_x = Column(Integer, nullable=True)
+    bbox_y = Column(Integer, nullable=True)
+    bbox_width = Column(Integer, nullable=True)
+    bbox_height = Column(Integer, nullable=True)
+
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    session = relationship("CorrectionSession", back_populates="corrections")
     user = relationship("User")
     analysis = relationship("Analysis")
 

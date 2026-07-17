@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, images, analyses, reports, users, lims, maintenance, simulator, settings, audit, super
+from app.api.v1.endpoints import auth, images, analyses, reports, users, lims, maintenance, simulator, settings, audit, super, corrections, models
 
 api_router = APIRouter()
 
@@ -7,6 +7,7 @@ api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(images.router, prefix="/images", tags=["Images"])
 api_router.include_router(analyses.router, prefix="/analyses", tags=["Analyses"])
+api_router.include_router(corrections.router, prefix="/analyses", tags=["Corrections"])
 api_router.include_router(reports.router, prefix="/reports", tags=["Reports"])
 api_router.include_router(users.router, prefix="/users", tags=["Users"])
 api_router.include_router(lims.router, prefix="/lims", tags=["LIMS Integration"])
@@ -15,6 +16,7 @@ api_router.include_router(simulator.router, prefix="/simulator", tags=["Simulato
 api_router.include_router(settings.router, prefix="/settings", tags=["User Settings"])
 api_router.include_router(audit.router, prefix="/audit", tags=["Audit Logs"])
 api_router.include_router(super.router, prefix="/super", tags=["Super Admin"])
+api_router.include_router(models.router, prefix="/admin/models", tags=["Model Management"])
 
 # Export individual routers for backward compatibility if main.py still uses them
 auth_router = auth.router
