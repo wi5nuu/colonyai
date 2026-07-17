@@ -123,7 +123,7 @@ async def sync_to_lims(
         user_id=current_user["user_id"],
         action="LIMS_EXPORT",
         resource_type="analysis",
-        organization_id=str(analysis.organization_id),
+        organization_id=str(analysis.organization_id) if analysis.organization_id else None,
         resource_id=analysis_id,
         details={
             "lims_record_id": lims_record_id,
