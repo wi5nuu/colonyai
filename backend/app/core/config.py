@@ -80,6 +80,9 @@ class Settings(BaseSettings):
     LIMS_MODE: str = os.getenv("LIMS_MODE", "simulated")
     LIMS_WEBHOOK_URL: str = os.getenv("LIMS_WEBHOOK_URL", "http://localhost:3000/api/mock-lims/receive")
 
+    # Telegram Alert Target
+    TELEGRAM_ALERT_TARGET: str = os.getenv("TELEGRAM_ALERT_TARGET", "@ColonyAILabAlerts")
+
     # SMTP Settings (Phase II MFA)
     SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
@@ -90,8 +93,6 @@ class Settings(BaseSettings):
     SMTP_TLS: bool = True
 
     class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
         case_sensitive = True
         extra = "ignore"
 
