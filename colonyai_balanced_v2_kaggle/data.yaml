@@ -1,0 +1,10 @@
+names:
+- colony_single
+- colony_merged
+- bubble
+- dust_debris
+- media_crack
+nc: 5
+path: /workspace/dataset
+train: images/train
+val: images/val
