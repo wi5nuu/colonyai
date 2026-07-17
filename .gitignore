@@ -119,8 +119,11 @@ frontend/out/
 frontend/tsconfig.tsbuildinfo
 frontend/node_modules/
 
-# ML Training
-ml-training/
+# ML Training (only ignore datasets, not scripts)
+ml-training/datasets/
+ml-training/runs/
+ml-training/*.pt
+ml-training/*.onnx
 hasil_training_colony/
 kaggle_init_only/
 kaggle_multi_zip/
