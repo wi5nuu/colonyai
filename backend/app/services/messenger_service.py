@@ -4,7 +4,8 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Messenger notification service\nclass MessengerService:
+# Messenger notification service
+class MessengerService:
     """
     Enterprise-grade Messenger Integration (WhatsApp/Telegram).
     For competition demo purposes, this simulates the connection and payload formatting
