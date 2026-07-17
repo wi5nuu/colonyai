@@ -60,16 +60,21 @@ async def init_db():
         return
 
     # Import all models to ensure they are registered with Base.metadata
-    from app.models import User, Analysis, ColonyDetection, AuditLog, SimulatorComparison, UserRole
+    from app.models import (
+        User, Organization, Analysis, ColonyDetection, AuditLog, 
+        SimulatorComparison, Correction, CorrectionSession, UserRole,
+        Notification, LimsLog, PasswordResetRequest, TokenBlacklist
+    )
+    from app.models.preferences import UserPreference, UserSession
     from sqlalchemy.future import select
     from app.core.security import get_password_hash
 
     try:
         async with engine.begin() as conn:
-            print("[DATABASE] Creating/Verifying tables...")
+            logger.info("[DATABASE] Creating/Verifying tables...")
             await conn.run_sync(Base.metadata.create_all)
         DB_AVAILABLE = True
-        print("[DATABASE] Connection successful and tables synchronized.")
+        logger.info("[DATABASE] Connection successful and tables synchronized.")
         
         # Seed only Super Admin (all other users must belong to an organization)
         async with AsyncSessionLocal() as session:
