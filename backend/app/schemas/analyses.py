@@ -146,6 +146,64 @@ class DashboardStatsResponse(BaseModel):
 
 
 # ============================================================
+# Correction Schemas (Continuous Learning)
+# ============================================================
+
+class CorrectionBBoxRequest(BaseModel):
+    x: int
+    y: int
+    width: int
+    height: int
+
+
+class CorrectionCreateRequest(BaseModel):
+    detection_id: Optional[str] = None
+    original_class: Optional[str] = None
+    corrected_class: str = Field(..., description="Target class or 'removed' for FP")
+    bbox: Optional[CorrectionBBoxRequest] = None
+    notes: Optional[str] = None
+
+
+class CorrectionResponse(BaseModel):
+    id: str
+    session_id: str
+    analysis_id: str
+    detection_id: Optional[str] = None
+    original_class: Optional[str] = None
+    corrected_class: str
+    bbox: Optional[BBoxResponse] = None
+    notes: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class CorrectionSessionResponse(BaseModel):
+    id: str
+    analysis_id: str
+    status: str
+    total_corrections: int
+    accuracy: Optional[float] = None
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+    corrections: List[CorrectionResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
+class CorrectionReportResponse(BaseModel):
+    session_id: str
+    analysis_id: str
+    total_corrections: int
+    accuracy: Optional[float] = None
+    per_class_breakdown: Dict[str, dict]  # {class: {tp, fp, fn}}
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+
+
+# ============================================================
 # Report Schemas
 # ============================================================
 
