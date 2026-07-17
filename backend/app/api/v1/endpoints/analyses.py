@@ -9,6 +9,8 @@ import math
 import os
 import shutil
 import tempfile
+import cv2 as _cv2
+import numpy as _np
 import time
 import logging
 
@@ -22,7 +24,7 @@ from app.core.database import get_db
 from app.core.config import settings
 from app.core.thresholds import get_all_thresholds
 from app.utils.s3 import s3_is_configured, upload_to_s3, get_presigned_url
-from app.services.colony_detector_optimized import ColonyDetectorOptimized, VALID_COLONY_CLASSES
+from app.services.colony_detector_optimized import get_detector, ColonyDetectorOptimized, VALID_COLONY_CLASSES
 from app.services.file_validator import validate_and_sanitize_image
 from app.services.image_processor import ImageProcessor
 from app.services.cfu_calculator import CFUCalculator
@@ -46,31 +48,60 @@ logger = logging.getLogger(__name__)
 # Simulation Endpoint (Case 1 Requirement)
 # ============================================================
 
+VALID_MEDIA_TYPES = {"PCA", "TSA", "VRBA", "MacConkey", "SDA", "EMB", "OTHER"}
+
 @router.post("/simulate", response_model=AnalysisResponse)
 async def simulate_analysis(
     file: UploadFile = File(...),
+    media_type: str = Form(default="PCA"),
+    dilution_factor: float = Form(default=1.0),
+    plated_volume_ml: float = Form(default=1.0),
     current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin")),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Real-time simulation for accuracy comparison (Case 1).
     Processes image with AI but DOES NOT save to audit history.
+    Accepts media_type, dilution_factor, plated_volume_ml from caller.
     """
-    from app.services.image_processor import ImageProcessor
+    # Sanitize media_type — fall back to PCA if unrecognised
+    if media_type not in VALID_MEDIA_TYPES:
+        logger.warning("simulate_analysis: unknown media_type=%s, defaulting to PCA", media_type)
+        media_type = "PCA"
 
     # 1. Validation
     contents, safe_filename, detected_mime = await validate_and_sanitize_image(file)
 
     # 2. Processing
     processor = ImageProcessor()
-    detector = ColonyDetectorOptimized()
+    detector = get_detector()
+    calculator = CFUCalculator()
 
     processed_img, roi_info = processor.preprocess_from_bytes(contents)
-    
-    # Use optimized detector with TTA for maximum accuracy in simulation
-    detections = detector.detect(processed_img, media_type="PCA", aggressive=True, use_tta=True)
 
-    # 3. Build a transient response (not saved to DB)
+    # Use optimized detector with TTA for maximum accuracy in simulation
+    detections = await detector.detect_async(processed_img, media_type=media_type, aggressive=True, use_tta=True)
+
+    # 3. Calculate colony counts from detections
+    class_breakdown = detector.get_detection_summary(detections)
+    colony_single = class_breakdown.get('colony_single', 0)
+    colony_merged = class_breakdown.get('colony_merged', 0)
+    valid_colony_count = colony_single + colony_merged
+
+    # 4. Calculate CFU/ml
+    cfu_result = calculator.calculate(
+        colony_single=colony_single,
+        colony_merged_raw=colony_merged,
+        dilution_factor=dilution_factor,
+        plated_volume_ml=plated_volume_ml,
+        media_type=media_type,
+        confidence_score=detector.get_average_confidence(detections),
+        reliability=detector.get_reliability_indicator(detections),
+        class_breakdown=class_breakdown,
+        detections=detections,
+    )
+
+    # 5. Build a transient response (not saved to DB)
     temp_id = uuid.uuid4()
     now = datetime.now(timezone.utc)
 
@@ -79,14 +110,14 @@ async def simulate_analysis(
         "user_id": current_user["user_id"],
         "sample_id": "SIMULATION-" + file.filename,
         "media_type": "SIMULATED",
-        "dilution_factor": 1.0,
-        "plated_volume_ml": 1.0,
+        "dilution_factor": dilution_factor,
+        "plated_volume_ml": plated_volume_ml,
         "status": "completed",
-        "colony_count": sum(1 for d in detections if d.get('is_valid_colony', True)),
-        "cfu_per_ml": 0.0,
-        "confidence_score": detector.get_average_confidence(detections),
-        "reliability": detector.get_reliability_indicator(detections),
-        "class_breakdown": detector.get_detection_summary(detections),
+        "colony_count": colony_single + colony_merged,
+        "cfu_per_ml": cfu_result.cfu_per_ml,
+        "confidence_score": cfu_result.confidence_score,
+        "reliability": cfu_result.reliability,
+        "class_breakdown": class_breakdown,
         "created_at": now.isoformat(),
         "updated_at": now.isoformat(),
         "is_valid_for_reporting": False,
@@ -381,13 +412,11 @@ async def create_analysis(
         image_processor = ImageProcessor()
         processed_image, roi_info = image_processor.preprocess(original_path)
 
-        # ── Step 4: YOLOv8 inference (Optimized) ──
-        colony_detector = ColonyDetectorOptimized()
+        # ── Step 4: YOLOv8 inference (Optimized — singleton model, async thread pool) ──
+        colony_detector = get_detector()
 
         start_time = time.time()
-        # Menggunakan Optimized Detector yang sudah menangani threshold per-media, 
-        # filtering ukuran, dan aspect ratio secara internal.
-        detections = colony_detector.detect(
+        detections = await colony_detector.detect_async(
             processed_image,
             media_type=media_type,
             aggressive=False,
@@ -458,32 +487,77 @@ async def create_analysis(
         annotated_path = os.path.join(annotated_dir, annotated_filename)
 
         # Load original image untuk annotation
-        import cv2 as _cv2
         original_img_bgr = _cv2.imread(original_path)
         if original_img_bgr is None:
             # Fallback: gunakan processed image jika original gagal di-load
             logger.warning("Gagal load original image, fallback ke processed image untuk annotation")
             image_processor.save_annotated_image(processed_image, detections, annotated_path)
+            # Koordinat DB = koordinat processed (512×512), tidak ada mapping yang bisa dilakukan
+            scaled_detections = detections
         else:
-            # Scale bounding box coordinates dari processed image ke original size
+            # Scale bounding box coordinates dari processed image (512×512) ke original size,
+            # kemudian apply inverse homography jika perspective correction dilakukan.
+            #
+            # Pipeline preprocessing:
+            #   original → warpPerspective(H) → resize(512×512) = processed_image
+            #
+            # Inverse mapping:
+            #   bbox_processed → scale → bbox_warped → H_inv → bbox_original
             orig_h, orig_w = original_img_bgr.shape[:2]
             proc_h, proc_w = processed_image.shape[:2]
-            
-            roi_x, roi_y = roi_info['x_offset'], roi_info['y_offset']
-            roi_w, roi_h = roi_info['roi_w'], roi_info['roi_h']
-            
-            scale_x = roi_w / proc_w
-            scale_y = roi_h / proc_h
+
+            # Scale factor dari processed (512×512) ke ukuran pre-resize (sama dengan original
+            # karena warpPerspective mempertahankan dimensi gambar)
+            scale_x = orig_w / proc_w
+            scale_y = orig_h / proc_h
+
+            # Ambil homography matrix dari preprocessing (None jika tidak ada warp)
+            H = roi_info.get('homography_matrix')
+            H_inv = _np.linalg.inv(H) if H is not None else None
 
             scaled_detections = []
             for det in detections:
                 scaled_det = det.copy()
-                # Rumus: (Coord_di_ROI * Scale) + Offset_ROI
+                bx = det['bbox']['x'] * scale_x
+                by = det['bbox']['y'] * scale_y
+                bw = det['bbox']['width'] * scale_x
+                bh = det['bbox']['height'] * scale_y
+
+                if H_inv is not None:
+                    # Transform centre point melalui H_inv untuk presisi maksimal
+                    cx_w = bx + bw / 2
+                    cy_w = by + bh / 2
+                    pt = _np.array([[[cx_w, cy_w]]], dtype=_np.float32)
+                    pt_orig = _cv2.perspectiveTransform(pt, H_inv)
+                    cx_o, cy_o = pt_orig[0][0]
+
+                    # Transform juga corner kiri-atas dan kanan-bawah untuk skala w/h
+                    tl = _np.array([[[bx, by]]], dtype=_np.float32)
+                    br = _np.array([[[bx + bw, by + bh]]], dtype=_np.float32)
+                    tl_o = _cv2.perspectiveTransform(tl, H_inv)[0][0]
+                    br_o = _cv2.perspectiveTransform(br, H_inv)[0][0]
+
+                    new_w = max(1, int(abs(br_o[0] - tl_o[0])))
+                    new_h = max(1, int(abs(br_o[1] - tl_o[1])))
+                    new_x = int(cx_o - new_w / 2)
+                    new_y = int(cy_o - new_h / 2)
+                else:
+                    new_x = int(bx)
+                    new_y = int(by)
+                    new_w = int(bw)
+                    new_h = int(bh)
+
+                # Clamp ke batas gambar
+                new_x = max(0, min(new_x, orig_w - 1))
+                new_y = max(0, min(new_y, orig_h - 1))
+                new_w = max(1, min(new_w, orig_w - new_x))
+                new_h = max(1, min(new_h, orig_h - new_y))
+
                 scaled_det['bbox'] = {
-                    'x': int(det['bbox']['x'] * scale_x + roi_x),
-                    'y': int(det['bbox']['y'] * scale_y + roi_y),
-                    'width': int(det['bbox']['width'] * scale_x),
-                    'height': int(det['bbox']['height'] * scale_y),
+                    'x': new_x,
+                    'y': new_y,
+                    'width': new_w,
+                    'height': new_h,
                 }
                 scaled_detections.append(scaled_det)
 
@@ -523,7 +597,9 @@ async def create_analysis(
         await db.commit()
 
         # ── Step 9: Simpan detection records ──
-        for detection in detections:
+        # Gunakan scaled_detections agar koordinat bbox di DB sesuai dengan
+        # gambar original (bukan koordinat 512×512 dari processed_image).
+        for detection in scaled_detections:
             det_record = ColonyDetection(
                 id=uuid.uuid4(),
                 analysis_id=analysis_id,
@@ -586,13 +662,12 @@ async def create_analysis(
             "status": analysis.status.value if hasattr(analysis.status, 'value') else analysis.status
         }
         
-        # Assume user has configured their preferences to receive alerts (hardcoded target for demo)
         if background_tasks:
-            # You can change the target ID or make it dynamic from user preferences in production
+            target_id = getattr(settings, 'TELEGRAM_ALERT_TARGET', '@ColonyAILabAlerts')
             background_tasks.add_task(
                 messenger_service.send_instant_analysis_alert,
                 platform="telegram",
-                target_id="@ColonyAILabAlerts",
+                target_id=target_id,
                 analysis_data=alert_payload,
                 image_url=analysis.annotated_image_url
             )
@@ -645,7 +720,10 @@ async def list_analyses(
         if org_id:
             base_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
         else:
-            base_conditions.append(Analysis.organization_id.is_(None))
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User tidak terdaftar pada organisasi manapun."
+            )
 
     # Analyst sees only own data; Manager/Admin/Auditor see all org data
     if user_role == "analyst":
@@ -732,7 +810,10 @@ async def get_dashboard_stats(
         if org_id:
             base_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
         else:
-            base_conditions.append(Analysis.organization_id.is_(None))
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User tidak terdaftar pada organisasi manapun."
+            )
 
     # Manager, Auditor, Admin see all stats in their org. Analyst sees only own stats.
     if current_user["role"] == "analyst":
@@ -829,11 +910,11 @@ async def get_dashboard_stats(
 
     return DashboardStatsResponse(
         total_analyses=total_analyses,
-        avg_time_saved_minutes=total_analyses * 15, # 15 min saved per analysis
+        avg_time_saved_minutes=total_analyses * 15,
         success_rate=round(success_rate, 1),
         pending_review=pending_review,
-        neural_confidence=round(avg_conf * 100, 1) if avg_conf > 0 else 0.0, # 0 if no data yet
-        system_latency_ms=42.0, # Realistically this would come from logs
+        neural_confidence=round(avg_conf * 100, 1) if avg_conf > 0 else 0.0,
+        system_latency_ms=42.0,
         verified_count=verified_count,
         failed_count=failed_count,
         matrix_breakdown=matrix_breakdown,
@@ -865,7 +946,10 @@ async def get_analysis(
         if org_id:
             query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
         else:
-            query_conditions.append(Analysis.organization_id.is_(None))
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User tidak terdaftar pada organisasi manapun."
+            )
 
     # Analyst sees only own data; Manager/Admin/Auditor see all org data
     if user_role == "analyst":
@@ -888,6 +972,70 @@ async def get_analysis(
         )
 
     return _build_analysis_response(analysis)
+
+
+@router.delete("/{analysis_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_analysis(
+    analysis_id: str,
+    request: Request = None,
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Delete an analysis record.
+    - Analyst: can only delete their own analyses
+    - Manager/Admin/Super Admin: can delete any analysis in their org (super_admin: any org)
+    """
+    try:
+        analysis_uuid = uuid.UUID(analysis_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid analysis ID format",
+        )
+
+    org_id = current_user.get("organization_id")
+    user_role = current_user.get("role")
+    query_conditions = [Analysis.id == analysis_uuid]
+
+    if user_role != "super_admin":
+        if org_id:
+            query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User tidak terdaftar pada organisasi manapun.",
+            )
+
+    # Analyst can only delete their own analyses
+    if user_role == "analyst":
+        query_conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
+
+    result = await db.execute(
+        select(Analysis).where(and_(*query_conditions))
+    )
+    analysis = result.scalars().unique().first()
+
+    if not analysis:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Analysis not found or you do not have permission to delete it.",
+        )
+
+    sample_id = analysis.sample_id
+
+    await db.delete(analysis)
+    await db.commit()
+
+    # Audit log
+    ip = request.client.host if request else None
+    ua = request.headers.get("user-agent") if request else None
+    await write_audit_log(
+        db, current_user["user_id"], "delete_analysis",
+        "analysis", current_user.get("organization_id"), analysis_id,
+        details={"sample_id": sample_id},
+        ip_address=ip, user_agent=ua,
+    )
 
 
 @router.get("/{analysis_id}/result")
@@ -995,7 +1143,10 @@ async def flag_for_review(
         if org_id:
             query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
         else:
-            query_conditions.append(Analysis.organization_id.is_(None))
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User tidak terdaftar pada organisasi manapun."
+            )
 
     result = await db.execute(
         select(Analysis)
