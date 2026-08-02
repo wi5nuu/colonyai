@@ -66,7 +66,7 @@ export default function DashboardPage() {
         setFilteredAnalyses(data.recent_analyses);
       }
     } catch (error) {
-      console.error("Dashboard Load Error:", error);
+      // Dashboard load failed - will retry on next poll
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);

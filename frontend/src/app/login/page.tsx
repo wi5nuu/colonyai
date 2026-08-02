@@ -40,7 +40,6 @@ export default function LoginPage() {
         window.location.href = "/dashboard";
       }
     } catch (error) {
-      console.warn("Backend login failed:", error);
       setTimeout(() => {
         setIsLoading(false);
       }, 800);

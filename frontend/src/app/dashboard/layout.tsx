@@ -217,7 +217,9 @@ export default function DashboardLayout({
       "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
     );
     audio.volume = 0.5;
-    audio.play().catch((e) => console.log("Audio play blocked by browser", e));
+    audio.play().catch(() => {
+      // Audio playback blocked by browser - ignore silently
+    });
   };
 
   useEffect(() => {
