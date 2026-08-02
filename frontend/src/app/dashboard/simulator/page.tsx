@@ -175,7 +175,6 @@ export default function SimulatorPage() {
         setAnalysisResult(null);
         setDetections([]);
         resetManualSimulation();
-        console.log("Image loaded successfully");
       };
       reader.readAsDataURL(selected);
     }
@@ -216,15 +215,34 @@ export default function SimulatorPage() {
 
       const data = await response.json();
       setAnalysisResult(data);
+
+      // BUG-3 FIX: Use actual image dimensions from backend response instead of hardcoded 640
+      // Backend now returns image_width, image_height, and bbox_normalized fields
+      const imgW = data.image_width || 640;
+      const imgH = data.image_height || 640;
+
       setDetections(
-        data.detections.map((d: any) => ({
-          id: d.id,
-          class: d.class_name as Detection["class"],
-          confidence: d.confidence,
-          x: (d.bbox.x / 640) * 100,
-          y: (d.bbox.y / 640) * 100,
-          size: Math.max(8, (d.bbox.width / 640) * 100),
-        }))
+        data.detections.map((d: any) => {
+          // Prefer pre-normalized values from backend, fallback to calculating from raw bbox
+          if (d.bbox_normalized) {
+            return {
+              id: d.id,
+              class: d.class_name as Detection["class"],
+              confidence: d.confidence,
+              x: d.bbox_normalized.x * 100,
+              y: d.bbox_normalized.y * 100,
+              size: Math.max(1.5, d.bbox_normalized.width * 100),
+            };
+          }
+          return {
+            id: d.id,
+            class: d.class_name as Detection["class"],
+            confidence: d.confidence,
+            x: (d.bbox.x / imgW) * 100,
+            y: (d.bbox.y / imgH) * 100,
+            size: Math.max(1.5, (d.bbox.width / imgW) * 100),
+          };
+        })
       );
       toast.success(t("simulator.aiAnalysisComplete"));
     } catch (err: any) {
@@ -560,7 +578,6 @@ export default function SimulatorPage() {
       toast.success(t("simulator.comparisonSaved"));
     } catch (err) {
       toast.error(t("simulator.comparisonFailed"));
-      console.error(err);
     } finally {
       setIsSaving(false);
     }
