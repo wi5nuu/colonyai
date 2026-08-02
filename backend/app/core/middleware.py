@@ -34,7 +34,7 @@ class SecureHeadersMiddleware(BaseHTTPMiddleware):
         # Development: allow all localhost ports for cross-origin image loading
         # Production: restrict to specific domains only
         import os
-        _is_debug = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
+        _is_debug = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
         if _is_debug:
             # Development: permissive CSP for local testing across ports
             csp = (

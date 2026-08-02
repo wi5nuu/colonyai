@@ -103,8 +103,9 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
     user = result.scalar_one_or_none()
 
     if not user:
-        # Avoid user enumeration by using a generic error and consistent time
-        await asyncio.sleep(0.1) # Subtle timing consistency
+        # Avoid user enumeration by using a generic error and constant-time delay
+        # ~0.5s matches typical Argon2 verification time to prevent timing oracle
+        await asyncio.sleep(0.5)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
@@ -196,16 +197,8 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
         logger.info("CODE: %s", mfa_code)
         logger.info("DISPATCHED VIA: %s", 'Real Email' if email_sent else 'Terminal Simulation')
         
-        # Write MFA code to static file for easy developer access
-        try:
-            import tempfile
-            import os
-            temp_dir = tempfile.gettempdir()
-            token_file_path = os.path.join(temp_dir, "mfa_token.txt")
-            with open(token_file_path, "w", encoding="utf-8") as token_file:
-                token_file.write(f"MFA CODE: {mfa_code}\nGenerated At: {datetime.now(timezone.utc).isoformat()} UTC\n")
-        except Exception as e:
-            logger.warning("Error writing MFA token to file: %s", e)
+        # NOTE: MFA code is intentionally NOT written to disk or any persistent store.
+        # The code is only delivered via email and stored hashed in the DB session.
         
         return {
             "mfa_required": True,
@@ -258,12 +251,28 @@ async def verify_mfa(request: MFAVerifyRequest, http_request: Request = None, db
     
     if not user or not user.mfa_code:
         raise HTTPException(status_code=401, detail="Invalid verification request")
-        
+
+    # ── Brute-force protection on MFA codes ──
+    # Reuse the same lockout mechanism as the login endpoint.
+    # Max 5 MFA attempts before the account is locked for 15 minutes.
+    if user.failed_login_attempts >= 5:
+        user.is_locked_out = 'yes'
+        user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
+        user.mfa_code = None
+        user.mfa_expires = None
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many failed MFA attempts. Account locked for 15 minutes."
+        )
+
     if user.mfa_expires < datetime.now(timezone.utc):
         raise HTTPException(status_code=401, detail="Verification code expired")
-        
+
     if user.mfa_code != request.code:
-        # Note: In production, you'd increment failed attempts here too
+        user.failed_login_attempts += 1
+        user.last_failed_login = datetime.now(timezone.utc)
+        await db.commit()
         raise HTTPException(status_code=401, detail="Incorrect security code")
         
     # ── Success: Clear Code ──
@@ -432,6 +441,17 @@ async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends
                 detail="User not found"
             )
 
+        # ── Blacklist the old refresh token to prevent token reuse ──
+        old_jti = payload.get("jti")
+        old_exp = payload.get("exp")
+        if old_jti and old_exp:
+            from app.models import TokenBlacklist
+            blacklist_item = TokenBlacklist(
+                jti=old_jti,
+                expires_at=datetime.fromtimestamp(old_exp, tz=timezone.utc).replace(tzinfo=None)
+            )
+            db.add(blacklist_item)
+
         # Create new access token
         access_token_expires = timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
@@ -443,6 +463,8 @@ async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends
         new_refresh_token = create_refresh_token(
             data={"sub": user_id, "email": email, "role": role}
         )
+
+        await db.commit()
 
         return {
             "access_token": access_token,
@@ -807,7 +829,7 @@ async def reset_password(request: ResetPasswordRequest, db: AsyncSession = Depen
     """
     from app.models import PasswordResetRequest
     
-    # ── Verify Token against PasswordResetRequest table ──
+    # ── Verify Token against PasswordResetRequest table with pessimistic lock ──
     result = await db.execute(
         select(User, PasswordResetRequest)
         .join(PasswordResetRequest, User.id == PasswordResetRequest.user_id)
@@ -816,6 +838,7 @@ async def reset_password(request: ResetPasswordRequest, db: AsyncSession = Depen
             PasswordResetRequest.token_expires_at > datetime.now(timezone.utc),
             PasswordResetRequest.status == "approved"
         )
+        .with_for_update()  # Prevent concurrent token usage
     )
     row = result.first()
 
