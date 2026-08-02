@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Upload as UploadIcon,
@@ -46,10 +46,32 @@ export default function UploadPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDocs, setShowDocs] = useState(false);
 
+  // Smart defaults per media type
+  const MEDIA_DEFAULTS: Record<string, { temp: number; time: number; method: string }> = {
+    PCA:       { temp: 35.0, time: 48,  method: "ISO 4833-1:2013" },
+    TSA:       { temp: 37.0, time: 24,  method: "AOAC 990.12" },
+    MacConkey: { temp: 37.0, time: 24,  method: "ISO 4832:2006" },
+    VRBA:      { temp: 37.0, time: 24,  method: "ISO 4832:2006" },
+    BGBB:      { temp: 37.0, time: 48,  method: "ISO 9308-1:2014" },
+    R2A:       { temp: 20.0, time: 168, method: "APHA 9215D" },
+    SDA:       { temp: 25.0, time: 120, method: "ISO 21527-1:2008" },
+    EMB:       { temp: 37.0, time: 24,  method: "ISO 16649-2:2001" },
+    Blood:     { temp: 37.0, time: 48,  method: "CLSI M35-A2" },
+    OTHER:     { temp: 37.0, time: 24,  method: "" },
+  };
+
+  // Auto-generate sample ID: ISO-{MEDIA}-{YYYYMMDD}-{SEQ}
+  const generateSampleId = (media: string) => {
+    const now = new Date();
+    const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+    const seq = String(Math.floor(Math.random() * 900) + 100);
+    return `ISO-${media}-${ymd}-${seq}`;
+  };
+
   const [formData, setFormData] = useState({
-    sampleId: "ISO-PCA-B2026-001",
+    sampleId: generateSampleId("PCA"),
     mediaType: "PCA" as MediaType,
-    dilutionFactor: 0.001,
+    dilutionFactor: 0.1,
     platedVolume: 1.0,
     incubationTemp: 35.0,
     incubationTime: 48,
@@ -57,6 +79,31 @@ export default function UploadPage() {
     mediaBatchNumber: "LOT-2026-X",
     incubatorId: "INC-001",
   });
+
+  // CFU/ml preview realtime: CFU/ml = colonies / (dilution * volume)
+  // Estimated colony count from filename hints; actual count comes from AI
+  const cfuPreview = useMemo(() => {
+    const { dilutionFactor, platedVolume } = formData;
+    if (!dilutionFactor || !platedVolume) return null;
+    const divisor = dilutionFactor * platedVolume;
+    // Example: 150 colonies (placeholder) → real value comes from AI result
+    const exampleColonies = 150;
+    const cfu = exampleColonies / divisor;
+    return cfu.toExponential(2);
+  }, [formData.dilutionFactor, formData.platedVolume]);
+
+  // Auto-fill defaults when media type changes
+  const handleMediaTypeChange = (media: string) => {
+    const defaults = MEDIA_DEFAULTS[media] || MEDIA_DEFAULTS.OTHER;
+    setFormData((prev) => ({
+      ...prev,
+      mediaType: media as MediaType,
+      incubationTemp: defaults.temp,
+      incubationTime: defaults.time,
+      methodStandard: defaults.method,
+      sampleId: generateSampleId(media),
+    }));
+  };
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -299,12 +346,12 @@ export default function UploadPage() {
                   </div>
                   <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {[
-                      { file: 'single.jpg', label: 'Single Colony', badge: 'Single', color: '#059669' },
-                      { file: 'merged.jpg', label: 'Stacked Colony', badge: 'Merged', color: '#d97706' },
-                      { file: 'bubble_artifact.jpg', label: 'Bubble', badge: 'Bubble', color: '#dc2626' },
+                      { file: 'colony_small.jpg', label: 'Single Colony', badge: 'Single', color: '#059669' },
+                      { file: 'merged.jpg', label: 'Merged Colony', badge: 'Merged', color: '#d97706' },
+                      { file: 'bubble_artifact.jpg', label: 'Bubble Artifact', badge: 'Bubble', color: '#2563eb' },
                       { file: 'crack.jpg', label: 'Media Crack', badge: 'Crack', color: '#7c3aed' },
                       { file: 'ecoli_dense.jpg', label: 'Dense E. coli', badge: 'E.coli', color: '#0891b2' },
-                      { file: 'dust.jpg', label: 'Empty Dish', badge: 'Empty', color: '#64748b' },
+                      { file: 'dust.jpg', label: 'Dust Debris', badge: 'Dust', color: '#64748b' },
                     ].map((sample, i) => (
                       <button
                         key={i}
@@ -364,12 +411,22 @@ export default function UploadPage() {
                   <div className="flex-1 space-y-2 sm:space-y-4">
                   {/* Sample ID */}
                   <div className="space-y-1">
-                    <label
-                      htmlFor="sampleId"
-                      className="text-[8px] font-black text-slate-900 dark:text-white uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
-                    >
-                      {t("upload.specimenIdentifier")} *
-                    </label>
+                    <div className="flex items-center justify-between ml-1">
+                      <label
+                        htmlFor="sampleId"
+                        className="text-[8px] font-black text-slate-900 dark:text-white uppercase tracking-[0.15em] sm:tracking-[0.2em]"
+                      >
+                        {t("upload.specimenIdentifier")} *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setFormData((p) => ({ ...p, sampleId: generateSampleId(p.mediaType) }))}
+                        className="text-[7px] font-bold text-primary hover:text-primary/70 uppercase tracking-widest flex items-center gap-1 transition-colors"
+                      >
+                        <CheckCircle2 className="w-2.5 h-2.5" />
+                        Auto-generate
+                      </button>
+                    </div>
 
                     <input
                       type="text"
@@ -398,12 +455,7 @@ export default function UploadPage() {
                         required
                         className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
                         value={formData.mediaType}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            mediaType: e.target.value as MediaType,
-                          })
-                        }
+                         onChange={(e) => handleMediaTypeChange(e.target.value)}
                       >
                         <option value="PCA">
                           PCA — Plate Count Agar
@@ -491,6 +543,26 @@ export default function UploadPage() {
                       />
                     </div>
                   </div>
+
+                  {/* CFU/ml Preview Realtime */}
+                  {cfuPreview && (
+                    <div className="flex items-center justify-between px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-none">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-3 h-3 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                        <span className="text-[8px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">
+                          CFU/ml Estimate
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 font-mono">
+                          ~{cfuPreview} CFU/ml
+                        </span>
+                        <span className="text-[7px] text-emerald-500 dark:text-emerald-600 uppercase tracking-widest">
+                          (based on 150 col.)
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* ISO Compliance: Incubation & Method */}
                   <div className="grid grid-cols-2 gap-2 sm:gap-6 pt-2">
