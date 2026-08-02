@@ -64,6 +64,21 @@ async def simulate_analysis(
     Processes image with AI but DOES NOT save to audit history.
     Accepts media_type, dilution_factor, plated_volume_ml from caller.
     """
+    # BUG-5 FIX: dilution_factor bisa < 1 (misal 0.1 untuk 10^-1)
+    # Validasi hanya: harus positif dan tidak melebihi 1,000,000
+    if dilution_factor <= 0 or dilution_factor > 1_000_000:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Dilution factor must be between 0 (exclusive) and 1,000,000"
+        )
+    
+    # Validate plated_volume_ml (must be between 0.01 and 10)
+    if plated_volume_ml <= 0 or plated_volume_ml > 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Plated volume must be between 0.01 and 10 mL"
+        )
+    
     # Sanitize media_type — fall back to PCA if unrecognised
     if media_type not in VALID_MEDIA_TYPES:
         logger.warning("simulate_analysis: unknown media_type=%s, defaulting to PCA", media_type)
@@ -102,14 +117,24 @@ async def simulate_analysis(
     )
 
     # 5. Build a transient response (not saved to DB)
+    # BUG-1 FIX: Return actual media_type, not "SIMULATED"
+    # BUG-4 FIX: Ensure all 5 classes are present in class_breakdown (even if 0)
     temp_id = uuid.uuid4()
     now = datetime.now(timezone.utc)
+
+    full_class_breakdown = {
+        'colony_single': class_breakdown.get('colony_single', 0),
+        'colony_merged': class_breakdown.get('colony_merged', 0),
+        'bubble': class_breakdown.get('bubble', 0),
+        'dust_debris': class_breakdown.get('dust_debris', 0),
+        'media_crack': class_breakdown.get('media_crack', 0),
+    }
 
     return {
         "id": str(temp_id),
         "user_id": current_user["user_id"],
         "sample_id": "SIMULATION-" + file.filename,
-        "media_type": "SIMULATED",
+        "media_type": media_type,
         "dilution_factor": dilution_factor,
         "plated_volume_ml": plated_volume_ml,
         "status": "completed",
@@ -117,7 +142,7 @@ async def simulate_analysis(
         "cfu_per_ml": cfu_result.cfu_per_ml,
         "confidence_score": cfu_result.confidence_score,
         "reliability": cfu_result.reliability,
-        "class_breakdown": class_breakdown,
+        "class_breakdown": full_class_breakdown,
         "created_at": now.isoformat(),
         "updated_at": now.isoformat(),
         "is_valid_for_reporting": False,
@@ -127,9 +152,20 @@ async def simulate_analysis(
                 "analysis_id": str(temp_id),
                 "class_name": d['class_name'],
                 "confidence": d['confidence'],
-                "bbox": d['bbox']
+                # FIX-ACC-4: Expose raw confidence (before position boost) for debugging
+                "confidence_original": d.get('confidence_original', d['confidence']),
+                "is_valid_colony": d.get('is_valid_colony', False),
+                "bbox": d['bbox'],
+                "bbox_normalized": {
+                    "x": d['bbox']['x'] / max(processed_img.shape[1], 1),
+                    "y": d['bbox']['y'] / max(processed_img.shape[0], 1),
+                    "width": d['bbox']['width'] / max(processed_img.shape[1], 1),
+                    "height": d['bbox']['height'] / max(processed_img.shape[0], 1),
+                }
             } for d in detections
         ],
+        "image_width": processed_img.shape[1],
+        "image_height": processed_img.shape[0],
         "warnings": ["INI ADALAH MODE SIMULASI. Data tidak disimpan ke Audit Ledger."],
         "user": {
             "full_name": current_user.get("full_name", "Unknown Analyst"),
@@ -344,23 +380,46 @@ async def create_analysis(
     file_content, safe_filename, detected_mime = await validate_and_sanitize_image(file)
 
     # ── FIX QA-007: Input media_type Validation ──
-    ALLOWED_MEDIA_TYPES = {"Plate Count Agar", "VRBA", "BGBB", "R2A", "TSA", "MacConkey", "Other"}
+    # FIX-2: Sinkronkan dengan thresholds_optimized.py — Blood, SDA, EMB sebelumnya tidak ada
+    ALLOWED_MEDIA_TYPES = {
+        "Plate Count Agar", "PCA",
+        "MacConkey",
+        "TSA",
+        "Blood",
+        "VRBA",
+        "SDA",
+        "EMB",
+        "BGBB",
+        "R2A",
+        "Other",
+    }
     if media_type not in ALLOWED_MEDIA_TYPES:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid media_type: '{media_type}'. Allowed values: {', '.join(ALLOWED_MEDIA_TYPES)}"
         )
 
-    # ── BUG-002: Validasi parameter kalkulasi ──
+    # ── BUG-002 & BUG-012: Validasi parameter kalkulasi dengan upper bound ──
+    # BUG-5 FIX: dilution_factor bisa < 1 (misal 0.001 untuk pengenceran 10^-3)
     if math.isnan(dilution_factor) or math.isinf(dilution_factor) or dilution_factor <= 0:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Dilution factor tidak valid. Harus berupa angka positif (contoh: 0.001 untuk 10⁻³).",
         )
+    if dilution_factor > 1_000_000:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Dilution factor terlalu besar. Maksimum adalah 1,000,000.",
+        )
     if math.isnan(plated_volume_ml) or math.isinf(plated_volume_ml) or plated_volume_ml <= 0:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Volume tidak valid. Harus berupa angka positif dalam mL (contoh: 1.0).",
+        )
+    if plated_volume_ml > 10:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Volume terlalu besar. Maksimum adalah 10 mL.",
         )
 
     analysis_id = uuid.uuid4()
@@ -511,9 +570,13 @@ async def create_analysis(
             scale_x = orig_w / proc_w
             scale_y = orig_h / proc_h
 
-            # Ambil homography matrix dari preprocessing (None jika tidak ada warp)
+            # FIX-3: Guard against singular homography matrix (LinAlgError crash)
             H = roi_info.get('homography_matrix')
-            H_inv = _np.linalg.inv(H) if H is not None else None
+            try:
+                H_inv = _np.linalg.inv(H) if H is not None else None
+            except _np.linalg.LinAlgError:
+                logger.warning("Homography matrix is singular — falling back to scale-only transform")
+                H_inv = None
 
             scaled_detections = []
             for det in detections:
