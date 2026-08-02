@@ -58,9 +58,14 @@ async def send_mfa_email(email_to: str, code: str):
     message.attach(MIMEText(html_content, "html"))
 
     import ssl
+    # BUG-SEC-003 FIX: Enable proper SSL/TLS certificate verification for production security
+    # Use default context with certificate verification enabled
     context = ssl.create_default_context()
-    context.check_hostname = False
-    context.verify_mode = ssl.CERT_NONE
+    # Only disable verification in development if explicitly configured
+    if hasattr(settings, 'SMTP_SKIP_VERIFY') and settings.SMTP_SKIP_VERIFY and settings.ENVIRONMENT == "development":
+        logger.warning("[EMAIL] SSL certificate verification disabled - DEVELOPMENT ONLY")
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
 
     try:
         await aiosmtplib.send(
