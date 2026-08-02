@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy import Column, String, DateTime, Enum as SAEnum, Float, Integer, Text, ForeignKey, JSON, Uuid, Boolean
 from sqlalchemy.orm import relationship
@@ -7,6 +7,10 @@ import uuid
 
 from app.core.database import Base
 import sqlalchemy.types as types
+
+def utcnow():
+    """Timezone-aware UTC datetime factory for SQLAlchemy defaults."""
+    return datetime.now(timezone.utc)
 
 class GUID(types.TypeDecorator):
     """Platform-independent GUID type.
@@ -83,8 +87,8 @@ class Organization(Base):
 
     # Metadata
     max_users = Column(Integer, default=10)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
 
     users = relationship("User", back_populates="organization")
 
@@ -124,8 +128,8 @@ class User(Base):
     mfa_expires = Column(DateTime, nullable=True) # Code validity (5 mins)
     trusted_devices = Column(JSON, nullable=True, default=list) # List of trusted Device IDs
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     organization = relationship("Organization", back_populates="users")
     analyses = relationship("Analysis", back_populates="user")
@@ -179,8 +183,8 @@ class Analysis(Base):
     media_batch_number = Column(String(100), nullable=True)
     incubator_id = Column(String(100), nullable=True)
 
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
 
     organization = relationship("Organization")
     user = relationship("User", back_populates="analyses")
@@ -200,7 +204,7 @@ class ColonyDetection(Base):
     bbox_width = Column(Integer, nullable=False)
     bbox_height = Column(Integer, nullable=False)
 
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
 
     analysis = relationship("Analysis", back_populates="detections")
 
@@ -215,7 +219,7 @@ class AuditLog(Base):
     resource_type = Column(String(100), nullable=False)
     resource_id = Column(GUID(), nullable=True)
     details = Column(JSON, nullable=True)
-    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    timestamp = Column(DateTime, default=utcnow, nullable=False)
     ip_address = Column(String(45), nullable=True)
     user_agent = Column(Text, nullable=True)
 
@@ -258,7 +262,7 @@ class SimulatorComparison(Base):
     overall_accuracy = Column(Float, nullable=True)
 
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
 
     user = relationship("User")
     analysis = relationship("Analysis")
@@ -272,7 +276,7 @@ class TokenBlacklist(Base):
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     jti = Column(String(255), unique=True, nullable=False, index=True)
     expires_at = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
 class Notification(Base):
     """
@@ -288,7 +292,7 @@ class Notification(Base):
     notification_type = Column(String(50), default="info")  # info, success, warning, error
     is_read = Column(Boolean, default=False)
     link = Column(String(255), nullable=True)  # URL to click
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
     user = relationship("User", back_populates="notifications")
 
@@ -314,7 +318,7 @@ class PasswordResetRequest(Base):
     status = Column(String(20), nullable=False, default="pending", index=True)
 
     # Timestamps
-    requested_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    requested_at = Column(DateTime, default=utcnow, nullable=False)
     expires_at = Column(DateTime, nullable=False)     # 24h after request
     reviewed_at = Column(DateTime, nullable=True)
 
@@ -344,7 +348,7 @@ class LimsLog(Base):
     status = Column(String(50), nullable=False)  # success, failed
     response_payload = Column(JSON, nullable=True)
     
-    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    timestamp = Column(DateTime, default=utcnow, nullable=False)
 
     user = relationship("User")
     analysis = relationship("Analysis")
@@ -363,7 +367,7 @@ class CorrectionSession(Base):
     status = Column(String(20), nullable=False, default="active")  # active, completed
     total_corrections = Column(Integer, default=0)
     accuracy = Column(Float, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
     completed_at = Column(DateTime, nullable=True)
 
     user = relationship("User")
@@ -393,7 +397,7 @@ class Correction(Base):
     bbox_height = Column(Integer, nullable=True)
 
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
 
     session = relationship("CorrectionSession", back_populates="corrections")
     user = relationship("User")

@@ -6,13 +6,17 @@ laboratory defaults, and active session tracking.
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, String, Boolean, Float, DateTime, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
+
+def utcnow():
+    """Timezone-aware UTC datetime factory for SQLAlchemy defaults."""
+    return datetime.now(timezone.utc)
 
 
 class UserPreference(Base):
@@ -37,8 +41,8 @@ class UserPreference(Base):
     language_preference = Column(String(10), default="en", nullable=False)
 
     # Metadata
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
 
     # Relationships
     user = relationship("User", back_populates="preferences")
@@ -57,9 +61,9 @@ class UserSession(Base):
     user_agent = Column(Text)
     
     is_active = Column(Boolean, default=True, index=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
     expires_at = Column(DateTime, nullable=False)
-    last_accessed = Column(DateTime, default=datetime.utcnow, nullable=False)
+    last_accessed = Column(DateTime, default=utcnow, nullable=False)
 
     # Relationships
     user = relationship("User", back_populates="sessions")
