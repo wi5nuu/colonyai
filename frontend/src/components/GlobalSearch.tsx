@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, X, FlaskConical, Building2, Calendar, ClipboardCheck, CornerDownLeft, Sparkles } from "lucide-react";
 import { useTranslationStore } from "@/lib/i18n/store";
+import { useAuthStore } from "@/lib/auth-store";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 interface SearchItem {
   id: string;
@@ -16,83 +19,22 @@ interface SearchItem {
   date: string;
 }
 
-const MOCK_DATABASE: SearchItem[] = [
-  {
-    id: "SPEC-0982-A",
-    type: "specimen",
-    titleEN: "Escherichia coli Agar Plate #12",
-    titleID: "Escherichia coli Agar Plate #12",
-    detailsEN: "YOLOv8 Detection: 142 Colonies | Accuracy: 94.2% | Lab Node: Jakarta Central",
-    detailsID: "YOLOv8 Detection: 142 Colonies | Accuracy: 94.2% | Lab Node: Jakarta Central",
-    statusEN: "Verified",
-    statusID: "Verified",
-    date: "2026-05-18",
-  },
-  {
-    id: "SPEC-0741-B",
-    type: "specimen",
-    titleEN: "Staphylococcus aureus Petri Dish #03",
-    titleID: "Staphylococcus aureus Petri Dish #03",
-    detailsEN: "YOLOv8 Detection: 87 Colonies | Accuracy: 93.1% | Lab Node: Bandung BioTech",
-    detailsID: "YOLOv8 Detection: 87 Colonies | Accuracy: 93.1% | Lab Node: Bandung BioTech",
-    statusEN: "Pending Validation",
-    statusID: "Pending Validation",
-    date: "2026-05-17",
-  },
-  {
-    id: "SPEC-1109-C",
-    type: "specimen",
-    titleEN: "Salmonella enterica Agar Plate #44",
-    titleID: "Salmonella enterica Agar Plate #44",
-    detailsEN: "YOLOv8 Detection: 312 Colonies | Accuracy: 95.8% | Lab Node: Surabaya BioSafety",
-    detailsID: "YOLOv8 Detection: 312 Colonies | Accuracy: 95.8% | Lab Node: Surabaya BioSafety",
-    statusEN: "Verified",
-    statusID: "Verified",
-    date: "2026-05-18",
-  },
-  {
-    id: "NODE-JKT-01",
-    type: "laboratory",
-    titleEN: "Jakarta Central Microbiology Lab",
-    titleID: "Jakarta Central Microbiology Lab",
-    detailsEN: "Active Nodes: 12 Petri Readers | Lead Analyst: Dr. H. Wibowo | Accreditation: ISO-17025",
-    detailsID: "Active Nodes: 12 Petri Readers | Lead Analyst: Dr. H. Wibowo | Accreditation: ISO-17025",
-    statusEN: "Operational",
-    statusID: "Operational",
-    date: "Active",
-  },
-  {
-    id: "NODE-BDG-02",
-    type: "laboratory",
-    titleEN: "Bandung BioTech Research Node",
-    titleID: "Bandung BioTech Research Node",
-    detailsEN: "Active Nodes: 8 Petri Readers | Lead Analyst: Prof. S. Santoso | Accreditation: ISO-17025",
-    detailsID: "Active Nodes: 8 Petri Readers | Lead Analyst: Prof. S. Santoso | Accreditation: ISO-17025",
-    statusEN: "Operational",
-    statusID: "Operational",
-    date: "Active",
-  },
-  {
-    id: "NODE-SUB-03",
-    type: "laboratory",
-    titleEN: "Surabaya BioSafety Hub",
-    titleID: "Surabaya BioSafety Hub",
-    detailsEN: "Active Nodes: 15 Petri Readers | Lead Analyst: Dr. R. Amelia | Accreditation: ISO-17025",
-    detailsID: "Active Nodes: 15 Petri Readers | Lead Analyst: Dr. R. Amelia | Accreditation: ISO-17025",
-    statusEN: "Operational",
-    statusID: "Operational",
-    date: "Active",
-  }
-];
+interface SearchResponse {
+  items: SearchItem[];
+  total: number;
+}
 
 export function GlobalSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"all" | "specimen" | "laboratory">("all");
+  const [items, setItems] = useState<SearchItem[]>([]);
+  const [loading, setLoading] = useState(false);
   const { language, t } = useTranslationStore();
+  const accessToken = useAuthStore((state) => state.accessToken);
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Listen for keyboard shortcuts: Ctrl+K or /
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey && e.key === "k") || e.key === "/") {
@@ -104,16 +46,15 @@ export function GlobalSearch() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Autofocus input when modal opens
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      const focusTimer = setTimeout(() => inputRef.current?.focus(), 100);
+      return () => clearTimeout(focusTimer);
     } else {
       setQuery("");
     }
   }, [isOpen]);
 
-  // Bind clicks on any search input in other components
   useEffect(() => {
     const handleClickSearch = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -126,32 +67,53 @@ export function GlobalSearch() {
     return () => document.removeEventListener("click", handleClickSearch);
   }, []);
 
-  // Filter items based on query & active tab
-  const filteredItems = MOCK_DATABASE.filter((item) => {
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (query) params.set("q", query);
+        params.set("limit", "10");
+
+        // BUG-6 FIX: Send auth token — backend now requires authentication on search
+        const headers: Record<string, string> = {};
+        if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+
+        const res = await fetch(`${API_URL}/api/v1/search?${params.toString()}`, { headers });
+        if (!res.ok) throw new Error("Search failed");
+
+        const data: SearchResponse = await res.json();
+        setItems(data.items);
+      } catch {
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query]);
+
+  const filteredItems = items.filter((item) => {
     const matchesTab = tab === "all" || item.type === tab;
-    const itemTitle = language === "en" ? item.titleEN : item.titleID;
-    const itemDetails = language === "en" ? item.detailsEN : item.detailsID;
-    const matchesQuery =
-      item.id.toLowerCase().includes(query.toLowerCase()) ||
-      itemTitle.toLowerCase().includes(query.toLowerCase()) ||
-      itemDetails.toLowerCase().includes(query.toLowerCase());
-    return matchesTab && matchesQuery;
+    return matchesTab;
   });
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[300] flex items-start justify-center pt-24 px-4">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
         onClick={() => setIsOpen(false)}
       />
 
-      {/* Modal Container */}
       <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 w-full max-w-2xl rounded-xl shadow-2xl relative z-10 overflow-hidden animate-in fade-in zoom-in duration-200">
         
-        {/* Search Input Area */}
         <div className="relative border-b border-slate-100 dark:border-slate-800 p-5 flex items-center">
           <Search className="w-5 h-5 text-[#0055ff] dark:text-[#00f2ff] mr-3" />
           <input
@@ -171,7 +133,6 @@ export function GlobalSearch() {
           </button>
         </div>
 
-        {/* Filters Tabs */}
         <div className="flex items-center gap-2 px-5 py-3 border-b border-slate-50 dark:border-slate-850 bg-slate-50/50 dark:bg-slate-950/20">
           {(["all", "specimen", "laboratory"] as const).map((tabType) => (
             <button
@@ -188,9 +149,15 @@ export function GlobalSearch() {
           ))}
         </div>
 
-        {/* Results List */}
         <div className="max-h-[350px] overflow-y-auto p-4 space-y-2">
-          {filteredItems.length > 0 ? (
+          {loading ? (
+            <div className="py-12 text-center space-y-2">
+              <div className="w-8 h-8 border-2 border-[#0055ff] dark:border-[#00f2ff] border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                Searching...
+              </p>
+            </div>
+          ) : filteredItems.length > 0 ? (
             filteredItems.map((item) => (
               <div
                 key={item.id}
@@ -247,7 +214,6 @@ export function GlobalSearch() {
           )}
         </div>
 
-        {/* Footer info bar */}
         <div className="bg-slate-50 dark:bg-slate-950/40 border-t border-slate-100 dark:border-slate-800 p-3 px-5 flex items-center justify-between text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
           <div className="flex items-center gap-4">
             <span>ESC to close</span>
