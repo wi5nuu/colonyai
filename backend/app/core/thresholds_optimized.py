@@ -19,7 +19,7 @@ Confidence aktual model (max per class dari 14 sampel):
 # CALIB-3: Dikalibrasi berdasarkan confidence aktual 14 sampel (20260802)
 CLASS_THRESHOLDS = {
     'colony_single': 0.05,   # CALIB-3: turun dari 0.35 — max conf hanya 0.338, threshold lama memblokir semua
-    'colony_merged': 0.05,   # CALIB-3: turun dari 0.12 — gambar gelap max conf 0.025-0.059
+    'colony_merged': 0.10,   # CALIB-3: naik dari 0.05 — cegah noise/background lolos (bounding box besar)
     'bubble':        0.08,   # CALIB-3: turun dari 0.15 — bubble_artifact max conf 0.220
     'dust_debris':   0.13,   # CALIB-3: turun dari 0.25 — dust synthetic max conf 0.464, p25=0.178
     'media_crack':   0.05,   # CALIB-3: turun dari 0.12 — max conf hanya 0.146
@@ -30,7 +30,7 @@ MEDIA_TYPE_THRESHOLDS = {
     'PCA': {
         # Background putih terang — kontras tinggi
         'colony_single': 0.05,
-        'colony_merged': 0.05,
+        'colony_merged': 0.10,
         'bubble':        0.08,
         'dust_debris':   0.13,
         'media_crack':   0.05,
@@ -38,7 +38,7 @@ MEDIA_TYPE_THRESHOLDS = {
     'MacConkey': {
         # Background merah muda — koloni berwarna
         'colony_single': 0.05,
-        'colony_merged': 0.05,
+        'colony_merged': 0.10,
         'bubble':        0.08,
         'dust_debris':   0.13,
         'media_crack':   0.05,
@@ -46,7 +46,7 @@ MEDIA_TYPE_THRESHOLDS = {
     'TSA': {
         # Background putih/kuning — mirip PCA
         'colony_single': 0.05,
-        'colony_merged': 0.05,
+        'colony_merged': 0.10,
         'bubble':        0.08,
         'dust_debris':   0.13,
         'media_crack':   0.05,
@@ -54,7 +54,7 @@ MEDIA_TYPE_THRESHOLDS = {
     'Blood': {
         # Background gelap merah — kontras rendah untuk koloni
         'colony_single': 0.05,
-        'colony_merged': 0.05,
+        'colony_merged': 0.08,
         'bubble':        0.06,
         'dust_debris':   0.13,
         'media_crack':   0.05,
@@ -62,7 +62,7 @@ MEDIA_TYPE_THRESHOLDS = {
     'VRBA': {
         # Background biru-merah gelap — kontras sangat rendah
         'colony_single': 0.05,
-        'colony_merged': 0.05,
+        'colony_merged': 0.08,
         'bubble':        0.06,
         'dust_debris':   0.13,
         'media_crack':   0.05,
@@ -70,7 +70,7 @@ MEDIA_TYPE_THRESHOLDS = {
     'SDA': {
         # Fungi/yeast — koloni besar, overlap sering
         'colony_single': 0.05,
-        'colony_merged': 0.05,
+        'colony_merged': 0.08,
         'bubble':        0.06,
         'dust_debris':   0.13,
         'media_crack':   0.05,
@@ -78,7 +78,7 @@ MEDIA_TYPE_THRESHOLDS = {
     'EMB': {
         # Background gelap — threshold minimum
         'colony_single': 0.05,
-        'colony_merged': 0.05,
+        'colony_merged': 0.08,
         'bubble':        0.06,
         'dust_debris':   0.13,
         'media_crack':   0.05,
@@ -86,7 +86,7 @@ MEDIA_TYPE_THRESHOLDS = {
     'BGBB': {
         # Background biru gelap
         'colony_single': 0.05,
-        'colony_merged': 0.05,
+        'colony_merged': 0.08,
         'bubble':        0.06,
         'dust_debris':   0.13,
         'media_crack':   0.05,
@@ -94,7 +94,7 @@ MEDIA_TYPE_THRESHOLDS = {
     'R2A': {
         # Koloni sangat kecil — threshold minimum semua class
         'colony_single': 0.05,
-        'colony_merged': 0.05,
+        'colony_merged': 0.08,
         'bubble':        0.06,
         'dust_debris':   0.10,
         'media_crack':   0.05,
@@ -178,11 +178,13 @@ MAX_DETECTIONS_PER_CLASS = {
 MAX_TOTAL_DETECTIONS = 600
 
 # SIZE FILTERS (dalam pixels pada gambar 640x640)
+# CALIB-3: colony_merged max diturunkan 600->80 — box >80px adalah noise/background bukan koloni
+# colony_single max diturunkan 350->120 — koloni single tidak mungkin >120px di 640x640
 SIZE_FILTERS = {
-    'colony_single': {'min': 6,  'max': 350},
-    'colony_merged': {'min': 5,  'max': 600},
+    'colony_single': {'min': 6,  'max': 120},
+    'colony_merged': {'min': 5,  'max': 80},
     'bubble':        {'min': 5,  'max': 200},
-    'dust_debris':   {'min': 3,  'max': 100},
+    'dust_debris':   {'min': 3,  'max': 80},
     'media_crack':   {'min': 10, 'max': 800},
 }
 
