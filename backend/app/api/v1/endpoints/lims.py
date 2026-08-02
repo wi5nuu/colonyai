@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import uuid
 import json
 import httpx
+from urllib.parse import urlparse
 
 from app.core.security import get_current_user, require_role
 from app.core.database import get_db
@@ -15,6 +16,49 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 
 router = APIRouter()
+
+# BUG-SEC-006 FIX: SSRF Protection - Whitelist of allowed LIMS domains
+ALLOWED_LIMS_DOMAINS = [
+    "lims.example.com",
+    "api.samplemanager.com",
+    "webhook.labware.com",
+    # Add your trusted LIMS providers here
+]
+
+def validate_lims_url(url: str) -> bool:
+    """
+    Validate LIMS URL to prevent SSRF attacks.
+    Only allows HTTPS URLs to whitelisted domains.
+    """
+    if not url:
+        return False
+    
+    try:
+        parsed = urlparse(url)
+        
+        # Only allow HTTPS
+        if parsed.scheme != "https":
+            return False
+        
+        # Block internal/private IP ranges
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+            
+        # Block localhost and private IPs
+        if hostname in ["localhost", "127.0.0.1", "0.0.0.0"] or hostname.startswith("192.168.") or hostname.startswith("10.") or hostname.startswith("172."):
+            return False
+        
+        # Check against whitelist
+        if hostname not in ALLOWED_LIMS_DOMAINS:
+            # If using settings.LIMS_WEBHOOK_URL, allow it as it's admin-configured
+            if url == settings.LIMS_WEBHOOK_URL:
+                return True
+            return False
+        
+        return True
+    except Exception:
+        return False
 
 
 class LIMSSyncResponse(BaseModel):
@@ -80,6 +124,13 @@ async def sync_to_lims(
     lims_mode = settings.LIMS_MODE
     lims_url = analysis.organization.lims_webhook_url if analysis.organization and analysis.organization.lims_webhook_url else settings.LIMS_WEBHOOK_URL
     
+    # BUG-SEC-006 FIX: Validate LIMS URL to prevent SSRF attacks
+    if lims_url and not validate_lims_url(lims_url):
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid LIMS webhook URL. Only HTTPS URLs to whitelisted domains are allowed. Contact administrator to whitelist your LIMS provider."
+        )
+    
     lims_record_id = f"LIMS-{str(uuid.uuid4())[:8].upper()}"
     message = "Sample result accepted by SampleManager. Record created. (Simulated)"
     next_action = "Awaiting supervisor approval in LIMS queue."
@@ -94,7 +145,8 @@ async def sync_to_lims(
 
     if lims_mode == "live" and lims_url:
         try:
-            async with httpx.AsyncClient() as client:
+            # Additional SSRF protection: Restrict to HTTPS and add timeout
+            async with httpx.AsyncClient(timeout=10.0, follow_redirects=False) as client:
                 res = await client.post(lims_url, json=payload, timeout=10.0)
                 res.raise_for_status()
                 response_payload = res.json()
@@ -102,7 +154,7 @@ async def sync_to_lims(
                 message = response_payload.get("message", message)
         except Exception as e:
             status_val = "failed"
-            message = f"LIMS Communication Error ({lims_url}): {str(e)}"
+            message = f"LIMS Communication Error: {str(e)}"
             response_payload = {"error": str(e)}
 
     # 5. Log to LimsLog
