@@ -274,9 +274,11 @@ async def issue_emergency_access(
                 detail="Anda hanya bisa memberikan akses darurat untuk pengguna dalam organisasi Anda."
             )
 
-    # Generate secure temp password: format TEMP-XXXXXX-XX (human readable)
-    raw = secrets.token_urlsafe(9).upper()
-    temp_password = f"Temp@{raw[:6]}{raw[6:]}"
+    # Generate secure temp password: Strong random password with mixed case, digits, and special chars
+    # Format: 16 characters from secure random source
+    import string
+    alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+    temp_password = ''.join(secrets.choice(alphabet) for _ in range(16))
 
     # Hash and save
     target_user.password_hash = get_password_hash(temp_password)

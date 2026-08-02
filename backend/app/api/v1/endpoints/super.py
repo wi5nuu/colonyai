@@ -165,8 +165,10 @@ async def provision_new_organization(
     db.add(new_org)
     
     # 2. Create First Admin for this Org
-    # Default password for first login
-    temp_password = f"Colony{secrets.token_hex(3).capitalize()}!" 
+    # Generate strong random temporary password (16 chars, mixed case, digits, special chars)
+    import string
+    alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+    temp_password = ''.join(secrets.choice(alphabet) for _ in range(16)) 
     
     new_admin = User(
         id=uuid.uuid4(),

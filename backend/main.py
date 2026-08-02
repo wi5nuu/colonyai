@@ -12,6 +12,7 @@ from app.core.rate_limiter import RateLimitMiddleware
 from app.core.middleware import SecureHeadersMiddleware
 from app.api.v1 import auth_router, image_router, analysis_router, report_router, user_router, lims_router, maintenance_router, simulator_router, settings_router, audit_router, super_router
 from app.api.v1.endpoints.models import router as models_router
+from app.api.v1.endpoints.search import router as search_router
 
 # â”€â”€ Logging Configuration â”€â”€
 logging.basicConfig(
@@ -93,6 +94,7 @@ app.include_router(settings_router, prefix=f"{settings.API_V1_PREFIX}/settings",
 app.include_router(audit_router, prefix=f"{settings.API_V1_PREFIX}/audit", tags=["Audit Logs"])
 app.include_router(super_router, prefix=f"{settings.API_V1_PREFIX}/super", tags=["Super Admin"])
 app.include_router(models_router, prefix=f"{settings.API_V1_PREFIX}/admin/models", tags=["Model Management"])
+app.include_router(search_router, prefix=f"{settings.API_V1_PREFIX}/search", tags=["Global Search"])
 
 
 @app.get("/")

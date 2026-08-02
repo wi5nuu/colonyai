@@ -1181,13 +1181,13 @@ async def admin_export_all_excel(
         ws1.append(["Total Registered Analysts", len(users_set), "Unique users"]) # B5
         ws1.append(["Completed Records", f'=COUNTIF(\'📋 All Records\'!N:N, "Completed")', "Status check"]) # B6
         ws1.append(["Failed Records", f'=COUNTIF(\'📋 All Records\'!N:N, "Failed")', "Status check"]) # B7
-        ws1.append(["Success Rate", "=B6/B4", "Dynamic %"]) # B8
+        ws1.append(["Success Rate", "=IFERROR(B6/B4, 0)", "Dynamic %"]) # B8 - Protected against division by zero
         ws1["B8"].number_format = '0.0%'
 
         ws1.append(["TNTC Results", f'=COUNTIF(\'📋 All Records\'!J:J, "TNTC")', "High density"]) # B9
         ws1.append(["TFTC Results", f'=COUNTIF(\'📋 All Records\'!J:J, "TFTC")', "Low density"]) # B10
         ws1.append(["Total Colonies Detected", f"=SUM('📋 All Records'!H:H)", "Global sum"]) # B11
-        ws1.append(["Average Colonies/Sample", "=B11/B4", "Mean distribution"]) # B12
+        ws1.append(["Average Colonies/Sample", "=IFERROR(B11/B4, 0)", "Mean distribution"]) # B12 - Protected against division by zero
 
         cfus_avg = sum(cfus_all)/len(cfus_all) if cfus_all else 0
         ws1.append(["Average CFU/ml", cfus_avg, "Mean density"]) # B13

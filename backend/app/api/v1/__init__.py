@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, images, analyses, reports, users, lims, maintenance, simulator, settings, audit, super, corrections, models
+from app.api.v1.endpoints import auth, images, analyses, reports, users, lims, maintenance, simulator, settings, audit, super, corrections, models, search
 
 api_router = APIRouter()
 
@@ -17,6 +17,7 @@ api_router.include_router(settings.router, prefix="/settings", tags=["User Setti
 api_router.include_router(audit.router, prefix="/audit", tags=["Audit Logs"])
 api_router.include_router(super.router, prefix="/super", tags=["Super Admin"])
 api_router.include_router(models.router, prefix="/admin/models", tags=["Model Management"])
+api_router.include_router(search.router, prefix="/search", tags=["Global Search"])
 
 # Export individual routers for backward compatibility if main.py still uses them
 auth_router = auth.router
