@@ -155,14 +155,14 @@ Result Storage + Annotated Image
 
 | Layer | Technology | Version |
 |-------|-----------|---------|
-| **ML / CV** | YOLOv8 (Ultralytics), OpenCV, CLAHE | ultralytics 8.x |
-| **Backend** | FastAPI, SQLAlchemy (async), Alembic | Python 3.13 |
-| **Auth** | Argon2id, JWT (python-jose), HTTP-only cookies | — |
+| **ML / CV** | YOLOv8 (Ultralytics), OpenCV, CLAHE | ultralytics 8.4.36 |
+| **Backend** | FastAPI, SQLAlchemy (async), Alembic | Python 3.13.7 |
+| **Auth** | Argon2id, JWT HS256 (python-jose), MFA via email | — |
 | **Database** | SQLite (dev) / PostgreSQL 14+ (prod) | — |
 | **Storage** | AWS S3 / local filesystem | boto3 |
-| **Frontend** | Next.js 14, React 18, TypeScript | App Router |
+| **Frontend** | Next.js 14.2.15, React 18, TypeScript 5 | App Router |
 | **UI** | Tailwind CSS, shadcn/ui, Lucide Icons | — |
-| **i18n** | Custom Zustand store (EN / ID) | — |
+| **State** | Zustand (auth + i18n store) | — |
 | **Containerization** | Docker, Docker Compose | 20+ |
 | **CI/CD** | GitHub Actions (pytest · Jest · Bandit · npm audit) | — |
 | **Deployment** | Railway (backend) + Vercel (frontend) | — |
@@ -171,17 +171,28 @@ Result Storage + Annotated Image
 
 ## Detection Classes
 
-The YOLOv8 model detects 5 object classes per image:
+The YOLOv8 model (`colony_best_new.pt`) detects 5 object classes per image:
 
-| Class | Description | Counted as CFU |
-|-------|-------------|---------------|
-| `colony_single` | Individual, non-overlapping bacterial colony | Yes |
-| `colony_merged` | Two or more overlapping colonies (area-estimated) | Yes (SA-001) |
-| `bubble` | Air bubble artifact | No |
-| `dust_debris` | Dust particle or foreign debris | No |
-| `media_crack` | Physical crack in agar medium | No |
+| Class | Description | Counted as CFU | Threshold (PCA) | BGR Color |
+|-------|-------------|---------------|-----------------|-----------|
+| `colony_single` | Individual, non-overlapping bacterial colony | Yes | 0.60 | (50, 220, 80) Green |
+| `colony_merged` | Two or more overlapping colonies (area-estimated) | Yes (SA-001) | 0.55 | (255, 140, 0) Orange |
+| `bubble` | Air bubble artifact | No | 0.50 | (30, 120, 255) Blue |
+| `dust_debris` | Dust particle or foreign debris | No | 0.25 | (220, 50, 50) Red |
+| `media_crack` | Physical crack in agar medium | No | 0.40 | (200, 60, 180) Purple |
 
 Each class is rendered with a distinct color overlay on the annotated result image.
+
+### Model Performance (`colony_best_new.pt`)
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **mAP50 (all classes)** | **0.986** | Validated on held-out test set |
+| **Precision** | 0.951 | Weighted average across 5 classes |
+| **Recall** | 0.951 | Weighted average across 5 classes |
+| **dust_debris mAP50** | 0.986 | After targeted fine-tune (epoch 29/50, run `dust_finetune_20260802_174354`) |
+| **Inference speed** | ~120 ms/img | RTX 5050 8GB VRAM, 640×640 input |
+| **Training hardware** | NVIDIA RTX 5050 8GB | CUDA 13.1, torch 2.12.0+cu128, Python 3.13.7 |
 
 ---
 
@@ -191,8 +202,9 @@ Each class is rendered with a distinct color overlay on the annotated result ima
 
 | Dependency | Version |
 |------------|---------|
-| Python | 3.10+ |
+| Python | 3.13+ |
 | Node.js | 18+ |
+| CUDA | 11.8+ (optional, for GPU inference) |
 | Git | any |
 | Docker | 20+ (optional) |
 
@@ -330,9 +342,12 @@ AWS_S3_BUCKET=colonyai-images
 AWS_REGION=ap-southeast-1
 
 # YOLOv8 Model
-MODEL_PATH=./models/colony_best.pt
+MODEL_PATH=./models/colony_best_new.pt
 MODEL_CONFIDENCE_THRESHOLD=0.60
 MODEL_IOU_THRESHOLD=0.45
+
+# Application mode (set to False in production — affects CSP and CORS)
+DEBUG=False
 
 # CORS
 ALLOWED_ORIGINS=http://localhost:3000
@@ -352,17 +367,23 @@ Base URL: `/api/v1`
 
 | Method | Endpoint | Role Required | Description |
 |--------|----------|--------------|-------------|
-| `POST` | `/auth/login` | — | Obtain access + refresh tokens |
-| `POST` | `/auth/refresh` | — | Refresh access token |
-| `POST` | `/auth/logout` | Any | Revoke token (blacklist jti) |
-| `POST` | `/analyses/upload` | Analyst+ | Upload image and trigger analysis |
-| `GET` | `/analyses` | Analyst+ | List analyses for current org |
-| `GET` | `/analyses/{id}` | Analyst+ | Get analysis result with detections |
+| `POST` | `/auth/login` | — | Obtain access + refresh tokens (MFA if untrusted device) |
+| `POST` | `/auth/verify-mfa` | — | Submit 6-digit MFA code; returns tokens on success |
+| `POST` | `/auth/refresh` | — | Rotate refresh token; old JTI is immediately blacklisted |
+| `POST` | `/auth/logout` | Any | Revoke access token (blacklist jti) |
+| `POST` | `/auth/forgot-password` | — | Trigger anti-phishing password reset flow |
+| `POST` | `/auth/reset-password` | — | Submit new password with reset token |
+| `POST` | `/analyses/upload` | Analyst+ | Upload plate image and trigger YOLOv8 analysis |
+| `POST` | `/analyses/simulate` | Analyst+ | Run analysis without saving to DB (preview mode) |
+| `GET` | `/analyses` | Analyst+ | List analyses for current org with pagination |
+| `GET` | `/analyses/{id}` | Analyst+ | Get analysis result with detections and bbox_normalized |
 | `PATCH` | `/analyses/{id}/corrections` | Analyst+ | Submit manual correction overlay |
-| `POST` | `/analyses/{id}/approve` | Manager+ | Approve analysis result |
+| `POST` | `/analyses/{id}/approve` | Manager+ | Approve and sign analysis result |
 | `GET` | `/reports/{id}/pdf` | Manager+ | Download signed PDF report |
 | `POST` | `/lims/export/{id}` | Manager+ | Export result to LIMS format |
+| `GET` | `/lims/logs` | Manager+ | Paginated LIMS audit logs with date/action filtering |
 | `GET` | `/audit/logs` | Auditor+ | View cryptographic audit log |
+| `GET` | `/search` | Analyst+ | Full-text search across analyses and specimens |
 | `GET` | `/super/organizations` | Super Admin | List all organizations |
 | `GET` | `/super/organizations/{id}/personnel` | Super Admin | List org personnel |
 
@@ -372,22 +393,26 @@ Full API documentation available at `/docs` (Swagger UI) when the backend is run
 
 ## Security Model
 
-ColonyAI implements a **Zero-Trust, defense-in-depth** architecture across 10 security layers:
+ColonyAI implements a **Zero-Trust, defense-in-depth** architecture across 12 security layers:
 
 | Layer | Control | Implementation |
 |-------|---------|---------------|
 | 1 | TLS 1.3 in transit | Vercel Edge + Let's Encrypt |
-| 2 | CORS origin whitelist | FastAPI `CORSMiddleware` |
-| 3 | Rate limiting | Token Bucket, 100 req/min per IP |
-| 4 | JWT authentication | python-jose, 15-min access tokens |
-| 5 | Token blacklisting | `jti` stored in DB on logout |
-| 6 | RBAC | FastAPI dependency injection per route |
-| 7 | File upload validation | Magic bytes · EXIF strip · ClamAV |
-| 8 | Input sanitization | Pydantic schemas + HTML escape |
-| 9 | SQL injection prevention | SQLAlchemy ORM parameterized queries |
-| 10 | Cryptographic audit log | SHA-256 hash chaining (ISO 17025 s.7.11) |
+| 2 | Secure response headers | HSTS · X-Frame-Options · CSP · Permissions-Policy |
+| 3 | CORS origin whitelist | FastAPI `CORSMiddleware`; strict in production (`DEBUG=False`) |
+| 4 | Rate limiting | Token Bucket, 100 req/min per IP (in-memory, per-process) |
+| 5 | Account lockout | 5 failed login or MFA attempts → 15-min lockout |
+| 6 | Multi-factor authentication | 6-digit TOTP-style code via email; brute-force protected |
+| 7 | JWT authentication | Argon2id passwords · HS256 JWT · 15-min access / 7-day refresh |
+| 8 | Refresh token rotation | Old refresh JTI blacklisted on every `/auth/refresh` call |
+| 9 | RBAC | FastAPI dependency injection per route; org-scoped data isolation |
+| 10 | File upload validation | Magic bytes · EXIF strip · MIME type allowlist |
+| 11 | Input sanitization | Pydantic schemas + HTML escape; parameterized ORM queries |
+| 12 | Cryptographic audit log | SHA-256 hash chaining (ISO 17025 s.7.11) |
 
 **Password hashing:** Argon2id (2015 PHC winner) — resistant to GPU brute-force.  
+**Timing attack mitigation:** Unknown-email login path delays 0.5 s to match Argon2 verification time.  
+**Source map protection:** `productionBrowserSourceMaps: false` — compiled source not served to browsers.  
 **Encryption at rest:** AES-256 (PostgreSQL storage layer + AWS S3 SSE-S3).
 
 ---
