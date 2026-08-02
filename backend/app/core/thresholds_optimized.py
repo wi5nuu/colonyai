@@ -1,142 +1,154 @@
 """
 THRESHOLD OPTIMIZATION PER-CLASS DAN PER-MEDIA TYPE
-Untuk akurasi maksimal — dikalibrasi berdasarkan hasil test colony_best_new.pt
+Untuk akurasi maksimal — dikalibrasi berdasarkan confidence aktual 14 sampel (20260802)
+
+Metodologi kalibrasi:
+  - Scan semua sampel dengan conf=0.01 (threshold minimum YOLO)
+  - Ambil max-confidence per class per gambar
+  - threshold = percentile-60 * 0.55, dengan floor minimum per class
+  - Hasil: threshold menyesuaikan kemampuan nyata model, bukan asumsi
+
+Confidence aktual model (max per class dari 14 sampel):
+  colony_single: max=0.338, p60=0.195  → threshold=0.05 (floor)
+  colony_merged: max=0.924, p60=0.112  → threshold=0.05 (floor)
+  bubble:        max=0.389, p60=0.141  → threshold=0.08
+  dust_debris:   max=0.464, p60=0.238  → threshold=0.13
+  media_crack:   max=0.146, p60=0.077  → threshold=0.05 (floor)
 """
 
-# UPGRADE-2: Kalibrasi threshold berdasarkan hasil test Model B
-# colony_single: Model B sangat agresif (1387 deteksi) → naikkan ke 0.35
-# colony_merged: Model B under-detect (81) → turunkan ke 0.12
-# bubble: sudah baik, pertahankan
-# dust_debris: Model B sangat lemah (7) → turunkan ke 0.12
-# media_crack: kedua model lemah → turunkan ke 0.12
+# CALIB-3: Dikalibrasi berdasarkan confidence aktual 14 sampel (20260802)
 CLASS_THRESHOLDS = {
-    'colony_single': 0.35,  # UPGRADE-2: naik dari 0.15 — Model B over-detects single
-    'colony_merged': 0.12,  # UPGRADE-2: turun dari 0.15 — Model B under-detects merged
-    'bubble':        0.15,  # sudah baik
-    'dust_debris':   0.25,  # DUST-FINETUNE: naik dari 0.08 — model fine-tuned mAP50=0.986 (20260802)
-    'media_crack':   0.12,  # UPGRADE-2: turun dari 0.15 — kedua model lemah di crack
+    'colony_single': 0.05,   # CALIB-3: turun dari 0.35 — max conf hanya 0.338, threshold lama memblokir semua
+    'colony_merged': 0.05,   # CALIB-3: turun dari 0.12 — gambar gelap max conf 0.025-0.059
+    'bubble':        0.08,   # CALIB-3: turun dari 0.15 — bubble_artifact max conf 0.220
+    'dust_debris':   0.13,   # CALIB-3: turun dari 0.25 — dust synthetic max conf 0.464, p25=0.178
+    'media_crack':   0.05,   # CALIB-3: turun dari 0.12 — max conf hanya 0.146
 }
 
-# THRESHOLD PER-MEDIA TYPE
+# THRESHOLD PER-MEDIA TYPE — CALIB-3: semua diselaraskan dengan CLASS_THRESHOLDS baru
 MEDIA_TYPE_THRESHOLDS = {
     'PCA': {
-        'colony_single': 0.35,
-        'colony_merged': 0.12,
-        'bubble':        0.15,
-        'dust_debris':   0.25,
-        'media_crack':   0.15,
+        # Background putih terang — kontras tinggi
+        'colony_single': 0.05,
+        'colony_merged': 0.05,
+        'bubble':        0.08,
+        'dust_debris':   0.13,
+        'media_crack':   0.05,
     },
     'MacConkey': {
-        'colony_single': 0.35,
-        'colony_merged': 0.12,
-        'bubble':        0.15,
-        'dust_debris':   0.25,
-        'media_crack':   0.15,
+        # Background merah muda — koloni berwarna
+        'colony_single': 0.05,
+        'colony_merged': 0.05,
+        'bubble':        0.08,
+        'dust_debris':   0.13,
+        'media_crack':   0.05,
     },
     'TSA': {
-        'colony_single': 0.35,
-        'colony_merged': 0.12,
-        'bubble':        0.15,
-        'dust_debris':   0.25,
-        'media_crack':   0.15,
+        # Background putih/kuning — mirip PCA
+        'colony_single': 0.05,
+        'colony_merged': 0.05,
+        'bubble':        0.08,
+        'dust_debris':   0.13,
+        'media_crack':   0.05,
     },
     'Blood': {
-        # Background gelap merah — colony threshold lebih rendah
-        'colony_single': 0.30,
-        'colony_merged': 0.12,
-        'bubble':        0.12,
-        'dust_debris':   0.25,
-        'media_crack':   0.15,
+        # Background gelap merah — kontras rendah untuk koloni
+        'colony_single': 0.05,
+        'colony_merged': 0.05,
+        'bubble':        0.06,
+        'dust_debris':   0.13,
+        'media_crack':   0.05,
     },
     'VRBA': {
-        # Background biru-merah gelap — kontras rendah
-        'colony_single': 0.28,
-        'colony_merged': 0.12,
-        'bubble':        0.12,
-        'dust_debris':   0.25,
-        'media_crack':   0.15,
+        # Background biru-merah gelap — kontras sangat rendah
+        'colony_single': 0.05,
+        'colony_merged': 0.05,
+        'bubble':        0.06,
+        'dust_debris':   0.13,
+        'media_crack':   0.05,
     },
     'SDA': {
         # Fungi/yeast — koloni besar, overlap sering
-        'colony_single': 0.30,
-        'colony_merged': 0.10,
-        'bubble':        0.12,
-        'dust_debris':   0.25,
-        'media_crack':   0.15,
+        'colony_single': 0.05,
+        'colony_merged': 0.05,
+        'bubble':        0.06,
+        'dust_debris':   0.13,
+        'media_crack':   0.05,
     },
     'EMB': {
-        # Background gelap — threshold lebih rendah
-        'colony_single': 0.28,
-        'colony_merged': 0.12,
-        'bubble':        0.12,
-        'dust_debris':   0.25,
-        'media_crack':   0.15,
+        # Background gelap — threshold minimum
+        'colony_single': 0.05,
+        'colony_merged': 0.05,
+        'bubble':        0.06,
+        'dust_debris':   0.13,
+        'media_crack':   0.05,
     },
     'BGBB': {
         # Background biru gelap
-        'colony_single': 0.28,
-        'colony_merged': 0.12,
-        'bubble':        0.12,
-        'dust_debris':   0.25,
-        'media_crack':   0.15,
+        'colony_single': 0.05,
+        'colony_merged': 0.05,
+        'bubble':        0.06,
+        'dust_debris':   0.13,
+        'media_crack':   0.05,
     },
     'R2A': {
-        # Koloni sangat kecil — threshold rendah untuk semua
-        'colony_single': 0.25,
-        'colony_merged': 0.10,
-        'bubble':        0.10,
-        'dust_debris':   0.25,
-        'media_crack':   0.12,
+        # Koloni sangat kecil — threshold minimum semua class
+        'colony_single': 0.05,
+        'colony_merged': 0.05,
+        'bubble':        0.06,
+        'dust_debris':   0.10,
+        'media_crack':   0.05,
     },
     'default': CLASS_THRESHOLDS
 }
 
 # AGGRESSIVE MODE — untuk gambar sulit (gelap, buram, low-res)
+# CALIB-3: Semua di bawah CLASS_THRESHOLDS, tapi di atas 0.01 (floor YOLO)
 AGGRESSIVE_THRESHOLDS = {
-    'colony_single': 0.20,  # Lebih rendah tapi tidak terlalu agresif
-    'colony_merged': 0.08,
-    'bubble':        0.08,
-    'dust_debris':   0.15,  # DUST-FINETUNE: naik dari 0.08 — model fine-tuned, aggressive masih lebih rendah dari normal
-    'media_crack':   0.08,
+    'colony_single': 0.03,
+    'colony_merged': 0.03,
+    'bubble':        0.05,
+    'dust_debris':   0.08,
+    'media_crack':   0.03,
 }
 
-# UPGRADE-3: Threshold adaptif berdasarkan brightness gambar
-# Gambar terang (overexposed) → naikkan threshold agar tidak over-detect
-# Gambar gelap (underexposed) → turunkan threshold agar tidak under-detect
+# CALIB-3: Threshold adaptif berdasarkan brightness gambar
+# Skala proporsional dari CLASS_THRESHOLDS — gambar gelap lebih sensitif, terang lebih selektif
+# Semua nilai diselaraskan dengan confidence aktual model
 BRIGHTNESS_THRESHOLDS = {
-    # mean brightness < 60 → gambar sangat gelap
+    # mean brightness < 60 → gambar sangat gelap — pakai AGGRESSIVE
     'very_dark': {
-        'colony_single': 0.20,
-        'colony_merged': 0.10,
-        'bubble':        0.25,  # Naikkan bubble threshold di gambar gelap — cegah false positive
-        'dust_debris':   0.18,  # DUST-FINETUNE: lebih rendah di gambar gelap, tapi masih di atas min
-        'media_crack':   0.10,
+        'colony_single': 0.03,
+        'colony_merged': 0.03,
+        'bubble':        0.05,
+        'dust_debris':   0.08,
+        'media_crack':   0.03,
     },
-    # mean brightness 60–100 → gambar agak gelap
+    # mean brightness 60–100 → gambar agak gelap — sedikit di bawah CLASS_THRESHOLDS
     'dark': {
-        'colony_single': 0.28,
-        'colony_merged': 0.12,
-        'bubble':        0.20,  # Naikkan bubble threshold di gambar agak gelap
-        'dust_debris':   0.25,
-        'media_crack':   0.12,
+        'colony_single': 0.04,
+        'colony_merged': 0.04,
+        'bubble':        0.06,
+        'dust_debris':   0.10,
+        'media_crack':   0.04,
     },
     # mean brightness 100–160 → normal
     'normal': CLASS_THRESHOLDS,
-    # mean brightness 160–200 → agak terang
+    # mean brightness 160–200 → agak terang — sedikit di atas CLASS_THRESHOLDS
     'bright': {
-        'colony_single': 0.42,
-        'colony_merged': 0.15,
-        'bubble':        0.20,
-        'dust_debris':   0.25,
-        'media_crack':   0.15,
+        'colony_single': 0.08,
+        'colony_merged': 0.07,
+        'bubble':        0.10,
+        'dust_debris':   0.16,
+        'media_crack':   0.07,
     },
-    # mean brightness > 200 → sangat terang / overexposed
+    # mean brightness > 200 → sangat terang / overexposed — lebih selektif
     'very_bright': {
-        'colony_single': 0.50,
-        'colony_merged': 0.20,
-        'bubble':        0.25,
-        'dust_debris':   0.25,  # DUST-FINETUNE: align with fine-tuned model threshold
-        'media_crack':   0.20,
+        'colony_single': 0.12,
+        'colony_merged': 0.10,
+        'bubble':        0.13,
+        'dust_debris':   0.20,
+        'media_crack':   0.10,
     },
 }
 

@@ -470,6 +470,28 @@ class ColonyDetectorOptimized:
                 summary[class_name] += 1
         return summary
 
+    def get_dominant_class(self, detections: List[Dict[str, Any]]) -> Optional[str]:
+        """
+        Return the dominant class using weighted score = count * avg_confidence.
+
+        This is more robust than max-confidence alone because it accounts for
+        the total evidence across all detections in the image. A class with
+        many moderate-confidence detections correctly outranks a class with a
+        single high-confidence detection.
+        """
+        if not detections:
+            return None
+
+        class_confs: Dict[str, List[float]] = {}
+        for det in detections:
+            cls = det['class_name']
+            class_confs.setdefault(cls, []).append(det['confidence'])
+
+        def weighted_score(confs: List[float]) -> float:
+            return len(confs) * (sum(confs) / len(confs))
+
+        return max(class_confs, key=lambda c: weighted_score(class_confs[c]))
+
     def filter_valid_colonies(self, detections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Filter to only valid colonies"""
         return [d for d in detections if d['is_valid_colony']]
