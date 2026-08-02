@@ -38,7 +38,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         try {
           await refreshAccessToken();
         } catch (e) {
-          console.error('Initial AuthGuard refresh failed:', e);
+          // Token refresh failed - will redirect to login
         }
       }
     };
@@ -78,7 +78,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       // Check if current path requires specific roles
       for (const [path, allowedRoles] of Object.entries(rolePermissions)) {
         if (pathname.startsWith(path) && role && !allowedRoles.includes(role)) {
-          console.warn(`Access denied to ${pathname} for role ${role}`);
           router.push('/dashboard'); // Redirect to safe zone
           break;
         }
