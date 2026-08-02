@@ -680,26 +680,6 @@ ENGINE: YOLOv8 SENSITIVE NODE`;
                             );
                             const displayUrl = annotatedUrl || originalUrl;
 
-                            // Debug: log URL to console for troubleshooting
-                            if (typeof window !== "undefined") {
-                              console.log(
-                                "[ColonyAI Image] annotated:",
-                                annotatedUrl,
-                              );
-                              console.log(
-                                "[ColonyAI Image] original:",
-                                originalUrl,
-                              );
-                              console.log(
-                                "[ColonyAI Image] display:",
-                                displayUrl,
-                              );
-                              console.log(
-                                "[ColonyAI Image] imgError:",
-                                imgError,
-                              );
-                            }
-
                             if (displayUrl && !imgError) {
                               return (
                                 <img
@@ -709,22 +689,13 @@ ENGINE: YOLOv8 SENSITIVE NODE`;
                                   alt={t("results.neuralAnalysis")}
                                   className="max-w-full lg:max-w-4xl max-h-full object-contain w-auto h-auto block"
                                   onLoad={(e) => {
-                                    console.log(
-                                      "[ColonyAI Image] Loaded successfully:",
-                                      displayUrl,
-                                    );
                                     setImgError(false);
                                     const img = e.target as HTMLImageElement;
                                     if (img.naturalWidth) {
                                       setNaturalWidth(img.naturalWidth);
                                     }
                                   }}
-                                  onError={(e) => {
-                                    console.error(
-                                      "[ColonyAI Image] Failed to load:",
-                                      displayUrl,
-                                      e,
-                                    );
+                                  onError={() => {
                                     setImgError(true);
                                   }}
                                 />
