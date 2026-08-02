@@ -173,13 +173,15 @@ Result Storage + Annotated Image
 
 The YOLOv8 model (`colony_best_new.pt`) detects 5 object classes per image:
 
-| Class | Description | Counted as CFU | Threshold (PCA) | BGR Color |
-|-------|-------------|---------------|-----------------|-----------|
-| `colony_single` | Individual, non-overlapping bacterial colony | Yes | 0.60 | (50, 220, 80) Green |
-| `colony_merged` | Two or more overlapping colonies (area-estimated) | Yes (SA-001) | 0.55 | (255, 140, 0) Orange |
-| `bubble` | Air bubble artifact | No | 0.50 | (30, 120, 255) Blue |
-| `dust_debris` | Dust particle or foreign debris | No | 0.25 | (220, 50, 50) Red |
-| `media_crack` | Physical crack in agar medium | No | 0.40 | (200, 60, 180) Purple |
+| Class | Description | Counted as CFU | Threshold (CALIB-3) | BGR Color |
+|-------|-------------|---------------|---------------------|-----------|
+| `colony_single` | Individual, non-overlapping bacterial colony | Yes | 0.05 | (50, 220, 80) Green |
+| `colony_merged` | Two or more overlapping colonies (area-estimated) | Yes (SA-001) | 0.10 | (255, 140, 0) Orange |
+| `bubble` | Air bubble artifact | No | 0.08 | (30, 120, 255) Blue |
+| `dust_debris` | Dust particle or foreign debris | No | 0.13 | (220, 50, 50) Red |
+| `media_crack` | Physical crack in agar medium | No | 0.05 | (200, 60, 180) Purple |
+
+> **CALIB-3** — thresholds dikalibrasi dari confidence scan 14 sampel nyata (Aug 2026). Model `colony_best_new.pt` beroperasi pada rentang confidence rendah (rata-rata < 0.2, max ~0.35); threshold tinggi seperti 0.60 akan memblokir hampir semua deteksi valid.
 
 Each class is rendered with a distinct color overlay on the annotated result image.
 

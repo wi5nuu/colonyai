@@ -126,6 +126,14 @@ const formatCFU = (value: number | null) => {
   });
 };
 
+// BUG-15 FIX: JS floating point — 1/0.1 = 10.000000000000002
+// parseFloat(toPrecision(10)) rounds away the floating point noise
+const formatDilutionRatio = (dilutionFactor: number): string => {
+  if (!dilutionFactor || dilutionFactor === 0) return "—";
+  const ratio = parseFloat((1 / dilutionFactor).toPrecision(10));
+  return `1:${ratio}`;
+};
+
 export default function ResultsPage() {
   const params = useParams();
   const router = useRouter();
@@ -385,19 +393,19 @@ ENGINE: YOLOv8 SENSITIVE NODE`;
             {analysis.warnings &&
               analysis.warnings.length > 0 &&
               viewMode === "audit" && (
-                <div className="bg-rose-50/50 dark:bg-rose-950/20 border-2 border-rose-100 dark:border-rose-900/40 p-4 rounded-none flex items-start gap-4 mb-8 transition-colors">
-                  <div className="p-2.5 bg-rose-500 rounded-none shadow-lg shadow-rose-200 dark:shadow-rose-900/40 flex-shrink-0">
+                <div className="bg-amber-50/50 dark:bg-amber-950/20 border-2 border-amber-100 dark:border-amber-900/40 p-4 rounded-none flex items-start gap-4 mb-8 transition-colors">
+                  <div className="p-2.5 bg-amber-500 rounded-none shadow-lg shadow-amber-200 dark:shadow-amber-900/40 flex-shrink-0">
                     <AlertTriangle className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-1.5">
+                    <p className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-1.5">
                       {t("results.neuralSensitivityAdvisory")}
                     </p>
-                    <ul className="text-xs text-rose-700/80 dark:text-rose-300 font-bold space-y-1">
+                    <ul className="text-xs text-amber-700/80 dark:text-amber-300 font-bold space-y-1">
                       {analysis.warnings.map((warning, idx) => (
                         <li
                           key={idx}
-                          className="flex items-center gap-2 before:w-1 before:h-1 before:bg-rose-400 before:rounded-full"
+                          className="flex items-center gap-2 before:w-1 before:h-1 before:bg-amber-400 before:rounded-full"
                         >
                           {warning}
                         </li>
@@ -593,7 +601,7 @@ ENGINE: YOLOv8 SENSITIVE NODE`;
                           {t("results.dilution")}
                         </span>
                         <span className="text-[9px] font-black text-slate-900 dark:text-white">
-                          1:{1 / analysis.dilution_factor}
+                           {formatDilutionRatio(analysis.dilution_factor)}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -1188,7 +1196,7 @@ ENGINE: YOLOv8 SENSITIVE NODE`;
                           <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Media / Protocol</td>
                           <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white uppercase">{analysis.media_type}</td>
                           <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Dilution Factor</td>
-                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white">{analysis.dilution_factor ? `1:${analysis.dilution_factor}` : "—"}</td>
+                          <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-black text-slate-900 dark:text-white">{analysis.dilution_factor ? formatDilutionRatio(analysis.dilution_factor) : "—"}</td>
                         </tr>
                         <tr className="bg-slate-50 dark:bg-slate-900">
                           <td className="border border-slate-300 dark:border-slate-600 px-3 py-2 font-bold text-slate-500 uppercase">Date &amp; Time</td>

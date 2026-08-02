@@ -76,8 +76,8 @@ export default function UploadPage() {
     incubationTemp: 35.0,
     incubationTime: 48,
     methodStandard: "ISO 4833-1:2013",
-    mediaBatchNumber: "LOT-2026-X",
-    incubatorId: "INC-001",
+    mediaBatchNumber: "",
+    incubatorId: "",
   });
 
   // CFU/ml preview realtime: CFU/ml = colonies / (dilution * volume)
