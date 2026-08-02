@@ -48,7 +48,7 @@ export default function UploadPage() {
 
   const [formData, setFormData] = useState({
     sampleId: "ISO-PCA-B2026-001",
-    mediaType: "Plate Count Agar" as MediaType,
+    mediaType: "PCA" as MediaType,
     dilutionFactor: 0.001,
     platedVolume: 1.0,
     incubationTemp: 35.0,
@@ -405,9 +405,11 @@ export default function UploadPage() {
                           })
                         }
                       >
-                        <option value="Plate Count Agar">
+                        <option value="PCA">
                           PCA — Plate Count Agar
                         </option>
+                        <option value="TSA">TSA — Tryptic Soy Agar</option>
+                        <option value="MacConkey">MAC — MacConkey Agar</option>
                         <option value="VRBA">
                           VRBA — Violet Red Bile Agar
                         </option>
@@ -415,9 +417,10 @@ export default function UploadPage() {
                           BGBB — Brilliant Green Bile Broth
                         </option>
                         <option value="R2A">R2A — Reasoner's 2A Agar</option>
-                        <option value="TSA">TSA — Tryptic Soy Agar</option>
-                        <option value="MacConkey">MAC — MacConkey Agar</option>
-                        <option value="Other">
+                        <option value="SDA">SDA — Sabouraud Dextrose Agar</option>
+                        <option value="EMB">EMB — Eosin Methylene Blue</option>
+                        <option value="Blood">Blood Agar</option>
+                        <option value="OTHER">
                           {t("upload.otherProtocol")}
                         </option>
                       </select>

@@ -56,13 +56,16 @@ export interface MFAVerifyRequest {
 // ============================================================
 
 export type MediaType =
-  | "Plate Count Agar"
+  | "PCA"
   | "VRBA"
   | "BGBB"
   | "R2A"
   | "TSA"
   | "MacConkey"
-  | "Other";
+  | "SDA"
+  | "EMB"
+  | "Blood"
+  | "OTHER";
 
 /**
  * Calculated CFU/mL status.

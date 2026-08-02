@@ -60,7 +60,7 @@ export const CLASS_VISUAL_STYLES: Record<DetectionClass, ClassVisualStyle> = {
     labelEn: 'Single Colony',
     countsTowardCFU: true,
     ariaLabel: 'Single colony — counted as 1 CFU',
-    opencvBGR: [34, 197, 94],  // (R=34, G=197, B=94) → OpenCV BGR
+    opencvBGR: [80, 220, 50],  // BGR matches backend CLASS_COLORS_BGR colony_single: (80,220,50)
   },
 
   colony_merged: {
@@ -72,7 +72,7 @@ export const CLASS_VISUAL_STYLES: Record<DetectionClass, ClassVisualStyle> = {
     labelEn: 'Merged Colony',
     countsTowardCFU: true,
     ariaLabel: 'Merged colony — estimated via bounding box area method (SA-001)',
-    opencvBGR: [8, 179, 234],  // Orange-ish in BGR
+    opencvBGR: [0, 140, 255],  // BGR matches backend CLASS_COLORS_BGR colony_merged: (0,140,255)
   },
 
   bubble: {
@@ -84,7 +84,7 @@ export const CLASS_VISUAL_STYLES: Record<DetectionClass, ClassVisualStyle> = {
     labelEn: 'Bubble (Artifact)',
     countsTowardCFU: false,
     ariaLabel: 'Bubble — artifact, not counted in CFU',
-    opencvBGR: [68, 68, 239],  // BGR red
+    opencvBGR: [255, 120, 30],  // BGR matches backend CLASS_COLORS_BGR bubble: (255,120,30)
   },
 
   dust_debris: {
@@ -96,7 +96,7 @@ export const CLASS_VISUAL_STYLES: Record<DetectionClass, ClassVisualStyle> = {
     labelEn: 'Dust/Debris (Artifact)',
     countsTowardCFU: false,
     ariaLabel: 'Dust or debris — artifact, not counted in CFU',
-    opencvBGR: [22, 115, 249], // BGR orange
+    opencvBGR: [50, 50, 220],  // BGR matches backend CLASS_COLORS_BGR dust_debris: (50,50,220)
   },
 
   media_crack: {
@@ -108,7 +108,7 @@ export const CLASS_VISUAL_STYLES: Record<DetectionClass, ClassVisualStyle> = {
     labelEn: 'Media Crack (Artifact)',
     countsTowardCFU: false,
     ariaLabel: 'Agar media crack — artifact, not counted in CFU',
-    opencvBGR: [247, 85, 168], // BGR purple
+    opencvBGR: [180, 60, 200],  // BGR matches backend CLASS_COLORS_BGR media_crack: (180,60,200)
   },
 };
 
