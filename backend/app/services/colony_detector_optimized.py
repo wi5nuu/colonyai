@@ -19,6 +19,7 @@ import logging
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
+import threading
 from app.core.config import settings
 from app.core.thresholds_optimized import (
     get_threshold,
@@ -26,7 +27,9 @@ from app.core.thresholds_optimized import (
     filter_by_aspect_ratio,
     boost_confidence,
     get_iou_threshold,
-    AGGRESSIVE_THRESHOLDS
+    AGGRESSIVE_THRESHOLDS,
+    MAX_DETECTIONS_PER_CLASS,
+    MAX_TOTAL_DETECTIONS,
 )
 
 # 5-class architecture
@@ -53,13 +56,19 @@ _inference_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="yolo
 
 # Global singleton cache (model loaded once at first use)
 _global_detector: Optional['ColonyDetectorOptimized'] = None
+# FIX-6: Lock to prevent race condition when multiple requests hit get_detector() simultaneously
+_detector_lock = threading.Lock()
 
 
 def get_detector(model_path: str = None) -> 'ColonyDetectorOptimized':
     global _global_detector
     path = model_path or _get_active_model_path() or settings.MODEL_PATH
-    if _global_detector is None or _global_detector.model_path != path:
-        _global_detector = ColonyDetectorOptimized(path)
+    # Double-checked locking — fast path skips lock once initialized
+    if _global_detector is not None and _global_detector.model_path == path:
+        return _global_detector
+    with _detector_lock:
+        if _global_detector is None or _global_detector.model_path != path:
+            _global_detector = ColonyDetectorOptimized(path)
     return _global_detector
 
 
@@ -108,10 +117,29 @@ class ColonyDetectorOptimized:
         if os.path.exists(self.model_path):
             self.model = YOLO(self.model_path)
             logger.info("Loaded optimized model from %s", self.model_path)
+            # FIX-1: Verify model.names matches expected 5-class architecture
+            expected = {'colony_single', 'colony_merged', 'bubble', 'dust_debris', 'media_crack'}
+            actual = set(self.model.names.values()) if self.model.names else set()
+            missing = expected - actual
+            extra = actual - expected
+            if missing:
+                logger.warning(
+                    "Model at %s is missing expected classes: %s. "
+                    "Detection accuracy will be reduced for these classes.",
+                    self.model_path, missing
+                )
+            if extra:
+                logger.warning(
+                    "Model at %s has unexpected classes: %s. "
+                    "These will be filtered out during post-processing.",
+                    self.model_path, extra
+                )
+            logger.info("Model classes: %s", actual)
         else:
+            # FIX-5: Use self.model_path instead of hardcoded filename
             raise RuntimeError(
                 f"Model not found at {self.model_path}. "
-                "Please ensure colony_best.pt exists in models/ folder."
+                "Please ensure the model file exists in the models/ folder."
             )
 
     async def detect_async(
@@ -168,6 +196,9 @@ class ColonyDetectorOptimized:
         # original_shape diambil SETELAH resize agar boost_confidence pakai koordinat yang benar
         original_shape = image.shape[:2]
 
+        # UPGRADE-3: Hitung brightness gambar untuk adaptive threshold
+        mean_brightness = float(np.mean(image)) if image is not None else None
+
         # Gunakan threshold SANGAT RENDAH untuk inference awal
         # Filtering per-class dilakukan setelahnya
         initial_conf = 0.01 if aggressive else 0.05
@@ -185,8 +216,8 @@ class ColonyDetectorOptimized:
             confidence = det['confidence']
             bbox = det['bbox']
 
-            # 1. Check threshold per-class
-            threshold = get_threshold(class_name, media_type, aggressive)
+            # 1. Check threshold per-class (dengan adaptive brightness)
+            threshold = get_threshold(class_name, media_type, aggressive, mean_brightness)
             if confidence < threshold:
                 continue
 
@@ -198,15 +229,41 @@ class ColonyDetectorOptimized:
             if apply_filters and not filter_by_aspect_ratio(bbox, class_name):
                 continue
 
-            # 4. Confidence boosting
-            boosted_conf = boost_confidence(confidence, bbox, original_shape, class_name)
-            det['confidence'] = boosted_conf
+            # FIX-ACC-1: Simpan confidence original, tapi JANGAN boost dulu.
+            # Boosting dilakukan SETELAH NMS agar urutan sort NMS tidak terdistorsi.
             det['confidence_original'] = confidence
-
             filtered_detections.append(det)
 
-        # 5. NMS per-class untuk remove duplicates
-        final_detections = self._nms_per_class(filtered_detections)
+        # 4. NMS per-class untuk remove duplicates (menggunakan confidence asli)
+        nms_detections = self._nms_per_class(filtered_detections)
+
+        # 5. Confidence boosting SETELAH NMS — boost tidak mempengaruhi seleksi NMS
+        for det in nms_detections:
+            det['confidence'] = boost_confidence(
+                det['confidence'], det['bbox'], original_shape, det['class_name']
+            )
+
+        # UPGRADE-4: Over-detection guard — cap per-class dan total
+        # Sort by confidence descending agar yang dibuang adalah yang paling tidak yakin
+        nms_detections.sort(key=lambda d: d['confidence'], reverse=True)
+        class_counts: Dict[str, int] = {}
+        final_detections = []
+        for det in nms_detections:
+            cls = det['class_name']
+            class_counts[cls] = class_counts.get(cls, 0) + 1
+            if class_counts[cls] > MAX_DETECTIONS_PER_CLASS.get(cls, 500):
+                logger.debug("Over-detection guard: dropping %s (count=%d)", cls, class_counts[cls])
+                continue
+            if len(final_detections) >= MAX_TOTAL_DETECTIONS:
+                logger.warning("Over-detection guard: total cap %d reached", MAX_TOTAL_DETECTIONS)
+                break
+            final_detections.append(det)
+
+        logger.info(
+            "Detection complete: brightness=%.1f, total=%d (after guard=%d), classes=%s",
+            mean_brightness or 0, len(nms_detections), len(final_detections),
+            {c: n for c, n in class_counts.items()}
+        )
 
         return final_detections
 
@@ -215,7 +272,11 @@ class ColonyDetectorOptimized:
         results = self.model(
             image,
             conf=conf_threshold,
-            iou=0.35,  # Lower IOU untuk keep more boxes
+            # FIX-ACC-2: Naikkan IoU internal YOLO ke 0.7 agar tidak double-suppress.
+            # NMS per-class custom kita (iou threshold ~0.40) yang menentukan final filtering,
+            # bukan YOLO internal. Dengan 0.35 sebelumnya, YOLO sudah membuang banyak
+            # deteksi valid sebelum pipeline kita sempat memprosesnya.
+            iou=0.7,
             imgsz=self.img_size,
             verbose=False
         )
@@ -417,8 +478,8 @@ class ColonyDetectorOptimized:
         """Get count of valid colonies only"""
         return sum(1 for d in detections if d['is_valid_colony'])
 
-    def get_average_confidence(self, detections: List[Dict[str, Any]], valid_only: bool = True) -> float:
-        """Get average confidence score"""
+    def get_average_confidence(self, detections: List[Dict[str, Any]], valid_only: bool = False) -> float:
+        """Get average confidence score across all detections (including artifacts)"""
         filtered = self.filter_valid_colonies(detections) if valid_only else detections
         if not filtered:
             return 0.0
