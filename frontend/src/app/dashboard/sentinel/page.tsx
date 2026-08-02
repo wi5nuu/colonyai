@@ -851,7 +851,7 @@ export default function SentinelPage() {
         {/* Epidemiological Security & Predictive Kinetics */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {/* Bio-Hazard Radar */}
-          <div className="space-y-2">
+          <div className="space-y-2 lg:row-span-2">
             <div className="flex items-center justify-between">
               <h3 className="text-[8px] font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-1.5">
                 <AlertTriangle className="w-3 h-3 text-rose-500" />
@@ -948,7 +948,7 @@ export default function SentinelPage() {
             </div>
             </div>
 
-            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 rounded-none shadow-sm relative overflow-hidden group">
+            <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 rounded-none shadow-sm relative overflow-hidden group lg:col-start-2">
               <div className="absolute top-0 right-0 p-2 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-1000">
                 <Globe className="w-24 h-24 text-emerald-500" />
               </div>
