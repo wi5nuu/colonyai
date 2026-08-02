@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
   ShieldAlert,
@@ -71,7 +71,7 @@ export function ResetRequestsPanel() {
     setMounted(true);
   }, []);
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await api.get<{ reset_requests: ResetRequest[] }>(
@@ -84,13 +84,13 @@ export function ResetRequestsPanel() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchRequests();
     const interval = setInterval(fetchRequests, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchRequests]);
 
   const filteredRequests = requests.filter((r) =>
     filterStatus === "all" ? true : r.status === filterStatus,

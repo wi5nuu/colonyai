@@ -157,7 +157,7 @@ export function Footer() {
                   className="w-4 h-4 text-[#0055ff] dark:text-[#00f2ff] flex-shrink-0"
                   aria-hidden="true"
                 />
-                <span>0813-948-290</span>
+                <span>0813-9488-2490</span>
               </li>
               <li className="flex gap-3 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
                 <Mail

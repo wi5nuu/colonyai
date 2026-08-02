@@ -62,11 +62,11 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-6">
-            <a href="tel:0813-948-290" className="flex items-center gap-2 hover:text-white/80 transition-colors cursor-pointer">
+            <a href="tel:081394882490" className="flex items-center gap-2 hover:text-white/80 transition-colors cursor-pointer">
               <div className="w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
                 <Phone className="w-2.5 h-2.5 text-white" />
               </div>
-              <span className="uppercase tracking-wider font-bold">Contact Center: 0813-948-290</span>
+              <span className="uppercase tracking-wider font-bold">Contact Center: 0813-9488-2490</span>
             </a>
             <span className="text-white/50">|</span>
             <Link href={isAuthenticated ? "/dashboard" : "/login"} className="flex items-center gap-2 hover:text-white/80 transition-colors">
@@ -250,11 +250,11 @@ export function Navbar() {
               </div>
 
               <a
-                href="tel:0813-948-290"
+                href="tel:081394882490"
                 className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-400"
               >
                 <Phone className="w-3.5 h-3.5 text-emerald-500" />
-                <span>0813-948-290</span>
+                <span>0813-9488-2490</span>
               </a>
             </div>
 
