@@ -25,6 +25,10 @@ class ApiClient {
   ): Promise<{ data: T }> {
     const url = `${this.baseUrl}${endpoint}`
     
+    // FIX BUG-MEDIUM-003: Add timeout to prevent hanging requests
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 seconds timeout
+    
     // Get auth token if available
     let authToken: string | null = null
     if (typeof window !== 'undefined') {
@@ -52,10 +56,14 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${authToken}`
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    })
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+        signal: controller.signal,
+      })
+      
+      clearTimeout(timeoutId)
 
     // Handle 401 Unauthorized - Attempt Token Refresh
     if (response.status === 401 && authToken && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh')) {
