@@ -7,6 +7,7 @@ import uuid
 import os
 import csv
 import io
+import statistics
 from collections import defaultdict
 from pathlib import Path
 
@@ -74,7 +75,11 @@ async def send_messenger_report(
     completed = sum(1 for a in analyses if str(getattr(a.status, 'value', a.status)) == "completed")
     colonies = sum(a.colony_count or 0 for a in analyses)
     cfus = [a.cfu_per_ml for a in analyses if a.cfu_per_ml is not None]
-    avg_cfu = f"{sum(cfus)/len(cfus):.2e}" if cfus else "N/A"
+    # FIX BUG-CRITICAL-005: Use statistics.mean() to prevent division by zero
+    try:
+        avg_cfu = f"{statistics.mean(cfus):.2e}" if cfus else "N/A"
+    except statistics.StatisticsError:
+        avg_cfu = "N/A"
 
     report_data = {
         "total": total,
@@ -891,7 +896,11 @@ async def admin_export_all_pdf(
         failed  = sum(1 for a in analyses if str(getattr(a.status,'value',a.status)) == "failed")
         colonies = sum(a.colony_count or 0 for a in analyses)
         cfus    = [a.cfu_per_ml for a in analyses if a.cfu_per_ml]
-        avg_cfu = sum(cfus)/len(cfus) if cfus else None
+        # FIX BUG-CRITICAL-005: Use statistics.mean() to prevent division by zero
+        try:
+            avg_cfu = statistics.mean(cfus) if cfus else None
+        except statistics.StatisticsError:
+            avg_cfu = None
         users_set = {str(a.user_id) for a in analyses}
 
         elems.append(Paragraph("1. Global Summary", head_s))
@@ -1234,8 +1243,16 @@ async def admin_export_all_excel(
 
         for i, (uid, d) in enumerate(sorted(user_data.items(), key=lambda x: -x[1]["count"])):
             sr   = f"{d['completed']/d['count']*100:.1f}%" if d['count'] else "N/A"
-            acfu = f"{sum(d['cfus'])/len(d['cfus']):.2e}" if d['cfus'] else "N/A"
-            aconf= f"{sum(d['confs'])/len(d['confs'])*100:.1f}%" if d['confs'] else "N/A"
+            # FIX BUG-CRITICAL-005: Safe average calculation
+            try:
+                acfu = f"{statistics.mean(d['cfus']):.2e}" if d['cfus'] else "N/A"
+            except statistics.StatisticsError:
+                acfu = "N/A"
+            
+            try:
+                aconf = f"{statistics.mean(d['confs'])*100:.1f}%" if d['confs'] else "N/A"
+            except statistics.StatisticsError:
+                aconf = "N/A"
             ws2.append([d["name"], d["email"], d["count"], d["completed"], d["failed"],
                         sr, d["colonies"], acfu, aconf])
             style_data_row(ws2, i+2, alt=(i%2==1))
@@ -1259,8 +1276,16 @@ async def admin_export_all_excel(
 
         for i, month in enumerate(sorted(monthly)):
             d = monthly[month]
-            acfu  = f"{sum(d['cfus'])/len(d['cfus']):.2e}" if d['cfus'] else "N/A"
-            aconf = f"{sum(d['confs'])/len(d['confs'])*100:.1f}%" if d['confs'] else "N/A"
+            # FIX BUG-CRITICAL-005: Safe average calculation
+            try:
+                acfu = f"{statistics.mean(d['cfus']):.2e}" if d['cfus'] else "N/A"
+            except statistics.StatisticsError:
+                acfu = "N/A"
+            
+            try:
+                aconf = f"{statistics.mean(d['confs'])*100:.1f}%" if d['confs'] else "N/A"
+            except statistics.StatisticsError:
+                aconf = "N/A"
             ws3.append([month, d["count"], d["completed"], d["colonies"], acfu, aconf])
             style_data_row(ws3, i+2, alt=(i%2==1))
         auto_width(ws3)
@@ -1281,7 +1306,11 @@ async def admin_export_all_excel(
             if a.cfu_per_ml: media_data[mt]["cfus"].append(a.cfu_per_ml)
 
         for i, (mt, d) in enumerate(sorted(media_data.items(), key=lambda x: -x[1]["count"])):
-            acfu = f"{sum(d['cfus'])/len(d['cfus']):.2e}" if d['cfus'] else "N/A"
+            # FIX BUG-CRITICAL-005: Safe average calculation
+            try:
+                acfu = f"{statistics.mean(d['cfus']):.2e}" if d['cfus'] else "N/A"
+            except statistics.StatisticsError:
+                acfu = "N/A"
             ws4.append([mt, d["count"], d["completed"], d["colonies"], acfu])
             style_data_row(ws4, i+2, alt=(i%2==1))
         auto_width(ws4)
@@ -1385,12 +1414,24 @@ async def admin_export_all_excel(
         ws6.freeze_panes = 'A2'
         auto_width(ws6)
 
-        # Save
+        # Save with path traversal protection
+        # FIX BUG-CRITICAL-004: Use safe path operations
         reports_dir = os.path.abspath(os.path.join(settings.UPLOAD_DIR, "reports"))
         os.makedirs(reports_dir, exist_ok=True)
         report_id = str(uuid.uuid4())
         filename = f"colonyai-admin-analytics-{report_id}.xlsx"
-        file_path = os.path.join(reports_dir, filename)
+        
+        # Use safe_join_path to prevent path traversal
+        from app.utils.path_sanitizer import safe_join_path
+        try:
+            file_path = safe_join_path(reports_dir, filename)
+        except ValueError as e:
+            logger.error(f"Path traversal attempt: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid file path"
+            )
+        
         wb.save(file_path)
 
         return FileResponse(
