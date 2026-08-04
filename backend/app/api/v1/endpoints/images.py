@@ -5,14 +5,18 @@ from typing import Optional
 import uuid
 import os
 from pathlib import Path
+import logging
 
 from app.core.security import get_current_user, require_role
 from app.core.config import settings
 from app.core.database import get_db
 from app.utils.s3 import s3_is_configured, upload_to_s3, get_presigned_url, delete_from_s3
+from app.utils.path_sanitizer import generate_safe_filename, safe_join_path, validate_path_in_directory
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ImageUploadResponse(BaseModel):
@@ -53,10 +57,18 @@ async def upload_image(
             detail=f"File size exceeds {settings.IMAGE_MAX_SIZE // (1024*1024)}MB limit"
         )
 
-    # Generate unique ID and filename from the same UUID
-    image_id = uuid.uuid4()
-    ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
-    unique_filename = f"{image_id}.{ext}"
+    # FIX BUG-CRITICAL-004: Sanitize filename to prevent path traversal
+    try:
+        # Generate safe filename with UUID for uniqueness
+        unique_filename = generate_safe_filename(file.filename, use_uuid=True)
+        # Extract UUID from generated filename (first part before underscore)
+        image_id = uuid.UUID(unique_filename.split('_')[0])
+    except (ValueError, IndexError) as e:
+        logger.error(f"Filename sanitization failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid filename: {str(e)}"
+        )
 
     # Read file bytes
     file_bytes = file.file.read()
@@ -143,16 +155,28 @@ async def delete_image(
             detail="Image not found in S3",
         )
 
-    # Fallback: local filesystem
+    # Fallback: local filesystem with path traversal protection
     # Try to find and delete from both directories
     for subdir in ["original", "annotated"]:
         upload_dir = os.path.join(settings.UPLOAD_DIR, subdir)
         if os.path.exists(upload_dir):
             for filename in os.listdir(upload_dir):
+                # FIX BUG-CRITICAL-004: Validate filename before deletion
                 if filename.startswith(image_id):
-                    file_path = os.path.join(upload_dir, filename)
-                    os.remove(file_path)
-                    return {"message": f"Image deleted from {subdir}"}
+                    try:
+                        # Use safe_join_path and validate path is within directory
+                        file_path = safe_join_path(upload_dir, filename)
+                        
+                        # Double-check the path is valid
+                        if not validate_path_in_directory(file_path, upload_dir):
+                            logger.warning(f"Path traversal attempt in delete: {file_path}")
+                            continue
+                        
+                        os.remove(file_path)
+                        return {"message": f"Image deleted from {subdir}"}
+                    except (ValueError, OSError) as e:
+                        logger.error(f"Error deleting file: {e}")
+                        continue
 
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
