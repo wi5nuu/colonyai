@@ -9,7 +9,12 @@ DB_AVAILABLE = False
 
 
 def get_engine():
-    """Create async engine with graceful fallback"""
+    """
+    Create async engine with graceful fallback and proper connection pool configuration.
+    
+    FIX BUG-MEDIUM-007: Add pool_pre_ping, pool_recycle, and pool_timeout
+    to prevent stale connections and improve reliability.
+    """
     try:
         # SQLite specific logic: pool_size and max_overflow are NOT supported
         if settings.DATABASE_URL.startswith("sqlite"):
@@ -19,13 +24,18 @@ def get_engine():
             # aiosqlite will handle it relative to cwd
             engine = create_async_engine(
                 db_url,
-                echo=settings.DEBUG
+                echo=settings.DEBUG,
+                pool_pre_ping=True,  # Test connection before using
             )
         else:
+            # PostgreSQL/MySQL with full connection pool configuration
             engine = create_async_engine(
                 settings.DATABASE_URL,
                 pool_size=settings.DATABASE_POOL_SIZE,
                 max_overflow=settings.DATABASE_MAX_OVERFLOW,
+                pool_pre_ping=True,      # Test connection before using (detect stale)
+                pool_recycle=3600,       # Recycle connections every hour
+                pool_timeout=30,         # Timeout after 30 seconds waiting for connection
                 echo=settings.DEBUG
             )
         return engine
@@ -109,15 +119,23 @@ async def init_db():
 
 
 async def get_db():
-    """Get database session"""
+    """
+    Get database session with proper resource cleanup.
+    
+    FIX BUG-CRITICAL-003: Ensure session is always closed, even if exception
+    occurs before yield. This prevents connection pool exhaustion.
+    """
     if AsyncSessionLocal is None:
         raise Exception("Database not available. Configure DATABASE_URL in .env")
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+    
+    # Create session outside context manager to ensure cleanup
+    session = AsyncSessionLocal()
+    try:
+        yield session
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        raise
+    finally:
+        # Always close session, even if exception before yield
+        await session.close()
