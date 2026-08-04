@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "ColonyAI Backend"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
-    SECRET_KEY: str = os.getenv("SECRET_KEY") or secrets.token_urlsafe(32)
+    SECRET_KEY: str = os.getenv("SECRET_KEY") or ""
     API_V1_PREFIX: str = "/api/v1"
 
     # Database  
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     INITIAL_SUPER_ADMIN_PASSWORD: str = os.getenv("INITIAL_SUPER_ADMIN_PASSWORD") or ""
 
     # JWT Security
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY") or secrets.token_urlsafe(32)
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY") or ""
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -98,6 +98,20 @@ class Settings(BaseSettings):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        
+        # FIX BUG-MEDIUM-005: Validate critical secrets are set
+        if not self.SECRET_KEY:
+            raise ValueError(
+                "SECRET_KEY must be set in environment variables. "
+                "Generate with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+            )
+        
+        if not self.JWT_SECRET_KEY:
+            raise ValueError(
+                "JWT_SECRET_KEY must be set in environment variables. "
+                "Generate with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+            )
+        
         # Ensure upload directories exist
         if self.UPLOAD_DIR:
             Path(self.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
