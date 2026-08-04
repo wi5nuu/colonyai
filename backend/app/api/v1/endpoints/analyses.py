@@ -44,6 +44,10 @@ from app.schemas.analyses import (
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+# FIX BUG-MEDIUM-006: Enforce pagination limits
+MAX_PAGE_SIZE = 100
+DEFAULT_PAGE_SIZE = 20
+
 # ============================================================
 # Simulation Endpoint (Case 1 Requirement)
 # ============================================================
