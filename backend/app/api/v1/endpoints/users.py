@@ -5,14 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime, timedelta, timezone
 import uuid
-import secrets
+import logging
 
 from app.core.security import get_current_user, require_role
 from app.core.database import get_db
 from app.models import User, Notification, Organization
 from app.utils.audit import write_audit_log
+from app.utils.password_generator import generate_secure_temp_password
+from app.utils.sanitization import sanitize_string
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 class UserProfile(BaseModel):
@@ -85,9 +88,16 @@ async def update_current_user_profile(
             detail="User not found",
         )
 
-    # Update fields
+    # Update fields with input sanitization
+    # FIX BUG-MEDIUM-002: Sanitize user input to prevent XSS
     if request.full_name is not None:
-        user.full_name = request.full_name
+        sanitized_name = sanitize_string(request.full_name.strip())
+        if len(sanitized_name) < 2 or len(sanitized_name) > 100:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Full name must be between 2 and 100 characters"
+            )
+        user.full_name = sanitized_name
 
     await db.commit()
     await db.refresh(user)
@@ -274,12 +284,9 @@ async def issue_emergency_access(
                 detail="Anda hanya bisa memberikan akses darurat untuk pengguna dalam organisasi Anda."
             )
 
-    # Generate secure temp password: Strong random password with mixed case, digits, and special chars
-    # Format: 16 characters from secure random source
-    import string
-    alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
-    temp_password = ''.join(secrets.choice(alphabet) for _ in range(16))
-
+    # FIX BUG-HIGH-002: Generate secure temp password that meets complexity requirements
+    temp_password = generate_secure_temp_password(length=12)
+    
     # Hash and save
     target_user.password_hash = get_password_hash(temp_password)
     target_user.is_locked_out = 'no'
@@ -287,7 +294,9 @@ async def issue_emergency_access(
     target_user.locked_until = None
 
     # Notify target user
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=2)
+    # FIX BUG-LOW-004: Use constant for expiry hours
+    EMERGENCY_ACCESS_EXPIRY_HOURS = 2
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=EMERGENCY_ACCESS_EXPIRY_HOURS)
     notif = Notification(
         id=uuid.uuid4(),
         user_id=target_user.id,
