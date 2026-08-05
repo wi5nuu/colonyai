@@ -12,7 +12,7 @@ Role-based access:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 import uuid
 
@@ -39,7 +39,7 @@ class ComparisonCreate(BaseModel):
     manual_bubble: int = 0
     manual_dust_debris: int = 0
     manual_media_crack: int = 0
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(None, max_length=1000)  # HIGH FIX: Length limit to prevent abuse
     # Sandbox mode: client supplies AI breakdown when analysis is transient (not in DB)
     ai_class_breakdown: Optional[dict] = None
     ai_total_valid: Optional[int] = None

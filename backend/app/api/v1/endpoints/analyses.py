@@ -482,6 +482,39 @@ async def create_analysis(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Waktu inkubasi harus antara 0-168 jam (7 hari).",
             )
+    
+    # ── HIGH FIX: Validate optional text fields to prevent injection ──
+    if method_standard and len(method_standard) > 200:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Method standard terlalu panjang (maksimum 200 karakter).",
+        )
+    
+    if media_batch_number:
+        if len(media_batch_number) > 100:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Media batch number terlalu panjang (maksimum 100 karakter).",
+            )
+        # Alphanumeric + dash/underscore only
+        if not re.match(r'^[a-zA-Z0-9\-_]+$', media_batch_number):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Media batch number hanya boleh berisi huruf, angka, dash, dan underscore.",
+            )
+    
+    if incubator_id:
+        if len(incubator_id) > 100:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Incubator ID terlalu panjang (maksimum 100 karakter).",
+            )
+        # Alphanumeric + dash/underscore only
+        if not re.match(r'^[a-zA-Z0-9\-_]+$', incubator_id):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Incubator ID hanya boleh berisi huruf, angka, dash, dan underscore.",
+            )
 
     analysis_id = uuid.uuid4()
 
