@@ -1,5 +1,74 @@
 # CHANGELOG - ColonyAI Security & Bug Fixes
 
+## [1.4.0] - 2026-08-05 (Fourth Round)
+
+### 🔒 SECURITY FIXES - CRITICAL (Fourth Audit)
+
+#### BUG-CRITICAL-SESSION-FIXATION: Multiple Session Fixation Vulnerabilities ✅
+**Severity:** CRITICAL  
+**Location:** `backend/app/api/v1/endpoints/auth.py`, `users.py`  
+**Issue:** After password reset/change, existing sessions remained valid, allowing attackers with stolen session tokens to maintain access even after password reset.  
+**Fix:** Clear all MFA codes and session-related data on password reset (user, admin, emergency access).  
+**Impact:** Prevents session hijacking after password changes.
+
+**Affected Endpoints Fixed:**
+- `reset_password` - user password reset (auth.py:888)
+- `admin_reset_password` - admin force reset (users.py:220)
+- `issue_emergency_access` - emergency temp password (users.py:289)
+
+#### BUG-CRITICAL-TOKEN-REUSE: Password Reset Token Reuse ✅
+**Severity:** CRITICAL  
+**Location:** `backend/app/api/v1/endpoints/auth.py:883`  
+**Issue:** Password reset token marked as "used" AFTER password validation, allowing attackers to retry with different passwords if validation fails.  
+**Fix:** Mark token as "used" BEFORE validation; rollback on validation failure.  
+**Impact:** Prevents brute-force password attempts via reset tokens.
+
+#### BUG-CRITICAL-LOGIN-RACE: Concurrent Login Race Condition ✅
+**Severity:** CRITICAL  
+**Location:** `backend/app/api/v1/endpoints/auth.py:102`  
+**Issue:** Multiple concurrent login attempts could race on `failed_login_attempts` counter, bypassing account lockout.  
+**Fix:** Added `.with_for_update()` pessimistic lock on User SELECT during login.  
+**Impact:** Serializes concurrent login attempts, prevents lockout bypass.
+
+---
+
+### 🔐 SECURITY FIXES - HIGH PRIORITY (Fourth Audit)
+
+#### BUG-HIGH-MFA-LOCKOUT: MFA Code Not Cleared on Lockout ✅
+**Severity:** HIGH  
+**Location:** `backend/app/api/v1/endpoints/auth.py:160`  
+**Issue:** MFA codes remained valid after account lockout, allowing bypass via valid MFA code after lockout expires.  
+**Fix:** Clear `mfa_code` and `mfa_expires` when account is locked.  
+**Impact:** Prevents MFA bypass after lockout.
+
+#### BUG-HIGH-EMAIL-CASE: Email Case Sensitivity Duplicates ✅
+**Severity:** HIGH  
+**Location:** `backend/app/api/v1/endpoints/auth.py:102`  
+**Issue:** Email not normalized to lowercase, allowing duplicate accounts (`user@test.com` vs `USER@test.com`).  
+**Fix:** Normalize email to `.lower().strip()` before all queries.  
+**Impact:** Prevents duplicate account creation via case manipulation.
+
+#### BUG-HIGH-SAMPLE-INJECTION: Sample ID Injection Vulnerabilities ✅
+**Severity:** HIGH  
+**Location:** `backend/app/api/v1/endpoints/analyses.py:397`  
+**Issue:** `sample_id` not sanitized, vulnerable to XSS, SQL injection via LIKE, and log injection.  
+**Fix:** Whitelist validation (alphanumeric + dash/underscore/space), max 100 chars.  
+**Impact:** Prevents injection attacks via sample identifiers.
+
+#### BUG-HIGH-FIELD-VALIDATION: Optional Field Injection ✅
+**Severity:** HIGH  
+**Location:** `backend/app/api/v1/endpoints/analyses.py:470+`  
+**Issue:** Optional fields (`method_standard`, `media_batch_number`, `incubator_id`, `notes`) not validated.  
+**Fix:** Added length limits and character whitelisting:
+- `method_standard`: max 200 chars
+- `media_batch_number`: alphanumeric + dash/underscore, max 100 chars
+- `incubator_id`: alphanumeric + dash/underscore, max 100 chars
+- `notes`: max 1000 chars (Pydantic Field)
+
+**Impact:** Prevents injection and abuse via optional text fields.
+
+---
+
 ## [1.3.0] - 2026-08-05 (Third Round)
 
 ### 🔒 SECURITY FIXES - CRITICAL (Third Audit)
