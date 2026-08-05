@@ -1,6 +1,136 @@
 # CHANGELOG - ColonyAI Security & Bug Fixes
 
-## [1.1.0] - 2026-08-05
+## [1.2.0] - 2026-08-05 (Second Round)
+
+### 🔒 SECURITY FIXES - CRITICAL (Second Audit)
+
+#### BUG-CRITICAL-TOCTOU: Race Condition in Token Blacklist ✅
+**Severity:** CRITICAL (CVSS 8.1)  
+**Location:** `backend/app/core/security.py:91-96`, `backend/app/api/v1/endpoints/auth.py`  
+**Issue:** Time-of-check-time-of-use (TOCTOU) race condition allowed concurrent requests to bypass token blacklist during logout, enabling session hijacking.  
+**Fix:** Implemented pessimistic locking with `SELECT ... FOR UPDATE` on User row before blacklist check/insert, serializing logout and authentication operations.  
+**Impact:** Prevents concurrent session hijack attacks where token is used between logout and blacklist commit.
+
+```python
+# Before (Race condition):
+result = await db.execute(select(TokenBlacklist).where(jti == jti))
+if result.scalar_one_or_none(): raise HTTPException(...)
+
+# After (Serialized with pessimistic lock):
+result = await db.execute(
+    select(User).where(User.id == user_id).with_for_update()
+)
+result = await db.execute(
+    select(TokenBlacklist).where(jti == jti).with_for_update()
+)
+```
+
+#### BUG-CRITICAL-REFRESH-BLACKLIST: Refresh Token Reuse Attack ✅
+**Severity:** CRITICAL  
+**Location:** `backend/app/api/v1/endpoints/auth.py` (refresh endpoint)  
+**Issue:** Revoked refresh tokens could still be reused to obtain new access tokens, bypassing logout security.  
+**Fix:** Added blacklist check for old refresh token JTI before issuing new tokens.  
+**Impact:** Prevents refresh token replay attacks after logout.
+
+#### BUG-CRITICAL-MFA-PLAINTEXT: MFA Code Stored in Plaintext ✅
+**Severity:** CRITICAL  
+**Location:** `backend/app/api/v1/endpoints/auth.py` (login, verify-mfa)  
+**Issue:** 6-digit MFA codes stored in plaintext in database, vulnerable to database breach.  
+**Fix:** Hash MFA codes with Argon2 at rest; verify with constant-time comparison.  
+**Impact:** Protects MFA codes from database compromise; prevents timing attacks on verification.
+
+```python
+# Before (Plaintext):
+user.mfa_code = "123456"
+if user.mfa_code != request.code: ...
+
+# After (Hashed):
+user.mfa_code = get_password_hash("123456")
+if not verify_password(request.code, user.mfa_code): ...
+```
+
+#### BUG-CRITICAL-NAN-INF: Type Coercion NaN/Infinity Bypass ✅
+**Severity:** CRITICAL  
+**Location:** `backend/app/api/v1/endpoints/analyses.py` (simulate, create_analysis)  
+**Issue:** NaN/Infinity floats from Form parameters bypassed validation checks (`x <= 0` is False for NaN), propagating to CFU calculations and causing DB corruption.  
+**Fix:** Added `math.isnan()` and `math.isinf()` checks before all numeric validations.  
+**Impact:** Prevents invalid CFU calculations and database JSON corruption from malformed numeric inputs.
+
+```python
+# Before (NaN bypass):
+if dilution_factor <= 0: raise HTTPException(...)
+
+# After (NaN/Inf caught):
+if math.isnan(dilution_factor) or math.isinf(dilution_factor) or dilution_factor <= 0:
+    raise HTTPException(...)
+```
+
+#### BUG-CRITICAL-MASS-ASSIGNMENT: Simulator Data Manipulation ✅
+**Severity:** CRITICAL  
+**Location:** `backend/app/api/v1/endpoints/simulator.py` (save_comparison)  
+**Issue:** Client-supplied `ai_class_breakdown`, `ai_total_valid`, and `overall_accuracy` were trusted even for persisted analyses, allowing accuracy metric manipulation.  
+**Fix:** Validate and whitelist client data only in sandbox mode; for persisted analyses, always derive from DB records.  
+**Impact:** Prevents client-side manipulation of AI performance metrics and benchmark results.
+
+```python
+# Before (Mass assignment):
+ai_breakdown = body.ai_class_breakdown  # Always trust client
+overall_accuracy = body.overall_accuracy or computed_value
+
+# After (Trust DB for persisted analyses):
+if analysis is None:  # Sandbox only
+    # Validate client data (whitelist keys, non-negative ints)
+    ai_breakdown = body.ai_class_breakdown
+else:  # Persisted: use DB
+    ai_breakdown = analysis.class_breakdown
+overall_accuracy = computed_from_agreements  # Never trust client
+```
+
+---
+
+### 🔐 SECURITY FIXES - HIGH PRIORITY (Second Audit)
+
+#### BUG-HIGH-PAGINATION-DOS: Unbounded Pagination Attack ✅
+**Severity:** HIGH  
+**Location:** `backend/app/api/v1/endpoints/analyses.py` (list_analyses), `simulator.py` (list_comparisons)  
+**Issue:** No upper limit on `page_size` parameter allowed DoS via massive result sets.  
+**Fix:** Enforce `MAX_PAGE_SIZE=100` cap; clamp `page >= 1` and `page_size` to safe range.  
+**Impact:** Prevents resource exhaustion DoS attacks via pagination abuse.
+
+```python
+# Before (Unbounded):
+page: int = 1
+page_size: int = 20
+
+# After (Clamped):
+MAX_PAGE_SIZE = 100
+page = max(1, page)
+page_size = max(1, min(page_size, MAX_PAGE_SIZE))
+```
+
+#### BUG-HIGH-WARNINGS-INJECTION: JSON Field Type Confusion ✅
+**Severity:** HIGH  
+**Location:** `backend/app/api/v1/endpoints/analyses.py` (flag_for_review)  
+**Issue:** `analysis.warnings` JSON field could be corrupted (non-list type); user-supplied `reason` not validated, causing crashes or injection.  
+**Fix:** Validate `warnings` is a list before append; enforce Pydantic `Field(min_length=1, max_length=500)` on reason.  
+**Impact:** Prevents crashes from type confusion and limits injection surface area.
+
+```python
+# Before (No validation):
+warnings = analysis.warnings or []
+warnings.append(f"Manual review: {body.reason}")
+
+# After (Type-safe):
+warnings = analysis.warnings
+if not isinstance(warnings, list):
+    warnings = []
+reason = body.reason.strip()  # Pydantic already validated length
+warnings.append(f"Manual review: {reason}")
+```
+
+---
+
+## [1.1.0] - 2026-08-05 (First Round)
 
 ### 🔒 SECURITY FIXES - CRITICAL
 
