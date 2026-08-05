@@ -221,6 +221,10 @@ async def admin_reset_password(
     target_user.is_locked_out = 'no'
     target_user.failed_login_attempts = 0
     target_user.locked_until = None
+    
+    # ── CRITICAL FIX: Clear all session-related data (prevent session fixation) ──
+    target_user.mfa_code = None
+    target_user.mfa_expires = None
 
     # 4. Audit Log
     ip = http_request.client.host if http_request and hasattr(http_request, 'client') else None
@@ -292,6 +296,10 @@ async def issue_emergency_access(
     target_user.is_locked_out = 'no'
     target_user.failed_login_attempts = 0
     target_user.locked_until = None
+    
+    # ── CRITICAL FIX: Clear all session-related data (prevent session fixation) ──
+    target_user.mfa_code = None
+    target_user.mfa_expires = None
 
     # Notify target user
     # FIX BUG-LOW-004: Use constant for expiry hours

@@ -396,6 +396,30 @@ async def create_analysis(
     # Ini menggantikan validasi lama yang hanya mengecek Content-Type header
     file_content, safe_filename, detected_mime = await validate_and_sanitize_image(file)
 
+    # ── HIGH FIX: Sanitize sample_id to prevent XSS/SQL/Log injection ──
+    # Remove dangerous characters and limit length
+    if not sample_id or not sample_id.strip():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Sample ID tidak boleh kosong."
+        )
+    
+    # Whitelist: alphanumeric, dash, underscore, space only
+    import re
+    if not re.match(r'^[a-zA-Z0-9\s\-_]+$', sample_id):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Sample ID hanya boleh berisi huruf, angka, spasi, dash, dan underscore."
+        )
+    
+    if len(sample_id) > 100:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Sample ID terlalu panjang (maksimum 100 karakter)."
+        )
+    
+    sample_id = sample_id.strip()
+
     # ── FIX QA-007: Input media_type Validation ──
     # FIX-2: Sinkronkan dengan thresholds_optimized.py — Blood, SDA, EMB sebelumnya tidak ada
     ALLOWED_MEDIA_TYPES = {
