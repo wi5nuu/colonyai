@@ -185,7 +185,8 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
         # Generate & Send MFA Code (Simulasi Telegram/Email)
         import secrets
         mfa_code = "".join([str(secrets.randbelow(10)) for _ in range(6)])
-        user.mfa_code = mfa_code
+        # ── Store ONLY the Argon2 hash, never the plaintext code ──
+        user.mfa_code = get_password_hash(mfa_code)
         user.mfa_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
         await db.commit()
         
@@ -267,9 +268,14 @@ async def verify_mfa(request: MFAVerifyRequest, http_request: Request = None, db
         )
 
     if user.mfa_expires < datetime.now(timezone.utc):
+        user.mfa_code = None
+        user.mfa_expires = None
+        await db.commit()
         raise HTTPException(status_code=401, detail="Verification code expired")
 
-    if user.mfa_code != request.code:
+    # Constant-time verification against the stored Argon2 hash
+    from app.core.security import verify_password
+    if not verify_password(request.code, user.mfa_code):
         user.failed_login_attempts += 1
         user.last_failed_login = datetime.now(timezone.utc)
         await db.commit()
@@ -431,6 +437,19 @@ async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends
         email = payload.get("email")
         role = payload.get("role")
 
+        # ── Reject revoked refresh tokens (prevent reuse of logged-out tokens) ──
+        old_jti = payload.get("jti")
+        if old_jti:
+            from app.models import TokenBlacklist
+            bl_result = await db.execute(
+                select(TokenBlacklist).where(TokenBlacklist.jti == old_jti)
+            )
+            if bl_result.scalar_one_or_none():
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Refresh token has been revoked"
+                )
+
         # Verify user still exists
         result = await db.execute(select(User).where(User.id == uuid.UUID(user_id)))
         user = result.scalar_one_or_none()
@@ -442,7 +461,6 @@ async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends
             )
 
         # ── Blacklist the old refresh token to prevent token reuse ──
-        old_jti = payload.get("jti")
         old_exp = payload.get("exp")
         if old_jti and old_exp:
             from app.models import TokenBlacklist
@@ -486,7 +504,21 @@ async def logout(
     db: AsyncSession = Depends(get_db)
 ):
     """Secure Logout with JWT Blacklisting"""
-    from app.models import TokenBlacklist
+    from app.models import TokenBlacklist, User
+
+    # ── Serialize with get_current_user via pessimistic lock on the user row ──
+    # get_current_user acquires the same lock before checking the blacklist,
+    # so this INSERT can never race past an in-flight authenticated request.
+    result = await db.execute(
+        select(User)
+        .where(User.id == uuid.UUID(current_user["user_id"]))
+        .with_for_update()
+    )
+    if not result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User no longer exists"
+        )
 
     # ── Blacklist the JTI ──
     jti = current_user.get("jti")

@@ -137,17 +137,59 @@ async def save_comparison(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Analysis not found. For simulation mode, supply ai_class_breakdown in the request body."
             )
+        
+        # ── CRITICAL FIX: Validate client-supplied sandbox data ──
+        # Prevent mass assignment attacks by validating structure and ranges
+        if not isinstance(body.ai_class_breakdown, dict):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="ai_class_breakdown must be a dictionary"
+            )
+        
+        # Whitelist expected keys and validate non-negative integers
+        allowed_keys = {"colony_single", "colony_merged", "bubble", "dust_debris", "media_crack"}
+        for key, value in body.ai_class_breakdown.items():
+            if key not in allowed_keys:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid key in ai_class_breakdown: {key}"
+                )
+            if not isinstance(value, int) or value < 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"ai_class_breakdown values must be non-negative integers"
+                )
+        
+        if body.ai_total_valid is not None and (not isinstance(body.ai_total_valid, int) or body.ai_total_valid < 0):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="ai_total_valid must be a non-negative integer"
+            )
+        
         # Use data supplied by client (from the /simulate response)
         ai_breakdown = body.ai_class_breakdown
         ai_single = ai_breakdown.get("colony_single", 0)
         ai_merged = ai_breakdown.get("colony_merged", 0)
         ai_total_valid = body.ai_total_valid if body.ai_total_valid is not None else (ai_single + ai_merged)
     else:
-        # Use AI breakdown stored in DB
+        # ── CRITICAL FIX: NEVER trust client-supplied values for persisted analyses ──
+        # Use ONLY AI breakdown stored in DB; ignore client-supplied fields
         ai_breakdown = analysis.class_breakdown or {}
         ai_single = ai_breakdown.get("colony_single", 0)
         ai_merged = ai_breakdown.get("colony_merged", 0)
         ai_total_valid = ai_single + ai_merged
+    
+    # ── Validate manual counts (always user-supplied) ──
+    if body.manual_colony_single < 0 or body.manual_colony_merged < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Manual colony counts must be non-negative"
+        )
+    if body.manual_bubble < 0 or body.manual_dust_debris < 0 or body.manual_media_crack < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Manual artifact counts must be non-negative"
+        )
 
     # Calculate agreements per class
     agreement_single = calculate_agreement(ai_single, body.manual_colony_single)
@@ -156,10 +198,19 @@ async def save_comparison(
     agreement_dust = calculate_agreement(ai_breakdown.get("dust_debris", 0), body.manual_dust_debris)
     agreement_crack = calculate_agreement(ai_breakdown.get("media_crack", 0), body.manual_media_crack)
 
-    # Use spatial overall_accuracy if provided by client (from spatial matching algorithm)
-    if body.overall_accuracy is not None:
+    # ── CRITICAL FIX: overall_accuracy mass assignment ──
+    # Only trust client-supplied overall_accuracy in SANDBOX mode (analysis is None).
+    # For persisted analyses, ALWAYS compute from agreements to prevent manipulation.
+    if analysis is None and body.overall_accuracy is not None:
+        # Sandbox mode: client can supply spatial matching accuracy
+        if not isinstance(body.overall_accuracy, (int, float)) or not (0 <= body.overall_accuracy <= 100):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="overall_accuracy must be a number between 0 and 100"
+            )
         overall_accuracy = body.overall_accuracy
     else:
+        # Persisted analysis OR no client value: compute from class agreements
         overall_accuracy = (agreement_single + agreement_merged + agreement_bubble + agreement_dust + agreement_crack) / 5
 
     comparison = SimulatorComparison(
@@ -267,6 +318,11 @@ async def list_comparisons(
     - Manager/Admin/Auditor: all org comparisons
     - Super Admin: all comparisons
     """
+    # ── CRITICAL FIX: Enforce pagination limits to prevent DoS ──
+    MAX_PAGE_SIZE = 100
+    page = max(1, page)
+    page_size = max(1, min(page_size, MAX_PAGE_SIZE))
+    
     user_role = current_user.get("role")
     offset = (page - 1) * page_size
 

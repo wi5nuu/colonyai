@@ -70,14 +70,27 @@ async def simulate_analysis(
     """
     # BUG-5 FIX: dilution_factor bisa < 1 (misal 0.1 untuk 10^-1)
     # Validasi hanya: harus positif dan tidak melebihi 1,000,000
-    if dilution_factor <= 0 or dilution_factor > 1_000_000:
+    # CRITICAL FIX: NaN/Infinity from type coercion would bypass <= 0 checks
+    if math.isnan(dilution_factor) or math.isinf(dilution_factor) or dilution_factor <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Dilution factor must be a finite positive number"
+        )
+    
+    if dilution_factor > 1_000_000:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Dilution factor must be between 0 (exclusive) and 1,000,000"
         )
     
     # Validate plated_volume_ml (must be between 0.01 and 10)
-    if plated_volume_ml <= 0 or plated_volume_ml > 10:
+    if math.isnan(plated_volume_ml) or math.isinf(plated_volume_ml) or plated_volume_ml <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Plated volume must be a finite positive number"
+        )
+    
+    if plated_volume_ml > 10:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Plated volume must be between 0.01 and 10 mL"
@@ -340,7 +353,7 @@ def _get_file_url(file_path: str) -> str:
 # ============================================================
 
 class FlagReviewRequest(BaseModel):
-    reason: str
+    reason: str = Field(..., min_length=1, max_length=500, description="Reason for flagging (max 500 chars)")
 
 
 # ============================================================
@@ -779,6 +792,10 @@ async def list_analyses(
     - Auditor: all org analyses (read-only)
     - Super Admin: all analyses
     """
+    # ── CRITICAL FIX: Enforce pagination limits to prevent DoS ──
+    page = max(1, page)
+    page_size = max(1, min(page_size, MAX_PAGE_SIZE))
+    
     base_conditions = []
     org_id = current_user.get("organization_id")
     user_role = current_user.get("role")
@@ -1228,9 +1245,17 @@ async def flag_for_review(
             detail="Analysis not found",
         )
 
-    # Add review warning
-    warnings = analysis.warnings or []
-    warnings.append(f"Manual review: {body.reason}")
+    # ── CRITICAL FIX: Validate reason and ensure warnings is a list ──
+    # Pydantic already validated min/max length, but sanitize whitespace
+    reason = body.reason.strip()
+    
+    # Ensure warnings is a list (DB JSON field could be corrupted/wrong type)
+    warnings = analysis.warnings
+    if not isinstance(warnings, list):
+        logger.warning(f"Analysis {analysis_id} had non-list warnings: {type(warnings)}")
+        warnings = []
+    
+    warnings.append(f"Manual review: {reason}")
     analysis.warnings = warnings
     await db.commit()
     await db.refresh(analysis)

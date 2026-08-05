@@ -2,7 +2,6 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
 from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import uuid
@@ -15,10 +14,12 @@ security = HTTPBearer()
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against a hashed password"""
+    if not hashed_password:
+        return False
     try:
         pwd_context.verify(hashed_password, plain_password)
         return True
-    except VerifyMismatchError:
+    except Exception:
         return False
 
 
@@ -88,24 +89,36 @@ async def get_current_user(
             detail="Could not validate credentials"
         )
     
-    # ── BLACKLIST CHECK ──
+    # ── BLACKLIST CHECK (TOCTOU-safe) ──
+    # Take a pessimistic row lock on the User FIRST, then re-check the
+    # blacklist inside the same transaction. logout() acquires the same
+    # lock on the user row before inserting into TokenBlacklist, so the
+    # two operations serialize: if logout commits first, this second
+    # blacklist query sees the revoked jti and rejects the request.
     async with AsyncSessionLocal() as db:
-        result = await db.execute(select(TokenBlacklist).where(TokenBlacklist.jti == jti))
-        blacklisted = result.scalar_one_or_none()
-        
-        if blacklisted:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has been revoked (logged out)"
-            )
-            
-        # ── Verify User exists ──
-        result = await db.execute(select(User).where(User.id == uuid.UUID(user_id)))
+        result = await db.execute(
+            select(User)
+            .where(User.id == uuid.UUID(user_id))
+            .with_for_update()
+        )
         user = result.scalar_one_or_none()
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User no longer exists"
+            )
+
+        result = await db.execute(
+            select(TokenBlacklist)
+            .where(TokenBlacklist.jti == jti)
+            .with_for_update()
+        )
+        blacklisted = result.scalar_one_or_none()
+
+        if blacklisted:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has been revoked (logged out)"
             )
 
         # ── Enforce Organization Membership ──
