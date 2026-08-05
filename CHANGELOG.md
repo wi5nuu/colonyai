@@ -1,5 +1,101 @@
 # CHANGELOG - ColonyAI Security & Bug Fixes
 
+## [1.3.0] - 2026-08-05 (Third Round)
+
+### 🔒 SECURITY FIXES - CRITICAL (Third Audit)
+
+#### BUG-CRITICAL-ORG-BYPASS: Horizontal Privilege Escalation via Missing Org Checks ✅
+**Severity:** CRITICAL  
+**Location:** `backend/app/api/v1/endpoints/analyses.py:1159`, `corrections.py` (3 endpoints)  
+**Issue:** Flawed organization_id validation logic (`role != super_admin and org_id`) allowed users without org_id to bypass multi-tenant isolation and access any analysis/correction across all organizations.  
+**Fix:** Changed conditional logic to explicit if/else with 403 response when org_id is None for non-super_admin users.  
+**Impact:** Prevents horizontal privilege escalation where users can access other organizations' sensitive data.
+
+```python
+# Before (Bypass via None org_id):
+if current_user.get("role") != "super_admin" and org_id:
+    query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+# If org_id is None, check is skipped entirely!
+
+# After (Explicit rejection):
+if user_role != "super_admin":
+    if org_id:
+        query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+    else:
+        raise HTTPException(status_code=403, detail="User tidak terdaftar pada organisasi manapun.")
+```
+
+**Affected Endpoints Fixed:**
+- `approve_analysis` - analyses.py:1159
+- `start_correction_session` - corrections.py:41
+- `save_correction` - corrections.py:80
+- `get_correction_report` - corrections.py:240
+
+#### BUG-CRITICAL-RACE-CONDITION: Concurrent Update Race in approve_analysis ✅
+**Severity:** CRITICAL  
+**Location:** `backend/app/api/v1/endpoints/analyses.py:1192`  
+**Issue:** Missing pessimistic lock on Analysis SELECT allowed concurrent approval requests to race, causing lost updates or inconsistent reliability status.  
+**Fix:** Added `.with_for_update()` pessimistic lock to serialize concurrent updates; works alongside existing optimistic locking (StaleDataError).  
+**Impact:** Prevents race conditions in concurrent analysis approval workflows.
+
+```python
+# Before (Race condition possible):
+result = await db.execute(
+    select(Analysis).where(and_(*query_conditions))
+)
+
+# After (Serialized with pessimistic lock):
+result = await db.execute(
+    select(Analysis)
+    .where(and_(*query_conditions))
+    .with_for_update()  # Lock row during update
+)
+```
+
+---
+
+### 🔐 SECURITY FIXES - HIGH PRIORITY (Third Audit)
+
+#### BUG-HIGH-SQL-INJECTION: LIKE Wildcard Escape Bypass ✅
+**Severity:** HIGH  
+**Location:** `backend/app/api/v1/endpoints/analyses.py:838`  
+**Issue:** User-supplied `search` parameter not escaped before LIKE query, allowing SQL wildcard injection (`%`, `_`) to enumerate data or cause performance degradation.  
+**Fix:** Escape backslash, percent, and underscore characters; pass `escape='\\'` parameter to `.ilike()` calls.  
+**Impact:** Prevents SQL injection via LIKE wildcards and performance DoS attacks.
+
+```python
+# Before (Wildcard injection):
+search_pattern = f"%{search}%"
+base_conditions.append(Analysis.sample_id.ilike(search_pattern))
+
+# After (Escaped):
+search_escaped = search.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+search_pattern = f"%{search_escaped}%"
+base_conditions.append(Analysis.sample_id.ilike(search_pattern, escape='\\'))
+```
+
+#### BUG-HIGH-VALIDATION-BYPASS: Missing Incubation Parameter Validation ✅
+**Severity:** HIGH  
+**Location:** `backend/app/api/v1/endpoints/analyses.py` (create_analysis)  
+**Issue:** Optional parameters `incubation_temp` and `incubation_time_hours` accepted without validation, allowing negative values, NaN, Infinity, or unrealistic ranges that could corrupt reports.  
+**Fix:** Added validation: incubation_temp must be 0-100°C, incubation_time_hours must be 0-168 hours (7 days), with NaN/Inf checks.  
+**Impact:** Prevents invalid incubation metadata in analysis records and reports.
+
+```python
+# After (Validated):
+if incubation_temp is not None:
+    if math.isnan(incubation_temp) or math.isinf(incubation_temp):
+        raise HTTPException(...)
+    if incubation_temp < 0 or incubation_temp > 100:
+        raise HTTPException(status_code=422, detail="Suhu inkubasi harus antara 0-100°C.")
+
+if incubation_time_hours is not None:
+    if incubation_time_hours < 0 or incubation_time_hours > 168:
+        raise HTTPException(status_code=422, detail="Waktu inkubasi harus antara 0-168 jam.")
+```
+
+---
+
 ## [1.2.0] - 2026-08-05 (Second Round)
 
 ### 🔒 SECURITY FIXES - CRITICAL (Second Audit)
