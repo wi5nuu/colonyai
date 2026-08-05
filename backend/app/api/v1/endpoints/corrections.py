@@ -38,8 +38,27 @@ async def start_correction_session(
     Returns the session with all existing detections loaded for review.
     """
     analysis_uuid = uuid.UUID(analysis_id)
+    
+    # ── CRITICAL FIX: Multi-tenant security check ──
+    org_id = current_user.get("organization_id")
+    user_role = current_user.get("role")
+    query_conditions = [Analysis.id == analysis_uuid]
+    
+    if user_role != "super_admin":
+        if org_id:
+            query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User tidak terdaftar pada organisasi manapun."
+            )
+    
+    # Analyst can only access own analyses
+    if user_role == "analyst":
+        query_conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
+    
     result = await db.execute(
-        select(Analysis).where(Analysis.id == analysis_uuid)
+        select(Analysis).where(and_(*query_conditions))
     )
     analysis = result.scalars().first()
     if not analysis:
@@ -77,8 +96,26 @@ async def save_correction(
     analysis_uuid = uuid.UUID(analysis_id)
     user_uuid = uuid.UUID(current_user["user_id"])
 
+    # ── CRITICAL FIX: Multi-tenant security check ──
+    org_id = current_user.get("organization_id")
+    user_role = current_user.get("role")
+    query_conditions = [Analysis.id == analysis_uuid]
+    
+    if user_role != "super_admin":
+        if org_id:
+            query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User tidak terdaftar pada organisasi manapun."
+            )
+    
+    # Analyst can only access own analyses
+    if user_role == "analyst":
+        query_conditions.append(Analysis.user_id == user_uuid)
+
     result = await db.execute(
-        select(Analysis).where(Analysis.id == analysis_uuid)
+        select(Analysis).where(and_(*query_conditions))
     )
     analysis = result.scalars().first()
     if not analysis:
@@ -199,6 +236,32 @@ async def get_correction_report(
     Includes per-class TP/FP/FN breakdown.
     """
     analysis_uuid = uuid.UUID(analysis_id)
+
+    # ── CRITICAL FIX: Multi-tenant security check ──
+    # First verify user has access to the analysis
+    org_id = current_user.get("organization_id")
+    user_role = current_user.get("role")
+    query_conditions = [Analysis.id == analysis_uuid]
+    
+    if user_role != "super_admin":
+        if org_id:
+            query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User tidak terdaftar pada organisasi manapun."
+            )
+    
+    # Analyst can only access own analyses
+    if user_role == "analyst":
+        query_conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
+    
+    analysis_result = await db.execute(
+        select(Analysis).where(and_(*query_conditions))
+    )
+    analysis = analysis_result.scalars().first()
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Analysis not found")
 
     result = await db.execute(
         select(CorrectionSession).where(

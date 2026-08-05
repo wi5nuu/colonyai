@@ -438,6 +438,26 @@ async def create_analysis(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Volume terlalu besar. Maksimum adalah 10 mL.",
         )
+    
+    # ── HIGH FIX: Validate optional incubation parameters ──
+    if incubation_temp is not None:
+        if math.isnan(incubation_temp) or math.isinf(incubation_temp):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Suhu inkubasi tidak valid.",
+            )
+        if incubation_temp < 0 or incubation_temp > 100:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Suhu inkubasi harus antara 0-100°C.",
+            )
+    
+    if incubation_time_hours is not None:
+        if incubation_time_hours < 0 or incubation_time_hours > 168:  # 7 days max
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Waktu inkubasi harus antara 0-168 jam (7 hari).",
+            )
 
     analysis_id = uuid.uuid4()
 
@@ -695,12 +715,13 @@ async def create_analysis(
         await db.commit()
 
         # ── Step 10: Reload analisis dengan relasi ──
-        result = await db.execute(
-            select(Analysis)
-            .where(Analysis.id == analysis_id)
-            .options(joinedload(Analysis.detections), joinedload(Analysis.user))
-        )
-        analysis = result.scalars().unique().first()
+    result = await db.execute(
+        select(Analysis)
+        .where(and_(*query_conditions))
+        .options(selectinload(Analysis.detections), joinedload(Analysis.user))
+        .with_for_update()  # CRITICAL FIX: Pessimistic lock prevents concurrent updates
+    )
+    analysis = result.scalars().unique().first()
 
         if not analysis:
             raise HTTPException(
@@ -815,10 +836,13 @@ async def list_analyses(
 
     # Apply filters
     if search:
-        search_pattern = f"%{search}%"
+        # ── HIGH FIX: Escape LIKE wildcards to prevent SQL injection ──
+        # User input '%' or '_' should be treated as literals, not wildcards
+        search_escaped = search.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+        search_pattern = f"%{search_escaped}%"
         base_conditions.append(
-            (Analysis.sample_id.ilike(search_pattern)) |
-            (Analysis.media_type.ilike(search_pattern))
+            (Analysis.sample_id.ilike(search_pattern, escape='\\')) |
+            (Analysis.media_type.ilike(search_pattern, escape='\\'))
         )
 
     if media_type:
@@ -1154,10 +1178,17 @@ async def approve_analysis(
 
     # Multi-tenant security check
     org_id = current_user.get("organization_id")
+    user_role = current_user.get("role")
     query_conditions = [Analysis.id == analysis_uuid]
 
-    if current_user.get("role") != "super_admin" and org_id:
-        query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+    if user_role != "super_admin":
+        if org_id:
+            query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User tidak terdaftar pada organisasi manapun."
+            )
 
     result = await db.execute(
         select(Analysis)
