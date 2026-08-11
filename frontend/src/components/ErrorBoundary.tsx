@@ -1,10 +1,3 @@
-"""
-React Error Boundary Component for ColonyAI Frontend
-
-FIX BUG-MEDIUM-004: Implements comprehensive error boundary to catch and display
-React component errors gracefully, preventing white screen of death.
-"""
-
 'use client'
 
 import React, { Component, ReactNode, ErrorInfo } from 'react'
