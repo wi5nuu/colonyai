@@ -772,13 +772,13 @@ async def create_analysis(
         await db.commit()
 
         # ── Step 10: Reload analisis dengan relasi ──
-    result = await db.execute(
-        select(Analysis)
-        .where(and_(*query_conditions))
-        .options(selectinload(Analysis.detections), joinedload(Analysis.user))
-        .with_for_update()  # CRITICAL FIX: Pessimistic lock prevents concurrent updates
-    )
-    analysis = result.scalars().unique().first()
+        result = await db.execute(
+            select(Analysis)
+            .where(Analysis.id == analysis_id)
+            .options(selectinload(Analysis.detections), joinedload(Analysis.user))
+            .with_for_update()  # CRITICAL FIX: Pessimistic lock prevents concurrent updates
+        )
+        analysis = result.scalars().unique().first()
 
         if not analysis:
             raise HTTPException(
