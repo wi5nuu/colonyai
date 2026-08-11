@@ -138,6 +138,15 @@ class ApiClient {
 
     const data = await response.json()
     return { data }
+    } catch (error) {
+      clearTimeout(timeoutId)
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new Error('Request timeout - the server took too long to respond')
+      }
+      throw error
+    } finally {
+      clearTimeout(timeoutId)
+    }
   }
 
   async get<T>(endpoint: string, config?: { params?: Record<string, any> }): Promise<{ data: T }> {
