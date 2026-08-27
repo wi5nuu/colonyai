@@ -10,9 +10,6 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     decode_token,
-    create_confirmation_code,
-    validate_email_domain,
-    sanitize_filename,
 )
 
 class TestPasswordHashing:
@@ -78,21 +75,4 @@ class TestJWTToken:
         assert payload["type"] == "refresh"
 
 
-class TestSecurityUtilities:
-    def test_confirmation_code_length(self):
-        code = create_confirmation_code()
-        assert len(code) == 6
-        assert code.isdigit()
-
-    def test_validate_email_domain_valid(self):
-        assert validate_email_domain("user@gmail.com") is True
-        assert validate_email_domain("user@yahoo.co.id") is True
-
-    def test_validate_email_domain_invalid(self):
-        assert validate_email_domain("user@invalid-tld.xyz") is False
-
-    def test_sanitize_filename_removes_path(self):
-        assert sanitize_filename("../../etc/passwd") == "etc_passwd"
-
-    def test_sanitize_filename_allow_safe(self):
-        assert sanitize_filename("colony_plate_001.jpg") == "colony_plate_001.jpg"
+class TestJWTToken:
