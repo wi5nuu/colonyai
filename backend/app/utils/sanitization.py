@@ -1,5 +1,5 @@
 import html
-from typing import Any, Dict, List, TypeVar, Union
+from typing import TypeVar
 
 T = TypeVar("T")
 
