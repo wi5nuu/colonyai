@@ -8,7 +8,7 @@ def sanitize_string(value: str) -> str:
     Escape HTML characters in a string to prevent XSS.
     """
     if not isinstance(value, str):
-        return value
+        return str(value)
     return html.escape(value)
 
 def sanitize_recursive(data: T) -> T:
