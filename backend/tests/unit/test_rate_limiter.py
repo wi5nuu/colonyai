@@ -4,12 +4,12 @@ import time
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 import pytest
-from app.core.rate_limiter import RateLimitMiddleware, TokenBucket
+from app.core.rate_limiter import RateLimitMiddleware, RateLimitInfo
 
 
-class TestTokenBucket:
+class TestRateLimitInfo:
     def setup_method(self):
-        self.bucket = TokenBucket(max_tokens=10, refill_rate=1.0)
+        self.bucket = RateLimitInfo(max_tokens=10, refill_rate=1.0)
 
     def test_initial_tokens(self):
         assert self.bucket.tokens == 10
