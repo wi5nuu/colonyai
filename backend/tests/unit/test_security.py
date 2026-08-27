@@ -73,6 +73,3 @@ class TestJWTToken:
         token = create_refresh_token(data)
         payload = decode_token(token)
         assert payload["type"] == "refresh"
-
-
-class TestJWTToken:
