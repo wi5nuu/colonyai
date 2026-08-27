@@ -6,9 +6,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-async def send_mfa_email(email_to: str, code: str):
+async def send_mfa_email(email_to: str, code: str) -> bool:
     """
     Send a 6-digit MFA code via SMTP.
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
     """
     if not settings.SMTP_USER or not settings.SMTP_PASS:
         logger.warning(f"[EMAIL] SMTP not configured. Printing code for {email_to}: {code}")
