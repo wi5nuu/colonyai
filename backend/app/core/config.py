@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 from typing import List
 from pathlib import Path
 import os
@@ -92,9 +93,10 @@ class Settings(BaseSettings):
     EMAILS_FROM_NAME: str = os.getenv("EMAILS_FROM_NAME", "ColonyAI Security")
     SMTP_TLS: bool = True
 
-    class Config:
-        case_sensitive = True
-        extra = "ignore"
+    model_config = ConfigDict(
+        case_sensitive=True,
+        extra="ignore",
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
