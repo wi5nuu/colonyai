@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from app.core.config import settings
 import logging
+import ssl
 
 logger = logging.getLogger(__name__)
 
