@@ -3,7 +3,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 import pytest
-from app.services.cfu_calculator import CFUCalculator, ColonyCounter, DetectionResult
+from app.services.cfu_calculator import CFUCalculator
 
 
 class TestCFUCalculator:
