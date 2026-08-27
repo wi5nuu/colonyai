@@ -169,7 +169,7 @@ class ImageProcessor:
         mask = np.zeros(image.shape[:2], dtype=np.uint8)
         circle_info = None
 
-        if circles is not None:
+        if circles is not None and len(circles[0]) > 0:
             # Get the largest circle
             circles = np.round(circles[0, :]).astype("int")
             largest_circle = max(circles, key=lambda c: c[2])
