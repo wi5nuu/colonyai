@@ -1,3 +1,4 @@
+import logging
 from pydantic_settings import BaseSettings
 from pydantic import ConfigDict
 from typing import List
@@ -11,6 +12,8 @@ env_path = Path(__file__).parent.parent.parent / ".env"
 load_dotenv(dotenv_path=env_path, override=True)
 
 # Now import os values will have the .env values
+logger = logging.getLogger(__name__)
+
 class Settings(BaseSettings):
     # Application
     APP_NAME: str = "ColonyAI Backend"
@@ -44,7 +47,7 @@ class Settings(BaseSettings):
 
     # Initial Admin Seed
     INITIAL_ADMIN_EMAIL: str = "admin@colonyai.local"
-    INITIAL_ADMIN_PASSWORD: str = "admin_secure_placeholder"
+    INITIAL_ADMIN_PASSWORD: str = ""
     SEED_USERS_PASSWORD: str = os.getenv("SEED_USERS_PASSWORD") or ""
     INITIAL_SUPER_ADMIN_EMAIL: str = os.getenv("INITIAL_SUPER_ADMIN_EMAIL", "superadmin@colonyai.com")
     INITIAL_SUPER_ADMIN_PASSWORD: str = os.getenv("INITIAL_SUPER_ADMIN_PASSWORD") or ""
@@ -117,6 +120,12 @@ class Settings(BaseSettings):
             raise ValueError(
                 "JWT_SECRET_KEY must be set in environment variables. "
                 "Generate with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+            )
+        
+        if not self.INITIAL_ADMIN_PASSWORD:
+            logger.warning(
+                "INITIAL_ADMIN_PASSWORD is not set. The admin account will not have a usable password. "
+                "Set INITIAL_ADMIN_PASSWORD in your .env file."
             )
         
         # Ensure upload directories exist
