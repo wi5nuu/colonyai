@@ -61,7 +61,6 @@ async def send_mfa_email(email_to: str, code: str) -> bool:
 
     message.attach(MIMEText(html_content, "html"))
 
-    import ssl
     # BUG-SEC-003 FIX: Enable proper SSL/TLS certificate verification for production security
     # Use default context with certificate verification enabled
     context = ssl.create_default_context()
