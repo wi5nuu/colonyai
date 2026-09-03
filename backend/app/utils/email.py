@@ -65,7 +65,7 @@ async def send_mfa_email(email_to: str, code: str) -> bool:
     # Use default context with certificate verification enabled
     context = ssl.create_default_context()
     # Only disable verification in development if explicitly configured
-    if hasattr(settings, 'SMTP_SKIP_VERIFY') and settings.SMTP_SKIP_VERIFY and settings.ENVIRONMENT == "development":
+    if hasattr(settings, 'SMTP_SKIP_VERIFY') and settings.SMTP_SKIP_VERIFY:
         logger.warning("[EMAIL] SSL certificate verification disabled - DEVELOPMENT ONLY")
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
