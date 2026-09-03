@@ -422,7 +422,7 @@ class CFUCalculator:
                 ),
                 recommendation=(
                     "Kurangi faktor pengenceran atau perpanjang waktu inkubasi. "
-                    f"Coba pengenceran: {dilution_factor / 10:.2e}"
+                    f"Coba pengenceran: {dilution_factor / 10:.4g}"
                 ),
                 confidence_score=confidence_score,
                 reliability=reliability,
