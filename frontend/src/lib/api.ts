@@ -65,8 +65,8 @@ class ApiClient {
       
       clearTimeout(timeoutId)
 
-    // Handle 401 Unauthorized - Attempt Token Refresh
-    if (response.status === 401 && authToken && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh')) {
+      // Handle 401 Unauthorized - Attempt Token Refresh
+      if (response.status === 401 && authToken && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh')) {
       if (!this.isRefreshing) {
         this.isRefreshing = true
         
