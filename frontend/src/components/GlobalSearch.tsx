@@ -96,7 +96,7 @@ export function GlobalSearch() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query]);
+  }, [query, accessToken]);
 
   const filteredItems = items.filter((item) => {
     const matchesTab = tab === "all" || item.type === tab;
