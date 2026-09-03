@@ -297,7 +297,7 @@ class ImageProcessor:
         agar warna bounding box benar (hijau = koloni, merah = debris, dll).
         """
         # ── Konversi ke BGR untuk OpenCV drawing ──
-        annotated_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        bgr_image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
         # Hitung colony count untuk label
         colony_count = sum(
@@ -317,7 +317,7 @@ class ImageProcessor:
 
             # Line thickness: tebal untuk koloni valid, tipis untuk artifact
             thickness = 3 if (is_valid and confidence > 0.75) else 2
-            cv2.rectangle(annotated_bgr, (x, y), (x + w, y + h), color, thickness)
+            cv2.rectangle(bgr_image, (x, y), (x + w, y + h), color, thickness)
 
             if show_labels:
                 label_parts = [class_name.replace('_', ' ').title()]
@@ -336,11 +336,11 @@ class ImageProcessor:
                 # Label background
                 lx1, ly1 = x, max(0, y - label_h - 6)
                 lx2, ly2 = x + label_w + 4, y
-                cv2.rectangle(annotated_bgr, (lx1, ly1), (lx2, ly2), color, -1)
+                cv2.rectangle(bgr_image, (lx1, ly1), (lx2, ly2), color, -1)
 
                 # Label text (white)
                 cv2.putText(
-                    annotated_bgr, label,
+                    bgr_image, label,
                     (x + 2, max(label_h, y - 4)),
                     font, font_scale,
                     (255, 255, 255),
@@ -349,17 +349,17 @@ class ImageProcessor:
                 )
 
         # ── Watermark: ColonyAI branding + colony count ──
-        h_img, w_img = annotated_bgr.shape[:2]
+        h_img, w_img = bgr_image.shape[:2]
 
         # Background strip gelap di bagian bawah
         strip_h = 32
-        overlay = annotated_bgr.copy()
+        overlay = bgr_image.copy()
         cv2.rectangle(overlay, (0, h_img - strip_h), (w_img, h_img), (20, 20, 20), -1)
-        cv2.addWeighted(overlay, 0.75, annotated_bgr, 0.25, 0, annotated_bgr)
+        cv2.addWeighted(overlay, 0.75, bgr_image, 0.25, 0, bgr_image)
 
         # ColonyAI label kiri
         cv2.putText(
-            annotated_bgr,
+            bgr_image,
             "ColonyAI v2.0 | AI-Powered Plate Reader",
             (10, h_img - 10),
             cv2.FONT_HERSHEY_SIMPLEX,
@@ -373,7 +373,7 @@ class ImageProcessor:
         count_label = f"Colonies: {colony_count}"
         (cw, _), _ = cv2.getTextSize(count_label, cv2.FONT_HERSHEY_SIMPLEX, 0.45, 1)
         cv2.putText(
-            annotated_bgr,
+            bgr_image,
             count_label,
             (w_img - cw - 10, h_img - 10),
             cv2.FONT_HERSHEY_SIMPLEX,
@@ -384,4 +384,4 @@ class ImageProcessor:
         )
 
         # ── Simpan dalam format BGR (OpenCV default) ──
-        cv2.imwrite(output_path, annotated_bgr)
+        cv2.imwrite(output_path, bgr_image)
