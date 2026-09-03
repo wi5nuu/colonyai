@@ -21,7 +21,7 @@ _rng = secrets.SystemRandom()
 
 # Password complexity requirements (must match validate_password_complexity in auth.py)
 MIN_PASSWORD_LENGTH = 8
-SPECIAL_CHARS = "!@#$%^&*(),.?\":{}|<>[]\\/_-+=~`"
+SPECIAL_CHARS = r"!@#$%^&*(),.?\":{}|<>[]\/_-+=~`"
 
 
 def generate_secure_temp_password(length: int = 12) -> str:
