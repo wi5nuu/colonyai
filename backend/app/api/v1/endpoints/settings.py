@@ -164,6 +164,13 @@ async def update_appearance_preferences(
             detail=f"Invalid theme. Must be one of: {valid_themes}"
         )
     
+    valid_languages = ["en", "id"]
+    if data.language not in valid_languages:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid language. Must be one of: {valid_languages}"
+        )
+    
     user_id = uuid.UUID(current_user["user_id"])
     
     result = await db.execute(select(UserPreference).where(UserPreference.user_id == user_id))
