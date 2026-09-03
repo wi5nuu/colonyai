@@ -76,6 +76,8 @@ class ComparisonResponse(BaseModel):
 
 def calculate_agreement(ai_count: int, manual_count: int) -> float:
     """Calculate agreement percentage between AI and manual count."""
+    if ai_count == 0 and manual_count == 0:
+        return 100.0
     max_val = max(ai_count, manual_count)
     if max_val == 0:
         return 100.0
