@@ -107,8 +107,6 @@ MEDIA_TYPE_ALIASES: dict[str, str] = {
     # TGEA
     "tgea":              "TGEA",
     "tryptone glucose extract agar": "TGEA",
-    # BGBB
-    "bgbb":              "BGBB",
     # Other → DEFAULT
     "other":             "DEFAULT",
 }
