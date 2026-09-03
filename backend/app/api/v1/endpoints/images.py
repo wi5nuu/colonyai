@@ -74,6 +74,7 @@ async def upload_image(
 
     if s3_is_configured():
         # Upload to S3
+        ext = unique_filename.rsplit('.', 1)[-1] if '.' in unique_filename else 'jpg'
         s3_key = f"{settings.AWS_S3_ORIGINAL_PREFIX}{image_id}.{ext}"
         upload_to_s3(file_bytes, s3_key, content_type=file.content_type)
         original_url = get_presigned_url(s3_key) or s3_key
