@@ -443,6 +443,11 @@ async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends
             )
 
         user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token payload"
+            )
         email = payload.get("email")
         role = payload.get("role")
 
