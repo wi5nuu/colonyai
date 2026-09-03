@@ -31,7 +31,6 @@ class OrgAdminInfo(BaseModel):
     id: str
     full_name: str
     email: str
-    recovery_password: Optional[str]
     last_active: Optional[datetime]
 
 class OrganizationDetail(BaseModel):
@@ -125,7 +124,6 @@ async def get_all_organizations(
                     "id": str(a.id), 
                     "full_name": a.full_name, 
                     "email": a.email, 
-                    "recovery_password": a.recovery_password,
                     "last_active": a.updated_at
                 }
                 for a in admins
@@ -280,7 +278,6 @@ class OrgPersonnelResponse(BaseModel):
     full_name: str
     email: str
     role: str
-    recovery_password: Optional[str] = None
 
 @router.get("/organizations/{org_id}/personnel")
 async def get_org_personnel(
@@ -300,7 +297,6 @@ async def get_org_personnel(
             "full_name": u.full_name,
             "email": u.email,
             "role": u.role.value if hasattr(u.role, "value") else str(u.role),
-            "recovery_password": u.recovery_password,
         }
         for u in users
     ]
