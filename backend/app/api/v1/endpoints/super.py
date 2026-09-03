@@ -198,7 +198,7 @@ async def provision_new_organization(
         "organization_id": str(org_id),
         "license_key": license_key,
         "admin_temp_password": temp_password,
-        "message": f"Organization '{request.name}' provisioned on {request.infra_config.get('node', 'Default Node')} with {request.infra_config.get('storage', '1 TB')} storage."
+        "message": f"Organization '{request.name}' provisioned on {request.infra_config.get('node', 'Default Node') if request.infra_config else 'Default Node'} with {request.infra_config.get('storage', '1 TB') if request.infra_config else '1 TB'} storage."
     }
 
 class GlobalResetPasswordRequest(BaseModel):
