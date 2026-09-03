@@ -61,7 +61,7 @@ Base = declarative_base()
 async def init_db():
     """Initialize database connection and create tables.
     Gracefully handles missing PostgreSQL for demo mode."""
-    global DB_AVAILABLE, engine
+    global DB_AVAILABLE
 
     if engine is None:
         logger.warning("[DATABASE] Database not configured. Running in DEMO MODE (no persistence).")
