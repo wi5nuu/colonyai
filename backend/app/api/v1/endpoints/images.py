@@ -130,7 +130,10 @@ async def get_image(
             detail="Image not found"
         )
 
-    return FileResponse(file_path, media_type="image/jpeg")
+    # Determine media type from file extension
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
+    media_type_map = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'webp': 'image/webp'}
+    return FileResponse(file_path, media_type=media_type_map.get(ext, 'image/jpeg'))
 
 
 @router.delete("/{image_id}")
