@@ -44,7 +44,8 @@ def s3_is_configured() -> bool:
         return False
     # Ignore placeholder/test credentials
     placeholder_prefixes = ("your-", "test-", "example-", "dummy-", "placeholder-")
-    if any(key.lower().startswith(p) for p in placeholder_prefixes):
+    key_lower = key.lower()
+    if any(key_lower.startswith(p) for p in placeholder_prefixes):
         return False
     return True
 
