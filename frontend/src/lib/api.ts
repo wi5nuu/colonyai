@@ -26,8 +26,9 @@ class ApiClient {
     const url = `${this.baseUrl}${endpoint}`
     
     // FIX BUG-MEDIUM-003: Add timeout to prevent hanging requests
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 seconds timeout
+    // Respect existing signal if provided by caller
+    const controller = options.signal ? null : new AbortController()
+    const timeoutId = controller ? setTimeout(() => controller.abort(), 30000) : null
     
     // Get auth token if available
     let authToken: string | null = null
@@ -60,10 +61,10 @@ class ApiClient {
       const response = await fetch(url, {
         ...options,
         headers,
-        signal: controller.signal,
+        signal: controller ? controller.signal : options.signal,
       })
       
-      clearTimeout(timeoutId)
+      if (timeoutId) clearTimeout(timeoutId)
 
       // Handle 401 Unauthorized - Attempt Token Refresh
       if (response.status === 401 && authToken && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh')) {
@@ -144,13 +145,13 @@ class ApiClient {
     const data = await response.json()
     return { data }
     } catch (error) {
-      clearTimeout(timeoutId)
+      if (timeoutId) clearTimeout(timeoutId)
       if (error instanceof DOMException && error.name === 'AbortError') {
         throw new Error('Request timeout - the server took too long to respond')
       }
       throw error
     } finally {
-      clearTimeout(timeoutId)
+      if (timeoutId) clearTimeout(timeoutId)
     }
   }
 
