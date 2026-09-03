@@ -4,6 +4,7 @@ from sqlalchemy import select, func
 from typing import List, Optional
 import uuid
 import secrets
+import string
 
 from app.core.database import get_db
 from app.core.security import require_role, get_password_hash
@@ -166,7 +167,6 @@ async def provision_new_organization(
     
     # 2. Create First Admin for this Org
     # Generate strong random temporary password (16 chars, mixed case, digits, special chars)
-    import string
     alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
     temp_password = ''.join(secrets.choice(alphabet) for _ in range(16)) 
     
