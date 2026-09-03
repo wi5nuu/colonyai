@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     # Application
     APP_NAME: str = "ColonyAI Backend"
     APP_VERSION: str = "1.0.0"
-    DEBUG: bool = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
+    DEBUG: bool = False
     SECRET_KEY: str = os.getenv("SECRET_KEY") or ""
     API_V1_PREFIX: str = "/api/v1"
 
