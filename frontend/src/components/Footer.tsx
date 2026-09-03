@@ -131,6 +131,7 @@ export function Footer() {
                   key={partner}
                   href="#"
                   className="text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-[#0055ff] dark:hover:text-[#00f2ff] transition-colors uppercase tracking-widest flex items-center gap-2 group"
+                  rel="noopener noreferrer"
                 >
                   <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700 group-hover:bg-[#0055ff] dark:group-hover:bg-[#00f2ff] transition-colors" />
                   {partner}

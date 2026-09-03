@@ -115,11 +115,13 @@ export function SecurityFooter() {
             <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">{t.col3_title}</h4>
             <nav className="flex flex-col gap-3">
                {t.links.map((item) => (
-                 <Link 
-                   key={item.name} 
-                   href={item.href}
-                   className="text-[11px] font-bold text-slate-600 hover:text-[#0055ff] flex items-center justify-between group transition-all uppercase tracking-wider"
-                 >
+                   <Link 
+                     key={item.name} 
+                     href={item.href}
+                     className="text-[11px] font-bold text-slate-600 hover:text-[#0055ff] flex items-center justify-between group transition-all uppercase tracking-wider"
+                     rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                     target={item.href.startsWith('http') ? '_blank' : undefined}
+                   >
                    {item.name}
                    <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                  </Link>
