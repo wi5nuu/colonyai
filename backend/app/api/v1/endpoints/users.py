@@ -9,7 +9,7 @@ import logging
 
 from app.core.security import get_current_user, require_role
 from app.core.database import get_db
-from app.models import User, Notification, Organization
+from app.models import User, UserRole, Notification, Organization
 from app.utils.audit import write_audit_log
 from app.utils.password_generator import generate_secure_temp_password
 from app.utils.sanitization import sanitize_string
@@ -65,7 +65,7 @@ async def get_current_user_profile(
         id=str(user.id),
         email=user.email,
         full_name=user.full_name,
-        role=user.role.value if hasattr(user.role, 'value') else str(user.role),
+        role=user.role.value if isinstance(user.role, UserRole) else str(user.role),
         laboratory_id=str(user.laboratory_id) if user.laboratory_id else None,
     )
 
@@ -106,7 +106,7 @@ async def update_current_user_profile(
         id=str(user.id),
         email=user.email,
         full_name=user.full_name,
-        role=user.role.value if hasattr(user.role, 'value') else str(user.role),
+        role=user.role.value if isinstance(user.role, UserRole) else str(user.role),
         laboratory_id=str(user.laboratory_id) if user.laboratory_id else None,
     )
 
