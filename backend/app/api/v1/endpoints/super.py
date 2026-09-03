@@ -250,19 +250,13 @@ async def toggle_org_status(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
         
-    current_status_str = getattr(org.is_active, "name", str(org.is_active)).lower()
-    if current_status_str == 'orgstatus.active':
+    current_status_str = str(org.is_active).lower()
+    if current_status_str in ['orgstatus.active', 'active', '1']:
         current_status_str = 'active'
-    elif current_status_str == 'orgstatus.suspended':
+    elif current_status_str in ['orgstatus.suspended', 'suspended', '2']:
         current_status_str = 'suspended'
-        
-    # Kalau bukan active/suspended dari string, coba parse valuenya
-    if current_status_str not in ['active', 'suspended']:
-        val = getattr(org.is_active, "value", None)
-        if val in [1, "1"]:
-            current_status_str = 'active'
-        elif val in [2, "2"]:
-            current_status_str = 'suspended'
+    else:
+        current_status_str = 'active'
 
     new_status = 'suspended' if current_status_str == 'active' else 'active'
     org.is_active = new_status
