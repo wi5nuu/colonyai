@@ -550,7 +550,7 @@ class CFUCalculator:
                 "u_combined": unc.u_combined,
                 "U_expanded": unc.U_expanded,
                 "coverage_factor": unc.coverage_factor,
-            } if unc else None,
+            } if unc is not None else None,
             "class_breakdown": result.class_breakdown,
             "warnings": result.warnings,
         }
