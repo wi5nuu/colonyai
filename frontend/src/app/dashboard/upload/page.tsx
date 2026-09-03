@@ -106,7 +106,12 @@ export default function UploadPage() {
   };
 
   const handleFile = useCallback((file: File) => {
-    if (!file.type.startsWith("image/")) {
+    // Validate file type using both MIME type and extension
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
       toast.error(t("upload.errorImageFile"));
       return;
     }
