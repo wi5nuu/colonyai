@@ -32,7 +32,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   full_name: string;
-  role?: "analyst" | "viewer";
+  role?: "analyst" | "manager" | "auditor" | "admin" | "super_admin";
 }
 
 export interface AuthResponse {
