@@ -71,6 +71,11 @@ export const useTranslationStore = create<TranslationStore>()(
       // After rehydration from localStorage, rebuild t() and apply lang to <html>
       onRehydrateStorage: () => (state) => {
         if (state) {
+          // Validate language value is one of the allowed values
+          const validLanguages: Language[] = ["en", "id"];
+          if (!validLanguages.includes(state.language)) {
+            state.language = "en";
+          }
           state.t = buildTranslator(state.language);
           // Re-apply lang to <html> on page load / hydration
           if (typeof document !== "undefined") {
