@@ -37,7 +37,7 @@ class MessengerService:
             f"\U0001f517 View full ledger on the Neural Control Center."
         )
         
-        logger.info(f"[WHATSAPP API] Sent message to {phone_number}:\n{message}")
+        logger.info(f"[WHATSAPP API] Sent message to {phone_number} (content redacted for privacy)")
         return True
 
     @staticmethod
@@ -65,7 +65,7 @@ class MessengerService:
             f"\U0001f517 View full ledger on the Neural Control Center."
         )
         
-        logger.info(f"[TELEGRAM API] Sent HTML message to {chat_id}:\n{message}")
+        logger.info(f"[TELEGRAM API] Sent HTML message to {chat_id} (content redacted for privacy)")
         return True
 
     @staticmethod
