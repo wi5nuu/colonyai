@@ -78,9 +78,9 @@ def sanitize_filename(filename: str, allowed_extensions: Optional[set] = None) -
     if ext not in allowed_extensions:
         raise ValueError(f"File extension {ext} not allowed. Allowed: {', '.join(allowed_extensions)}")
     
-    # Sanitize name: keep only alphanumeric, dash, underscore
+    # Sanitize name: keep only alphanumeric, dash, underscore (no dots to prevent double extension attacks)
     # Replace other characters with underscore
-    name = re.sub(r'[^a-zA-Z0-9._-]', '_', name)
+    name = re.sub(r'[^a-zA-Z0-9_-]', '_', name)
     
     # Prevent empty name after sanitization
     if not name or name == '_':
