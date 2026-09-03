@@ -7,6 +7,7 @@ from pathlib import Path
 import uuid
 import math
 import os
+import re
 import shutil
 import tempfile
 import cv2 as _cv2
@@ -419,7 +420,6 @@ async def create_analysis(
         )
     
     # Whitelist: alphanumeric, dash, underscore, space only
-    import re
     if not re.match(r'^[a-zA-Z0-9\s\-_]+$', sample_id):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
