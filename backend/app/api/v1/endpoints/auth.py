@@ -141,7 +141,8 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
             )
 
     # ── Check Account Lockout ──
-    if user.is_locked_out == 'yes':
+    is_locked = str(user.is_locked_out).lower() in ('yes', 'true', '1', 'locked')
+    if is_locked:
         if user.locked_until and user.locked_until > datetime.now(timezone.utc):
             remaining = (user.locked_until - datetime.now(timezone.utc)).seconds // 60
             raise HTTPException(
@@ -150,7 +151,7 @@ async def login(request: LoginRequest, http_request: Request = None, db: AsyncSe
             )
         else:
             # Reset lockout after time expired
-            user.is_locked_out = 'no'
+            user.is_locked_out = False
             user.failed_login_attempts = 0
             await db.commit()
 
