@@ -64,6 +64,11 @@ class Settings(BaseSettings):
     # Image Processing
     IMAGE_MAX_SIZE: int = 10485760  # 10MB
     IMAGE_ALLOWED_TYPES: str = "image/jpeg,image/png,image/webp"
+    
+    @property
+    def IMAGE_ALLOWED_TYPES_LIST(self) -> list[str]:
+        """Return IMAGE_ALLOWED_TYPES as a list for easier comparison."""
+        return [t.strip() for t in self.IMAGE_ALLOWED_TYPES.split(",")]
     PLATE_DETECTION_ENABLED: bool = True
 
     # Celery
