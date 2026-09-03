@@ -175,7 +175,7 @@ class ApiClient {
   async post<T>(endpoint: string, body?: any, config?: { headers?: Record<string, string> }): Promise<{ data: T }> {
     const options: RequestInit = {
       method: 'POST',
-      headers: config?.headers || {},
+      headers: config?.headers,
     }
     
     if (body instanceof FormData) {
