@@ -12,6 +12,7 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.utils.s3 import s3_is_configured, upload_to_s3, get_presigned_url, delete_from_s3
 from app.utils.path_sanitizer import generate_safe_filename, safe_join_path, validate_path_in_directory
+from app.services.file_validator import validate_and_sanitize_image
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
@@ -37,18 +38,19 @@ async def upload_image(
     current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin"))
 ):
     """Upload a plate image for analysis (Auditor: no upload — read-only role)"""
-    # Validate file type
-    allowed_types = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
-    if file.content_type not in allowed_types:
+    # Validate file type using magic bytes instead of content_type header
+    try:
+        file_content, safe_filename, detected_mime = await validate_and_sanitize_image(file)
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File type not allowed. Allowed: {', '.join(allowed_types)}"
+            detail=f"File validation failed: {str(e)}"
         )
 
-    # Validate file size (10MB max)
-    file.file.seek(0, 2)
-    file_size = file.file.tell()
-    file.file.seek(0)
+    # Validate file size (10MB max) using already-read content
+    file_size = len(file_content)
 
     if file_size > settings.IMAGE_MAX_SIZE:
         raise HTTPException(
@@ -69,8 +71,8 @@ async def upload_image(
             detail=f"Invalid filename: {str(e)}"
         )
 
-    # Read file bytes
-    file_bytes = file.file.read()
+    # Use validated file content from magic bytes validation
+    file_bytes = file_content
 
     if s3_is_configured():
         # Upload to S3
