@@ -1,4 +1,5 @@
 import asyncio
+import re
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -56,7 +57,6 @@ def validate_password_complexity(password: str):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Password must contain at least one digit"
         )
-    import re
     if not re.search(r"[!@#$%^&*(),.?\":{}|<>\[\]\\/_\-+=~`]", password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
