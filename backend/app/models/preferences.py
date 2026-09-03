@@ -15,8 +15,9 @@ from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 def utcnow():
-    """Timezone-aware UTC datetime factory for SQLAlchemy defaults."""
-    return datetime.now(timezone.utc)
+    """Timezone-aware UTC datetime factory for SQLAlchemy defaults.
+    Uses naive UTC for SQLite compatibility."""
+    return datetime.utcnow()
 
 
 class UserPreference(Base):
