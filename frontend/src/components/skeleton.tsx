@@ -1,6 +1,15 @@
 export function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse bg-muted rounded ${className || ''}`} />
+    <div
+      className={`bg-muted rounded ${className || ''}`}
+      style={{
+        backgroundImage: 'linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.05) 50%, transparent 100%)',
+        backgroundSize: '200% 100%',
+        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      }}
+      role="presentation"
+      aria-hidden="true"
+    />
   )
 }
 
