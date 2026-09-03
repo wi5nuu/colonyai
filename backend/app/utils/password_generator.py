@@ -15,6 +15,9 @@ import secrets
 import re
 from typing import Optional
 
+# Reuse a single SystemRandom instance for shuffling
+_rng = secrets.SystemRandom()
+
 
 # Password complexity requirements (must match validate_password_complexity in auth.py)
 MIN_PASSWORD_LENGTH = 8
@@ -73,7 +76,7 @@ def generate_secure_temp_password(length: int = 12) -> str:
     password_chars.extend(secrets.choice(all_chars) for _ in range(remaining_length))
     
     # Shuffle to avoid predictable pattern (special char always at position 3, etc)
-    secrets.SystemRandom().shuffle(password_chars)
+    _rng.shuffle(password_chars)
     
     password = ''.join(password_chars)
     
