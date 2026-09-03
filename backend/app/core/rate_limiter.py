@@ -84,7 +84,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.max_requests = max_requests
         self.window_seconds = window_seconds
-        self.refill_rate = max_requests / window_seconds  # tokens per second
+        self.refill_rate = min(max_requests / window_seconds, max_requests)  # Cap at max_requests per second
         
         # Rate limit storage (thread-safe with lock)
         self._limits: Dict[str, RateLimitInfo] = defaultdict(
