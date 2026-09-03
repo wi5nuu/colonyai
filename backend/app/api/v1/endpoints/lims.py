@@ -46,7 +46,7 @@ def validate_lims_url(url: str) -> bool:
             return False
             
         # Block localhost and private IPs
-        if hostname in ["localhost", "127.0.0.1", "0.0.0.0"] or hostname.startswith("192.168.") or hostname.startswith("10.") or hostname.startswith("172."):
+        if hostname in ["localhost", "127.0.0.1", "0.0.0.0"] or hostname.startswith("192.168.") or hostname.startswith("10.") or (hostname.startswith("172.") and len(hostname.split(".")) == 4 and 16 <= int(hostname.split(".")[1]) <= 31):
             return False
         
         # Check against whitelist
