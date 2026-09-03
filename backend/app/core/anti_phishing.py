@@ -33,6 +33,9 @@ _email_reset_attempts: Dict[str, Tuple[int, float]] = defaultdict(lambda: (0, ti
 # Permanently blocked IPs this session (cleared on restart)
 _blocked_ips: Dict[str, str] = {}  # ip → reason
 
+# Last cleanup timestamp
+_last_cleanup: float = time.monotonic()
+
 # ─────────────────────────────────────────────
 # Configuration
 # ─────────────────────────────────────────────
@@ -65,6 +68,19 @@ def check_and_record_reset_attempt(ip: str, email: str, user_role: str) -> None:
     """
     with _lock:
         now = time.monotonic()
+        
+        # Periodic cleanup of stale entries to prevent memory leak
+        global _last_cleanup
+        if now - _last_cleanup > WINDOW_SECONDS_IP * 2:
+            stale_ips = [ip for ip, (_, start) in _ip_reset_attempts.items() 
+                        if now - start > WINDOW_SECONDS_IP * 2]
+            for ip in stale_ips:
+                del _ip_reset_attempts[ip]
+            stale_emails = [em for em, (_, start) in _email_reset_attempts.items() 
+                           if now - start > WINDOW_SECONDS_EMAIL * 2]
+            for em in stale_emails:
+                del _email_reset_attempts[em]
+            _last_cleanup = now
 
         # ── 1. Check if IP is permanently blocked ──
         if ip in _blocked_ips:
