@@ -132,7 +132,9 @@ async def get_db():
     session = AsyncSessionLocal()
     try:
         yield session
-        await session.commit()
+        # Only commit if there are pending changes to avoid double commit
+        if session.is_active and session.dirty:
+            await session.commit()
     except Exception:
         await session.rollback()
         raise
