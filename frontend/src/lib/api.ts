@@ -73,7 +73,7 @@ class ApiClient {
         try {
           // Import useAuthStore dynamically to avoid circular dependency
           const { useAuthStore } = await import('./auth-store')
-          const refreshSuccess = await useAuthStore.getState().refreshAccessToken()
+          await useAuthStore.getState().refreshAccessToken()
           
           this.isRefreshing = false
           
@@ -95,9 +95,14 @@ class ApiClient {
               }
             })
           }
+          // If no new token after refresh, fall through to throw
+          throw new Error('Token refresh succeeded but no new token found')
         } catch (refreshError) {
           this.isRefreshing = false
           this.refreshSubscribers = []
+          // Clear auth state on refresh failure
+          const { useAuthStore } = await import('./auth-store')
+          useAuthStore.getState().logout().catch(() => {})
           throw refreshError
         }
       } else {
