@@ -5,7 +5,7 @@ import { Search, X, FlaskConical, Building2, Calendar, ClipboardCheck, CornerDow
 import { useTranslationStore } from "@/lib/i18n/store";
 import { useAuthStore } from "@/lib/auth-store";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 interface SearchItem {
   id: string;

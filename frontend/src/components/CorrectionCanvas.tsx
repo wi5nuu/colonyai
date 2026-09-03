@@ -22,7 +22,7 @@ import {
   ALL_DETECTION_CLASSES,
 } from "@/lib/detection-styles";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 const CLASS_OPTIONS: { value: string; label: string; color: string }[] = [
   ...ALL_DETECTION_CLASSES.map((cls) => ({
