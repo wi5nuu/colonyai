@@ -206,17 +206,7 @@ async def get_lims_logs(
     db: AsyncSession = Depends(get_db)
 ):
     """Get LIMS synchronization history for audit purposes."""
-    query = select(LimsLog).order_by(desc(LimsLog.timestamp)).limit(limit)
-    
-    if current_user["role"] != "super_admin":
-        query = query.where(LimsLog.organization_id == uuid.UUID(current_user["organization_id"]))
-        
-    result = await db.execute(query)
-    logs = result.scalars().all()
-    
     # We need to join with User and Analysis to get sample_id and user_name
-    # But for a simple list, we can just return what we have or do a more complex query
-    # Let's do a join to make the admin page useful
     from app.models import User, Analysis
     
     query = (
