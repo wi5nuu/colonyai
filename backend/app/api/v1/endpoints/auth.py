@@ -350,8 +350,11 @@ async def register(
     # ── Enforce Password Complexity ──
     validate_password_complexity(request.password)
 
+    # Normalize email to lowercase for consistent comparison
+    normalized_email = request.email.lower().strip()
+
     # Check if user already exists
-    result = await db.execute(select(User).where(User.email == request.email))
+    result = await db.execute(select(User).where(User.email == normalized_email))
     existing_user = result.scalar_one_or_none()
 
     if existing_user:
@@ -384,7 +387,7 @@ async def register(
     new_user = User(
         id=uuid.uuid4(),
         organization_id=target_org_id,
-        email=request.email,
+        email=normalized_email,
         password_hash=get_password_hash(request.password),
         full_name=request.full_name,
         role=request.role
