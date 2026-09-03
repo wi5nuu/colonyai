@@ -179,6 +179,8 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
             isAuthenticated: false,
+            tempEmail: null,
+            loginStep: 'credentials',
           })
         }
       },
