@@ -133,6 +133,17 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if self._is_exempt(path):
             return await call_next(request)
         
+        # Periodic cleanup of stale entries to prevent memory leak
+        now = time.monotonic()
+        if not hasattr(self, '_last_cleanup'):
+            self._last_cleanup = now
+        if now - self._last_cleanup > self.window_seconds * 2:
+            stale_keys = [k for k, v in self._limits.items() 
+                         if now - v.last_refill > self.window_seconds * 2]
+            for k in stale_keys:
+                del self._limits[k]
+            self._last_cleanup = now
+        
         # Get or create rate limit info for this client
         rate_limit = self._limits[identifier]
         
