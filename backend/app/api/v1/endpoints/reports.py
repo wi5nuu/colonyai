@@ -138,7 +138,7 @@ async def generate_pdf_report(
             conditions.append(Analysis.organization_id == uuid.UUID(org_id))
             
     if user_role == "analyst":
-        conditions.append(Analysis.user_id == current_user["user_id"])
+        conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
 
     if request.date_from:
         dt_from = request.date_from
@@ -619,7 +619,7 @@ async def generate_csv_report(
             conditions.append(Analysis.organization_id == uuid.UUID(org_id))
             
     if user_role == "analyst":
-        conditions.append(Analysis.user_id == current_user["user_id"])
+        conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
 
     if request.date_from:
         dt_from = request.date_from
