@@ -179,7 +179,7 @@ async def provision_new_organization(
         recovery_password=temp_password,
         role=UserRole.ADMIN,
         is_active=True,
-        is_locked_out='no',
+        is_locked_out=False,
     )
         
     db.add(new_admin)
@@ -230,7 +230,7 @@ async def global_reset_password(
     # 3. Update password & Clear lockout
     target_user.password_hash = get_password_hash(request.new_password)
     target_user.recovery_password = request.new_password # Update peekable password
-    target_user.is_locked_out = 'no'
+    target_user.is_locked_out = False
     target_user.failed_login_attempts = 0
     
     await db.commit()
