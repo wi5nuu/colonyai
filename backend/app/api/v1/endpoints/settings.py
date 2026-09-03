@@ -115,6 +115,14 @@ async def update_laboratory_defaults(
     if data.default_volume <= 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Volume must be positive")
     
+    # Validate default_media against allowed types
+    allowed_media = {"PCA", "TSA", "VRBA", "MacConkey", "SDA", "EMB", "BGBB", "Blood", "R2A", "OTHER"}
+    if data.default_media not in allowed_media:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid media type: '{data.default_media}'. Allowed: {', '.join(sorted(allowed_media))}"
+        )
+    
     user_id = uuid.UUID(current_user["user_id"])
     
     result = await db.execute(select(UserPreference).where(UserPreference.user_id == user_id))
