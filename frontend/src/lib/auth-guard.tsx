@@ -29,7 +29,18 @@ const PUBLIC_PATHS = [
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, isLoading, refreshAccessToken } = useAuthStore();
+  const { isAuthenticated, isLoading, refreshAccessToken, accessToken } = useAuthStore();
+
+  // Check if access token is expired (decode JWT exp claim)
+  const isTokenExpired = (): boolean => {
+    if (!accessToken) return true;
+    try {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      return payload.exp * 1000 < Date.now();
+    } catch {
+      return true;
+    }
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -39,6 +50,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
           await refreshAccessToken();
         } catch (e) {
           // Token refresh failed - will redirect to login
+        }
+      } else if (state.isAuthenticated && isTokenExpired()) {
+        // Token is expired, try to refresh
+        try {
+          await refreshAccessToken();
+        } catch (e) {
+          // Refresh failed, will redirect to login
         }
       }
     };
