@@ -48,6 +48,17 @@ logger = logging.getLogger(__name__)
 MAX_PAGE_SIZE = 100
 DEFAULT_PAGE_SIZE = 20
 
+
+def _safe_uuid(value: str, field_name: str = "ID") -> uuid.UUID:
+    """Safely parse a string as UUID, raising HTTPException if invalid."""
+    try:
+        return uuid.UUID(value)
+    except (ValueError, AttributeError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid {field_name} format: {value}"
+        )
+
 # ============================================================
 # Simulation Endpoint (Case 1 Requirement)
 # ============================================================
@@ -543,7 +554,7 @@ async def create_analysis(
 
         analysis = Analysis(
             id=analysis_id,
-            user_id=uuid.UUID(current_user["user_id"]),
+            user_id=_safe_uuid(current_user["user_id"], "user_id"),
             organization_id=target_org_id,
             sample_id=sample_id,
             media_type=media_type,
@@ -889,7 +900,7 @@ async def list_analyses(
 
     # Analyst sees only own data; Manager/Admin/Auditor see all org data
     if user_role == "analyst":
-        base_conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
+        base_conditions.append(Analysis.user_id == _safe_uuid(current_user["user_id"], "user_id"))
 
     # Apply filters
     if search:
@@ -982,7 +993,7 @@ async def get_dashboard_stats(
 
     # Manager, Auditor, Admin see all stats in their org. Analyst sees only own stats.
     if current_user["role"] == "analyst":
-        user_id = uuid.UUID(current_user["user_id"])
+        user_id = _safe_uuid(current_user["user_id"], "user_id")
         base_conditions.append(Analysis.user_id == user_id)
 
     def _apply_conditions(query):
@@ -1118,7 +1129,7 @@ async def get_analysis(
 
     # Analyst sees only own data; Manager/Admin/Auditor see all org data
     if user_role == "analyst":
-        query_conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
+        query_conditions.append(Analysis.user_id == _safe_uuid(current_user["user_id"], "user_id"))
 
     result = await db.execute(
         select(Analysis)
@@ -1174,7 +1185,7 @@ async def delete_analysis(
 
     # Analyst can only delete their own analyses
     if user_role == "analyst":
-        query_conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
+        query_conditions.append(Analysis.user_id == _safe_uuid(current_user["user_id"], "user_id"))
 
     result = await db.execute(
         select(Analysis).where(and_(*query_conditions))
