@@ -66,7 +66,7 @@ export const useAuthStore = create<AuthState>()(
           set({
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
-            user: data.user ? { ...data.user, role: data.user.role.toLowerCase() } : null,
+            user: data.user ? { ...data.user, role: data.user.role?.toLowerCase() || 'analyst' } : null,
             isLoading: false,
             isAuthenticated: true,
             error: null,
