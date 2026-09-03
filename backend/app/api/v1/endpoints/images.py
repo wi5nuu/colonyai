@@ -16,7 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-logger = logging.getLogger(__name__)
 
 
 class ImageUploadResponse(BaseModel):
