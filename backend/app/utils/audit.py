@@ -58,4 +58,4 @@ async def write_audit_log(
 
     if db is not None:
         db.add(audit_entry)
-        await db.commit()
+        # Note: caller is responsible for committing the session to avoid double-commits
