@@ -929,7 +929,7 @@ async def reset_password(request: ResetPasswordRequest, db: AsyncSession = Depen
     user.mfa_code = None
     user.mfa_expires = None
     user.failed_login_attempts = 0
-    user.is_locked_out = 'no'
+    user.is_locked_out = False
     user.locked_until = None
     
     # Mark request as used
