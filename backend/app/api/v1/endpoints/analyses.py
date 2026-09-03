@@ -352,6 +352,9 @@ def _get_file_url(file_path: str) -> str:
         # Ensure we use forward slashes for the URL
         url_path = rel_path.replace(os.path.sep, '/')
         
+        # Remove any leading ../ to prevent path traversal in URLs
+        url_path = url_path.lstrip('../')
+        
         return f"/uploads/{url_path}"
     except Exception as e:
         # Fallback: just use the filename
