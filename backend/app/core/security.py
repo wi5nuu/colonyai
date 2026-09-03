@@ -96,9 +96,16 @@ async def get_current_user(
     # two operations serialize: if logout commits first, this second
     # blacklist query sees the revoked jti and rejects the request.
     async with AsyncSessionLocal() as db:
+        try:
+            user_uuid = uuid.UUID(user_id)
+        except (ValueError, AttributeError):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid user ID format"
+            )
         result = await db.execute(
             select(User)
-            .where(User.id == uuid.UUID(user_id))
+            .where(User.id == user_uuid)
             .with_for_update()
         )
         user = result.scalar_one_or_none()
