@@ -98,6 +98,13 @@ export function GlobalSearch() {
     };
   }, [query, accessToken]);
 
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   const filteredItems = items.filter((item) => {
     const matchesTab = tab === "all" || item.type === tab;
     return matchesTab;
