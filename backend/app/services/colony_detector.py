@@ -1,7 +1,15 @@
 import logging
-from ultralytics import YOLO
-import numpy as np
-import cv2
+
+try:
+    from ultralytics import YOLO
+    import numpy as np
+    import cv2
+    YOLO_AVAILABLE = True
+except ImportError:
+    YOLO_AVAILABLE = False
+    np = None
+    cv2 = None
+    YOLO = None
 from typing import List, Dict, Any, Tuple
 import os
 from app.core.config import settings
