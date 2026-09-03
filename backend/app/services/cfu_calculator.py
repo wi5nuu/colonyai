@@ -434,7 +434,7 @@ class CFUCalculator:
 
         elif total_colonies > TNTC_BOUNDARY:
             # TNTC: FDA BAM — jangan laporkan nilai absolut CFU/mL
-            estimated_order = f">{int(raw_cfu / 1000) * 1000:,}"
+            estimated_order = f">{max(int(raw_cfu / 1000) * 1000, 1000):,}"
 
             # Hitung pengenceran yang direkomendasikan
             recommended_dilution = dilution_factor * 10
