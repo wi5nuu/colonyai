@@ -52,7 +52,7 @@ DEFAULT_PAGE_SIZE = 20
 # Simulation Endpoint (Case 1 Requirement)
 # ============================================================
 
-VALID_MEDIA_TYPES = {"PCA", "TSA", "VRBA", "MacConkey", "SDA", "EMB", "OTHER"}
+VALID_MEDIA_TYPES = {"PCA", "TSA", "VRBA", "MacConkey", "SDA", "EMB", "BGBB", "Blood", "R2A", "OTHER"}
 
 @router.post("/simulate", response_model=AnalysisResponse)
 async def simulate_analysis(
