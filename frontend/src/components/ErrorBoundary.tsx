@@ -31,8 +31,14 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to console for debugging
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
+    // Structured error logging with component stack
+    if (typeof window !== 'undefined' && 'console' in window) {
+      console.groupCollapsed('%c[ErrorBoundary]', 'color: red; font-weight: bold;', error.message)
+      console.error('Error:', error)
+      console.error('Component Stack:', errorInfo.componentStack)
+      console.error('Error Info:', errorInfo)
+      console.groupEnd()
+    }
     
     this.setState({
       error,
