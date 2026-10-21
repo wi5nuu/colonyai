@@ -23,12 +23,12 @@ logger = logging.getLogger(__name__)
 # ── Allowed MIME types (validated via magic bytes, NOT Content-Type header) ──
 ALLOWED_MIME_TYPES: dict[str, str] = {
     "image/jpeg": ".jpg",
-    "image/png":  ".png",
+    "image/png": ".png",
     "image/webp": ".webp",
 }
 
 # ── Limits ──
-MIN_IMAGE_DIMENSION = 100     # pixels (width AND height)
+MIN_IMAGE_DIMENSION = 100  # pixels (width AND height)
 MAX_IMAGE_DIMENSION = 15_000  # pixels
 MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024  # 15 MB
 
@@ -132,8 +132,7 @@ async def validate_and_sanitize_image(
         raise HTTPException(
             status_code=400,
             detail=(
-                "File tidak dapat dibaca sebagai gambar. "
-                "Pastikan file tidak rusak atau corrupt."
+                "File tidak dapat dibaca sebagai gambar. " "Pastikan file tidak rusak atau corrupt."
             ),
         )
 

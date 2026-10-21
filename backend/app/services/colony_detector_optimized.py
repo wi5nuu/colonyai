@@ -2,12 +2,14 @@
 COLONY DETECTOR OPTIMIZED - Untuk Akurasi Maksimal
 Dengan threshold per-class, post-processing, dan confidence boosting
 """
+
 import numpy as np
 from pathlib import Path
 
 try:
     from ultralytics import YOLO
     import cv2
+
     YOLO_AVAILABLE = True
 except ImportError:
     YOLO_AVAILABLE = False
@@ -33,8 +35,8 @@ from app.core.thresholds_optimized import (
 )
 
 # 5-class architecture
-VALID_COLONY_CLASSES = {'colony_single', 'colony_merged'}
-ARTIFACT_CLASSES = {'bubble', 'dust_debris', 'media_crack'}
+VALID_COLONY_CLASSES = {"colony_single", "colony_merged"}
+ARTIFACT_CLASSES = {"bubble", "dust_debris", "media_crack"}
 ALL_CLASSES = VALID_COLONY_CLASSES | ARTIFACT_CLASSES
 logger = logging.getLogger(__name__)
 
@@ -43,11 +45,11 @@ logger = logging.getLogger(__name__)
 # To show the intended color in browser: swap R↔B here.
 # Intended display colors (RGB): single=green, merged=orange, bubble=blue, debris=red, crack=purple
 CLASS_COLORS_BGR = {
-    'colony_single': (80, 220, 50),    # BGR → displayed as RGB (50,220,80) = green
-    'colony_merged': (0, 140, 255),    # BGR → displayed as RGB (255,140,0) = orange
-    'bubble':        (255, 120, 30),   # BGR → displayed as RGB (30,120,255) = blue
-    'dust_debris':   (50, 50, 220),    # BGR → displayed as RGB (220,50,50) = red
-    'media_crack':   (180, 60, 200),   # BGR → displayed as RGB (200,60,180) = purple
+    "colony_single": (80, 220, 50),  # BGR → displayed as RGB (50,220,80) = green
+    "colony_merged": (0, 140, 255),  # BGR → displayed as RGB (255,140,0) = orange
+    "bubble": (255, 120, 30),  # BGR → displayed as RGB (30,120,255) = blue
+    "dust_debris": (50, 50, 220),  # BGR → displayed as RGB (220,50,50) = red
+    "media_crack": (180, 60, 200),  # BGR → displayed as RGB (200,60,180) = purple
 }
 
 
@@ -55,12 +57,12 @@ CLASS_COLORS_BGR = {
 _inference_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="yolo")
 
 # Global singleton cache (model loaded once at first use)
-_global_detector: Optional['ColonyDetectorOptimized'] = None
+_global_detector: Optional["ColonyDetectorOptimized"] = None
 # FIX-6: Lock to prevent race condition when multiple requests hit get_detector() simultaneously
 _detector_lock = threading.Lock()
 
 
-def get_detector(model_path: str = None) -> 'ColonyDetectorOptimized':
+def get_detector(model_path: str = None) -> "ColonyDetectorOptimized":
     global _global_detector
     path = model_path or _get_active_model_path() or settings.MODEL_PATH
     # Double-checked locking — fast path skips lock once initialized
@@ -110,15 +112,13 @@ class ColonyDetectorOptimized:
         self.img_size = settings.MODEL_IMG_SIZE
 
         if not YOLO_AVAILABLE:
-            raise RuntimeError(
-                "YOLO/ultralytics not installed. Run: pip install ultralytics"
-            )
+            raise RuntimeError("YOLO/ultralytics not installed. Run: pip install ultralytics")
 
         if os.path.exists(self.model_path):
             self.model = YOLO(self.model_path)
             logger.info("Loaded optimized model from %s", self.model_path)
             # FIX-1: Verify model.names matches expected 5-class architecture
-            expected = {'colony_single', 'colony_merged', 'bubble', 'dust_debris', 'media_crack'}
+            expected = {"colony_single", "colony_merged", "bubble", "dust_debris", "media_crack"}
             actual = set(self.model.names.values()) if self.model.names else set()
             missing = expected - actual
             extra = actual - expected
@@ -126,13 +126,15 @@ class ColonyDetectorOptimized:
                 logger.warning(
                     "Model at %s is missing expected classes: %s. "
                     "Detection accuracy will be reduced for these classes.",
-                    self.model_path, missing
+                    self.model_path,
+                    missing,
                 )
             if extra:
                 logger.warning(
                     "Model at %s has unexpected classes: %s. "
                     "These will be filtered out during post-processing.",
-                    self.model_path, extra
+                    self.model_path,
+                    extra,
                 )
             logger.info("Model classes: %s", actual)
         else:
@@ -148,7 +150,7 @@ class ColonyDetectorOptimized:
         media_type: str = None,
         aggressive: bool = False,
         use_tta: bool = False,
-        apply_filters: bool = True
+        apply_filters: bool = True,
     ) -> List[Dict[str, Any]]:
         """
         Async version of detect() — runs blocking YOLO inference in thread pool.
@@ -156,9 +158,7 @@ class ColonyDetectorOptimized:
         """
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            _inference_executor,
-            self.detect,
-            image, media_type, aggressive, use_tta, apply_filters
+            _inference_executor, self.detect, image, media_type, aggressive, use_tta, apply_filters
         )
 
     def detect(
@@ -167,7 +167,7 @@ class ColonyDetectorOptimized:
         media_type: str = None,
         aggressive: bool = False,
         use_tta: bool = False,
-        apply_filters: bool = True
+        apply_filters: bool = True,
     ) -> List[Dict[str, Any]]:
         """
         Detect colonies dengan optimasi akurasi maksimal
@@ -212,9 +212,9 @@ class ColonyDetectorOptimized:
         filtered_detections = []
 
         for det in detections:
-            class_name = det['class_name']
-            confidence = det['confidence']
-            bbox = det['bbox']
+            class_name = det["class_name"]
+            confidence = det["confidence"]
+            bbox = det["bbox"]
 
             # 1. Check threshold per-class (dengan adaptive brightness)
             threshold = get_threshold(class_name, media_type, aggressive, mean_brightness)
@@ -231,7 +231,7 @@ class ColonyDetectorOptimized:
 
             # FIX-ACC-1: Simpan confidence original, tapi JANGAN boost dulu.
             # Boosting dilakukan SETELAH NMS agar urutan sort NMS tidak terdistorsi.
-            det['confidence_original'] = confidence
+            det["confidence_original"] = confidence
             filtered_detections.append(det)
 
         # 4. NMS per-class untuk remove duplicates (menggunakan confidence asli)
@@ -239,17 +239,17 @@ class ColonyDetectorOptimized:
 
         # 5. Confidence boosting SETELAH NMS — boost tidak mempengaruhi seleksi NMS
         for det in nms_detections:
-            det['confidence'] = boost_confidence(
-                det['confidence'], det['bbox'], original_shape, det['class_name']
+            det["confidence"] = boost_confidence(
+                det["confidence"], det["bbox"], original_shape, det["class_name"]
             )
 
         # UPGRADE-4: Over-detection guard — cap per-class dan total
         # Sort by confidence descending agar yang dibuang adalah yang paling tidak yakin
-        nms_detections.sort(key=lambda d: d['confidence'], reverse=True)
+        nms_detections.sort(key=lambda d: d["confidence"], reverse=True)
         class_counts: Dict[str, int] = {}
         final_detections = []
         for det in nms_detections:
-            cls = det['class_name']
+            cls = det["class_name"]
             class_counts[cls] = class_counts.get(cls, 0) + 1
             if class_counts[cls] > MAX_DETECTIONS_PER_CLASS.get(cls, 500):
                 logger.debug("Over-detection guard: dropping %s (count=%d)", cls, class_counts[cls])
@@ -261,8 +261,10 @@ class ColonyDetectorOptimized:
 
         logger.info(
             "Detection complete: brightness=%.1f, total=%d (after guard=%d), classes=%s",
-            mean_brightness or 0, len(nms_detections), len(final_detections),
-            {c: n for c, n in class_counts.items()}
+            mean_brightness or 0,
+            len(nms_detections),
+            len(final_detections),
+            {c: n for c, n in class_counts.items()},
         )
 
         return final_detections
@@ -278,7 +280,7 @@ class ColonyDetectorOptimized:
             # deteksi valid sebelum pipeline kita sempat memprosesnya.
             iou=0.7,
             imgsz=self.img_size,
-            verbose=False
+            verbose=False,
         )
 
         detections = []
@@ -291,19 +293,19 @@ class ColonyDetectorOptimized:
 
             for box, conf_score, cls_id in zip(boxes, confidences, class_ids):
                 x1, y1, x2, y2 = box
-                class_name = self.model.names.get(cls_id, f'class_{cls_id}')
+                class_name = self.model.names.get(cls_id, f"class_{cls_id}")
 
                 detection = {
-                    'class_name': class_name,
-                    'confidence': float(conf_score),
-                    'bbox': {
-                        'x': int(x1),
-                        'y': int(y1),
-                        'width': int(x2 - x1),
-                        'height': int(y2 - y1)
+                    "class_name": class_name,
+                    "confidence": float(conf_score),
+                    "bbox": {
+                        "x": int(x1),
+                        "y": int(y1),
+                        "width": int(x2 - x1),
+                        "height": int(y2 - y1),
                     },
-                    'is_valid_colony': class_name in VALID_COLONY_CLASSES,
-                    'color': CLASS_COLORS_BGR.get(class_name, (200, 200, 200))
+                    "is_valid_colony": class_name in VALID_COLONY_CLASSES,
+                    "color": CLASS_COLORS_BGR.get(class_name, (200, 200, 200)),
                 }
                 detections.append(detection)
 
@@ -319,21 +321,21 @@ class ColonyDetectorOptimized:
         # Original — weight 1.0
         dets_original = self._detect_single(image, conf_threshold)
         for det in dets_original:
-            det['_tta_weight'] = 1.0
+            det["_tta_weight"] = 1.0
 
         # Horizontal flip — weight 0.8
         img_hflip = cv2.flip(image, 1) if cv2 is not None else image
         dets_hflip = self._detect_single(img_hflip, conf_threshold)
         for det in dets_hflip:
-            det['bbox']['x'] = w - det['bbox']['x'] - det['bbox']['width']
-            det['_tta_weight'] = 0.8
+            det["bbox"]["x"] = w - det["bbox"]["x"] - det["bbox"]["width"]
+            det["_tta_weight"] = 0.8
 
         # Vertical flip — weight 0.8
         img_vflip = cv2.flip(image, 0) if cv2 is not None else image
         dets_vflip = self._detect_single(img_vflip, conf_threshold)
         for det in dets_vflip:
-            det['bbox']['y'] = h - det['bbox']['y'] - det['bbox']['height']
-            det['_tta_weight'] = 0.8
+            det["bbox"]["y"] = h - det["bbox"]["y"] - det["bbox"]["height"]
+            det["_tta_weight"] = 0.8
 
         # Merge all detections (weights already tagged per detection)
         all_dets = dets_original + dets_hflip + dets_vflip
@@ -355,39 +357,39 @@ class ColonyDetectorOptimized:
             cluster = [i]
             used.add(i)
             for j, other in enumerate(detections):
-                if j in used or det['class_name'] != other['class_name']:
+                if j in used or det["class_name"] != other["class_name"]:
                     continue
-                if self._iou(det['bbox'], other['bbox']) > 0.45:
+                if self._iou(det["bbox"], other["bbox"]) > 0.45:
                     cluster.append(j)
                     used.add(j)
 
             if len(cluster) == 1:
                 # Single detection — tetap pakai confidence asli
                 best = det.copy()
-                best.pop('_tta_weight', None)
+                best.pop("_tta_weight", None)
                 merged.append(best)
             else:
                 # Weighted average of cluster
-                total_w = sum(detections[k]['_tta_weight'] for k in cluster)
+                total_w = sum(detections[k]["_tta_weight"] for k in cluster)
                 if total_w == 0:
                     best = det.copy()
-                    best.pop('_tta_weight', None)
+                    best.pop("_tta_weight", None)
                     merged.append(best)
                     continue
 
-                avg_conf = sum(
-                    detections[k]['confidence'] * detections[k]['_tta_weight']
-                    for k in cluster
-                ) / total_w
+                avg_conf = (
+                    sum(detections[k]["confidence"] * detections[k]["_tta_weight"] for k in cluster)
+                    / total_w
+                )
 
                 # Ambil bbox dari detection dengan confidence tertinggi
-                best_k = max(cluster, key=lambda k: detections[k]['confidence'])
+                best_k = max(cluster, key=lambda k: detections[k]["confidence"])
                 best = detections[best_k].copy()
 
                 # Boost confidence jika muncul di >1 augmentation
                 boost = min(1.0 + (len(cluster) - 1) * 0.05, 1.15)
-                best['confidence'] = min(avg_conf * boost, 1.0)
-                best.pop('_tta_weight', None)
+                best["confidence"] = min(avg_conf * boost, 1.0)
+                best.pop("_tta_weight", None)
                 merged.append(best)
 
         return merged
@@ -400,7 +402,7 @@ class ColonyDetectorOptimized:
         # Group by class
         by_class = {}
         for det in detections:
-            cls = det['class_name']
+            cls = det["class_name"]
             if cls not in by_class:
                 by_class[cls] = []
             by_class[cls].append(det)
@@ -420,7 +422,7 @@ class ColonyDetectorOptimized:
             return []
 
         # Sort by confidence
-        detections = sorted(detections, key=lambda x: x['confidence'], reverse=True)
+        detections = sorted(detections, key=lambda x: x["confidence"], reverse=True)
 
         keep = []
         while detections:
@@ -429,19 +431,18 @@ class ColonyDetectorOptimized:
 
             # Remove overlapping boxes
             detections = [
-                det for det in detections
-                if self._iou(best['bbox'], det['bbox']) < iou_threshold
+                det for det in detections if self._iou(best["bbox"], det["bbox"]) < iou_threshold
             ]
 
         return keep
 
     def _iou(self, box1: dict, box2: dict) -> float:
         """Calculate IoU between two boxes"""
-        x1_1, y1_1 = box1['x'], box1['y']
-        x2_1, y2_1 = x1_1 + box1['width'], y1_1 + box1['height']
+        x1_1, y1_1 = box1["x"], box1["y"]
+        x2_1, y2_1 = x1_1 + box1["width"], y1_1 + box1["height"]
 
-        x1_2, y1_2 = box2['x'], box2['y']
-        x2_2, y2_2 = x1_2 + box2['width'], y1_2 + box2['height']
+        x1_2, y1_2 = box2["x"], box2["y"]
+        x2_2, y2_2 = x1_2 + box2["width"], y1_2 + box2["height"]
 
         # Intersection
         x1_i = max(x1_1, x1_2)
@@ -455,8 +456,8 @@ class ColonyDetectorOptimized:
         inter_area = (x2_i - x1_i) * (y2_i - y1_i)
 
         # Union
-        box1_area = box1['width'] * box1['height']
-        box2_area = box2['width'] * box2['height']
+        box1_area = box1["width"] * box1["height"]
+        box2_area = box2["width"] * box2["height"]
         union_area = box1_area + box2_area - inter_area
 
         return inter_area / union_area if union_area > 0 else 0.0
@@ -465,7 +466,7 @@ class ColonyDetectorOptimized:
         """Get summary count by class"""
         summary = {cls: 0 for cls in ALL_CLASSES}
         for detection in detections:
-            class_name = detection['class_name']
+            class_name = detection["class_name"]
             if class_name in summary:
                 summary[class_name] += 1
         return summary
@@ -484,8 +485,8 @@ class ColonyDetectorOptimized:
 
         class_confs: Dict[str, List[float]] = {}
         for det in detections:
-            cls = det['class_name']
-            class_confs.setdefault(cls, []).append(det['confidence'])
+            cls = det["class_name"]
+            class_confs.setdefault(cls, []).append(det["confidence"])
 
         def weighted_score(confs: List[float]) -> float:
             return len(confs) * (sum(confs) / len(confs))
@@ -494,25 +495,27 @@ class ColonyDetectorOptimized:
 
     def filter_valid_colonies(self, detections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Filter to only valid colonies"""
-        return [d for d in detections if d['is_valid_colony']]
+        return [d for d in detections if d["is_valid_colony"]]
 
     def get_valid_colony_count(self, detections: List[Dict[str, Any]]) -> int:
         """Get count of valid colonies only"""
-        return sum(1 for d in detections if d['is_valid_colony'])
+        return sum(1 for d in detections if d["is_valid_colony"])
 
-    def get_average_confidence(self, detections: List[Dict[str, Any]], valid_only: bool = False) -> float:
+    def get_average_confidence(
+        self, detections: List[Dict[str, Any]], valid_only: bool = False
+    ) -> float:
         """Get average confidence score across all detections (including artifacts)"""
         filtered = self.filter_valid_colonies(detections) if valid_only else detections
         if not filtered:
             return 0.0
-        return sum(d['confidence'] for d in filtered) / len(filtered)
+        return sum(d["confidence"] for d in filtered) / len(filtered)
 
     def get_reliability_indicator(self, detections: List[Dict[str, Any]]) -> str:
         """Get plate-level reliability indicator"""
         avg_conf = self.get_average_confidence(detections, valid_only=True)
         if avg_conf >= 0.8:
-            return 'high'
+            return "high"
         elif avg_conf >= 0.6:
-            return 'medium'
+            return "medium"
         else:
-            return 'low'
+            return "low"

@@ -1,4 +1,5 @@
 """Audit logging utility functions"""
+
 import uuid
 import hashlib
 import json
@@ -39,7 +40,7 @@ async def write_audit_log(
 
     details_str = json.dumps(details, sort_keys=True) if details else "{}"
     raw_str = f"{previous_hash or ''}{action}{resource_type}{str(resource_uuid) if resource_uuid else ''}{details_str}{timestamp.isoformat()}"
-    current_hash = hashlib.sha256(raw_str.encode('utf-8')).hexdigest()
+    current_hash = hashlib.sha256(raw_str.encode("utf-8")).hexdigest()
 
     audit_entry = AuditLog(
         id=uuid.uuid4(),

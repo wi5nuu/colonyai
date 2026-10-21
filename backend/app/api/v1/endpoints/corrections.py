@@ -10,12 +10,12 @@ from sqlalchemy.orm import selectinload
 
 from app.core.security import require_role
 from app.core.database import get_db
-from app.models import (
-    Analysis, CorrectionSession, Correction, ColonyDetection, User
-)
+from app.models import Analysis, CorrectionSession, Correction, ColonyDetection, User
 from app.schemas.analyses import (
-    CorrectionCreateRequest, CorrectionResponse,
-    CorrectionSessionResponse, CorrectionReportResponse,
+    CorrectionCreateRequest,
+    CorrectionResponse,
+    CorrectionSessionResponse,
+    CorrectionReportResponse,
     BBoxResponse,
 )
 
@@ -38,28 +38,26 @@ async def start_correction_session(
     Returns the session with all existing detections loaded for review.
     """
     analysis_uuid = uuid.UUID(analysis_id)
-    
+
     # ── CRITICAL FIX: Multi-tenant security check ──
     org_id = current_user.get("organization_id")
     user_role = current_user.get("role")
     query_conditions = [Analysis.id == analysis_uuid]
-    
+
     if user_role != "super_admin":
         if org_id:
             query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
         else:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="User tidak terdaftar pada organisasi manapun."
+                detail="User tidak terdaftar pada organisasi manapun.",
             )
-    
+
     # Analyst can only access own analyses
     if user_role == "analyst":
         query_conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
-    
-    result = await db.execute(
-        select(Analysis).where(and_(*query_conditions))
-    )
+
+    result = await db.execute(select(Analysis).where(and_(*query_conditions)))
     analysis = result.scalars().first()
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis not found")
@@ -100,23 +98,21 @@ async def save_correction(
     org_id = current_user.get("organization_id")
     user_role = current_user.get("role")
     query_conditions = [Analysis.id == analysis_uuid]
-    
+
     if user_role != "super_admin":
         if org_id:
             query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
         else:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="User tidak terdaftar pada organisasi manapun."
+                detail="User tidak terdaftar pada organisasi manapun.",
             )
-    
+
     # Analyst can only access own analyses
     if user_role == "analyst":
         query_conditions.append(Analysis.user_id == user_uuid)
 
-    result = await db.execute(
-        select(Analysis).where(and_(*query_conditions))
-    )
+    result = await db.execute(select(Analysis).where(and_(*query_conditions)))
     analysis = result.scalars().first()
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis not found")
@@ -153,7 +149,16 @@ async def save_correction(
         )
         det = det_result.scalars().first()
         if det:
-            bbox = type('obj', (object,), {'x': det.bbox_x, 'y': det.bbox_y, 'width': det.bbox_width, 'height': det.bbox_height})()
+            bbox = type(
+                "obj",
+                (object,),
+                {
+                    "x": det.bbox_x,
+                    "y": det.bbox_y,
+                    "width": det.bbox_width,
+                    "height": det.bbox_height,
+                },
+            )()
 
     correction = Correction(
         id=uuid.uuid4(),
@@ -193,13 +198,15 @@ async def finish_correction_session(
     analysis_uuid = uuid.UUID(analysis_id)
 
     result = await db.execute(
-        select(CorrectionSession).where(
+        select(CorrectionSession)
+        .where(
             and_(
                 CorrectionSession.analysis_id == analysis_uuid,
                 CorrectionSession.user_id == user_uuid,
                 CorrectionSession.status == "active",
             )
-        ).options(selectinload(CorrectionSession.corrections))
+        )
+        .options(selectinload(CorrectionSession.corrections))
     )
     session = result.scalars().first()
     if not session:
@@ -210,10 +217,7 @@ async def finish_correction_session(
 
     # Calculate accuracy: corrections that keep original class = accurate
     if session.corrections:
-        accurate = sum(
-            1 for c in session.corrections
-            if c.original_class == c.corrected_class
-        )
+        accurate = sum(1 for c in session.corrections if c.original_class == c.corrected_class)
         session.accuracy = accurate / len(session.corrections) if session.corrections else 1.0
     else:
         session.accuracy = 1.0
@@ -228,7 +232,9 @@ async def finish_correction_session(
 )
 async def get_correction_report(
     analysis_id: str,
-    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin", "super_admin")),
+    current_user: dict = Depends(
+        require_role("analyst", "manager", "auditor", "admin", "super_admin")
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -242,31 +248,30 @@ async def get_correction_report(
     org_id = current_user.get("organization_id")
     user_role = current_user.get("role")
     query_conditions = [Analysis.id == analysis_uuid]
-    
+
     if user_role != "super_admin":
         if org_id:
             query_conditions.append(Analysis.organization_id == uuid.UUID(org_id))
         else:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="User tidak terdaftar pada organisasi manapun."
+                detail="User tidak terdaftar pada organisasi manapun.",
             )
-    
+
     # Analyst can only access own analyses
     if user_role == "analyst":
         query_conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
-    
-    analysis_result = await db.execute(
-        select(Analysis).where(and_(*query_conditions))
-    )
+
+    analysis_result = await db.execute(select(Analysis).where(and_(*query_conditions)))
     analysis = analysis_result.scalars().first()
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis not found")
 
     result = await db.execute(
-        select(CorrectionSession).where(
-            CorrectionSession.analysis_id == analysis_uuid
-        ).options(selectinload(CorrectionSession.corrections)).order_by(CorrectionSession.created_at.desc())
+        select(CorrectionSession)
+        .where(CorrectionSession.analysis_id == analysis_uuid)
+        .options(selectinload(CorrectionSession.corrections))
+        .order_by(CorrectionSession.created_at.desc())
     )
     sessions = result.scalars().unique().all()
 
@@ -307,7 +312,9 @@ async def get_correction_report(
 )
 async def get_active_session(
     analysis_id: str,
-    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin", "super_admin")),
+    current_user: dict = Depends(
+        require_role("analyst", "manager", "auditor", "admin", "super_admin")
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """Get the active correction session for an analysis, if any."""
@@ -315,13 +322,15 @@ async def get_active_session(
     user_uuid = uuid.UUID(current_user["user_id"])
 
     result = await db.execute(
-        select(CorrectionSession).where(
+        select(CorrectionSession)
+        .where(
             and_(
                 CorrectionSession.analysis_id == analysis_uuid,
                 CorrectionSession.user_id == user_uuid,
                 CorrectionSession.status == "active",
             )
-        ).options(selectinload(CorrectionSession.corrections))
+        )
+        .options(selectinload(CorrectionSession.corrections))
     )
     session = result.scalars().first()
     if not session:
@@ -357,10 +366,16 @@ def _build_session_response(session: CorrectionSession) -> CorrectionSessionResp
                 detection_id=str(c.detection_id) if c.detection_id else None,
                 original_class=c.original_class,
                 corrected_class=c.corrected_class,
-                bbox=BBoxResponse(
-                    x=c.bbox_x, y=c.bbox_y,
-                    width=c.bbox_width, height=c.bbox_height,
-                ) if c.bbox_x is not None else None,
+                bbox=(
+                    BBoxResponse(
+                        x=c.bbox_x,
+                        y=c.bbox_y,
+                        width=c.bbox_width,
+                        height=c.bbox_height,
+                    )
+                    if c.bbox_x is not None
+                    else None
+                ),
                 notes=c.notes,
                 created_at=c.created_at,
             )

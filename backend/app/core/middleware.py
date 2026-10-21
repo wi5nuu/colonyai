@@ -5,17 +5,21 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class SecureHeadersMiddleware(BaseHTTPMiddleware):
     """
     Middleware to add enterprise-grade security headers to all responses.
     Implements best practices for web security.
     """
+
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         response = await call_next(request)
 
         # ── 1. HTTP Strict Transport Security (HSTS) ──
         # Forces browser to use HTTPS. 1 year (31536000s)
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains; preload"
+        )
 
         # ── 2. X-Content-Type-Options ──
         # Prevent MIME type sniffing
@@ -34,6 +38,7 @@ class SecureHeadersMiddleware(BaseHTTPMiddleware):
         # Development: allow all localhost ports for cross-origin image loading
         # Production: restrict to specific domains only
         import os
+
         _is_debug = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
         if _is_debug:
             # Development: permissive CSP for local testing across ports

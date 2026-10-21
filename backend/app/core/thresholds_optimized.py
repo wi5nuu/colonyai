@@ -18,98 +18,98 @@ Confidence aktual model (max per class dari 14 sampel):
 
 # CALIB-3: Dikalibrasi berdasarkan confidence aktual 14 sampel (20260802)
 CLASS_THRESHOLDS = {
-    'colony_single': 0.05,   # CALIB-3: turun dari 0.35 — max conf hanya 0.338, threshold lama memblokir semua
-    'colony_merged': 0.10,   # CALIB-3: naik dari 0.05 — cegah noise/background lolos (bounding box besar)
-    'bubble':        0.08,   # CALIB-3: turun dari 0.15 — bubble_artifact max conf 0.220
-    'dust_debris':   0.13,   # CALIB-3: turun dari 0.25 — dust synthetic max conf 0.464, p25=0.178
-    'media_crack':   0.05,   # CALIB-3: turun dari 0.12 — max conf hanya 0.146
+    "colony_single": 0.05,  # CALIB-3: turun dari 0.35 — max conf hanya 0.338, threshold lama memblokir semua
+    "colony_merged": 0.10,  # CALIB-3: naik dari 0.05 — cegah noise/background lolos (bounding box besar)
+    "bubble": 0.08,  # CALIB-3: turun dari 0.15 — bubble_artifact max conf 0.220
+    "dust_debris": 0.13,  # CALIB-3: turun dari 0.25 — dust synthetic max conf 0.464, p25=0.178
+    "media_crack": 0.05,  # CALIB-3: turun dari 0.12 — max conf hanya 0.146
 }
 
 # THRESHOLD PER-MEDIA TYPE — CALIB-3: semua diselaraskan dengan CLASS_THRESHOLDS baru
 MEDIA_TYPE_THRESHOLDS = {
-    'PCA': {
+    "PCA": {
         # Background putih terang — kontras tinggi
-        'colony_single': 0.05,
-        'colony_merged': 0.10,
-        'bubble':        0.08,
-        'dust_debris':   0.13,
-        'media_crack':   0.05,
+        "colony_single": 0.05,
+        "colony_merged": 0.10,
+        "bubble": 0.08,
+        "dust_debris": 0.13,
+        "media_crack": 0.05,
     },
-    'MacConkey': {
+    "MacConkey": {
         # Background merah muda — koloni berwarna
-        'colony_single': 0.05,
-        'colony_merged': 0.10,
-        'bubble':        0.08,
-        'dust_debris':   0.13,
-        'media_crack':   0.05,
+        "colony_single": 0.05,
+        "colony_merged": 0.10,
+        "bubble": 0.08,
+        "dust_debris": 0.13,
+        "media_crack": 0.05,
     },
-    'TSA': {
+    "TSA": {
         # Background putih/kuning — mirip PCA
-        'colony_single': 0.05,
-        'colony_merged': 0.10,
-        'bubble':        0.08,
-        'dust_debris':   0.13,
-        'media_crack':   0.05,
+        "colony_single": 0.05,
+        "colony_merged": 0.10,
+        "bubble": 0.08,
+        "dust_debris": 0.13,
+        "media_crack": 0.05,
     },
-    'Blood': {
+    "Blood": {
         # Background gelap merah — kontras rendah untuk koloni
-        'colony_single': 0.05,
-        'colony_merged': 0.08,
-        'bubble':        0.06,
-        'dust_debris':   0.13,
-        'media_crack':   0.05,
+        "colony_single": 0.05,
+        "colony_merged": 0.08,
+        "bubble": 0.06,
+        "dust_debris": 0.13,
+        "media_crack": 0.05,
     },
-    'VRBA': {
+    "VRBA": {
         # Background biru-merah gelap — kontras sangat rendah
-        'colony_single': 0.05,
-        'colony_merged': 0.08,
-        'bubble':        0.06,
-        'dust_debris':   0.13,
-        'media_crack':   0.05,
+        "colony_single": 0.05,
+        "colony_merged": 0.08,
+        "bubble": 0.06,
+        "dust_debris": 0.13,
+        "media_crack": 0.05,
     },
-    'SDA': {
+    "SDA": {
         # Fungi/yeast — koloni besar, overlap sering
-        'colony_single': 0.05,
-        'colony_merged': 0.08,
-        'bubble':        0.06,
-        'dust_debris':   0.13,
-        'media_crack':   0.05,
+        "colony_single": 0.05,
+        "colony_merged": 0.08,
+        "bubble": 0.06,
+        "dust_debris": 0.13,
+        "media_crack": 0.05,
     },
-    'EMB': {
+    "EMB": {
         # Background gelap — threshold minimum
-        'colony_single': 0.05,
-        'colony_merged': 0.08,
-        'bubble':        0.06,
-        'dust_debris':   0.13,
-        'media_crack':   0.05,
+        "colony_single": 0.05,
+        "colony_merged": 0.08,
+        "bubble": 0.06,
+        "dust_debris": 0.13,
+        "media_crack": 0.05,
     },
-    'BGBB': {
+    "BGBB": {
         # Background biru gelap
-        'colony_single': 0.05,
-        'colony_merged': 0.08,
-        'bubble':        0.06,
-        'dust_debris':   0.13,
-        'media_crack':   0.05,
+        "colony_single": 0.05,
+        "colony_merged": 0.08,
+        "bubble": 0.06,
+        "dust_debris": 0.13,
+        "media_crack": 0.05,
     },
-    'R2A': {
+    "R2A": {
         # Koloni sangat kecil — threshold minimum semua class
-        'colony_single': 0.05,
-        'colony_merged': 0.08,
-        'bubble':        0.06,
-        'dust_debris':   0.10,
-        'media_crack':   0.05,
+        "colony_single": 0.05,
+        "colony_merged": 0.08,
+        "bubble": 0.06,
+        "dust_debris": 0.10,
+        "media_crack": 0.05,
     },
-    'default': CLASS_THRESHOLDS
+    "default": CLASS_THRESHOLDS,
 }
 
 # AGGRESSIVE MODE — untuk gambar sulit (gelap, buram, low-res)
 # CALIB-3: Semua di bawah CLASS_THRESHOLDS, tapi di atas 0.01 (floor YOLO)
 AGGRESSIVE_THRESHOLDS = {
-    'colony_single': 0.03,
-    'colony_merged': 0.03,
-    'bubble':        0.05,
-    'dust_debris':   0.08,
-    'media_crack':   0.03,
+    "colony_single": 0.03,
+    "colony_merged": 0.03,
+    "bubble": 0.05,
+    "dust_debris": 0.08,
+    "media_crack": 0.03,
 }
 
 # CALIB-3: Threshold adaptif berdasarkan brightness gambar
@@ -117,63 +117,65 @@ AGGRESSIVE_THRESHOLDS = {
 # Semua nilai diselaraskan dengan confidence aktual model
 BRIGHTNESS_THRESHOLDS = {
     # mean brightness < 60 → gambar sangat gelap — pakai AGGRESSIVE
-    'very_dark': {
-        'colony_single': 0.03,
-        'colony_merged': 0.03,
-        'bubble':        0.05,
-        'dust_debris':   0.08,
-        'media_crack':   0.03,
+    "very_dark": {
+        "colony_single": 0.03,
+        "colony_merged": 0.03,
+        "bubble": 0.05,
+        "dust_debris": 0.08,
+        "media_crack": 0.03,
     },
     # mean brightness 60–100 → gambar agak gelap — sedikit di bawah CLASS_THRESHOLDS
-    'dark': {
-        'colony_single': 0.04,
-        'colony_merged': 0.04,
-        'bubble':        0.06,
-        'dust_debris':   0.10,
-        'media_crack':   0.04,
+    "dark": {
+        "colony_single": 0.04,
+        "colony_merged": 0.04,
+        "bubble": 0.06,
+        "dust_debris": 0.10,
+        "media_crack": 0.04,
     },
     # mean brightness 100–160 → normal
-    'normal': CLASS_THRESHOLDS,
+    "normal": CLASS_THRESHOLDS,
     # mean brightness 160–200 → agak terang — sedikit di atas CLASS_THRESHOLDS
-    'bright': {
-        'colony_single': 0.08,
-        'colony_merged': 0.07,
-        'bubble':        0.10,
-        'dust_debris':   0.16,
-        'media_crack':   0.07,
+    "bright": {
+        "colony_single": 0.08,
+        "colony_merged": 0.07,
+        "bubble": 0.10,
+        "dust_debris": 0.16,
+        "media_crack": 0.07,
     },
     # mean brightness > 200 → sangat terang / overexposed — lebih selektif
-    'very_bright': {
-        'colony_single': 0.12,
-        'colony_merged': 0.10,
-        'bubble':        0.13,
-        'dust_debris':   0.20,
-        'media_crack':   0.10,
+    "very_bright": {
+        "colony_single": 0.12,
+        "colony_merged": 0.10,
+        "bubble": 0.13,
+        "dust_debris": 0.20,
+        "media_crack": 0.10,
     },
 }
+
 
 def get_brightness_category(mean_brightness: float) -> str:
     """Kategorikan brightness gambar."""
     if mean_brightness < 60:
-        return 'very_dark'
+        return "very_dark"
     elif mean_brightness < 100:
-        return 'dark'
+        return "dark"
     elif mean_brightness < 160:
-        return 'normal'
+        return "normal"
     elif mean_brightness < 200:
-        return 'bright'
+        return "bright"
     else:
-        return 'very_bright'
+        return "very_bright"
+
 
 # UPGRADE-4: Batas maksimum deteksi per gambar untuk cegah over-detection
 # Berdasarkan ISO 4833 — plate dengan >250 koloni dinyatakan TNTC
 # Buffer 2x untuk include artifacts
 MAX_DETECTIONS_PER_CLASS = {
-    'colony_single': 300,
-    'colony_merged': 150,
-    'bubble':        200,
-    'dust_debris':   100,
-    'media_crack':    50,
+    "colony_single": 300,
+    "colony_merged": 150,
+    "bubble": 200,
+    "dust_debris": 100,
+    "media_crack": 50,
 }
 MAX_TOTAL_DETECTIONS = 600
 
@@ -181,65 +183,65 @@ MAX_TOTAL_DETECTIONS = 600
 # CALIB-3: colony_merged max diturunkan 600->80 — box >80px adalah noise/background bukan koloni
 # colony_single max diturunkan 350->120 — koloni single tidak mungkin >120px di 640x640
 SIZE_FILTERS = {
-    'colony_single': {'min': 6,  'max': 120},
-    'colony_merged': {'min': 5,  'max': 80},
-    'bubble':        {'min': 5,  'max': 200},
-    'dust_debris':   {'min': 3,  'max': 80},
-    'media_crack':   {'min': 10, 'max': 800},
+    "colony_single": {"min": 6, "max": 120},
+    "colony_merged": {"min": 5, "max": 80},
+    "bubble": {"min": 5, "max": 200},
+    "dust_debris": {"min": 3, "max": 80},
+    "media_crack": {"min": 10, "max": 800},
 }
 
 # ASPECT RATIO FILTERS
 ASPECT_RATIO_FILTERS = {
-    'colony_single': {'min': 0.3,  'max': 3.0},
-    'colony_merged': {'min': 0.2,  'max': 5.0},
-    'bubble':        {'min': 0.5,  'max': 2.0},
-    'dust_debris':   {'min': 0.2,  'max': 5.0},
-    'media_crack':   {'min': 0.05, 'max': 20.0},
+    "colony_single": {"min": 0.3, "max": 3.0},
+    "colony_merged": {"min": 0.2, "max": 5.0},
+    "bubble": {"min": 0.5, "max": 2.0},
+    "dust_debris": {"min": 0.2, "max": 5.0},
+    "media_crack": {"min": 0.05, "max": 20.0},
 }
 
 # CONFIDENCE BOOSTING
 CONFIDENCE_BOOST = {
-    'center_plate':     1.15,
-    'edge_penalty':     0.85,
-    'high_density_area': 1.10,
+    "center_plate": 1.15,
+    "edge_penalty": 0.85,
+    "high_density_area": 1.10,
 }
 
 # IOU THRESHOLDS untuk NMS per-class
 IOU_THRESHOLDS = {
-    'colony_single': 0.40,
-    'colony_merged': 0.30,
-    'bubble':        0.45,
-    'dust_debris':   0.45,
-    'media_crack':   0.35,
+    "colony_single": 0.40,
+    "colony_merged": 0.30,
+    "bubble": 0.45,
+    "dust_debris": 0.45,
+    "media_crack": 0.35,
 }
 
 
 # ── Alias mapping: nama frontend → key internal ──────────────────────────────
 MEDIA_TYPE_ALIASES = {
-    "plate count agar":          "PCA",
-    "pca":                       "PCA",
-    "macconkey":                 "MacConkey",
-    "macconkey agar":            "MacConkey",
-    "mac":                       "MacConkey",
-    "tsa":                       "TSA",
-    "tryptic soy agar":          "TSA",
-    "trypticase soy agar":       "TSA",
-    "blood":                     "Blood",
-    "blood agar":                "Blood",
-    "bap":                       "Blood",
-    "ba":                        "Blood",
-    "vrba":                      "VRBA",
-    "violet red bile agar":      "VRBA",
-    "sda":                       "SDA",
-    "sabouraud":                 "SDA",
-    "sabouraud dextrose agar":   "SDA",
-    "emb":                       "EMB",
-    "eosin methylene blue":      "EMB",
-    "bgbb":                      "BGBB",
-    "bile green brilliant blue":  "BGBB",
-    "r2a":                       "R2A",
-    "reasoner's 2a":             "R2A",
-    "reasoners 2a":              "R2A",
+    "plate count agar": "PCA",
+    "pca": "PCA",
+    "macconkey": "MacConkey",
+    "macconkey agar": "MacConkey",
+    "mac": "MacConkey",
+    "tsa": "TSA",
+    "tryptic soy agar": "TSA",
+    "trypticase soy agar": "TSA",
+    "blood": "Blood",
+    "blood agar": "Blood",
+    "bap": "Blood",
+    "ba": "Blood",
+    "vrba": "VRBA",
+    "violet red bile agar": "VRBA",
+    "sda": "SDA",
+    "sabouraud": "SDA",
+    "sabouraud dextrose agar": "SDA",
+    "emb": "EMB",
+    "eosin methylene blue": "EMB",
+    "bgbb": "BGBB",
+    "bile green brilliant blue": "BGBB",
+    "r2a": "R2A",
+    "reasoner's 2a": "R2A",
+    "reasoners 2a": "R2A",
 }
 
 
@@ -260,7 +262,7 @@ def get_threshold(
     # UPGRADE-3: Adaptive threshold berdasarkan brightness
     if brightness is not None:
         cat = get_brightness_category(brightness)
-        if cat != 'normal':
+        if cat != "normal":
             bright_thresh = BRIGHTNESS_THRESHOLDS[cat].get(class_name)
             if bright_thresh is not None:
                 # Blend dengan media-type threshold jika ada
@@ -286,39 +288,38 @@ def get_threshold(
 
 
 def filter_by_size(bbox: dict, class_name: str) -> bool:
-    size_filter = SIZE_FILTERS.get(class_name, {'min': 5, 'max': 1000})
-    width  = bbox['width']
-    height = bbox['height']
-    area   = width * height
-    return size_filter['min'] ** 2 <= area <= size_filter['max'] ** 2
+    size_filter = SIZE_FILTERS.get(class_name, {"min": 5, "max": 1000})
+    width = bbox["width"]
+    height = bbox["height"]
+    area = width * height
+    return size_filter["min"] ** 2 <= area <= size_filter["max"] ** 2
 
 
 def filter_by_aspect_ratio(bbox: dict, class_name: str) -> bool:
-    ratio_filter = ASPECT_RATIO_FILTERS.get(class_name, {'min': 0.1, 'max': 10.0})
-    width  = bbox['width']
-    height = bbox['height']
+    ratio_filter = ASPECT_RATIO_FILTERS.get(class_name, {"min": 0.1, "max": 10.0})
+    width = bbox["width"]
+    height = bbox["height"]
     if height == 0:
         return False
     aspect_ratio = width / height
-    return ratio_filter['min'] <= aspect_ratio <= ratio_filter['max']
+    return ratio_filter["min"] <= aspect_ratio <= ratio_filter["max"]
 
 
 def boost_confidence(confidence: float, bbox: dict, image_shape: tuple, class_name: str) -> float:
     img_h, img_w = image_shape[:2]
-    center_x = bbox['x'] + bbox['width'] / 2
-    center_y = bbox['y'] + bbox['height'] / 2
-    dist_from_center = ((center_x - img_w/2)**2 + (center_y - img_h/2)**2)**0.5
-    max_dist = ((img_w/2)**2 + (img_h/2)**2)**0.5
+    center_x = bbox["x"] + bbox["width"] / 2
+    center_y = bbox["y"] + bbox["height"] / 2
+    dist_from_center = ((center_x - img_w / 2) ** 2 + (center_y - img_h / 2) ** 2) ** 0.5
+    max_dist = ((img_w / 2) ** 2 + (img_h / 2) ** 2) ** 0.5
     normalized_dist = dist_from_center / max_dist if max_dist > 0 else 0
 
     if normalized_dist < 0.3:
-        confidence *= CONFIDENCE_BOOST['center_plate']
+        confidence *= CONFIDENCE_BOOST["center_plate"]
     elif normalized_dist > 0.8:
-        confidence *= CONFIDENCE_BOOST['edge_penalty']
+        confidence *= CONFIDENCE_BOOST["edge_penalty"]
 
     return min(confidence, 1.0)
 
 
 def get_iou_threshold(class_name: str) -> float:
     return IOU_THRESHOLDS.get(class_name, 0.40)
-

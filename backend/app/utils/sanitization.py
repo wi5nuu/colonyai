@@ -3,6 +3,7 @@ from typing import TypeVar
 
 T = TypeVar("T")
 
+
 def sanitize_string(value: str) -> str:
     """
     Escape HTML characters in a string to prevent XSS.
@@ -10,6 +11,7 @@ def sanitize_string(value: str) -> str:
     if not isinstance(value, str):
         return str(value)
     return html.escape(value)
+
 
 def sanitize_recursive(data: T) -> T:
     """

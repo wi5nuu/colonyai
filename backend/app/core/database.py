@@ -11,7 +11,7 @@ DB_AVAILABLE = False
 def get_engine():
     """
     Create async engine with graceful fallback and proper connection pool configuration.
-    
+
     FIX BUG-MEDIUM-007: Add pool_pre_ping, pool_recycle, and pool_timeout
     to prevent stale connections and improve reliability.
     """
@@ -33,10 +33,10 @@ def get_engine():
                 settings.DATABASE_URL,
                 pool_size=settings.DATABASE_POOL_SIZE,
                 max_overflow=settings.DATABASE_MAX_OVERFLOW,
-                pool_pre_ping=True,      # Test connection before using (detect stale)
-                pool_recycle=3600,       # Recycle connections every hour
-                pool_timeout=30,         # Timeout after 30 seconds waiting for connection
-                echo=settings.DEBUG
+                pool_pre_ping=True,  # Test connection before using (detect stale)
+                pool_recycle=3600,  # Recycle connections every hour
+                pool_timeout=30,  # Timeout after 30 seconds waiting for connection
+                echo=settings.DEBUG,
             )
         return engine
     except Exception as e:
@@ -47,11 +47,7 @@ def get_engine():
 engine = get_engine()
 
 if engine:
-    AsyncSessionLocal = async_sessionmaker(
-        engine,
-        class_=AsyncSession,
-        expire_on_commit=False
-    )
+    AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 else:
     AsyncSessionLocal = None
 
@@ -65,15 +61,27 @@ async def init_db():
 
     if engine is None:
         logger.warning("[DATABASE] Database not configured. Running in DEMO MODE (no persistence).")
-        logger.warning("   To enable full features: install PostgreSQL and set DATABASE_URL in .env")
+        logger.warning(
+            "   To enable full features: install PostgreSQL and set DATABASE_URL in .env"
+        )
         DB_AVAILABLE = False
         return
 
     # Import all models to ensure they are registered with Base.metadata
     from app.models import (
-        User, Organization, Analysis, ColonyDetection, AuditLog, 
-        SimulatorComparison, Correction, CorrectionSession, UserRole,
-        Notification, LimsLog, PasswordResetRequest, TokenBlacklist
+        User,
+        Organization,
+        Analysis,
+        ColonyDetection,
+        AuditLog,
+        SimulatorComparison,
+        Correction,
+        CorrectionSession,
+        UserRole,
+        Notification,
+        LimsLog,
+        PasswordResetRequest,
+        TokenBlacklist,
     )
     from app.models.preferences import UserPreference, UserSession
     from sqlalchemy.future import select
@@ -85,7 +93,7 @@ async def init_db():
             await conn.run_sync(Base.metadata.create_all)
         DB_AVAILABLE = True
         logger.info("[DATABASE] Connection successful and tables synchronized.")
-        
+
         # Seed only Super Admin (all other users must belong to an organization)
         async with AsyncSessionLocal() as session:
             super_admin_email = settings.INITIAL_SUPER_ADMIN_EMAIL
@@ -93,13 +101,15 @@ async def init_db():
             super_admin_user = result.scalars().first()
             if not super_admin_user:
                 logger.info(f"Seeding super admin: {super_admin_email}")
-                session.add(User(
-                    email=super_admin_email,
-                    password_hash=get_password_hash(settings.INITIAL_SUPER_ADMIN_PASSWORD),
-                    full_name="Super Administrator",
-                    role=UserRole.SUPER_ADMIN,
-                    organization_id=None,
-                ))
+                session.add(
+                    User(
+                        email=super_admin_email,
+                        password_hash=get_password_hash(settings.INITIAL_SUPER_ADMIN_PASSWORD),
+                        full_name="Super Administrator",
+                        role=UserRole.SUPER_ADMIN,
+                        organization_id=None,
+                    )
+                )
                 await session.commit()
             else:
                 # Only update if needed (password changed), skip if already correct
@@ -121,13 +131,13 @@ async def init_db():
 async def get_db():
     """
     Get database session with proper resource cleanup.
-    
+
     FIX BUG-CRITICAL-003: Ensure session is always closed, even if exception
     occurs before yield. This prevents connection pool exhaustion.
     """
     if AsyncSessionLocal is None:
         raise Exception("Database not available. Configure DATABASE_URL in .env")
-    
+
     # Create session outside context manager to ensure cleanup
     session = AsyncSessionLocal()
     try:
