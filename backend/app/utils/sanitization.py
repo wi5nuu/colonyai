@@ -4,10 +4,12 @@ from typing import TypeVar
 T = TypeVar("T")
 
 
-def sanitize_string(value: str) -> str:
+def sanitize_string(value: str | None) -> str | None:
     """
     Escape HTML characters in a string to prevent XSS.
     """
+    if value is None:
+        return None
     if not isinstance(value, str):
         return str(value)
     return html.escape(value)
