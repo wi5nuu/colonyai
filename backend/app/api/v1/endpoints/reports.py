@@ -7,6 +7,7 @@ import uuid
 import os
 import csv
 import io
+import logging
 import statistics
 from collections import defaultdict
 from pathlib import Path
@@ -19,6 +20,8 @@ from app.schemas.analyses import ReportResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
 from sqlalchemy.orm import joinedload
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 

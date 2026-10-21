@@ -15,6 +15,10 @@ from app.api.v1.endpoints.models import router as models_router
 from app.api.v1.endpoints.search import router as search_router
 
 # â”€â”€ Logging Configuration â”€â”€
+# The log directory is git-ignored, so create it on first start (fresh clones, CI, containers).
+if settings.LOG_FILE:
+    Path(settings.LOG_FILE).parent.mkdir(parents=True, exist_ok=True)
+
 logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
     format="%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d | %(message)s",
