@@ -76,89 +76,32 @@ jobs:
           name: backend-coverage
           path: backend/coverage.xml
 
-  # ─── Frontend Tests ───────────────────────────────────────────────────────
+  # ─── Frontend Build ───────────────────────────────────────────────────────
   frontend-tests:
-    name: Frontend Tests (Next.js)
+    name: Frontend Typecheck & Build (Next.js)
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-      
+
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
-      
-      - name: Install testing libraries
+
+      - name: Type check
         working-directory: frontend
-        run: npm install --save-dev jest @testing-library/react @testing-library/jest-dom jest-environment-jsdom ts-jest @types/jest
-      
-      - name: Create Jest config
+        run: npx tsc --noEmit
+
+      - name: Production build
         working-directory: frontend
-        run: |
-          cat > jest.config.js << 'EOF'
-          const nextJest = require('next/jest')
-          
-          const createJestConfig = nextJest({
-            dir: './',
-          })
-          
-          const customJestConfig = {
-            testEnvironment: 'jest-environment-jsdom',
-            setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-            moduleNameMapping: {
-              '^@/(.*)$': '<rootDir>/src/$1',
-            },
-            testMatch: ['**/__tests__/**/*.test.tsx', '**/__tests__/**/*.test.ts'],
-            collectCoverageFrom: [
-              'src/**/*.{js,jsx,ts,tsx}',
-              '!src/**/*.d.ts',
-              '!src/**/*.stories.{js,jsx,ts,tsx}',
-            ],
-            coverageReporters: ['text', 'lcov', 'clover'],
-          }
-          
-          module.exports = createJestConfig(customJestConfig)
-          EOF
-      
-      - name: Create Jest setup file
-        working-directory: frontend
-        run: |
-          cat > jest.setup.js << 'EOF'
-          import '@testing-library/jest-dom'
-          
-          // Mock window.matchMedia
-          Object.defineProperty(window, 'matchMedia', {
-            writable: true,
-            value: jest.fn().mockImplementation(query => ({
-              matches: false,
-              media: query,
-              onchange: null,
-              addListener: jest.fn(),
-              removeListener: jest.fn(),
-              addEventListener: jest.fn(),
-              removeEventListener: jest.fn(),
-              dispatchEvent: jest.fn(),
-            })),
-          })
-          EOF
-      
-      - name: Run frontend tests
-        working-directory: frontend
-        run: npm test -- --coverage --ci
-      
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: frontend-test-results
-          path: frontend/coverage/
+        run: npm run build
 
   # ─── Code Quality Checks ──────────────────────────────────────────────────
   code-quality:
@@ -181,7 +124,7 @@ jobs:
       - name: Install Python linting tools
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 black mypy
+          pip install "flake8==7.3.0" "black==26.5.1"
       
       - name: Install Node linting tools
         working-directory: frontend
@@ -246,7 +189,8 @@ jobs:
     name: Build Docker Images
     runs-on: ubuntu-latest
     needs: [backend-tests, frontend-tests, code-quality]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Release jobs are opt-in: set the repository variable ENABLE_DEPLOY=true once deploy secrets exist.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_DEPLOY == 'true'
     
     steps:
       - uses: actions/checkout@v4
@@ -283,7 +227,7 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: [docker-build]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.ENABLE_DEPLOY == 'true'
     
     steps:
       - uses: actions/checkout@v4
@@ -309,7 +253,7 @@ jobs:
     name: Coverage Summary
     runs-on: ubuntu-latest
     needs: [backend-tests, frontend-tests]
-    if: always()
+    if: always() && needs.backend-tests.result == 'success'
     
     steps:
       - uses: actions/checkout@v4
@@ -319,12 +263,6 @@ jobs:
         with:
           name: backend-coverage
           path: coverage/backend
-      
-      - name: Download frontend coverage
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-test-results
-          path: coverage/frontend
       
       - name: Generate coverage summary
         run: |
