@@ -40,15 +40,16 @@ _last_cleanup: float = time.monotonic()
 # Configuration
 # ─────────────────────────────────────────────
 
-MAX_RESETS_PER_IP_PER_HOUR = 5       # Max 5 reset requests from 1 IP per hour
-MAX_RESETS_PER_EMAIL_PER_DAY = 3     # Max 3 reset requests per email per day
-BLOCK_THRESHOLD_IP = 10              # Auto-block IP after 10 attempts/hour
-WINDOW_SECONDS_IP = 3600             # 1-hour window for IP tracking
-WINDOW_SECONDS_EMAIL = 86400         # 24-hour window for email tracking
+MAX_RESETS_PER_IP_PER_HOUR = 5  # Max 5 reset requests from 1 IP per hour
+MAX_RESETS_PER_EMAIL_PER_DAY = 3  # Max 3 reset requests per email per day
+BLOCK_THRESHOLD_IP = 10  # Auto-block IP after 10 attempts/hour
+WINDOW_SECONDS_IP = 3600  # 1-hour window for IP tracking
+WINDOW_SECONDS_EMAIL = 86400  # 24-hour window for email tracking
 
 
 class PhishingBlockedError(Exception):
     """Raised when a request is identified as phishing."""
+
     def __init__(self, reason: str, threat_level: str = "HIGH"):
         self.reason = reason
         self.threat_level = threat_level
@@ -59,7 +60,7 @@ def check_and_record_reset_attempt(ip: str, email: str, user_role: str) -> None:
     """
     Central anti-phishing gate. Call this BEFORE processing any password reset.
     Raises PhishingBlockedError if the request is suspicious.
-    
+
     Checks:
     1. IP permanently blocked?
     2. IP exceeded hourly threshold?
@@ -68,16 +69,22 @@ def check_and_record_reset_attempt(ip: str, email: str, user_role: str) -> None:
     """
     with _lock:
         now = time.monotonic()
-        
+
         # Periodic cleanup of stale entries to prevent memory leak
         global _last_cleanup
         if now - _last_cleanup > WINDOW_SECONDS_IP * 2:
-            stale_ips = [ip for ip, (_, start) in _ip_reset_attempts.items() 
-                        if now - start > WINDOW_SECONDS_IP * 2]
+            stale_ips = [
+                ip
+                for ip, (_, start) in _ip_reset_attempts.items()
+                if now - start > WINDOW_SECONDS_IP * 2
+            ]
             for ip in stale_ips:
                 del _ip_reset_attempts[ip]
-            stale_emails = [em for em, (_, start) in _email_reset_attempts.items() 
-                           if now - start > WINDOW_SECONDS_EMAIL * 2]
+            stale_emails = [
+                em
+                for em, (_, start) in _email_reset_attempts.items()
+                if now - start > WINDOW_SECONDS_EMAIL * 2
+            ]
             for em in stale_emails:
                 del _email_reset_attempts[em]
             _last_cleanup = now
@@ -85,8 +92,7 @@ def check_and_record_reset_attempt(ip: str, email: str, user_role: str) -> None:
         # ── 1. Check if IP is permanently blocked ──
         if ip in _blocked_ips:
             raise PhishingBlockedError(
-                f"IP {ip} diblokir permanen. Alasan: {_blocked_ips[ip]}",
-                threat_level="CRITICAL"
+                f"IP {ip} diblokir permanen. Alasan: {_blocked_ips[ip]}", threat_level="CRITICAL"
             )
 
         # ── 2. Track & check IP reset frequency ──
@@ -105,7 +111,7 @@ def check_and_record_reset_attempt(ip: str, email: str, user_role: str) -> None:
             raise PhishingBlockedError(
                 f"IP {ip} otomatis diblokir karena {ip_count} percobaan reset dalam 1 jam. "
                 f"Kemungkinan serangan phishing/credential stuffing.",
-                threat_level="CRITICAL"
+                threat_level="CRITICAL",
             )
 
         # Soft warn at threshold
@@ -113,7 +119,7 @@ def check_and_record_reset_attempt(ip: str, email: str, user_role: str) -> None:
             raise PhishingBlockedError(
                 f"Terlalu banyak permintaan reset dari IP {ip} ({ip_count} dalam 1 jam). "
                 f"Coba lagi dalam {int((WINDOW_SECONDS_IP - (now - ip_window_start)) / 60)} menit.",
-                threat_level="HIGH"
+                threat_level="HIGH",
             )
 
         # ── 3. Track & check per-email frequency ──
@@ -129,7 +135,7 @@ def check_and_record_reset_attempt(ip: str, email: str, user_role: str) -> None:
             raise PhishingBlockedError(
                 f"Email {email} telah melebihi batas {MAX_RESETS_PER_EMAIL_PER_DAY} "
                 f"permintaan reset per hari. Kemungkinan akun sedang ditargetkan.",
-                threat_level="HIGH"
+                threat_level="HIGH",
             )
 
         # ── 4. Extra scrutiny for Admin/Super Admin accounts ──
@@ -141,7 +147,7 @@ def check_and_record_reset_attempt(ip: str, email: str, user_role: str) -> None:
                 raise PhishingBlockedError(
                     f"Percobaan reset password akun Admin ({email}) terdeteksi dari IP {ip}. "
                     f"IP diblokir. Insiden ini dicatat dalam Audit Ledger.",
-                    threat_level="CRITICAL"
+                    threat_level="CRITICAL",
                 )
 
 
@@ -155,7 +161,7 @@ def get_threat_status(ip: str) -> dict:
             "is_blocked": is_blocked,
             "block_reason": _blocked_ips.get(ip),
             "reset_attempts_this_hour": count,
-            "threat_level": "CRITICAL" if is_blocked else "HIGH" if count > 3 else "LOW"
+            "threat_level": "CRITICAL" if is_blocked else "HIGH" if count > 3 else "LOW",
         }
 
 

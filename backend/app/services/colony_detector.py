@@ -4,6 +4,7 @@ try:
     from ultralytics import YOLO
     import numpy as np
     import cv2
+
     YOLO_AVAILABLE = True
 except ImportError:
     YOLO_AVAILABLE = False
@@ -18,31 +19,29 @@ logger = logging.getLogger(__name__)
 
 
 # 5-class architecture per proposal
-VALID_COLONY_CLASSES = {'colony_single', 'colony_merged'}
-ARTIFACT_CLASSES = {'bubble', 'dust_debris', 'media_crack'}
+VALID_COLONY_CLASSES = {"colony_single", "colony_merged"}
+ARTIFACT_CLASSES = {"bubble", "dust_debris", "media_crack"}
 ALL_CLASSES = VALID_COLONY_CLASSES | ARTIFACT_CLASSES
 
 # Class-specific colors for annotation
 # Format RGB (karena image dalam RGB mode setelah preprocess)
 # cv2.rectangle menerima BGR — dikonversi di save_annotated_image
 CLASS_COLORS_RGB = {
-    'colony_single': (0, 220, 80),      # Green
-    'colony_merged': (255, 140, 0),     # Orange
-    'bubble':        (30, 120, 255),    # Blue
-    'dust_debris':   (220, 50, 50),     # Red
-    'media_crack':   (160, 60, 200),    # Purple
+    "colony_single": (0, 220, 80),  # Green
+    "colony_merged": (255, 140, 0),  # Orange
+    "bubble": (30, 120, 255),  # Blue
+    "dust_debris": (220, 50, 50),  # Red
+    "media_crack": (160, 60, 200),  # Purple
 }
 # BGR version for OpenCV drawing (swapped from RGB)
-CLASS_COLORS_BGR = {
-    k: (v[2], v[1], v[0]) for k, v in CLASS_COLORS_RGB.items()
-}
+CLASS_COLORS_BGR = {k: (v[2], v[1], v[0]) for k, v in CLASS_COLORS_RGB.items()}
 # Keep backward-compatible alias
 CLASS_COLORS = CLASS_COLORS_BGR
 
 
 class ColonyDetector:
     """YOLOv8-based colony detection and classification system
-    
+
     5-class architecture:
     - colony_single: Individual, well-separated colonies
     - colony_merged: Overlapping/touching colonies
@@ -109,10 +108,10 @@ class ColonyDetector:
 
         results = self.model(
             image,
-            conf=conf,           # Threshold awal — endpoint melakukan filter per-kelas setelahnya
+            conf=conf,  # Threshold awal — endpoint melakukan filter per-kelas setelahnya
             iou=self.iou_threshold,
             imgsz=self.img_size,
-            verbose=False
+            verbose=False,
         )
 
         # Parse results
@@ -126,25 +125,25 @@ class ColonyDetector:
 
             for box, conf_score, cls_id in zip(boxes, confidences, class_ids):
                 x1, y1, x2, y2 = box
-                class_name = self.model.names.get(cls_id, f'class_{cls_id}')
+                class_name = self.model.names.get(cls_id, f"class_{cls_id}")
 
                 detection = {
-                    'class_name': class_name,
-                    'confidence': float(conf_score),
-                    'bbox': {
-                        'x': int(x1),
-                        'y': int(y1),
-                        'width': int(x2 - x1),
-                        'height': int(y2 - y1)
+                    "class_name": class_name,
+                    "confidence": float(conf_score),
+                    "bbox": {
+                        "x": int(x1),
+                        "y": int(y1),
+                        "width": int(x2 - x1),
+                        "height": int(y2 - y1),
                     },
-                    'is_valid_colony': class_name in VALID_COLONY_CLASSES,
+                    "is_valid_colony": class_name in VALID_COLONY_CLASSES,
                     # Color di-store dalam BGR untuk konsistensi dengan OpenCV
-                    'color': CLASS_COLORS_BGR.get(class_name, (200, 200, 200))
+                    "color": CLASS_COLORS_BGR.get(class_name, (200, 200, 200)),
                 }
                 detections.append(detection)
 
         return detections
-    
+
     def detect_from_file(self, image_path: str) -> List[Dict[str, Any]]:
         """Detect colonies from an image file"""
         results = self.model(
@@ -152,7 +151,7 @@ class ColonyDetector:
             conf=self.confidence_threshold,
             iou=self.iou_threshold,
             imgsz=self.img_size,
-            verbose=False
+            verbose=False,
         )
 
         detections = []
@@ -165,19 +164,19 @@ class ColonyDetector:
 
             for box, conf, cls_id in zip(boxes, confidences, class_ids):
                 x1, y1, x2, y2 = box
-                class_name = self.model.names.get(cls_id, f'class_{cls_id}')
+                class_name = self.model.names.get(cls_id, f"class_{cls_id}")
 
                 detection = {
-                    'class_name': class_name,
-                    'confidence': float(conf),
-                    'bbox': {
-                        'x': int(x1),
-                        'y': int(y1),
-                        'width': int(x2 - x1),
-                        'height': int(y2 - y1)
+                    "class_name": class_name,
+                    "confidence": float(conf),
+                    "bbox": {
+                        "x": int(x1),
+                        "y": int(y1),
+                        "width": int(x2 - x1),
+                        "height": int(y2 - y1),
                     },
-                    'is_valid_colony': class_name in VALID_COLONY_CLASSES,
-                    'color': CLASS_COLORS.get(class_name, (255, 255, 255))
+                    "is_valid_colony": class_name in VALID_COLONY_CLASSES,
+                    "color": CLASS_COLORS.get(class_name, (255, 255, 255)),
                 }
                 detections.append(detection)
 
@@ -187,7 +186,7 @@ class ColonyDetector:
         """Get summary count by class for all 5 classes"""
         summary = {cls: 0 for cls in ALL_CLASSES}
         for detection in detections:
-            class_name = detection['class_name']
+            class_name = detection["class_name"]
             if class_name in summary:
                 summary[class_name] += 1
             else:
@@ -196,15 +195,17 @@ class ColonyDetector:
 
     def filter_valid_colonies(self, detections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Filter to only include valid colony detections (excludes artifacts)"""
-        return [d for d in detections if d['is_valid_colony']]
+        return [d for d in detections if d["is_valid_colony"]]
 
     def get_valid_colony_count(self, detections: List[Dict[str, Any]]) -> int:
         """Get count of valid colonies only (excludes artifacts)"""
-        return sum(1 for d in detections if d['is_valid_colony'])
+        return sum(1 for d in detections if d["is_valid_colony"])
 
-    def get_average_confidence(self, detections: List[Dict[str, Any]], valid_only: bool = True) -> float:
+    def get_average_confidence(
+        self, detections: List[Dict[str, Any]], valid_only: bool = True
+    ) -> float:
         """Get average confidence score
-        
+
         Args:
             detections: List of detections
             valid_only: If True, only average valid colony confidences
@@ -212,11 +213,11 @@ class ColonyDetector:
         filtered = self.filter_valid_colonies(detections) if valid_only else detections
         if not filtered:
             return 0.0
-        return sum(d['confidence'] for d in filtered) / len(filtered)
+        return sum(d["confidence"] for d in filtered) / len(filtered)
 
     def get_reliability_indicator(self, detections: List[Dict[str, Any]]) -> str:
         """Get plate-level reliability indicator based on confidence scores
-        
+
         Returns:
             'high' - Average confidence >= 0.8
             'medium' - Average confidence 0.6-0.8
@@ -224,8 +225,8 @@ class ColonyDetector:
         """
         avg_conf = self.get_average_confidence(detections, valid_only=True)
         if avg_conf >= 0.8:
-            return 'high'
+            return "high"
         elif avg_conf >= 0.6:
-            return 'medium'
+            return "medium"
         else:
-            return 'low'
+            return "low"

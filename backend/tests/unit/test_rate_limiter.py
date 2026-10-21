@@ -21,7 +21,8 @@ class TestRateLimitInfo:
     def test_consume_all_tokens(self):
         for _ in range(10):
             assert self.bucket.consume() is True
-        assert self.bucket.tokens == 0
+        # Time keeps flowing between calls, so a tiny refill (<1 token) is expected.
+        assert self.bucket.tokens < 1
 
     def test_consume_when_empty(self):
         self.bucket.tokens = 0
@@ -29,7 +30,7 @@ class TestRateLimitInfo:
 
     def test_refill_over_time(self):
         self.bucket.tokens = 0
-        self.bucket.last_refill = time.time() - 5
+        self.bucket.last_refill = time.monotonic() - 5  # the bucket uses a monotonic clock
         assert self.bucket.consume() is True
         assert self.bucket.tokens > 0
 

@@ -11,7 +11,11 @@ from app.core.security import get_current_user, require_role
 from app.core.config import settings
 from app.core.database import get_db
 from app.utils.s3 import s3_is_configured, upload_to_s3, get_presigned_url, delete_from_s3
-from app.utils.path_sanitizer import generate_safe_filename, safe_join_path, validate_path_in_directory
+from app.utils.path_sanitizer import (
+    generate_safe_filename,
+    safe_join_path,
+    validate_path_in_directory,
+)
 from app.services.file_validator import validate_and_sanitize_image
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -35,7 +39,7 @@ class ImageResponse(BaseModel):
 @router.post("/upload", response_model=ImageUploadResponse)
 async def upload_image(
     file: UploadFile = File(...),
-    current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin"))
+    current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin")),
 ):
     """Upload a plate image for analysis (Auditor: no upload — read-only role)"""
     # Validate file type using magic bytes instead of content_type header
@@ -45,8 +49,7 @@ async def upload_image(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File validation failed: {str(e)}"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"File validation failed: {str(e)}"
         )
 
     # Validate file size (10MB max) using already-read content
@@ -55,7 +58,7 @@ async def upload_image(
     if file_size > settings.IMAGE_MAX_SIZE:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File size exceeds {settings.IMAGE_MAX_SIZE // (1024*1024)}MB limit"
+            detail=f"File size exceeds {settings.IMAGE_MAX_SIZE // (1024*1024)}MB limit",
         )
 
     # FIX BUG-CRITICAL-004: Sanitize filename to prevent path traversal
@@ -63,12 +66,11 @@ async def upload_image(
         # Generate safe filename with UUID for uniqueness
         unique_filename = generate_safe_filename(file.filename, use_uuid=True)
         # Extract UUID from generated filename (first part before underscore)
-        image_id = uuid.UUID(unique_filename.split('_')[0])
+        image_id = uuid.UUID(unique_filename.split("_")[0])
     except (ValueError, IndexError) as e:
         logger.error(f"Filename sanitization failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid filename: {str(e)}"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid filename: {str(e)}"
         )
 
     # Use validated file content from magic bytes validation
@@ -76,7 +78,7 @@ async def upload_image(
 
     if s3_is_configured():
         # Upload to S3
-        ext = unique_filename.rsplit('.', 1)[-1] if '.' in unique_filename else 'jpg'
+        ext = unique_filename.rsplit(".", 1)[-1] if "." in unique_filename else "jpg"
         s3_key = f"{settings.AWS_S3_ORIGINAL_PREFIX}{image_id}.{ext}"
         upload_to_s3(file_bytes, s3_key, content_type=file.content_type)
         original_url = get_presigned_url(s3_key) or s3_key
@@ -97,10 +99,7 @@ async def upload_image(
 
 
 @router.get("/{filename}")
-async def get_image(
-    filename: str,
-    current_user: dict = Depends(get_current_user)
-):
+async def get_image(filename: str, current_user: dict = Depends(get_current_user)):
     """Retrieve uploaded image by filename"""
     if s3_is_configured():
         # Try to resolve the S3 key from the filename
@@ -113,6 +112,7 @@ async def get_image(
                 url = get_presigned_url(s3_key)
                 if url:
                     from fastapi.responses import RedirectResponse
+
                     return RedirectResponse(url=url)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -127,22 +127,24 @@ async def get_image(
         file_path = os.path.join(settings.UPLOAD_DIR, "annotated", filename)
 
     if not os.path.exists(file_path):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Image not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
 
     # Determine media type from file extension
-    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
-    media_type_map = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'webp': 'image/webp'}
-    return FileResponse(file_path, media_type=media_type_map.get(ext, 'image/jpeg'))
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
+    media_type_map = {
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "webp": "image/webp",
+    }
+    return FileResponse(file_path, media_type=media_type_map.get(ext, "image/jpeg"))
 
 
 @router.delete("/{image_id}")
 async def delete_image(
     image_id: str,
     current_user: dict = Depends(require_role("analyst", "manager", "admin", "super_admin")),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Delete an image by ID (Auditor: no delete — read-only role)"""
     if s3_is_configured():
@@ -171,19 +173,16 @@ async def delete_image(
                     try:
                         # Use safe_join_path and validate path is within directory
                         file_path = safe_join_path(upload_dir, filename)
-                        
+
                         # Double-check the path is valid
                         if not validate_path_in_directory(file_path, upload_dir):
                             logger.warning(f"Path traversal attempt in delete: {file_path}")
                             continue
-                        
+
                         os.remove(file_path)
                         return {"message": f"Image deleted from {subdir}"}
                     except (ValueError, OSError) as e:
                         logger.error(f"Error deleting file: {e}")
                         continue
 
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="Image not found"
-    )
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")

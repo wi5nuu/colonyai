@@ -3,6 +3,7 @@
 try:
     import boto3
     from botocore.exceptions import ClientError
+
     BOTO3_AVAILABLE = True
 except ImportError:
     boto3 = None
@@ -50,7 +51,9 @@ def s3_is_configured() -> bool:
     return True
 
 
-def upload_to_s3(file_bytes: bytes, s3_key: str, content_type: str = "application/octet-stream") -> Optional[str]:
+def upload_to_s3(
+    file_bytes: bytes, s3_key: str, content_type: str = "application/octet-stream"
+) -> Optional[str]:
     """Upload raw bytes to S3.
 
     Args:

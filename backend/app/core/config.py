@@ -14,6 +14,7 @@ load_dotenv(dotenv_path=env_path, override=True)
 # Now import os values will have the .env values
 logger = logging.getLogger(__name__)
 
+
 class Settings(BaseSettings):
     # Application
     APP_NAME: str = "ColonyAI Backend"
@@ -22,7 +23,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = os.getenv("SECRET_KEY") or ""
     API_V1_PREFIX: str = "/api/v1"
 
-    # Database  
+    # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL") or "sqlite+aiosqlite:///./colonyai.db"
     DATABASE_POOL_SIZE: int = 10
     DATABASE_MAX_OVERFLOW: int = 20
@@ -49,7 +50,9 @@ class Settings(BaseSettings):
     INITIAL_ADMIN_EMAIL: str = "admin@colonyai.local"
     INITIAL_ADMIN_PASSWORD: str = ""
     SEED_USERS_PASSWORD: str = os.getenv("SEED_USERS_PASSWORD") or ""
-    INITIAL_SUPER_ADMIN_EMAIL: str = os.getenv("INITIAL_SUPER_ADMIN_EMAIL", "superadmin@colonyai.com")
+    INITIAL_SUPER_ADMIN_EMAIL: str = os.getenv(
+        "INITIAL_SUPER_ADMIN_EMAIL", "superadmin@colonyai.com"
+    )
     INITIAL_SUPER_ADMIN_PASSWORD: str = os.getenv("INITIAL_SUPER_ADMIN_PASSWORD") or ""
 
     # JWT Security
@@ -60,18 +63,21 @@ class Settings(BaseSettings):
 
     # YOLO Model
     MODEL_PATH: str = str(Path(__file__).parent.parent.parent / "models" / "colony_best_new.pt")
-    MODEL_CONFIDENCE_THRESHOLD: float = 0.35  # Lower default to allow more detections before per-class filtering
+    MODEL_CONFIDENCE_THRESHOLD: float = (
+        0.35  # Lower default to allow more detections before per-class filtering
+    )
     MODEL_IOU_THRESHOLD: float = 0.45
     MODEL_IMG_SIZE: int = 640
 
     # Image Processing
     IMAGE_MAX_SIZE: int = 10485760  # 10MB
     IMAGE_ALLOWED_TYPES: str = "image/jpeg,image/png,image/webp"
-    
+
     @property
     def IMAGE_ALLOWED_TYPES_LIST(self) -> list[str]:
         """Return IMAGE_ALLOWED_TYPES as a list for easier comparison."""
         return [t.strip() for t in self.IMAGE_ALLOWED_TYPES.split(",")]
+
     PLATE_DETECTION_ENABLED: bool = True
 
     # Celery
@@ -87,7 +93,9 @@ class Settings(BaseSettings):
 
     # LIMS Integration
     LIMS_MODE: str = os.getenv("LIMS_MODE", "simulated")
-    LIMS_WEBHOOK_URL: str = os.getenv("LIMS_WEBHOOK_URL", "http://localhost:3000/api/mock-lims/receive")
+    LIMS_WEBHOOK_URL: str = os.getenv(
+        "LIMS_WEBHOOK_URL", "http://localhost:3000/api/mock-lims/receive"
+    )
 
     # Telegram Alert Target
     TELEGRAM_ALERT_TARGET: str = os.getenv("TELEGRAM_ALERT_TARGET", "@ColonyAILabAlerts")
@@ -108,26 +116,26 @@ class Settings(BaseSettings):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
+
         # FIX BUG-MEDIUM-005: Validate critical secrets are set
         if not self.SECRET_KEY:
             raise ValueError(
                 "SECRET_KEY must be set in environment variables. "
                 "Generate with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
             )
-        
+
         if not self.JWT_SECRET_KEY:
             raise ValueError(
                 "JWT_SECRET_KEY must be set in environment variables. "
                 "Generate with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
             )
-        
+
         if not self.INITIAL_ADMIN_PASSWORD:
             logger.warning(
                 "INITIAL_ADMIN_PASSWORD is not set. The admin account will not have a usable password. "
                 "Set INITIAL_ADMIN_PASSWORD in your .env file."
             )
-        
+
         # Ensure upload directories exist
         if self.UPLOAD_DIR:
             Path(self.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
@@ -135,5 +143,5 @@ class Settings(BaseSettings):
             Path(f"{self.UPLOAD_DIR}/annotated").mkdir(parents=True, exist_ok=True)
             Path(f"{self.UPLOAD_DIR}/reports").mkdir(parents=True, exist_ok=True)
 
-settings = Settings()
 
+settings = Settings()

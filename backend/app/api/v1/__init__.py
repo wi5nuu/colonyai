@@ -1,5 +1,20 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, images, analyses, reports, users, lims, maintenance, simulator, settings, audit, super, corrections, models, search
+from app.api.v1.endpoints import (
+    auth,
+    images,
+    analyses,
+    reports,
+    users,
+    lims,
+    maintenance,
+    simulator,
+    settings,
+    audit,
+    super,
+    corrections,
+    models,
+    search,
+)
 
 api_router = APIRouter()
 

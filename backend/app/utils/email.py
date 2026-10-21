@@ -7,10 +7,11 @@ import ssl
 
 logger = logging.getLogger(__name__)
 
+
 async def send_mfa_email(email_to: str, code: str) -> bool:
     """
     Send a 6-digit MFA code via SMTP.
-    
+
     Returns:
         bool: True if email sent successfully, False otherwise
     """
@@ -65,7 +66,7 @@ async def send_mfa_email(email_to: str, code: str) -> bool:
     # Use default context with certificate verification enabled
     context = ssl.create_default_context()
     # Only disable verification in development if explicitly configured
-    if hasattr(settings, 'SMTP_SKIP_VERIFY') and settings.SMTP_SKIP_VERIFY:
+    if hasattr(settings, "SMTP_SKIP_VERIFY") and settings.SMTP_SKIP_VERIFY:
         logger.warning("[EMAIL] SSL certificate verification disabled - DEVELOPMENT ONLY")
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
@@ -78,7 +79,7 @@ async def send_mfa_email(email_to: str, code: str) -> bool:
             username=settings.SMTP_USER,
             password=settings.SMTP_PASS,
             start_tls=settings.SMTP_TLS,
-            tls_context=context if settings.SMTP_TLS else None
+            tls_context=context if settings.SMTP_TLS else None,
         )
         logger.info(f"[EMAIL] MFA code sent successfully to {email_to}")
         return True

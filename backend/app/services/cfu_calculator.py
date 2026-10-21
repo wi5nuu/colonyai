@@ -31,7 +31,6 @@ from app.core.thresholds import (
     TNTC_BOUNDARY,
 )
 
-
 # ============================================================
 # Data Classes
 # ============================================================
@@ -163,9 +162,7 @@ def estimate_merged_colonies(detections: list[dict[str, Any]]) -> MergedColonyEs
                 single_areas.append(float(area))
 
     # Kumpulkan semua bounding box colony_merged
-    merged_detections = [
-        d for d in detections if d.get("class_name") == "colony_merged"
-    ]
+    merged_detections = [d for d in detections if d.get("class_name") == "colony_merged"]
 
     raw_merged_count = len(merged_detections)
 
@@ -543,14 +540,18 @@ class CFUCalculator:
             "reliability": result.reliability,
             "is_valid_for_reporting": result.is_valid_for_reporting,
             "estimated_cfu_order": result.estimated_cfu_order,
-            "uncertainty": {
-                "u_model": unc.u_model,
-                "u_counting": unc.u_counting,
-                "u_dilution": unc.u_dilution,
-                "u_combined": unc.u_combined,
-                "U_expanded": unc.U_expanded,
-                "coverage_factor": unc.coverage_factor,
-            } if unc is not None else None,
+            "uncertainty": (
+                {
+                    "u_model": unc.u_model,
+                    "u_counting": unc.u_counting,
+                    "u_dilution": unc.u_dilution,
+                    "u_combined": unc.u_combined,
+                    "U_expanded": unc.U_expanded,
+                    "coverage_factor": unc.coverage_factor,
+                }
+                if unc is not None
+                else None
+            ),
             "class_breakdown": result.class_breakdown,
             "warnings": result.warnings,
         }

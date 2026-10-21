@@ -34,8 +34,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
-    
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+
     # Add JTI for blacklisting
     jti = str(uuid.uuid4())
     to_encode.update({"exp": expire, "type": "access", "jti": jti})
@@ -75,20 +77,19 @@ async def get_current_user(
     from app.core.database import AsyncSessionLocal
     from app.models import TokenBlacklist, User
     from sqlalchemy import select
-    
+
     token = credentials.credentials
-    
+
     payload = decode_token(token)
-    
+
     jti = payload.get("jti")
     user_id: str = payload.get("sub")
-    
+
     if user_id is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials"
         )
-    
+
     # ── BLACKLIST CHECK (TOCTOU-safe) ──
     # Take a pessimistic row lock on the User FIRST, then re-check the
     # blacklist inside the same transaction. logout() acquires the same
@@ -100,39 +101,31 @@ async def get_current_user(
             user_uuid = uuid.UUID(user_id)
         except (ValueError, AttributeError):
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid user ID format"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user ID format"
             )
-        result = await db.execute(
-            select(User)
-            .where(User.id == user_uuid)
-            .with_for_update()
-        )
+        result = await db.execute(select(User).where(User.id == user_uuid).with_for_update())
         user = result.scalar_one_or_none()
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User no longer exists"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="User no longer exists"
             )
 
         result = await db.execute(
-            select(TokenBlacklist)
-            .where(TokenBlacklist.jti == jti)
-            .with_for_update()
+            select(TokenBlacklist).where(TokenBlacklist.jti == jti).with_for_update()
         )
         blacklisted = result.scalar_one_or_none()
 
         if blacklisted:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has been revoked (logged out)"
+                detail="Token has been revoked (logged out)",
             )
 
         # ── Enforce Organization Membership ──
         if user.role.value != "super_admin" and not user.organization_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Akun tidak terdaftar pada perusahaan mana pun. Hubungi Super Admin."
+                detail="Akun tidak terdaftar pada perusahaan mana pun. Hubungi Super Admin.",
             )
 
     return {
@@ -141,7 +134,7 @@ async def get_current_user(
         "role": payload.get("role"),
         "organization_id": str(user.organization_id) if user.organization_id else None,
         "jti": jti,
-        "exp": payload.get("exp")
+        "exp": payload.get("exp"),
     }
 
 
@@ -154,18 +147,19 @@ def require_role(*required_roles: str):
     'super_admin' has god-mode access to all endpoints.
     'admin' has full access to their organization's endpoints.
     """
+
     async def role_checker(current_user: dict = Depends(get_current_user)):
         user_role = current_user.get("role")
-        
+
         # 1. Super Admin bypasses all checks
         if user_role == "super_admin":
             return current_user
-            
+
         # 2. Specific role check
         if user_role not in required_roles:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
             )
         return current_user
+
     return role_checker
