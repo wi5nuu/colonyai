@@ -19,6 +19,7 @@ export function LanguageSwitcher() {
           document.cookie = "lang=en;path=/;max-age=31536000";
         }}
         title="Switch to English"
+        aria-label="Switch to English"
         className={`px-1 py-1 rounded-none text-[9px] font-black uppercase tracking-widest transition-colors ${
           isEnglish
             ? "text-slate-900 dark:text-white"
@@ -35,6 +36,7 @@ export function LanguageSwitcher() {
           document.cookie = "lang=id;path=/;max-age=31536000";
         }}
         title="Beralih ke Bahasa Indonesia"
+        aria-label="Switch to Indonesian"
         className={`px-1 py-1 rounded-none text-[9px] font-black uppercase tracking-widest transition-colors ${
           !isEnglish
             ? "text-slate-900 dark:text-white"

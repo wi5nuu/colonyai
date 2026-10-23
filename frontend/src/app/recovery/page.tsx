@@ -28,7 +28,7 @@ export default function RecoveryPage() {
     setIsLoading(true);
 
     try {
-      // Menghubungi API forgot-password yang sudah kita siapkan di backend
+      // Call the forgot-password API that we prepared in the backend
       await api.post("/api/v1/auth/forgot-password", { email });
       setIsSent(true);
       toast.success(t("auth.resetLinkSent"));

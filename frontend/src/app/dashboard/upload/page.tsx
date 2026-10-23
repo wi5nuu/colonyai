@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Upload as UploadIcon,
@@ -46,20 +46,72 @@ export default function UploadPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDocs, setShowDocs] = useState(false);
 
+  // Smart defaults per media type
+  const MEDIA_DEFAULTS: Record<string, { temp: number; time: number; method: string }> = {
+    PCA:       { temp: 35.0, time: 48,  method: "ISO 4833-1:2013" },
+    TSA:       { temp: 37.0, time: 24,  method: "AOAC 990.12" },
+    MacConkey: { temp: 37.0, time: 24,  method: "ISO 4832:2006" },
+    VRBA:      { temp: 37.0, time: 24,  method: "ISO 4832:2006" },
+    BGBB:      { temp: 37.0, time: 48,  method: "ISO 9308-1:2014" },
+    R2A:       { temp: 20.0, time: 168, method: "APHA 9215D" },
+    SDA:       { temp: 25.0, time: 120, method: "ISO 21527-1:2008" },
+    EMB:       { temp: 37.0, time: 24,  method: "ISO 16649-2:2001" },
+    Blood:     { temp: 37.0, time: 48,  method: "CLSI M35-A2" },
+    OTHER:     { temp: 37.0, time: 24,  method: "" },
+  };
+
+  // Auto-generate sample ID: ISO-{MEDIA}-{YYYYMMDD}-{SEQ}
+  const generateSampleId = (media: string) => {
+    const now = new Date();
+    const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+    const seq = String(Math.floor(Math.random() * 900) + 100);
+    return `ISO-${media}-${ymd}-${seq}`;
+  };
+
   const [formData, setFormData] = useState({
-    sampleId: "ISO-PCA-B2026-001",
-    mediaType: "Plate Count Agar" as MediaType,
-    dilutionFactor: 0.001,
+    sampleId: generateSampleId("PCA"),
+    mediaType: "PCA" as MediaType,
+    dilutionFactor: 0.1,
     platedVolume: 1.0,
     incubationTemp: 35.0,
     incubationTime: 48,
     methodStandard: "ISO 4833-1:2013",
-    mediaBatchNumber: "LOT-2026-X",
-    incubatorId: "INC-001",
+    mediaBatchNumber: "",
+    incubatorId: "",
   });
 
+  // CFU/ml preview realtime: CFU/ml = colonies / (dilution * volume)
+  // Estimated colony count from filename hints; actual count comes from AI
+  const cfuPreview = useMemo(() => {
+    const { dilutionFactor, platedVolume } = formData;
+    if (!dilutionFactor || !platedVolume) return null;
+    const divisor = dilutionFactor * platedVolume;
+    // Example: 150 colonies (placeholder) → real value comes from AI result
+    const exampleColonies = 150;
+    const cfu = exampleColonies / divisor;
+    return cfu.toExponential(2);
+  }, [formData.dilutionFactor, formData.platedVolume]);
+
+  // Auto-fill defaults when media type changes
+  const handleMediaTypeChange = (media: string) => {
+    const defaults = MEDIA_DEFAULTS[media] || MEDIA_DEFAULTS.OTHER;
+    setFormData((prev) => ({
+      ...prev,
+      mediaType: media as MediaType,
+      incubationTemp: defaults.temp,
+      incubationTime: defaults.time,
+      methodStandard: defaults.method,
+      sampleId: generateSampleId(media),
+    }));
+  };
+
   const handleFile = useCallback((file: File) => {
-    if (!file.type.startsWith("image/")) {
+    // Validate file type using both MIME type and extension
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
       toast.error(t("upload.errorImageFile"));
       return;
     }
@@ -299,12 +351,12 @@ export default function UploadPage() {
                   </div>
                   <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {[
-                      { file: 'single.jpg', label: 'Koloni Tunggal', badge: 'Single', color: '#059669' },
-                      { file: 'merged.jpg', label: 'Koloni Bertumpuk', badge: 'Merged', color: '#d97706' },
-                      { file: 'bubble_artifact.jpg', label: 'Gelembung', badge: 'Bubble', color: '#dc2626' },
-                      { file: 'crack.jpg', label: 'Retakan Media', badge: 'Crack', color: '#7c3aed' },
-                      { file: 'ecoli_dense.jpg', label: 'E. coli Padat', badge: 'E.coli', color: '#0891b2' },
-                      { file: 'dust.jpg', label: 'Cawan Kosong', badge: 'Empty', color: '#64748b' },
+                      { file: 'colony_small.jpg', label: 'Single Colony', badge: 'Single', color: '#059669' },
+                      { file: 'merged.jpg', label: 'Merged Colony', badge: 'Merged', color: '#d97706' },
+                      { file: 'bubble_artifact.jpg', label: 'Bubble Artifact', badge: 'Bubble', color: '#2563eb' },
+                      { file: 'crack.jpg', label: 'Media Crack', badge: 'Crack', color: '#7c3aed' },
+                      { file: 'ecoli_dense.jpg', label: 'Dense E. coli', badge: 'E.coli', color: '#0891b2' },
+                      { file: 'dust.jpg', label: 'Dust Debris', badge: 'Dust', color: '#64748b' },
                     ].map((sample, i) => (
                       <button
                         key={i}
@@ -364,12 +416,22 @@ export default function UploadPage() {
                   <div className="flex-1 space-y-2 sm:space-y-4">
                   {/* Sample ID */}
                   <div className="space-y-1">
-                    <label
-                      htmlFor="sampleId"
-                      className="text-[8px] font-black text-slate-900 dark:text-white uppercase tracking-[0.15em] sm:tracking-[0.2em] ml-1"
-                    >
-                      {t("upload.specimenIdentifier")} *
-                    </label>
+                    <div className="flex items-center justify-between ml-1">
+                      <label
+                        htmlFor="sampleId"
+                        className="text-[8px] font-black text-slate-900 dark:text-white uppercase tracking-[0.15em] sm:tracking-[0.2em]"
+                      >
+                        {t("upload.specimenIdentifier")} *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setFormData((p) => ({ ...p, sampleId: generateSampleId(p.mediaType) }))}
+                        className="text-[7px] font-bold text-primary hover:text-primary/70 uppercase tracking-widest flex items-center gap-1 transition-colors"
+                      >
+                        <CheckCircle2 className="w-2.5 h-2.5" />
+                        Auto-generate
+                      </button>
+                    </div>
 
                     <input
                       type="text"
@@ -398,16 +460,13 @@ export default function UploadPage() {
                         required
                         className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-none outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm"
                         value={formData.mediaType}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            mediaType: e.target.value as MediaType,
-                          })
-                        }
+                         onChange={(e) => handleMediaTypeChange(e.target.value)}
                       >
-                        <option value="Plate Count Agar">
+                        <option value="PCA">
                           PCA — Plate Count Agar
                         </option>
+                        <option value="TSA">TSA — Tryptic Soy Agar</option>
+                        <option value="MacConkey">MAC — MacConkey Agar</option>
                         <option value="VRBA">
                           VRBA — Violet Red Bile Agar
                         </option>
@@ -415,9 +474,10 @@ export default function UploadPage() {
                           BGBB — Brilliant Green Bile Broth
                         </option>
                         <option value="R2A">R2A — Reasoner's 2A Agar</option>
-                        <option value="TSA">TSA — Tryptic Soy Agar</option>
-                        <option value="MacConkey">MAC — MacConkey Agar</option>
-                        <option value="Other">
+                        <option value="SDA">SDA — Sabouraud Dextrose Agar</option>
+                        <option value="EMB">EMB — Eosin Methylene Blue</option>
+                        <option value="Blood">Blood Agar</option>
+                        <option value="OTHER">
                           {t("upload.otherProtocol")}
                         </option>
                       </select>
@@ -488,6 +548,26 @@ export default function UploadPage() {
                       />
                     </div>
                   </div>
+
+                  {/* CFU/ml Preview Realtime */}
+                  {cfuPreview && (
+                    <div className="flex items-center justify-between px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-none">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-3 h-3 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                        <span className="text-[8px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">
+                          CFU/ml Estimate
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 font-mono">
+                          ~{cfuPreview} CFU/ml
+                        </span>
+                        <span className="text-[7px] text-emerald-500 dark:text-emerald-600 uppercase tracking-widest">
+                          (based on 150 col.)
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* ISO Compliance: Incubation & Method */}
                   <div className="grid grid-cols-2 gap-2 sm:gap-6 pt-2">
@@ -621,44 +701,44 @@ export default function UploadPage() {
             directory={t("upload.docsToggle")}
             title={t("upload.docsTitle")}
             description={t("upload.docsDescription")}
-            rawText={`PROTOKOL SARAF COLONYAI - SOP ISO-17025
+            rawText={`COLONYAI NEURAL PROTOCOL - SOP ISO-17025
 ==========================================
 
 1. OVERVIEW: INTELLIGENCE INTAKE
-Gerbang utama pemrosesan spesimen biologis menggunakan mesin saraf ColonyAI. Dirancang untuk akurasi tinggi ISO-17025.
+Primary gateway for processing biological specimens using the ColonyAI neural engine. Designed for ISO-17025 high-accuracy standards.
 
-2. TATA CARA PEMASUKAN GAMBAR
-- Klik area unggah atau seret file PNG/JPG (Max 10MB).
-- Pastikan cawan petri berada di tengah frame.
-- Pencahayaan LED 45 derajat sangat disarankan untuk deteksi koloni yang akurat.
-- Resolusi minimal 300 DPI.
+2. IMAGE UPLOAD PROCEDURE
+- Click the upload area or drag and drop PNG/JPG files (Max 10MB).
+- Ensure the petri dish is centered in the frame.
+- 45-degree LED lighting is highly recommended for accurate colony detection.
+- Minimum resolution of 300 DPI.
 
-3. KONFIGURASI PARAMETER (PROTOKOL BIOLOGIS)
-A. PENGIDENTIFIKASI SPESIMEN: Kunci utama pelacakan (Traceability). Masukkan kode unik laboratorium (e.g., ISO-PCA-B2026-001).
-B. MATRIKS MEDIA AGAR: Menentukan target mikroba.
-   - PCA: Total mikroba umum.
-   - VRBA/BGBB: Kelompok Coliform.
-   - R2A: Bakteri air/stres.
-   - TSA/MAC: Pertumbuhan umum/Gram-negatif.
-C. FAKTOR PENGENCERAN: 10^-1 sampai 10^-6. Menjamin jumlah koloni 30-300 CFU untuk validitas statistik.
-D. VOLUME (ML): Volume sampel yang diplating.
-E. PARAMETER INKUBASI:
-   - Incubation Temp: Suhu ideal pertumbuhan mikroba (misal: 35°C). Cara isi: Masukkan angka suhu operasional inkubator.
-   - Time (Hours): Durasi inkubasi (misal: 48 jam). Cara isi: Hitung total waktu sejak spesimen masuk hingga pembacaan.
-F. KEPATUHAN & TRACEABILITY:
-   - Method Standard (ISO): Referensi metode resmi (e.g., ISO 4833-1:2013). Cara isi: Kode standar ISO yang digunakan sebagai acuan.
-   - Media Batch/Lot #: Nomor produksi media agar. Cara isi: Lihat pada label kemasan media. Penting untuk validasi kualitas media.
-   - Incubator ID: Identitas mesin inkubator (e.g., INC-001). Cara isi: Masukkan ID alat untuk audit distribusi suhu.
+3. PARAMETER CONFIGURATION (BIOLOGICAL PROTOCOL)
+A. SPECIMEN IDENTIFIER: Primary traceability key. Enter the unique laboratory code (e.g., ISO-PCA-B2026-001).
+B. AGAR MEDIA MATRIX: Determines microbial target.
+   - PCA: General total microbes.
+   - VRBA/BGBB: Coliform group.
+   - R2A: Water/stressed bacteria.
+   - TSA/MAC: General growth/Gram-negative.
+C. DILUTION FACTOR: 10^-1 to 10^-6. Ensures 30-300 CFU colony count for statistical validity.
+D. VOLUME (ML): Volume of plated sample.
+E. INCUBATION PARAMETERS:
+   - Incubation Temp: Ideal microbial growth temperature (e.g., 35°C). How to fill: Enter the incubator's operational temperature.
+   - Time (Hours): Incubation duration (e.g., 48 hours). How to fill: Calculate total time from specimen entry to reading.
+F. COMPLIANCE & TRACEABILITY:
+   - Method Standard (ISO): Official method reference (e.g., ISO 4833-1:2013). How to fill: ISO standard code used as reference.
+   - Media Batch/Lot #: Agar media production number. How to fill: Check the media packaging label. Important for media quality validation.
+   - Incubator ID: Incubator machine identity (e.g., INC-001). How to fill: Enter equipment ID for temperature distribution audit.
 
 4. AI DETECTION CLASSES (5-Class YOLOv8)
-- colony_single: Koloni tunggal terpisah (dihitung)
-- colony_merged: Koloni bertumpuk (estimasi area SA-001)
-- bubble: Gelembung udara (diabaikan)
-- dust_debris: Debu/partikel (diabaikan)
-- media_crack: Retakan agar (diabaikan)
+- colony_single: Single separate colony (counted)
+- colony_merged: Stacked colony (SA-001 area estimation)
+- bubble: Air bubble (ignored)
+- dust_debris: Dust/particle (ignored)
+- media_crack: Agar crack (ignored)
 
 STATUS: GA (General Availability)
-PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
+PRECISION: 94.1% mAP@0.5 on 8+ media types.`}
           >
             <section className="space-y-3">
               <div className="flex items-center gap-2 mb-1">
@@ -670,10 +750,10 @@ PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
                 </h2>
               </div>
               <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-sm border border-slate-100">
-                Sistem Intelligence Intake adalah gerbang utama pemrosesan
-                spesimen biologis menggunakan mesin saraf ColonyAI. Protokol ini
-                dirancang untuk memenuhi standar akurasi tinggi yang
-                dipersyaratkan oleh ISO-17025.
+                The Intelligence Intake System is the main gateway for processing
+                biological specimens using the ColonyAI neural engine. This protocol
+                is designed to meet the high accuracy standards
+                required by ISO-17025.
               </p>
             </section>
 
@@ -683,14 +763,14 @@ PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
                   02
                 </span>
                 <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">
-                  Protokol Konfigurasi Detail
+                  Detailed Configuration Protocol
                 </h2>
               </div>
               <div className="space-y-4 ml-0.5">
                 {[
                   {
                     id: "1",
-                    title: "Pengidentifikasi Spesimen (Traceability)",
+                    title: "Specimen Identifier (Traceability)",
                     desc: `${t("upload.purposeLabel")} ${t("upload.descSampleIdPurpose")} ${t("upload.inputLabel")} ${t("upload.descSampleIdInput")} ${t("upload.resultLabel")} ${t("upload.descSampleIdResult")}`,
                   },
                   {
@@ -698,10 +778,10 @@ PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
                     title: "Matriks Media Agar (Selectivity)",
                     desc: `${t("upload.purposeLabel")} ${t("upload.descMediaPurpose")} ${t("upload.inputLabel")} ${t("upload.descMediaInput")} ${t("upload.resultLabel")} ${t("upload.descMediaResult")}`,
                     list: [
-                      "PCA: Untuk Total Plate Count (TPC) umum.",
-                      "VRBA/BGBB: Spesifik untuk kelompok Coliform/E.coli.",
-                      "R2A: Khusus bakteri stres/heterotrofik pada air.",
-                      "TSA/MAC: Untuk pertumbuhan umum atau selektif Gram-negatif.",
+                      "PCA: For general Total Plate Count (TPC).",
+                      "VRBA/BGBB: Specific for Coliform/E.coli group.",
+                      "R2A: Specific for stressed/heterotrophic bacteria in water.",
+                      "TSA/MAC: For general growth or Gram-negative selective.",
                     ],
                   },
                   {
@@ -712,17 +792,17 @@ PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
                   {
                     id: "4",
                     title: "Volume & Parameter Inkubasi",
-                    desc: `${t("upload.purposeLabel")} Normalisasi hitungan dan pencatatan kondisi fisik.`,
+                    desc: `${t("upload.purposeLabel")} Normalize count and record physical conditions.`,
                     list: [
                       `Volume: ${t("upload.descVolumeInput")} -> ${t("upload.descVolumeResult")}`,
-                      `Suhu: ${t("upload.descTempInput")} -> ${t("upload.descTempResult")}`,
-                      `Waktu: ${t("upload.descTimeInput")} -> ${t("upload.descTimeResult")}`,
+                      `Temperature: ${t("upload.descTempInput")} -> ${t("upload.descTempResult")}`,
+                      `Time: ${t("upload.descTimeInput")} -> ${t("upload.descTimeResult")}`,
                     ],
                   },
                   {
                     id: "5",
-                    title: "Kepatuhan Audit (Batch & Method)",
-                    desc: "Menjamin ketertelusuran penuh (Full Traceability) sesuai standar audit ISO-17025.",
+                    title: "Audit Compliance (Batch & Method)",
+                    desc: "Ensures full traceability according to ISO-17025 audit standards.",
                     list: [
                       `Standard: ${t("upload.descMethodInput")} -> ${t("upload.descMethodResult")}`,
                       `Batch/Lot: ${t("upload.descBatchInput")} -> ${t("upload.descBatchResult")}`,
@@ -771,11 +851,11 @@ PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
               <div className="space-y-3">
                 {[
                   {
-                    label: "Resolusi",
-                    val: "Minimal 300 DPI untuk akurasi optimal.",
+                    label: "Resolution",
+                    val: "Minimum 300 DPI for optimal accuracy.",
                   },
-                  { label: "Pencahayaan", val: "Sudut lampu LED 45 derajat." },
-                  { label: "Format", val: "PNG atau JPG (Max 10MB)." },
+                  { label: "Lighting", val: "45-degree LED lamp angle." },
+                  { label: "Format", val: "PNG or JPG (Max 10MB)." },
                 ].map((item, i) => (
                   <div
                     key={i}
@@ -805,27 +885,27 @@ PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
                 {[
                   {
                     name: "colony_single",
-                    desc: "Koloni tunggal terpisah — dihitung dalam CFU/ml.",
+                    desc: "Single separate colony — counted in CFU/ml.",
                     color: "bg-emerald-500",
                   },
                   {
                     name: "colony_merged",
-                    desc: "Koloni bertumpuk — estimasi SA-001.",
+                    desc: "Stacked colony — SA-001 estimation.",
                     color: "bg-amber-500",
                   },
                   {
                     name: "bubble",
-                    desc: "Gelembung udara — diabaikan dari hitungan.",
+                    desc: "Air bubble — excluded from count.",
                     color: "bg-rose-500",
                   },
                   {
                     name: "dust_debris",
-                    desc: "Debu/partikel — diabaikan dari hitungan.",
+                    desc: "Dust/particle — excluded from count.",
                     color: "bg-slate-400",
                   },
                   {
                     name: "media_crack",
-                    desc: "Retakan media agar — diabaikan dari hitungan.",
+                    desc: "Agar media crack — excluded from count.",
                     color: "bg-violet-500",
                   },
                 ].map((cls, i) => (
@@ -856,8 +936,8 @@ PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
                     Protocol Status: GA
                   </p>
                   <p className="text-[9px] text-emerald-700 leading-relaxed font-semibold">
-                    Tingkat presisi saat ini mencapai 99.8 persen pada media PCA
-                    standar laboratorium.
+                    Current precision level reaches 99.8 percent on standard
+                    laboratory PCA media.
                   </p>
                 </div>
               </div>
@@ -873,8 +953,8 @@ PRESISI: 94.1% mAP@0.5 pada 8+ jenis media.`}
                     ColonyAI Vault
                   </p>
                   <p className="text-[9px] text-slate-500 leading-relaxed font-medium">
-                    Seluruh data dienkripsi dan disimpan untuk kepatuhan data
-                    jangka panjang sesuai ISO-17025.
+                    All data is encrypted and stored for long-term data
+                    compliance per ISO-17025.
                   </p>
                 </div>
               </div>

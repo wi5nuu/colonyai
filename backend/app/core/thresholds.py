@@ -12,9 +12,7 @@ Keputusan: SA-001 & BUG-007 — ColonyAI Technical Decisions v1.0.0 (12 Apr 2026
 from typing import Literal
 
 # Nama kelas yang valid
-ColonyClassName = Literal[
-    "colony_single", "colony_merged", "bubble", "dust_debris", "media_crack"
-]
+ColonyClassName = Literal["colony_single", "colony_merged", "bubble", "dust_debris", "media_crack"]
 
 
 # Per-media-type threshold configuration
@@ -23,58 +21,58 @@ MEDIA_CONFIDENCE_THRESHOLDS: dict[str, dict[str, float]] = {
     "PCA": {
         "colony_single": 0.20,
         "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
-        "bubble":        0.10,
-        "dust_debris":   0.20,
-        "media_crack":   0.20,
+        "bubble": 0.10,
+        "dust_debris": 0.20,
+        "media_crack": 0.20,
     },
     "VRBA": {
         "colony_single": 0.20,
         "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
-        "bubble":        0.10,
-        "dust_debris":   0.15,
-        "media_crack":   0.15,
+        "bubble": 0.10,
+        "dust_debris": 0.15,
+        "media_crack": 0.15,
     },
     "BGBB": {
         "colony_single": 0.20,
         "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
-        "bubble":        0.10,
-        "dust_debris":   0.20,
-        "media_crack":   0.20,
+        "bubble": 0.10,
+        "dust_debris": 0.20,
+        "media_crack": 0.20,
     },
     "TGEA": {
         "colony_single": 0.20,
         "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
-        "bubble":        0.10,
-        "dust_debris":   0.20,
-        "media_crack":   0.20,
+        "bubble": 0.10,
+        "dust_debris": 0.20,
+        "media_crack": 0.20,
     },
     "TSA": {
         "colony_single": 0.20,
         "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
-        "bubble":        0.10,
-        "dust_debris":   0.20,
-        "media_crack":   0.20,
+        "bubble": 0.10,
+        "dust_debris": 0.20,
+        "media_crack": 0.20,
     },
     "MACCONKEY": {
         "colony_single": 0.20,
         "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
-        "bubble":        0.10,
-        "dust_debris":   0.15,
-        "media_crack":   0.15,
+        "bubble": 0.10,
+        "dust_debris": 0.15,
+        "media_crack": 0.15,
     },
     "R2A": {
         "colony_single": 0.20,
         "colony_merged": 0.15,  # OPT-002: Turun dari 0.20
-        "bubble":        0.10,
-        "dust_debris":   0.15,
-        "media_crack":   0.15,
+        "bubble": 0.10,
+        "dust_debris": 0.15,
+        "media_crack": 0.15,
     },
     "DEFAULT": {
         "colony_single": 0.15,
         "colony_merged": 0.15,
-        "bubble":        0.10,
-        "dust_debris":   0.10,
-        "media_crack":   0.10,
+        "bubble": 0.10,
+        "dust_debris": 0.10,
+        "media_crack": 0.10,
     },
 }
 
@@ -83,34 +81,32 @@ MEDIA_CONFIDENCE_THRESHOLDS: dict[str, dict[str, float]] = {
 # threshold per-media SELALU aktif, tidak pernah fallback ke DEFAULT.
 MEDIA_TYPE_ALIASES: dict[str, str] = {
     # Plate Count Agar (berbagai ejaan)
-    "plate count agar":  "PCA",
-    "plate count":       "PCA",
-    "pca":               "PCA",
+    "plate count agar": "PCA",
+    "plate count": "PCA",
+    "pca": "PCA",
     # Violet Red Bile Agar
     "violet red bile agar": "VRBA",
-    "vrba":              "VRBA",
+    "vrba": "VRBA",
     # Brilliant Green Bile Broth
     "brilliant green bile broth": "BGBB",
-    "bgbb":              "BGBB",
+    "bgbb": "BGBB",
     # Tryptic / Tryptone Soy Agar
-    "tryptic soy agar":  "TSA",
+    "tryptic soy agar": "TSA",
     "tryptone soy agar": "TSA",
-    "tsa":               "TSA",
+    "tsa": "TSA",
     # MacConkey
-    "macconkey":         "MACCONKEY",
-    "macconkey agar":    "MACCONKEY",
-    "mac conkey":        "MACCONKEY",
+    "macconkey": "MACCONKEY",
+    "macconkey agar": "MACCONKEY",
+    "mac conkey": "MACCONKEY",
     # R2A
-    "r2a":               "R2A",
-    "reasoner's 2a":     "R2A",
-    "reasoners 2a":      "R2A",
+    "r2a": "R2A",
+    "reasoner's 2a": "R2A",
+    "reasoners 2a": "R2A",
     # TGEA
-    "tgea":              "TGEA",
+    "tgea": "TGEA",
     "tryptone glucose extract agar": "TGEA",
-    # BGBB
-    "bgbb":              "BGBB",
     # Other → DEFAULT
-    "other":             "DEFAULT",
+    "other": "DEFAULT",
 }
 
 
@@ -120,13 +116,13 @@ DEFAULT_IOU_THRESHOLD: float = 0.45
 
 # Batas TNTC / TFTC sesuai ISO 4833-1:2013 dan FDA BAM Chapter 3
 # INKLUSIF kedua batas: 25 ≤ valid ≤ 250
-TFTC_BOUNDARY: int = 25   # count < 25 → TFTC (eksklusif batas bawah)
+TFTC_BOUNDARY: int = 25  # count < 25 → TFTC (eksklusif batas bawah)
 TNTC_BOUNDARY: int = 250  # count > 250 → TNTC (eksklusif batas atas)
 
 # Batas validasi input koloni (Pydantic / sanity check)
 MAX_COLONY_SINGLE: int = 10_000
 MAX_COLONY_MERGED: int = 5_000
-MAX_MERGED_PER_BBOX: int = 50   # Cap estimasi SA-001 per bounding box
+MAX_MERGED_PER_BBOX: int = 50  # Cap estimasi SA-001 per bounding box
 
 
 def _resolve_media_key(media_type: str) -> str:

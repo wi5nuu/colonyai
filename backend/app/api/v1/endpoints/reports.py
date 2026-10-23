@@ -7,6 +7,8 @@ import uuid
 import os
 import csv
 import io
+import logging
+import statistics
 from collections import defaultdict
 from pathlib import Path
 
@@ -19,6 +21,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
 from sqlalchemy.orm import joinedload
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 
@@ -28,11 +32,13 @@ class ReportRequest(BaseModel):
     date_to: Optional[str] = None
     format: str = "pdf"  # pdf, csv
 
+
 class SendMessengerRequest(BaseModel):
     platform: str  # "whatsapp" or "telegram"
-    target_id: str # Phone number or chat ID
+    target_id: str  # Phone number or chat ID
     date_from: Optional[str] = None
     date_to: Optional[str] = None
+
 
 @router.post("/send-messenger")
 async def send_messenger_report(
@@ -48,12 +54,12 @@ async def send_messenger_report(
     # Build query
     conditions = []
     user_role = current_user.get("role")
-    
+
     if user_role != "super_admin":
         org_id = current_user.get("organization_id")
         if org_id:
             conditions.append(Analysis.organization_id == uuid.UUID(org_id))
-            
+
     if request.date_from:
         dt_from = request.date_from
         if len(dt_from) == 10:
@@ -71,17 +77,16 @@ async def send_messenger_report(
 
     # Aggregate Data
     total = len(analyses)
-    completed = sum(1 for a in analyses if str(getattr(a.status, 'value', a.status)) == "completed")
+    completed = sum(1 for a in analyses if str(getattr(a.status, "value", a.status)) == "completed")
     colonies = sum(a.colony_count or 0 for a in analyses)
     cfus = [a.cfu_per_ml for a in analyses if a.cfu_per_ml is not None]
-    avg_cfu = f"{sum(cfus)/len(cfus):.2e}" if cfus else "N/A"
+    # FIX BUG-CRITICAL-005: Use statistics.mean() to prevent division by zero
+    try:
+        avg_cfu = f"{statistics.mean(cfus):.2e}" if cfus else "N/A"
+    except statistics.StatisticsError:
+        avg_cfu = "N/A"
 
-    report_data = {
-        "total": total,
-        "completed": completed,
-        "colonies": colonies,
-        "avg_cfu": avg_cfu
-    }
+    report_data = {"total": total, "completed": completed, "colonies": colonies, "avg_cfu": avg_cfu}
 
     user_name = current_user.get("full_name", "Unknown Analyst")
 
@@ -90,7 +95,9 @@ async def send_messenger_report(
     elif request.platform == "telegram":
         await messenger_service.send_telegram_report(request.target_id, report_data, user_name)
     else:
-        raise HTTPException(status_code=400, detail="Invalid platform specified. Use 'whatsapp' or 'telegram'.")
+        raise HTTPException(
+            status_code=400, detail="Invalid platform specified. Use 'whatsapp' or 'telegram'."
+        )
 
     return {"message": f"Report successfully dispatched via {request.platform.capitalize()}."}
 
@@ -115,8 +122,13 @@ async def generate_pdf_report(
     from reportlab.lib.units import mm, cm
     from reportlab.lib.colors import black, HexColor
     from reportlab.platypus import (
-        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-        PageBreak, KeepTogether,
+        SimpleDocTemplate,
+        Paragraph,
+        Spacer,
+        Table,
+        TableStyle,
+        PageBreak,
+        KeepTogether,
     )
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
@@ -126,14 +138,14 @@ async def generate_pdf_report(
     # Query analyses for the date range
     conditions = []
     user_role = current_user.get("role")
-    
+
     if user_role != "super_admin":
         org_id = current_user.get("organization_id")
         if org_id:
             conditions.append(Analysis.organization_id == uuid.UUID(org_id))
-            
+
     if user_role == "analyst":
-        conditions.append(Analysis.user_id == current_user["user_id"])
+        conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
 
     if request.date_from:
         dt_from = request.date_from
@@ -150,8 +162,7 @@ async def generate_pdf_report(
         select(Analysis)
         .where(and_(*conditions))
         .options(
-            joinedload(Analysis.detections),
-            joinedload(Analysis.user).joinedload(User.organization)
+            joinedload(Analysis.detections), joinedload(Analysis.user).joinedload(User.organization)
         )
         .order_by(Analysis.created_at.desc())
     )
@@ -181,23 +192,30 @@ async def generate_pdf_report(
         W, H = A4
         # Top accent bar
         canvas_obj.setFillColor(HexColor("#1a202c"))
-        canvas_obj.rect(0, H - 1*cm, W, 1*cm, fill=1, stroke=0)
+        canvas_obj.rect(0, H - 1 * cm, W, 1 * cm, fill=1, stroke=0)
         # Header text
         canvas_obj.setFont("Times-Roman", 7)
         canvas_obj.setFillColor(HexColor("#FFFFFF"))
-        canvas_obj.drawString(2.5*cm, H - 0.65*cm, "ColonyAI Analytics Platform  |  CONFIDENTIAL")
-        canvas_obj.drawRightString(W - 2.5*cm, H - 0.65*cm,
-            f"Doc: CAI-{_doc_report_id[:8].upper()}  |  {_doc_generated[:10]}")
+        canvas_obj.drawString(
+            2.5 * cm, H - 0.65 * cm, "ColonyAI Analytics Platform  |  CONFIDENTIAL"
+        )
+        canvas_obj.drawRightString(
+            W - 2.5 * cm,
+            H - 0.65 * cm,
+            f"Doc: CAI-{_doc_report_id[:8].upper()}  |  {_doc_generated[:10]}",
+        )
         # Bottom footer line
         canvas_obj.setStrokeColor(HexColor("#CBD5E0"))
         canvas_obj.setLineWidth(0.5)
-        canvas_obj.line(2.5*cm, 1.8*cm, W - 2.5*cm, 1.8*cm)
+        canvas_obj.line(2.5 * cm, 1.8 * cm, W - 2.5 * cm, 1.8 * cm)
         canvas_obj.setFont("Times-Roman", 7)
         canvas_obj.setFillColor(HexColor("#718096"))
-        canvas_obj.drawString(2.5*cm, 1.3*cm,
-            "ColonyAI  |  ISO 17025:2017  |  ISO 4833-1:2013  |  FDA BAM Ch.3  |  BPOM RI")
-        canvas_obj.drawRightString(W - 2.5*cm, 1.3*cm,
-            f"Page {doc_obj.page}")
+        canvas_obj.drawString(
+            2.5 * cm,
+            1.3 * cm,
+            "ColonyAI  |  ISO 17025:2017  |  ISO 4833-1:2013  |  FDA BAM Ch.3  |  BPOM RI",
+        )
+        canvas_obj.drawRightString(W - 2.5 * cm, 1.3 * cm, f"Page {doc_obj.page}")
         canvas_obj.restoreState()
 
     doc = SimpleDocTemplate(
@@ -274,47 +292,75 @@ async def generate_pdf_report(
 
     # ── COVER BLOCK ─────────────────────────────────────────────────
     # Top rule
-    elements.append(Table(
-        [[" "]],
-        colWidths=[16*cm],
-        rowHeights=[0.15*cm],
-        style=TableStyle([
-            ("BACKGROUND", (0,0), (-1,-1), HexColor("#1a202c")),
-            ("TOPPADDING", (0,0), (-1,-1), 0),
-            ("BOTTOMPADDING", (0,0), (-1,-1), 0),
-        ])
-    ))
+    elements.append(
+        Table(
+            [[" "]],
+            colWidths=[16 * cm],
+            rowHeights=[0.15 * cm],
+            style=TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), HexColor("#1a202c")),
+                    ("TOPPADDING", (0, 0), (-1, -1), 0),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+                ]
+            ),
+        )
+    )
     elements.append(Spacer(1, 10))
-    elements.append(Paragraph("COLONYAI ANALYTICS PLATFORM", ParagraphStyle(
-        "CoverOrg", parent=styles["Normal"], fontName=base_bold,
-        fontSize=9, alignment=TA_CENTER, textColor=HexColor("#718096"),
-        tracking=2, spaceAfter=4,
-    )))
+    elements.append(
+        Paragraph(
+            "COLONYAI ANALYTICS PLATFORM",
+            ParagraphStyle(
+                "CoverOrg",
+                parent=styles["Normal"],
+                fontName=base_bold,
+                fontSize=9,
+                alignment=TA_CENTER,
+                textColor=HexColor("#718096"),
+                tracking=2,
+                spaceAfter=4,
+            ),
+        )
+    )
     elements.append(Paragraph("Laboratory Analysis Report", title_style))
-    elements.append(Paragraph(
-        "Automated Colony Enumeration — BPOM RI · ISO 17025:2017 · ISO 4833-1:2013 · FDA BAM Ch.3",
-        subtitle_style,
-    ))
+    elements.append(
+        Paragraph(
+            "Automated Colony Enumeration — BPOM RI · ISO 17025:2017 · ISO 4833-1:2013 · FDA BAM Ch.3",
+            subtitle_style,
+        )
+    )
     elements.append(Spacer(1, 8))
     # Meta info table
     meta_data = [
-        [Paragraph("<b>Report ID</b>", label_style), Paragraph(f"CAI-{report_id[:8].upper()}", body_style),
-         Paragraph("<b>Generated</b>", label_style), Paragraph(_doc_generated, body_style)],
-        [Paragraph("<b>Report Type</b>", label_style), Paragraph(request.report_type.upper(), body_style),
-         Paragraph("<b>Classification</b>", label_style), Paragraph("CONFIDENTIAL — Internal Use Only", body_style)],
+        [
+            Paragraph("<b>Report ID</b>", label_style),
+            Paragraph(f"CAI-{report_id[:8].upper()}", body_style),
+            Paragraph("<b>Generated</b>", label_style),
+            Paragraph(_doc_generated, body_style),
+        ],
+        [
+            Paragraph("<b>Report Type</b>", label_style),
+            Paragraph(request.report_type.upper(), body_style),
+            Paragraph("<b>Classification</b>", label_style),
+            Paragraph("CONFIDENTIAL — Internal Use Only", body_style),
+        ],
     ]
-    meta_table = Table(meta_data, colWidths=[3.5*cm, 5*cm, 3.5*cm, 5*cm])
-    meta_table.setStyle(TableStyle([
-        ("FONTNAME", (0,0), (-1,-1), base_font_name),
-        ("FONTSIZE", (0,0), (-1,-1), 9),
-        ("BACKGROUND", (0,0), (-1,-1), HexColor("#F7FAFC")),
-        ("BOX", (0,0), (-1,-1), 0.5, HexColor("#CBD5E0")),
-        ("INNERGRID", (0,0), (-1,-1), 0.3, HexColor("#E2E8F0")),
-        ("TOPPADDING", (0,0), (-1,-1), 5),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 5),
-        ("LEFTPADDING", (0,0), (-1,-1), 8),
-        ("RIGHTPADDING", (0,0), (-1,-1), 8),
-    ]))
+    meta_table = Table(meta_data, colWidths=[3.5 * cm, 5 * cm, 3.5 * cm, 5 * cm])
+    meta_table.setStyle(
+        TableStyle(
+            [
+                ("FONTNAME", (0, 0), (-1, -1), base_font_name),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+                ("BACKGROUND", (0, 0), (-1, -1), HexColor("#F7FAFC")),
+                ("BOX", (0, 0), (-1, -1), 0.5, HexColor("#CBD5E0")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.3, HexColor("#E2E8F0")),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
     elements.append(meta_table)
     elements.append(Spacer(1, 14))
 
@@ -322,8 +368,13 @@ async def generate_pdf_report(
     total_analyses = len(analyses)
     total_colonies = sum(a.colony_count or 0 for a in analyses)
     valid_analyses = sum(
-        1 for a in analyses
-        if (a.status == AnalysisStatus.COMPLETED if hasattr(a.status, 'value') else str(a.status) == "completed")
+        1
+        for a in analyses
+        if (
+            a.status == AnalysisStatus.COMPLETED
+            if hasattr(a.status, "value")
+            else str(a.status) == "completed"
+        )
     )
     avg_cfu = None
     cfu_values = [a.cfu_per_ml for a in analyses if a.cfu_per_ml is not None]
@@ -341,20 +392,24 @@ async def generate_pdf_report(
     ]
 
     summary_table = Table(summary_data, colWidths=[8 * cm, 8 * cm])
-    summary_table.setStyle(TableStyle([
-        ("FONTNAME", (0, 0), (-1, -1), base_font_name),
-        ("FONTSIZE", (0, 0), (-1, -1), 12),
-        ("BACKGROUND", (0, 0), (-1, 0), HexColor("#4A5568")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), HexColor("#FFFFFF")),
-        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("GRID", (0, 0), (-1, -1), 0.5, black),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [HexColor("#F7FAFC"), HexColor("#FFFFFF")]),
-        ("TOPPADDING", (0, 0), (-1, -1), 6),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-        ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-    ]))
+    summary_table.setStyle(
+        TableStyle(
+            [
+                ("FONTNAME", (0, 0), (-1, -1), base_font_name),
+                ("FONTSIZE", (0, 0), (-1, -1), 12),
+                ("BACKGROUND", (0, 0), (-1, 0), HexColor("#4A5568")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), HexColor("#FFFFFF")),
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("GRID", (0, 0), (-1, -1), 0.5, black),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [HexColor("#F7FAFC"), HexColor("#FFFFFF")]),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
     elements.append(summary_table)
     elements.append(Spacer(1, 18))
 
@@ -376,41 +431,72 @@ async def generate_pdf_report(
 
     executive_data = [
         ["Metric", "Pre-AI (Manual)", "Post-AI (ColonyAI)", "Improvement"],
-        ["Time per Sample", f"{manual_time_per_sample} min", f"{ai_time_per_sample} min", Paragraph(f"{time_saved_per_sample} min saved ({efficiency_gain_pct:.0f}% reduction)", small_style)],
-        ["Total Time Invested", Paragraph(f"{total_analyses * manual_time_per_sample} min ({total_analyses * manual_time_per_sample / 60:.1f} hrs)", small_style),
-         Paragraph(f"{total_analyses * ai_time_per_sample} min ({total_analyses * ai_time_per_sample / 60:.1f} hrs)", small_style),
-         Paragraph(f"{total_time_saved_minutes} min ({total_time_saved_hours:.1f} hrs) saved", small_style)],
+        [
+            "Time per Sample",
+            f"{manual_time_per_sample} min",
+            f"{ai_time_per_sample} min",
+            Paragraph(
+                f"{time_saved_per_sample} min saved ({efficiency_gain_pct:.0f}% reduction)",
+                small_style,
+            ),
+        ],
+        [
+            "Total Time Invested",
+            Paragraph(
+                f"{total_analyses * manual_time_per_sample} min ({total_analyses * manual_time_per_sample / 60:.1f} hrs)",
+                small_style,
+            ),
+            Paragraph(
+                f"{total_analyses * ai_time_per_sample} min ({total_analyses * ai_time_per_sample / 60:.1f} hrs)",
+                small_style,
+            ),
+            Paragraph(
+                f"{total_time_saved_minutes} min ({total_time_saved_hours:.1f} hrs) saved",
+                small_style,
+            ),
+        ],
         ["Inter-Analyst CV", "22.7%-80%", "<5%", "Consistent results"],
-        ["Throughput", f"{total_analyses} plates", f"{total_analyses} plates (automated)", "5-8x potential increase"],
+        [
+            "Throughput",
+            f"{total_analyses} plates",
+            f"{total_analyses} plates (automated)",
+            "5-8x potential increase",
+        ],
     ]
 
     executive_table = Table(executive_data, colWidths=[3.5 * cm, 3.5 * cm, 4 * cm, 5 * cm])
-    executive_table.setStyle(TableStyle([
-        ("FONTNAME", (0, 0), (-1, -1), base_font_name),
-        ("FONTSIZE", (0, 0), (-1, -1), 9),
-        ("BACKGROUND", (0, 0), (-1, 0), HexColor("#2D3748")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), HexColor("#FFFFFF")),
-        ("FONTNAME", (0, 0), (-1, 0), base_font_name),
-        ("FONTSIZE", (0, 0), (-1, 0), 10),
-        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("GRID", (0, 0), (-1, -1), 0.5, black),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [HexColor("#F0FFF4"), HexColor("#FFFFFF")]),
-        ("TOPPADDING", (0, 0), (-1, -1), 5),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-        ("LEFTPADDING", (0, 0), (-1, -1), 6),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-    ]))
+    executive_table.setStyle(
+        TableStyle(
+            [
+                ("FONTNAME", (0, 0), (-1, -1), base_font_name),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+                ("BACKGROUND", (0, 0), (-1, 0), HexColor("#2D3748")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), HexColor("#FFFFFF")),
+                ("FONTNAME", (0, 0), (-1, 0), base_font_name),
+                ("FONTSIZE", (0, 0), (-1, 0), 10),
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("GRID", (0, 0), (-1, -1), 0.5, black),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [HexColor("#F0FFF4"), HexColor("#FFFFFF")]),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
     elements.append(executive_table)
     elements.append(Spacer(1, 12))
 
     # Cost savings note
-    elements.append(Paragraph(
-        f"<b>Estimated Labor Cost Savings:</b> Approximately IDR {labor_cost_saved:,.0f} "
-        f"({total_time_saved_hours:.1f} hours × {avg_analyst_hourly_rate:,} IDR/hr × 40% efficiency gain). "
-        f"Based on proposal benchmarks for Indonesian microbiology laboratories.",
-        small_style,
-    ))
+    elements.append(
+        Paragraph(
+            f"<b>Estimated Labor Cost Savings:</b> Approximately IDR {labor_cost_saved:,.0f} "
+            f"({total_time_saved_hours:.1f} hours × {avg_analyst_hourly_rate:,} IDR/hr × 40% efficiency gain). "
+            f"Based on proposal benchmarks for Indonesian microbiology laboratories.",
+            small_style,
+        )
+    )
     elements.append(Spacer(1, 18))
 
     # --- Monthly Throughput Trends ---
@@ -432,27 +518,33 @@ async def generate_pdf_report(
     for month in sorted(monthly_data.keys()):
         data = monthly_data[month]
         avg_cfu = sum(data["cfu_values"]) / len(data["cfu_values"]) if data["cfu_values"] else 0
-        trend_data.append([
-            month,
-            str(data["count"]),
-            str(data["colonies"]),
-            f"{avg_cfu:.2e}" if avg_cfu > 0 else "N/A",
-        ])
+        trend_data.append(
+            [
+                month,
+                str(data["count"]),
+                str(data["colonies"]),
+                f"{avg_cfu:.2e}" if avg_cfu > 0 else "N/A",
+            ]
+        )
 
     trend_table = Table(trend_data, colWidths=[4 * cm, 4 * cm, 4 * cm, 4 * cm])
-    trend_table.setStyle(TableStyle([
-        ("FONTNAME", (0, 0), (-1, -1), base_font_name),
-        ("FONTSIZE", (0, 0), (-1, -1), 10),
-        ("BACKGROUND", (0, 0), (-1, 0), HexColor("#4A5568")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), HexColor("#FFFFFF")),
-        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-        ("GRID", (0, 0), (-1, -1), 0.5, black),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [HexColor("#F0FFF4"), HexColor("#FFFFFF")]),
-        ("TOPPADDING", (0, 0), (-1, -1), 5),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-        ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-    ]))
+    trend_table.setStyle(
+        TableStyle(
+            [
+                ("FONTNAME", (0, 0), (-1, -1), base_font_name),
+                ("FONTSIZE", (0, 0), (-1, -1), 10),
+                ("BACKGROUND", (0, 0), (-1, 0), HexColor("#4A5568")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), HexColor("#FFFFFF")),
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("GRID", (0, 0), (-1, -1), 0.5, black),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [HexColor("#F0FFF4"), HexColor("#FFFFFF")]),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
     elements.append(trend_table)
     elements.append(Spacer(1, 18))
 
@@ -460,16 +552,24 @@ async def generate_pdf_report(
     elements.append(Paragraph("Sample Details", heading_style))
 
     for analysis in analyses:
-        status_str = analysis.status.value if hasattr(analysis.status, 'value') else str(analysis.status)
+        status_str = (
+            analysis.status.value if hasattr(analysis.status, "value") else str(analysis.status)
+        )
         analyst_name = analysis.user.full_name if analysis.user else "Unknown Analyst"
-        org_name = analysis.user.organization.name if analysis.user and analysis.user.organization else "ColonyAI General"
-        
-        elements.append(Paragraph(
-            f"<b>Sample:</b> {analysis.sample_id} &nbsp; | &nbsp; "
-            f"<b>Media:</b> {analysis.media_type} &nbsp; | &nbsp; "
-            f"<b>Date:</b> {analysis.created_at.strftime('%Y-%m-%d %H:%M')}",
-            body_style,
-        ))
+        org_name = (
+            analysis.user.organization.name
+            if analysis.user and analysis.user.organization
+            else "ColonyAI General"
+        )
+
+        elements.append(
+            Paragraph(
+                f"<b>Sample:</b> {analysis.sample_id} &nbsp; | &nbsp; "
+                f"<b>Media:</b> {analysis.media_type} &nbsp; | &nbsp; "
+                f"<b>Date:</b> {analysis.created_at.strftime('%Y-%m-%d %H:%M')}",
+                body_style,
+            )
+        )
 
         detail_data = [
             ["Parameter", "Value"],
@@ -478,27 +578,51 @@ async def generate_pdf_report(
             ["Dilution Factor", Paragraph(f"{analysis.dilution_factor}", body_style)],
             ["Plated Volume (ml)", Paragraph(f"{analysis.plated_volume_ml}", body_style)],
             ["Colony Count", Paragraph(str(analysis.colony_count or 0), body_style)],
-            ["CFU/ml", Paragraph(f"{analysis.cfu_per_ml:.2e}" if analysis.cfu_per_ml else "N/A", body_style)],
-            ["Confidence", Paragraph(f"{analysis.confidence_score * 100:.1f}%" if analysis.confidence_score else "N/A", body_style)],
+            [
+                "CFU/ml",
+                Paragraph(
+                    f"{analysis.cfu_per_ml:.2e}" if analysis.cfu_per_ml else "N/A", body_style
+                ),
+            ],
+            [
+                "Confidence",
+                Paragraph(
+                    (
+                        f"{analysis.confidence_score * 100:.1f}%"
+                        if analysis.confidence_score
+                        else "N/A"
+                    ),
+                    body_style,
+                ),
+            ],
             ["Reliability", Paragraph((analysis.reliability or "N/A").capitalize(), body_style)],
             ["Status", Paragraph(status_str.capitalize(), body_style)],
         ]
 
         detail_table = Table(detail_data, colWidths=[6 * cm, 10 * cm])
-        detail_table.setStyle(TableStyle([
-            ("FONTNAME", (0, 0), (-1, -1), base_font_name),
-            ("FONTSIZE", (0, 0), (-1, -1), 11),
-            ("BACKGROUND", (0, 0), (-1, 0), HexColor("#E2E8F0")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), black),
-            ("FONTNAME", (0, 0), (-1, 0), base_font_name),
-            ("FONTSIZE", (0, 0), (-1, 0), 11),
-            ("GRID", (0, 0), (-1, -1), 0.5, HexColor("#CBD5E0")),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [HexColor("#F7FAFC"), HexColor("#FFFFFF")]),
-            ("TOPPADDING", (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-            ("LEFTPADDING", (0, 0), (-1, -1), 8),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-        ]))
+        detail_table.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (-1, -1), base_font_name),
+                    ("FONTSIZE", (0, 0), (-1, -1), 11),
+                    ("BACKGROUND", (0, 0), (-1, 0), HexColor("#E2E8F0")),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), black),
+                    ("FONTNAME", (0, 0), (-1, 0), base_font_name),
+                    ("FONTSIZE", (0, 0), (-1, 0), 11),
+                    ("GRID", (0, 0), (-1, -1), 0.5, HexColor("#CBD5E0")),
+                    (
+                        "ROWBACKGROUNDS",
+                        (0, 1),
+                        (-1, -1),
+                        [HexColor("#F7FAFC"), HexColor("#FFFFFF")],
+                    ),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                ]
+            )
+        )
         elements.append(detail_table)
 
         # Class breakdown if available
@@ -508,16 +632,20 @@ async def generate_pdf_report(
             for cls_name, count in class_breakdown.items():
                 breakdown_rows.append([cls_name, str(count)])
             breakdown_table = Table(breakdown_rows, colWidths=[6 * cm, 10 * cm])
-            breakdown_table.setStyle(TableStyle([
-                ("FONTNAME", (0, 0), (-1, -1), base_font_name),
-                ("FONTSIZE", (0, 0), (-1, -1), 10),
-                ("BACKGROUND", (0, 0), (-1, 0), HexColor("#EDF2F7")),
-                ("GRID", (0, 0), (-1, -1), 0.5, HexColor("#CBD5E0")),
-                ("TOPPADDING", (0, 0), (-1, -1), 3),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-                ("LEFTPADDING", (0, 0), (-1, -1), 8),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-            ]))
+            breakdown_table.setStyle(
+                TableStyle(
+                    [
+                        ("FONTNAME", (0, 0), (-1, -1), base_font_name),
+                        ("FONTSIZE", (0, 0), (-1, -1), 10),
+                        ("BACKGROUND", (0, 0), (-1, 0), HexColor("#EDF2F7")),
+                        ("GRID", (0, 0), (-1, -1), 0.5, HexColor("#CBD5E0")),
+                        ("TOPPADDING", (0, 0), (-1, -1), 3),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                    ]
+                )
+            )
             elements.append(Spacer(1, 4))
             elements.append(Paragraph("<i>Class Breakdown:</i>", small_style))
             elements.append(breakdown_table)
@@ -547,38 +675,48 @@ async def generate_pdf_report(
             Paragraph("Name &amp; Signature / Date", small_style),
         ],
     ]
-    sig_table = Table(sig_data, colWidths=[5.5*cm, 5.5*cm, 5.5*cm])
-    sig_table.setStyle(TableStyle([
-        ("FONTNAME", (0,0), (-1,-1), base_font_name),
-        ("FONTSIZE", (0,0), (-1,-1), 9),
-        ("BOX", (0,0), (-1,-1), 0.5, HexColor("#CBD5E0")),
-        ("INNERGRID", (0,0), (-1,-1), 0.3, HexColor("#E2E8F0")),
-        ("BACKGROUND", (0,0), (-1,0), HexColor("#F7FAFC")),
-        ("TOPPADDING", (0,0), (-1,-1), 8),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 8),
-        ("LEFTPADDING", (0,0), (-1,-1), 8),
-        ("RIGHTPADDING", (0,0), (-1,-1), 8),
-        ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-    ]))
+    sig_table = Table(sig_data, colWidths=[5.5 * cm, 5.5 * cm, 5.5 * cm])
+    sig_table.setStyle(
+        TableStyle(
+            [
+                ("FONTNAME", (0, 0), (-1, -1), base_font_name),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+                ("BOX", (0, 0), (-1, -1), 0.5, HexColor("#CBD5E0")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.3, HexColor("#E2E8F0")),
+                ("BACKGROUND", (0, 0), (-1, 0), HexColor("#F7FAFC")),
+                ("TOPPADDING", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ]
+        )
+    )
     elements.append(sig_table)
     elements.append(Spacer(1, 16))
 
     # Disclaimer
     disclaimer_style = ParagraphStyle(
-        "Disclaimer", parent=styles["Normal"],
-        fontName=base_font_name, fontSize=8, leading=11,
+        "Disclaimer",
+        parent=styles["Normal"],
+        fontName=base_font_name,
+        fontSize=8,
+        leading=11,
         textColor=HexColor("#718096"),
-        borderPad=6, leftIndent=0,
+        borderPad=6,
+        leftIndent=0,
     )
-    elements.append(Paragraph(
-        "<b>DISCLAIMER:</b> This report was generated by ColonyAI Automated Microbiology Platform "
-        "using a validated YOLOv8 neural network (v4.2). All results conform to ISO 4833-1:2013 "
-        "and FDA BAM Chapter 3 standards. Expanded uncertainty (U) is reported at k=2 (~95% CI) "
-        "per GUM (JCGM 100:2008). This document is CONFIDENTIAL and intended solely for authorized "
-        "laboratory personnel. Reproduction without written consent is prohibited. "
-        f"Document ID: CAI-{report_id[:8].upper()}",
-        disclaimer_style,
-    ))
+    elements.append(
+        Paragraph(
+            "<b>DISCLAIMER:</b> This report was generated by ColonyAI Automated Microbiology Platform "
+            "using a validated YOLOv8 neural network (v4.2). All results conform to ISO 4833-1:2013 "
+            "and FDA BAM Chapter 3 standards. Expanded uncertainty (U) is reported at k=2 (~95% CI) "
+            "per GUM (JCGM 100:2008). This document is CONFIDENTIAL and intended solely for authorized "
+            "laboratory personnel. Reproduction without written consent is prohibited. "
+            f"Document ID: CAI-{report_id[:8].upper()}",
+            disclaimer_style,
+        )
+    )
 
     # Build with header/footer
     doc.build(elements, onFirstPage=_header_footer, onLaterPages=_header_footer)
@@ -607,14 +745,14 @@ async def generate_csv_report(
     # Query analyses for the date range
     conditions = []
     user_role = current_user.get("role")
-    
+
     if user_role != "super_admin":
         org_id = current_user.get("organization_id")
         if org_id:
             conditions.append(Analysis.organization_id == uuid.UUID(org_id))
-            
+
     if user_role == "analyst":
-        conditions.append(Analysis.user_id == current_user["user_id"])
+        conditions.append(Analysis.user_id == uuid.UUID(current_user["user_id"]))
 
     if request.date_from:
         dt_from = request.date_from
@@ -631,8 +769,7 @@ async def generate_csv_report(
         select(Analysis)
         .where(and_(*conditions))
         .options(
-            joinedload(Analysis.detections),
-            joinedload(Analysis.user).joinedload(User.organization)
+            joinedload(Analysis.detections), joinedload(Analysis.user).joinedload(User.organization)
         )
         .order_by(Analysis.created_at.desc())
     )
@@ -649,66 +786,83 @@ async def generate_csv_report(
     writer = csv.writer(output)
 
     # Header
-    writer.writerow([
-        "Analysis ID",
-        "Company / Institution",
-        "Analyst Name",
-        "Sample ID",
-        "Media Type",
-        "Dilution Factor",
-        "Plated Volume (ml)",
-        "Total Colonies",
-        "CFU/ml",
-        "Status",
-        "Detection Class",
-        "Detection Confidence",
-        "BBox X",
-        "BBox Y",
-        "BBox Width",
-        "BBox Height",
-    ])
+    writer.writerow(
+        [
+            "Analysis ID",
+            "Company / Institution",
+            "Analyst Name",
+            "Sample ID",
+            "Media Type",
+            "Dilution Factor",
+            "Plated Volume (ml)",
+            "Total Colonies",
+            "CFU/ml",
+            "Status",
+            "Detection Class",
+            "Detection Confidence",
+            "BBox X",
+            "BBox Y",
+            "BBox Width",
+            "BBox Height",
+        ]
+    )
 
     # Data rows (one per detection)
     for analysis in analyses:
-        status_str = analysis.status.value if hasattr(analysis.status, 'value') else str(analysis.status)
+        status_str = (
+            analysis.status.value if hasattr(analysis.status, "value") else str(analysis.status)
+        )
         analyst_name = analysis.user.full_name if analysis.user else "Unknown Analyst"
-        org_name = analysis.user.organization.name if analysis.user and analysis.user.organization else "ColonyAI General"
+        org_name = (
+            analysis.user.organization.name
+            if analysis.user and analysis.user.organization
+            else "ColonyAI General"
+        )
 
         if analysis.detections:
             for detection in analysis.detections:
-                writer.writerow([
+                writer.writerow(
+                    [
+                        str(analysis.id),
+                        org_name,
+                        analyst_name,
+                        analysis.sample_id.replace(",", ";") if analysis.sample_id else "",
+                        analysis.media_type,
+                        analysis.dilution_factor,
+                        analysis.plated_volume_ml,
+                        analysis.colony_count or 0,
+                        f"{analysis.cfu_per_ml:.2e}" if analysis.cfu_per_ml else "N/A",
+                        status_str,
+                        detection.class_name,
+                        f"{detection.confidence * 100:.1f}%",
+                        detection.bbox_x,
+                        detection.bbox_y,
+                        detection.bbox_width,
+                        detection.bbox_height,
+                    ]
+                )
+        else:
+            # Summary row only if no detections
+            writer.writerow(
+                [
                     str(analysis.id),
                     org_name,
                     analyst_name,
-                    analysis.sample_id,
+                    analysis.sample_id.replace(",", ";") if analysis.sample_id else "",
                     analysis.media_type,
                     analysis.dilution_factor,
                     analysis.plated_volume_ml,
                     analysis.colony_count or 0,
                     f"{analysis.cfu_per_ml:.2e}" if analysis.cfu_per_ml else "N/A",
                     status_str,
-                    detection.class_name,
-                    f"{detection.confidence * 100:.1f}%",
-                    detection.bbox_x,
-                    detection.bbox_y,
-                    detection.bbox_width,
-                    detection.bbox_height,
-                ])
-        else:
-            # Summary row only if no detections
-            writer.writerow([
-                str(analysis.id),
-                org_name,
-                analyst_name,
-                analysis.sample_id,
-                analysis.media_type,
-                analysis.dilution_factor,
-                analysis.plated_volume_ml,
-                analysis.colony_count or 0,
-                f"{analysis.cfu_per_ml:.2e}" if analysis.cfu_per_ml else "N/A",
-                status_str,
-                "", "", "", "", "", "",
-            ])
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                ]
+            )
 
     # Save to file
     reports_dir = os.path.join(settings.UPLOAD_DIR, "reports")
@@ -767,6 +921,7 @@ async def download_report(
 # ORG-WIDE EXPORT: Admin & Manager can export all org data
 # ============================================================
 
+
 @router.get("/admin/pdf-all", response_class=FileResponse)
 async def admin_export_all_pdf(
     current_user: dict = Depends(require_role("admin", "manager", "super_admin")),
@@ -780,7 +935,14 @@ async def admin_export_all_pdf(
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import cm
     from reportlab.lib.colors import black, HexColor
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+    from reportlab.platypus import (
+        SimpleDocTemplate,
+        Paragraph,
+        Spacer,
+        Table,
+        TableStyle,
+        PageBreak,
+    )
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.enums import TA_CENTER, TA_LEFT
     from collections import defaultdict
@@ -812,86 +974,176 @@ async def admin_export_all_pdf(
         def _adm_header_footer(canvas_obj, doc_obj):
             canvas_obj.saveState()
             from reportlab.lib.pagesizes import A4 as _A4
+
             W, H = _A4
             canvas_obj.setFillColor(HexColor("#1a202c"))
-            canvas_obj.rect(0, H - 1*cm, W, 1*cm, fill=1, stroke=0)
+            canvas_obj.rect(0, H - 1 * cm, W, 1 * cm, fill=1, stroke=0)
             canvas_obj.setFont("Times-Roman", 7)
             canvas_obj.setFillColor(HexColor("#FFFFFF"))
-            canvas_obj.drawString(2.5*cm, H - 0.65*cm, "ColonyAI Analytics  |  ADMIN MASTER REPORT  |  CONFIDENTIAL")
-            canvas_obj.drawRightString(W - 2.5*cm, H - 0.65*cm,
-                f"Doc: ADM-{_adm_report_id[:8].upper()}  |  {_adm_now[:10]}")
+            canvas_obj.drawString(
+                2.5 * cm,
+                H - 0.65 * cm,
+                "ColonyAI Analytics  |  ADMIN MASTER REPORT  |  CONFIDENTIAL",
+            )
+            canvas_obj.drawRightString(
+                W - 2.5 * cm,
+                H - 0.65 * cm,
+                f"Doc: ADM-{_adm_report_id[:8].upper()}  |  {_adm_now[:10]}",
+            )
             canvas_obj.setStrokeColor(HexColor("#CBD5E0"))
             canvas_obj.setLineWidth(0.5)
-            canvas_obj.line(2.5*cm, 1.8*cm, W - 2.5*cm, 1.8*cm)
+            canvas_obj.line(2.5 * cm, 1.8 * cm, W - 2.5 * cm, 1.8 * cm)
             canvas_obj.setFont("Times-Roman", 7)
             canvas_obj.setFillColor(HexColor("#718096"))
-            canvas_obj.drawString(2.5*cm, 1.3*cm,
-                "ColonyAI  |  ISO 17025:2017  |  ISO 4833-1:2013  |  BPOM RI  |  For Authorized Personnel Only")
-            canvas_obj.drawRightString(W - 2.5*cm, 1.3*cm, f"Page {doc_obj.page}")
+            canvas_obj.drawString(
+                2.5 * cm,
+                1.3 * cm,
+                "ColonyAI  |  ISO 17025:2017  |  ISO 4833-1:2013  |  BPOM RI  |  For Authorized Personnel Only",
+            )
+            canvas_obj.drawRightString(W - 2.5 * cm, 1.3 * cm, f"Page {doc_obj.page}")
             canvas_obj.restoreState()
 
-        doc = SimpleDocTemplate(file_path, pagesize=A4,
-            topMargin=3.2*cm, bottomMargin=2.8*cm,
-            leftMargin=2.5*cm, rightMargin=2.5*cm)
+        doc = SimpleDocTemplate(
+            file_path,
+            pagesize=A4,
+            topMargin=3.2 * cm,
+            bottomMargin=2.8 * cm,
+            leftMargin=2.5 * cm,
+            rightMargin=2.5 * cm,
+        )
 
         base = "Times-Roman"
         bold = "Times-Bold"
         styles = getSampleStyleSheet()
-        title_s = ParagraphStyle("T", parent=styles["Title"],
-            fontName=bold, fontSize=18, alignment=TA_CENTER,
-            spaceAfter=4, textColor=HexColor("#1a202c"))
-        head_s  = ParagraphStyle("H", parent=styles["Heading2"],
-            fontName=bold, fontSize=11, spaceBefore=12, spaceAfter=4,
-            textColor=HexColor("#1a202c"))
-        body_s  = ParagraphStyle("B", parent=styles["Normal"],
-            fontName=base, fontSize=10, spaceAfter=3)
-        small_s = ParagraphStyle("S", parent=styles["Normal"],
-            fontName=base, fontSize=8, spaceAfter=2, textColor=HexColor("#718096"))
-        label_s = ParagraphStyle("L", parent=styles["Normal"],
-            fontName=bold, fontSize=9, textColor=HexColor("#2D3748"))
+        title_s = ParagraphStyle(
+            "T",
+            parent=styles["Title"],
+            fontName=bold,
+            fontSize=18,
+            alignment=TA_CENTER,
+            spaceAfter=4,
+            textColor=HexColor("#1a202c"),
+        )
+        head_s = ParagraphStyle(
+            "H",
+            parent=styles["Heading2"],
+            fontName=bold,
+            fontSize=11,
+            spaceBefore=12,
+            spaceAfter=4,
+            textColor=HexColor("#1a202c"),
+        )
+        body_s = ParagraphStyle(
+            "B", parent=styles["Normal"], fontName=base, fontSize=10, spaceAfter=3
+        )
+        small_s = ParagraphStyle(
+            "S",
+            parent=styles["Normal"],
+            fontName=base,
+            fontSize=8,
+            spaceAfter=2,
+            textColor=HexColor("#718096"),
+        )
+        label_s = ParagraphStyle(
+            "L", parent=styles["Normal"], fontName=bold, fontSize=9, textColor=HexColor("#2D3748")
+        )
 
         elems = []
         now = _adm_now
 
         # ── COVER BLOCK ──
-        elems.append(Table([[" "]], colWidths=[16*cm], rowHeights=[0.15*cm],
-            style=TableStyle([
-                ("BACKGROUND",(0,0),(-1,-1),HexColor("#1a202c")),
-                ("TOPPADDING",(0,0),(-1,-1),0),("BOTTOMPADDING",(0,0),(-1,-1),0),
-            ])))
+        elems.append(
+            Table(
+                [[" "]],
+                colWidths=[16 * cm],
+                rowHeights=[0.15 * cm],
+                style=TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), HexColor("#1a202c")),
+                        ("TOPPADDING", (0, 0), (-1, -1), 0),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+                    ]
+                ),
+            )
+        )
         elems.append(Spacer(1, 8))
-        elems.append(Paragraph("COLONYAI ANALYTICS PLATFORM", ParagraphStyle(
-            "CoverOrg2", parent=styles["Normal"], fontName=bold,
-            fontSize=8, alignment=TA_CENTER, textColor=HexColor("#718096"), spaceAfter=3)))
+        elems.append(
+            Paragraph(
+                "COLONYAI ANALYTICS PLATFORM",
+                ParagraphStyle(
+                    "CoverOrg2",
+                    parent=styles["Normal"],
+                    fontName=bold,
+                    fontSize=8,
+                    alignment=TA_CENTER,
+                    textColor=HexColor("#718096"),
+                    spaceAfter=3,
+                ),
+            )
+        )
         elems.append(Paragraph("Admin Master Report", title_s))
-        elems.append(Paragraph(
-            "Comprehensive Laboratory Analytics — All Organizations · All Analysts · All Periods",
-            ParagraphStyle("SubT", parent=styles["Normal"], fontName=base,
-                fontSize=10, alignment=TA_CENTER, textColor=HexColor("#4A5568"), spaceAfter=6)))
+        elems.append(
+            Paragraph(
+                "Comprehensive Laboratory Analytics — All Organizations · All Analysts · All Periods",
+                ParagraphStyle(
+                    "SubT",
+                    parent=styles["Normal"],
+                    fontName=base,
+                    fontSize=10,
+                    alignment=TA_CENTER,
+                    textColor=HexColor("#4A5568"),
+                    spaceAfter=6,
+                ),
+            )
+        )
         elems.append(Spacer(1, 6))
-        meta = Table([
-            [Paragraph("<b>Report ID</b>", label_s), Paragraph(f"ADM-{report_id[:8].upper()}", body_s),
-             Paragraph("<b>Generated</b>", label_s), Paragraph(now, body_s)],
-            [Paragraph("<b>Total Records</b>", label_s), Paragraph(str(len(analyses)), body_s),
-             Paragraph("<b>Classification</b>", label_s), Paragraph("CONFIDENTIAL — Admin Only", body_s)],
-        ], colWidths=[3.5*cm, 5*cm, 3.5*cm, 5*cm])
-        meta.setStyle(TableStyle([
-            ("FONTNAME",(0,0),(-1,-1),base),("FONTSIZE",(0,0),(-1,-1),9),
-            ("BACKGROUND",(0,0),(-1,-1),HexColor("#F7FAFC")),
-            ("BOX",(0,0),(-1,-1),0.5,HexColor("#CBD5E0")),
-            ("INNERGRID",(0,0),(-1,-1),0.3,HexColor("#E2E8F0")),
-            ("TOPPADDING",(0,0),(-1,-1),5),("BOTTOMPADDING",(0,0),(-1,-1),5),
-            ("LEFTPADDING",(0,0),(-1,-1),8),("RIGHTPADDING",(0,0),(-1,-1),8),
-        ]))
+        meta = Table(
+            [
+                [
+                    Paragraph("<b>Report ID</b>", label_s),
+                    Paragraph(f"ADM-{report_id[:8].upper()}", body_s),
+                    Paragraph("<b>Generated</b>", label_s),
+                    Paragraph(now, body_s),
+                ],
+                [
+                    Paragraph("<b>Total Records</b>", label_s),
+                    Paragraph(str(len(analyses)), body_s),
+                    Paragraph("<b>Classification</b>", label_s),
+                    Paragraph("CONFIDENTIAL — Admin Only", body_s),
+                ],
+            ],
+            colWidths=[3.5 * cm, 5 * cm, 3.5 * cm, 5 * cm],
+        )
+        meta.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (-1, -1), base),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("BACKGROUND", (0, 0), (-1, -1), HexColor("#F7FAFC")),
+                    ("BOX", (0, 0), (-1, -1), 0.5, HexColor("#CBD5E0")),
+                    ("INNERGRID", (0, 0), (-1, -1), 0.3, HexColor("#E2E8F0")),
+                    ("TOPPADDING", (0, 0), (-1, -1), 5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                ]
+            )
+        )
         elems += [meta, Spacer(1, 14)]
 
         # ── Global Summary Table ──
-        total   = len(analyses)
-        completed = sum(1 for a in analyses if str(getattr(a.status,'value',a.status)) == "completed")
-        failed  = sum(1 for a in analyses if str(getattr(a.status,'value',a.status)) == "failed")
+        total = len(analyses)
+        completed = sum(
+            1 for a in analyses if str(getattr(a.status, "value", a.status)) == "completed"
+        )
+        failed = sum(1 for a in analyses if str(getattr(a.status, "value", a.status)) == "failed")
         colonies = sum(a.colony_count or 0 for a in analyses)
-        cfus    = [a.cfu_per_ml for a in analyses if a.cfu_per_ml]
-        avg_cfu = sum(cfus)/len(cfus) if cfus else None
+        cfus = [a.cfu_per_ml for a in analyses if a.cfu_per_ml]
+        # FIX BUG-CRITICAL-005: Use statistics.mean() to prevent division by zero
+        try:
+            avg_cfu = statistics.mean(cfus) if cfus else None
+        except statistics.StatisticsError:
+            avg_cfu = None
         users_set = {str(a.user_id) for a in analyses}
 
         elems.append(Paragraph("1. Global Summary", head_s))
@@ -905,45 +1157,73 @@ async def admin_export_all_pdf(
             ["Total Colonies Detected", str(colonies)],
             ["Average CFU/ml", f"{avg_cfu:.2e}" if avg_cfu else "N/A"],
         ]
-        t = Table(summary_rows, colWidths=[8*cm, 8*cm])
-        t.setStyle(TableStyle([
-            ("FONTNAME",(0,0),(-1,-1),base), ("FONTSIZE",(0,0),(-1,-1),11),
-            ("BACKGROUND",(0,0),(-1,0),HexColor("#1a202c")), ("TEXTCOLOR",(0,0),(-1,0),HexColor("#ffffff")),
-            ("GRID",(0,0),(-1,-1),0.5,black),
-            ("ROWBACKGROUNDS",(0,1),(-1,-1),[HexColor("#f7fafc"),HexColor("#ffffff")]),
-            ("TOPPADDING",(0,0),(-1,-1),6),("BOTTOMPADDING",(0,0),(-1,-1),6),
-            ("LEFTPADDING",(0,0),(-1,-1),8),("RIGHTPADDING",(0,0),(-1,-1),8),
-        ]))
+        t = Table(summary_rows, colWidths=[8 * cm, 8 * cm])
+        t.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (-1, -1), base),
+                    ("FONTSIZE", (0, 0), (-1, -1), 11),
+                    ("BACKGROUND", (0, 0), (-1, 0), HexColor("#1a202c")),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), HexColor("#ffffff")),
+                    ("GRID", (0, 0), (-1, -1), 0.5, black),
+                    (
+                        "ROWBACKGROUNDS",
+                        (0, 1),
+                        (-1, -1),
+                        [HexColor("#f7fafc"), HexColor("#ffffff")],
+                    ),
+                    ("TOPPADDING", (0, 0), (-1, -1), 6),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                ]
+            )
+        )
         elems += [t, Spacer(1, 16)]
 
         # ── Per-User Summary ──
         elems.append(Paragraph("2. Per-User Breakdown", head_s))
-        user_stats: dict = defaultdict(lambda: {"name":"","count":0,"completed":0,"colonies":0})
+        user_stats: dict = defaultdict(
+            lambda: {"name": "", "count": 0, "completed": 0, "colonies": 0}
+        )
         for a in analyses:
             uid = str(a.user_id)
             user_stats[uid]["name"] = a.user.full_name if a.user else uid[:8]
             user_stats[uid]["count"] += 1
-            if str(getattr(a.status,'value',a.status)) == "completed":
+            if str(getattr(a.status, "value", a.status)) == "completed":
                 user_stats[uid]["completed"] += 1
             user_stats[uid]["colonies"] += a.colony_count or 0
 
         user_rows = [["Analyst Name", "Analyses", "Completed", "Total Colonies"]]
         for uid, s in user_stats.items():
             user_rows.append([s["name"], str(s["count"]), str(s["completed"]), str(s["colonies"])])
-        t2 = Table(user_rows, colWidths=[6*cm,3*cm,3*cm,4*cm])
-        t2.setStyle(TableStyle([
-            ("FONTNAME",(0,0),(-1,-1),base),("FONTSIZE",(0,0),(-1,-1),10),
-            ("BACKGROUND",(0,0),(-1,0),HexColor("#2d3748")),("TEXTCOLOR",(0,0),(-1,0),HexColor("#ffffff")),
-            ("GRID",(0,0),(-1,-1),0.5,black),
-            ("ROWBACKGROUNDS",(0,1),(-1,-1),[HexColor("#ebf8ff"),HexColor("#ffffff")]),
-            ("TOPPADDING",(0,0),(-1,-1),5),("BOTTOMPADDING",(0,0),(-1,-1),5),
-            ("LEFTPADDING",(0,0),(-1,-1),6),("RIGHTPADDING",(0,0),(-1,-1),6),
-        ]))
+        t2 = Table(user_rows, colWidths=[6 * cm, 3 * cm, 3 * cm, 4 * cm])
+        t2.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (-1, -1), base),
+                    ("FONTSIZE", (0, 0), (-1, -1), 10),
+                    ("BACKGROUND", (0, 0), (-1, 0), HexColor("#2d3748")),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), HexColor("#ffffff")),
+                    ("GRID", (0, 0), (-1, -1), 0.5, black),
+                    (
+                        "ROWBACKGROUNDS",
+                        (0, 1),
+                        (-1, -1),
+                        [HexColor("#ebf8ff"), HexColor("#ffffff")],
+                    ),
+                    ("TOPPADDING", (0, 0), (-1, -1), 5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                ]
+            )
+        )
         elems += [t2, Spacer(1, 16)]
 
         # ── Monthly Trend ──
         elems.append(Paragraph("3. Monthly Throughput Trend", head_s))
-        monthly: dict = defaultdict(lambda:{"count":0,"colonies":0})
+        monthly: dict = defaultdict(lambda: {"count": 0, "colonies": 0})
         for a in analyses:
             m = a.created_at.strftime("%Y-%m")
             monthly[m]["count"] += 1
@@ -951,52 +1231,107 @@ async def admin_export_all_pdf(
         trend_rows = [["Month", "Analyses", "Total Colonies"]]
         for m in sorted(monthly):
             trend_rows.append([m, str(monthly[m]["count"]), str(monthly[m]["colonies"])])
-        t3 = Table(trend_rows, colWidths=[4*cm,4*cm,8*cm])
-        t3.setStyle(TableStyle([
-            ("FONTNAME",(0,0),(-1,-1),base),("FONTSIZE",(0,0),(-1,-1),10),
-            ("BACKGROUND",(0,0),(-1,0),HexColor("#4a5568")),("TEXTCOLOR",(0,0),(-1,0),HexColor("#ffffff")),
-            ("GRID",(0,0),(-1,-1),0.5,black),
-            ("ROWBACKGROUNDS",(0,1),(-1,-1),[HexColor("#f0fff4"),HexColor("#ffffff")]),
-            ("TOPPADDING",(0,0),(-1,-1),5),("BOTTOMPADDING",(0,0),(-1,-1),5),
-            ("LEFTPADDING",(0,0),(-1,-1),8),("RIGHTPADDING",(0,0),(-1,-1),8),
-        ]))
-        elems += [t3, Spacer(1,16), PageBreak()]
+        t3 = Table(trend_rows, colWidths=[4 * cm, 4 * cm, 8 * cm])
+        t3.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (-1, -1), base),
+                    ("FONTSIZE", (0, 0), (-1, -1), 10),
+                    ("BACKGROUND", (0, 0), (-1, 0), HexColor("#4a5568")),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), HexColor("#ffffff")),
+                    ("GRID", (0, 0), (-1, -1), 0.5, black),
+                    (
+                        "ROWBACKGROUNDS",
+                        (0, 1),
+                        (-1, -1),
+                        [HexColor("#f0fff4"), HexColor("#ffffff")],
+                    ),
+                    ("TOPPADDING", (0, 0), (-1, -1), 5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                ]
+            )
+        )
+        elems += [t3, Spacer(1, 16), PageBreak()]
 
         # ── All Samples Detail ──
         elems.append(Paragraph("4. All Sample Records", head_s))
-        detail_rows = [["Sample ID","Analyst","Media","CFU/ml","Colonies","Confidence","Status","Date"]]
+        detail_rows = [
+            ["Sample ID", "Analyst", "Media", "CFU/ml", "Colonies", "Confidence", "Status", "Date"]
+        ]
         for a in analyses:
             name = a.user.full_name if a.user else "Unknown"
-            status_val = str(getattr(a.status,'value',a.status)).capitalize()
-            cfu_val = f"{a.cfu_per_ml:.2e}" if a.cfu_per_ml else (str(a.cfu_status) if a.cfu_status else "N/A")
+            status_val = str(getattr(a.status, "value", a.status)).capitalize()
+            cfu_val = (
+                f"{a.cfu_per_ml:.2e}"
+                if a.cfu_per_ml
+                else (str(a.cfu_status) if a.cfu_status else "N/A")
+            )
             conf = f"{a.confidence_score*100:.0f}%" if a.confidence_score else "N/A"
-            detail_rows.append([
-                a.sample_id, name, a.media_type or "—",
-                cfu_val, str(a.colony_count or 0),
-                conf, status_val,
-                a.created_at.strftime("%Y-%m-%d"),
-            ])
+            detail_rows.append(
+                [
+                    a.sample_id,
+                    name,
+                    a.media_type or "—",
+                    cfu_val,
+                    str(a.colony_count or 0),
+                    conf,
+                    status_val,
+                    a.created_at.strftime("%Y-%m-%d"),
+                ]
+            )
         # Optimized colWidths to fit A4 (16cm total)
-        t4 = Table(detail_rows, colWidths=[2.2*cm, 2.8*cm, 1.8*cm, 2.2*cm, 1.6*cm, 1.8*cm, 1.8*cm, 1.8*cm])
-        t4.setStyle(TableStyle([
-            ("FONTNAME",(0,0),(-1,-1),base),("FONTSIZE",(0,0),(-1,-1),8),
-            ("BACKGROUND",(0,0),(-1,0),HexColor("#1a202c")),("TEXTCOLOR",(0,0),(-1,0),HexColor("#ffffff")),
-            ("GRID",(0,0),(-1,-1),0.4,black),
-            ("ROWBACKGROUNDS",(0,1),(-1,-1),[HexColor("#f7fafc"),HexColor("#ffffff")]),
-            ("TOPPADDING",(0,0),(-1,-1),3),("BOTTOMPADDING",(0,0),(-1,-1),3),
-            ("LEFTPADDING",(0,0),(-1,-1),4),("RIGHTPADDING",(0,0),(-1,-1),4),
-            ("FONTSIZE",(0,1),(-1,-1),8),
-        ]))
+        t4 = Table(
+            detail_rows,
+            colWidths=[
+                2.2 * cm,
+                2.8 * cm,
+                1.8 * cm,
+                2.2 * cm,
+                1.6 * cm,
+                1.8 * cm,
+                1.8 * cm,
+                1.8 * cm,
+            ],
+        )
+        t4.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (-1, -1), base),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8),
+                    ("BACKGROUND", (0, 0), (-1, 0), HexColor("#1a202c")),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), HexColor("#ffffff")),
+                    ("GRID", (0, 0), (-1, -1), 0.4, black),
+                    (
+                        "ROWBACKGROUNDS",
+                        (0, 1),
+                        (-1, -1),
+                        [HexColor("#f7fafc"), HexColor("#ffffff")],
+                    ),
+                    ("TOPPADDING", (0, 0), (-1, -1), 3),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 4),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+                    ("FONTSIZE", (0, 1), (-1, -1), 8),
+                ]
+            )
+        )
         elems.append(t4)
 
         doc.build(elems, onFirstPage=_adm_header_footer, onLaterPages=_adm_header_footer)
-        return FileResponse(file_path, media_type="application/pdf", filename=f"colonyai-admin-report-{report_id}.pdf")
+        return FileResponse(
+            file_path,
+            media_type="application/pdf",
+            filename=f"colonyai-admin-report-{report_id}.pdf",
+        )
     except Exception as e:
         import logging
+
         logging.error(f"Error generating admin PDF: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error generating PDF report: {str(e)}"
+            detail=f"Error generating PDF report: {str(e)}",
         )
 
 
@@ -1036,16 +1371,16 @@ async def admin_export_all_excel(
         wb = openpyxl.Workbook()
 
         # ── Styles ──
-        HDR_FILL  = PatternFill("solid", fgColor="1A202C")
+        HDR_FILL = PatternFill("solid", fgColor="1A202C")
         HDR2_FILL = PatternFill("solid", fgColor="2D3748")
-        ALT_FILL  = PatternFill("solid", fgColor="EBF8FF")
-        HDR_FONT  = Font(bold=True, color="FFFFFF", size=11)
-        TITLE_FONT= Font(bold=True, size=14, color="1A202C")
-        SUB_FONT  = Font(bold=True, size=10, color="2D3748")
-        THIN      = Side(style="thin", color="CBD5E0")
-        BORDER    = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
-        CENTER    = Alignment(horizontal="center", vertical="center", wrap_text=True)
-        LEFT      = Alignment(horizontal="left",   vertical="center", wrap_text=True)
+        ALT_FILL = PatternFill("solid", fgColor="EBF8FF")
+        HDR_FONT = Font(bold=True, color="FFFFFF", size=11)
+        TITLE_FONT = Font(bold=True, size=14, color="1A202C")
+        SUB_FONT = Font(bold=True, size=10, color="2D3748")
+        THIN = Side(style="thin", color="CBD5E0")
+        BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+        CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
 
         def style_header_row(ws, row, fill=HDR_FILL):
             for cell in ws[row]:
@@ -1085,9 +1420,9 @@ async def admin_export_all_excel(
         ws_dash["A1"].alignment = CENTER
 
         # Key Metrics (KPIs)
-        total     = len(analyses)
+        total = len(analyses)
         users_set = {str(a.user_id) for a in analyses}
-        cfus_all  = [a.cfu_per_ml for a in analyses if a.cfu_per_ml]
+        cfus_all = [a.cfu_per_ml for a in analyses if a.cfu_per_ml]
         confs_all = [a.confidence_score for a in analyses if a.confidence_score]
         tntc_count = sum(1 for a in analyses if a.cfu_status == "TNTC")
         tftc_count = sum(1 for a in analyses if a.cfu_status == "TFTC")
@@ -1108,11 +1443,11 @@ async def admin_export_all_excel(
         ws_dash["B7"] = "='📋 Summary Table'!B5"
 
         ws_dash["E4"] = "Efficiency Rate"
-        ws_dash["F4"] = "='📋 Summary Table'!B15" # Efficiency Gain
+        ws_dash["F4"] = "='📋 Summary Table'!B15"  # Efficiency Gain
         ws_dash["E5"] = "Time Saved (Hrs)"
-        ws_dash["F5"] = "=(B4 * 18) / 60" # 18 mins saved per sample
+        ws_dash["F5"] = "=(B4 * 18) / 60"  # 18 mins saved per sample
         ws_dash["E6"] = "Labor Cost Saved"
-        ws_dash["F6"] = "=F5 * 50000 * 0.4" # IDR 50k/hr * 40% reduction
+        ws_dash["F6"] = "=F5 * 50000 * 0.4"  # IDR 50k/hr * 40% reduction
         ws_dash["E7"] = "Neural Confidence"
         ws_dash["F7"] = "='📋 Summary Table'!B14"
 
@@ -1122,27 +1457,31 @@ async def admin_export_all_excel(
             ws_dash[f"E{row}"].fill = PatternFill("solid", fgColor="F0FFF4")
             ws_dash[f"B{row}"].font = Font(bold=True)
             ws_dash[f"F{row}"].font = Font(bold=True, color="2F855A")
-            ws_dash[f"F{row}"].number_format = '#,##0'
+            ws_dash[f"F{row}"].number_format = "#,##0"
 
         # Create Hidden Data for Dashboard Charts
         ws_hidden = wb.create_sheet("hidden_data")
         media_counts = defaultdict(int)
-        for a in analyses: media_counts[a.media_type or "Unknown"] += 1
+        for a in analyses:
+            media_counts[a.media_type or "Unknown"] += 1
         ws_hidden.append(["Media", "Count"])
-        for m, c in media_counts.items(): ws_hidden.append([m, c])
+        for m, c in media_counts.items():
+            ws_hidden.append([m, c])
 
         mon_counts = defaultdict(int)
-        for a in analyses: mon_counts[a.created_at.strftime("%b %Y")] += 1
+        for a in analyses:
+            mon_counts[a.created_at.strftime("%b %Y")] += 1
         ws_hidden.append([])
         ws_hidden.append(["Month", "Count"])
-        for m, c in mon_counts.items(): ws_hidden.append([m, c])
+        for m, c in mon_counts.items():
+            ws_hidden.append([m, c])
 
         from openpyxl.chart import BarChart, LineChart, PieChart, Reference
 
         pie = PieChart()
         pie.title = "Sample Volume by Media Type"
-        data = Reference(ws_hidden, min_col=2, min_row=2, max_row=len(media_counts)+1)
-        cats = Reference(ws_hidden, min_col=1, min_row=2, max_row=len(media_counts)+1)
+        data = Reference(ws_hidden, min_col=2, min_row=2, max_row=len(media_counts) + 1)
+        cats = Reference(ws_hidden, min_col=1, min_row=2, max_row=len(media_counts) + 1)
         pie.add_data(data)
         pie.set_categories(cats)
         ws_dash.add_chart(pie, "A9")
@@ -1150,8 +1489,18 @@ async def admin_export_all_excel(
         bar = BarChart()
         bar.title = "Throughput Growth (Monthly)"
         bar.y_axis.title = "Samples"
-        data = Reference(ws_hidden, min_col=2, min_row=len(media_counts)+4, max_row=len(media_counts)+len(mon_counts)+3)
-        cats = Reference(ws_hidden, min_col=1, min_row=len(media_counts)+4, max_row=len(media_counts)+len(mon_counts)+3)
+        data = Reference(
+            ws_hidden,
+            min_col=2,
+            min_row=len(media_counts) + 4,
+            max_row=len(media_counts) + len(mon_counts) + 3,
+        )
+        cats = Reference(
+            ws_hidden,
+            min_col=1,
+            min_row=len(media_counts) + 4,
+            max_row=len(media_counts) + len(mon_counts) + 3,
+        )
         bar.add_data(data)
         bar.set_categories(cats)
         ws_dash.add_chart(bar, "E9")
@@ -1167,8 +1516,11 @@ async def admin_export_all_excel(
         ws1["A1"] = "ColonyAI — Admin Analytics Summary"
         ws1["A1"].font = TITLE_FONT
         ws1["A1"].alignment = CENTER
-        ws1["A1"].fill = ws1["A1"].fill.__class__(fill_type="solid",
-            fgColor="1A202C") if hasattr(ws1["A1"].fill, "__class__") else ws1["A1"].fill
+        ws1["A1"].fill = (
+            ws1["A1"].fill.__class__(fill_type="solid", fgColor="1A202C")
+            if hasattr(ws1["A1"].fill, "__class__")
+            else ws1["A1"].fill
+        )
         ws1.freeze_panes = "A3"
 
         ws1.append([])
@@ -1177,28 +1529,40 @@ async def admin_export_all_excel(
 
         # Dynamic Formulas pointing to Raw Records (Sheet 6)
         total_count = len(analyses)
-        ws1.append(["Total Analyses", total_count, "Calculated from Records"]) # B4
-        ws1.append(["Total Registered Analysts", len(users_set), "Unique users"]) # B5
-        ws1.append(["Completed Records", f'=COUNTIF(\'📋 All Records\'!N:N, "Completed")', "Status check"]) # B6
-        ws1.append(["Failed Records", f'=COUNTIF(\'📋 All Records\'!N:N, "Failed")', "Status check"]) # B7
-        ws1.append(["Success Rate", "=B6/B4", "Dynamic %"]) # B8
-        ws1["B8"].number_format = '0.0%'
+        ws1.append(["Total Analyses", total_count, "Calculated from Records"])  # B4
+        ws1.append(["Total Registered Analysts", len(users_set), "Unique users"])  # B5
+        ws1.append(
+            ["Completed Records", f"=COUNTIF('📋 All Records'!N:N, \"Completed\")", "Status check"]
+        )  # B6
+        ws1.append(
+            ["Failed Records", f"=COUNTIF('📋 All Records'!N:N, \"Failed\")", "Status check"]
+        )  # B7
+        ws1.append(
+            ["Success Rate", "=IFERROR(B6/B4, 0)", "Dynamic %"]
+        )  # B8 - Protected against division by zero
+        ws1["B8"].number_format = "0.0%"
 
-        ws1.append(["TNTC Results", f'=COUNTIF(\'📋 All Records\'!J:J, "TNTC")', "High density"]) # B9
-        ws1.append(["TFTC Results", f'=COUNTIF(\'📋 All Records\'!J:J, "TFTC")', "Low density"]) # B10
-        ws1.append(["Total Colonies Detected", f"=SUM('📋 All Records'!H:H)", "Global sum"]) # B11
-        ws1.append(["Average Colonies/Sample", "=B11/B4", "Mean distribution"]) # B12
+        ws1.append(
+            ["TNTC Results", f"=COUNTIF('📋 All Records'!J:J, \"TNTC\")", "High density"]
+        )  # B9
+        ws1.append(
+            ["TFTC Results", f"=COUNTIF('📋 All Records'!J:J, \"TFTC\")", "Low density"]
+        )  # B10
+        ws1.append(["Total Colonies Detected", f"=SUM('📋 All Records'!H:H)", "Global sum"])  # B11
+        ws1.append(
+            ["Average Colonies/Sample", "=IFERROR(B11/B4, 0)", "Mean distribution"]
+        )  # B12 - Protected against division by zero
 
-        cfus_avg = sum(cfus_all)/len(cfus_all) if cfus_all else 0
-        ws1.append(["Average CFU/ml", cfus_avg, "Mean density"]) # B13
-        ws1["B13"].number_format = '0.00E+00'
+        cfus_avg = sum(cfus_all) / len(cfus_all) if cfus_all else 0
+        ws1.append(["Average CFU/ml", cfus_avg, "Mean density"])  # B13
+        ws1["B13"].number_format = "0.00E+00"
 
-        conf_avg = sum(confs_all)/len(confs_all) if confs_all else 0
-        ws1.append(["Average Confidence", conf_avg, "Model reliability"]) # B14
-        ws1["B14"].number_format = '0.0%'
+        conf_avg = sum(confs_all) / len(confs_all) if confs_all else 0
+        ws1.append(["Average Confidence", conf_avg, "Model reliability"])  # B14
+        ws1["B14"].number_format = "0.0%"
 
-        ws1.append(["Efficiency Gain", 0.9, "AI vs Manual baseline"]) # B15
-        ws1["B15"].number_format = '0%'
+        ws1.append(["Efficiency Gain", 0.9, "AI vs Manual baseline"])  # B15
+        ws1["B15"].number_format = "0%"
 
         for row in range(4, 16):
             style_data_row(ws1, row, alt=(row % 2 == 1))
@@ -1208,61 +1572,125 @@ async def admin_export_all_excel(
         # SHEET 2: Per-User Analytics
         # ─────────────────────────────────────────────
         ws2 = wb.create_sheet("👤 Per-User Analytics")
-        ws2.append(["Analyst Name", "Email", "Total Analyses", "Completed", "Failed",
-                    "Success Rate", "Total Colonies", "Avg CFU/ml", "Avg Confidence"])
+        ws2.append(
+            [
+                "Analyst Name",
+                "Email",
+                "Total Analyses",
+                "Completed",
+                "Failed",
+                "Success Rate",
+                "Total Colonies",
+                "Avg CFU/ml",
+                "Avg Confidence",
+            ]
+        )
         style_header_row(ws2, 1)
 
-        user_data: dict = defaultdict(lambda: {
-            "name":"","email":"","count":0,"completed":0,"failed":0,
-            "colonies":0,"cfus":[],"confs":[]
-        })
+        user_data: dict = defaultdict(
+            lambda: {
+                "name": "",
+                "email": "",
+                "count": 0,
+                "completed": 0,
+                "failed": 0,
+                "colonies": 0,
+                "cfus": [],
+                "confs": [],
+            }
+        )
         for a in analyses:
             uid = str(a.user_id)
             if a.user:
-                user_data[uid]["name"]  = a.user.full_name
+                user_data[uid]["name"] = a.user.full_name
                 user_data[uid]["email"] = a.user.email
             else:
-                user_data[uid]["name"]  = uid[:8]
+                user_data[uid]["name"] = uid[:8]
                 user_data[uid]["email"] = "—"
             user_data[uid]["count"] += 1
-            s = str(getattr(a.status,'value',a.status))
-            if s == "completed": user_data[uid]["completed"] += 1
-            if s == "failed":    user_data[uid]["failed"]    += 1
+            s = str(getattr(a.status, "value", a.status))
+            if s == "completed":
+                user_data[uid]["completed"] += 1
+            if s == "failed":
+                user_data[uid]["failed"] += 1
             user_data[uid]["colonies"] += a.colony_count or 0
-            if a.cfu_per_ml:     user_data[uid]["cfus"].append(a.cfu_per_ml)
-            if a.confidence_score: user_data[uid]["confs"].append(a.confidence_score)
+            if a.cfu_per_ml:
+                user_data[uid]["cfus"].append(a.cfu_per_ml)
+            if a.confidence_score:
+                user_data[uid]["confs"].append(a.confidence_score)
 
         for i, (uid, d) in enumerate(sorted(user_data.items(), key=lambda x: -x[1]["count"])):
-            sr   = f"{d['completed']/d['count']*100:.1f}%" if d['count'] else "N/A"
-            acfu = f"{sum(d['cfus'])/len(d['cfus']):.2e}" if d['cfus'] else "N/A"
-            aconf= f"{sum(d['confs'])/len(d['confs'])*100:.1f}%" if d['confs'] else "N/A"
-            ws2.append([d["name"], d["email"], d["count"], d["completed"], d["failed"],
-                        sr, d["colonies"], acfu, aconf])
-            style_data_row(ws2, i+2, alt=(i%2==1))
+            sr = f"{d['completed']/d['count']*100:.1f}%" if d["count"] else "N/A"
+            # FIX BUG-CRITICAL-005: Safe average calculation
+            try:
+                acfu = f"{statistics.mean(d['cfus']):.2e}" if d["cfus"] else "N/A"
+            except statistics.StatisticsError:
+                acfu = "N/A"
+
+            try:
+                aconf = f"{statistics.mean(d['confs'])*100:.1f}%" if d["confs"] else "N/A"
+            except statistics.StatisticsError:
+                aconf = "N/A"
+            ws2.append(
+                [
+                    d["name"],
+                    d["email"],
+                    d["count"],
+                    d["completed"],
+                    d["failed"],
+                    sr,
+                    d["colonies"],
+                    acfu,
+                    aconf,
+                ]
+            )
+            style_data_row(ws2, i + 2, alt=(i % 2 == 1))
         auto_width(ws2)
 
         # ─────────────────────────────────────────────
         # SHEET 3: Monthly Trend
         # ─────────────────────────────────────────────
         ws3 = wb.create_sheet("📅 Monthly Trend")
-        ws3.append(["Month", "Total Analyses", "Completed", "Total Colonies", "Avg CFU/ml", "Avg Confidence"])
+        ws3.append(
+            [
+                "Month",
+                "Total Analyses",
+                "Completed",
+                "Total Colonies",
+                "Avg CFU/ml",
+                "Avg Confidence",
+            ]
+        )
         style_header_row(ws3, 1)
 
-        monthly: dict = defaultdict(lambda:{"count":0,"completed":0,"colonies":0,"cfus":[],"confs":[]})
+        monthly: dict = defaultdict(
+            lambda: {"count": 0, "completed": 0, "colonies": 0, "cfus": [], "confs": []}
+        )
         for a in analyses:
             m = a.created_at.strftime("%Y-%m")
             monthly[m]["count"] += 1
-            if str(getattr(a.status,'value',a.status))=="completed": monthly[m]["completed"] += 1
+            if str(getattr(a.status, "value", a.status)) == "completed":
+                monthly[m]["completed"] += 1
             monthly[m]["colonies"] += a.colony_count or 0
-            if a.cfu_per_ml:       monthly[m]["cfus"].append(a.cfu_per_ml)
-            if a.confidence_score: monthly[m]["confs"].append(a.confidence_score)
+            if a.cfu_per_ml:
+                monthly[m]["cfus"].append(a.cfu_per_ml)
+            if a.confidence_score:
+                monthly[m]["confs"].append(a.confidence_score)
 
         for i, month in enumerate(sorted(monthly)):
             d = monthly[month]
-            acfu  = f"{sum(d['cfus'])/len(d['cfus']):.2e}" if d['cfus'] else "N/A"
-            aconf = f"{sum(d['confs'])/len(d['confs'])*100:.1f}%" if d['confs'] else "N/A"
+            # FIX BUG-CRITICAL-005: Safe average calculation
+            try:
+                acfu = f"{statistics.mean(d['cfus']):.2e}" if d["cfus"] else "N/A"
+            except statistics.StatisticsError:
+                acfu = "N/A"
+
+            try:
+                aconf = f"{statistics.mean(d['confs'])*100:.1f}%" if d["confs"] else "N/A"
+            except statistics.StatisticsError:
+                aconf = "N/A"
             ws3.append([month, d["count"], d["completed"], d["colonies"], acfu, aconf])
-            style_data_row(ws3, i+2, alt=(i%2==1))
+            style_data_row(ws3, i + 2, alt=(i % 2 == 1))
         auto_width(ws3)
 
         # ─────────────────────────────────────────────
@@ -1272,18 +1700,26 @@ async def admin_export_all_excel(
         ws4.append(["Media Type", "Count", "Completed", "Total Colonies", "Avg CFU/ml"])
         style_header_row(ws4, 1)
 
-        media_data: dict = defaultdict(lambda:{"count":0,"completed":0,"colonies":0,"cfus":[]})
+        media_data: dict = defaultdict(
+            lambda: {"count": 0, "completed": 0, "colonies": 0, "cfus": []}
+        )
         for a in analyses:
             mt = a.media_type or "Unknown"
             media_data[mt]["count"] += 1
-            if str(getattr(a.status,'value',a.status))=="completed": media_data[mt]["completed"] += 1
+            if str(getattr(a.status, "value", a.status)) == "completed":
+                media_data[mt]["completed"] += 1
             media_data[mt]["colonies"] += a.colony_count or 0
-            if a.cfu_per_ml: media_data[mt]["cfus"].append(a.cfu_per_ml)
+            if a.cfu_per_ml:
+                media_data[mt]["cfus"].append(a.cfu_per_ml)
 
         for i, (mt, d) in enumerate(sorted(media_data.items(), key=lambda x: -x[1]["count"])):
-            acfu = f"{sum(d['cfus'])/len(d['cfus']):.2e}" if d['cfus'] else "N/A"
+            # FIX BUG-CRITICAL-005: Safe average calculation
+            try:
+                acfu = f"{statistics.mean(d['cfus']):.2e}" if d["cfus"] else "N/A"
+            except statistics.StatisticsError:
+                acfu = "N/A"
             ws4.append([mt, d["count"], d["completed"], d["colonies"], acfu])
-            style_data_row(ws4, i+2, alt=(i%2==1))
+            style_data_row(ws4, i + 2, alt=(i % 2 == 1))
         auto_width(ws4)
 
         # ─────────────────────────────────────────────
@@ -1298,18 +1734,22 @@ async def admin_export_all_excel(
             ("1e3–1e4", 1e3, 1e4),
             ("1e4–1e5", 1e4, 1e5),
             ("1e5–1e6", 1e5, 1e6),
-            (">1e6",   1e6, float("inf")),
+            (">1e6", 1e6, float("inf")),
         ]
         valid_cfus = [a.cfu_per_ml for a in analyses if a.cfu_per_ml]
         for i, (label, lo, hi) in enumerate(buckets):
             cnt = sum(1 for v in valid_cfus if lo <= v < hi)
             pct = f"{cnt/len(valid_cfus)*100:.1f}%" if valid_cfus else "0.0%"
             ws5.append([label, cnt, pct])
-            style_data_row(ws5, i+2, alt=(i%2==1))
+            style_data_row(ws5, i + 2, alt=(i % 2 == 1))
 
         ws5.append([])
-        ws5.append(["TNTC (Too Numerous)", tntc_count, f"{tntc_count/total*100:.1f}%" if total else "0.0%"])
-        ws5.append(["TFTC (Too Few)",      tftc_count, f"{tftc_count/total*100:.1f}%" if total else "0.0%"])
+        ws5.append(
+            ["TNTC (Too Numerous)", tntc_count, f"{tntc_count/total*100:.1f}%" if total else "0.0%"]
+        )
+        ws5.append(
+            ["TFTC (Too Few)", tftc_count, f"{tftc_count/total*100:.1f}%" if total else "0.0%"]
+        )
         auto_width(ws5)
 
         # ── Add Charts ──
@@ -1319,10 +1759,10 @@ async def admin_export_all_excel(
         c1 = LineChart()
         c1.title = "Monthly Analysis Trend"
         c1.style = 13
-        c1.y_axis.title = 'Count'
-        c1.x_axis.title = 'Month'
-        data = Reference(ws3, min_col=2, min_row=1, max_col=3, max_row=len(monthly)+1)
-        cats = Reference(ws3, min_col=1, min_row=2, max_row=len(monthly)+1)
+        c1.y_axis.title = "Count"
+        c1.x_axis.title = "Month"
+        data = Reference(ws3, min_col=2, min_row=1, max_col=3, max_row=len(monthly) + 1)
+        cats = Reference(ws3, min_col=1, min_row=2, max_row=len(monthly) + 1)
         c1.add_data(data, titles_from_data=True)
         c1.set_categories(cats)
         ws3.add_chart(c1, "H2")
@@ -1330,8 +1770,8 @@ async def admin_export_all_excel(
         # 2. Pie Chart on Sheet 4 (Media Type)
         c2 = PieChart()
         c2.title = "Media Type Distribution"
-        data = Reference(ws4, min_col=2, min_row=2, max_row=len(media_data)+1)
-        cats = Reference(ws4, min_col=1, min_row=2, max_row=len(media_data)+1)
+        data = Reference(ws4, min_col=2, min_row=2, max_row=len(media_data) + 1)
+        cats = Reference(ws4, min_col=1, min_row=2, max_row=len(media_data) + 1)
         c2.add_data(data, titles_from_data=False)
         c2.set_categories(cats)
         ws4.add_chart(c2, "H2")
@@ -1340,8 +1780,8 @@ async def admin_export_all_excel(
         c3 = BarChart()
         c3.title = "CFU/ml Distribution"
         c3.style = 10
-        data = Reference(ws5, min_col=2, min_row=1, max_row=len(buckets)+1)
-        cats = Reference(ws5, min_col=1, min_row=2, max_row=len(buckets)+1)
+        data = Reference(ws5, min_col=2, min_row=1, max_row=len(buckets) + 1)
+        cats = Reference(ws5, min_col=1, min_row=2, max_row=len(buckets) + 1)
         c3.add_data(data, titles_from_data=True)
         c3.set_categories(cats)
         ws5.add_chart(c3, "H2")
@@ -1350,47 +1790,92 @@ async def admin_export_all_excel(
         # SHEET 6: All Raw Records
         # ─────────────────────────────────────────────
         ws6 = wb.create_sheet("📋 All Records")
-        ws6.append([
-            "Analysis ID","Analyst","Email","Sample ID","Media Type",
-            "Dilution Factor","Plated Vol (ml)","Colony Count",
-            "CFU/ml","CFU Status","Uncertainty U",
-            "Incubation Temp (°C)","Incubation Time (Hrs)","Method Standard",
-            "Media Batch #","Incubator ID",
-            "Confidence","Reliability","Status",
-            "Colony Single","Colony Merged","Bubble","Dust","Crack",
-            "Created At"
-        ])
+        ws6.append(
+            [
+                "Analysis ID",
+                "Analyst",
+                "Email",
+                "Sample ID",
+                "Media Type",
+                "Dilution Factor",
+                "Plated Vol (ml)",
+                "Colony Count",
+                "CFU/ml",
+                "CFU Status",
+                "Uncertainty U",
+                "Incubation Temp (°C)",
+                "Incubation Time (Hrs)",
+                "Method Standard",
+                "Media Batch #",
+                "Incubator ID",
+                "Confidence",
+                "Reliability",
+                "Status",
+                "Colony Single",
+                "Colony Merged",
+                "Bubble",
+                "Dust",
+                "Crack",
+                "Created At",
+            ]
+        )
         style_header_row(ws6, 1)
 
         for i, a in enumerate(analyses):
-            name  = a.user.full_name if a.user else "Unknown"
-            email = a.user.email     if a.user else "Unknown"
-            cb    = a.class_breakdown or {}
-            status_val = str(getattr(a.status,'value',a.status)).capitalize()
-            cfu_val    = f"{a.cfu_per_ml:.2e}" if a.cfu_per_ml else (a.cfu_status or "N/A")
-            ws6.append([
-                str(a.id), name, email, a.sample_id, a.media_type or "—",
-                a.dilution_factor, a.plated_volume_ml, a.colony_count or 0,
-                cfu_val, a.cfu_status or "normal", a.uncertainty_u or "N/A",
-                a.incubation_temp or "—", a.incubation_time_hours or "—",
-                a.method_standard or "ISO 4833-1:2013",
-                a.media_batch_number or "—", a.incubator_id or "—",
-                f"{a.confidence_score*100:.1f}%" if a.confidence_score else "N/A",
-                (a.reliability or "high").capitalize(), status_val,
-                cb.get("colony_single", 0), cb.get("colony_merged", 0),
-                cb.get("bubble", 0), cb.get("dust_debris", 0), cb.get("media_crack", 0),
-                a.created_at.strftime("%Y-%m-%d %H:%M"),
-            ])
-            style_data_row(ws6, i+2, alt=(i%2==1))
-        ws6.freeze_panes = 'A2'
+            name = a.user.full_name if a.user else "Unknown"
+            email = a.user.email if a.user else "Unknown"
+            cb = a.class_breakdown or {}
+            status_val = str(getattr(a.status, "value", a.status)).capitalize()
+            cfu_val = f"{a.cfu_per_ml:.2e}" if a.cfu_per_ml else (a.cfu_status or "N/A")
+            ws6.append(
+                [
+                    str(a.id),
+                    name,
+                    email,
+                    a.sample_id,
+                    a.media_type or "—",
+                    a.dilution_factor,
+                    a.plated_volume_ml,
+                    a.colony_count or 0,
+                    cfu_val,
+                    a.cfu_status or "normal",
+                    a.uncertainty_u or "N/A",
+                    a.incubation_temp or "—",
+                    a.incubation_time_hours or "—",
+                    a.method_standard or "ISO 4833-1:2013",
+                    a.media_batch_number or "—",
+                    a.incubator_id or "—",
+                    f"{a.confidence_score*100:.1f}%" if a.confidence_score else "N/A",
+                    (a.reliability or "high").capitalize(),
+                    status_val,
+                    cb.get("colony_single", 0),
+                    cb.get("colony_merged", 0),
+                    cb.get("bubble", 0),
+                    cb.get("dust_debris", 0),
+                    cb.get("media_crack", 0),
+                    a.created_at.strftime("%Y-%m-%d %H:%M"),
+                ]
+            )
+            style_data_row(ws6, i + 2, alt=(i % 2 == 1))
+        ws6.freeze_panes = "A2"
         auto_width(ws6)
 
-        # Save
+        # Save with path traversal protection
+        # FIX BUG-CRITICAL-004: Use safe path operations
         reports_dir = os.path.abspath(os.path.join(settings.UPLOAD_DIR, "reports"))
         os.makedirs(reports_dir, exist_ok=True)
         report_id = str(uuid.uuid4())
         filename = f"colonyai-admin-analytics-{report_id}.xlsx"
-        file_path = os.path.join(reports_dir, filename)
+
+        # Use safe_join_path to prevent path traversal
+        from app.utils.path_sanitizer import safe_join_path
+
+        try:
+            file_path = safe_join_path(reports_dir, filename)
+        except ValueError as e:
+            logger.error(f"Path traversal attempt: {e}")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file path")
+
         wb.save(file_path)
 
         return FileResponse(
@@ -1400,8 +1885,9 @@ async def admin_export_all_excel(
         )
     except Exception as e:
         import logging
+
         logging.error(f"Error generating admin Excel: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error generating Excel report: {str(e)}"
+            detail=f"Error generating Excel report: {str(e)}",
         )

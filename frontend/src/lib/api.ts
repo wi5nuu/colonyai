@@ -24,7 +24,11 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<{ data: T }> {
     const url = `${this.baseUrl}${endpoint}`
-    console.log(`[ColonyAI API] Calling: ${url}`);
+    
+    // FIX BUG-MEDIUM-003: Add timeout to prevent hanging requests
+    // Respect existing signal if provided by caller
+    const controller = options.signal ? null : new AbortController()
+    const timeoutId = controller ? setTimeout(() => controller.abort(), 30000) : null
     
     // Get auth token if available
     let authToken: string | null = null
@@ -53,26 +57,33 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${authToken}`
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    })
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+        signal: controller ? controller.signal : options.signal,
+      })
+      
+      if (timeoutId) clearTimeout(timeoutId)
 
-    // Handle 401 Unauthorized - Attempt Token Refresh
-    if (response.status === 401 && authToken && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh')) {
+      // Handle 401 Unauthorized - Attempt Token Refresh
+      if (response.status === 401 && authToken && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh')) {
       if (!this.isRefreshing) {
         this.isRefreshing = true
         
         try {
           // Import useAuthStore dynamically to avoid circular dependency
           const { useAuthStore } = await import('./auth-store')
-          const refreshSuccess = await useAuthStore.getState().refreshAccessToken()
+          await useAuthStore.getState().refreshAccessToken()
           
           this.isRefreshing = false
           
-          // Re-fetch the new token
-          const authStorage = localStorage.getItem('auth-storage')
-          const newToken = authStorage ? JSON.parse(authStorage).state?.accessToken : null
+          // Re-fetch the new token (SSR-safe)
+          let newToken: string | null = null
+          if (typeof window !== 'undefined') {
+            const authStorage = localStorage.getItem('auth-storage')
+            newToken = authStorage ? JSON.parse(authStorage).state?.accessToken : null
+          }
           
           if (newToken) {
             this.onTokenRefreshed(newToken)
@@ -85,22 +96,27 @@ class ApiClient {
               }
             })
           }
+          // If no new token after refresh, fall through to throw
+          throw new Error('Token refresh succeeded but no new token found')
         } catch (refreshError) {
           this.isRefreshing = false
           this.refreshSubscribers = []
+          // Clear auth state on refresh failure
+          const { useAuthStore } = await import('./auth-store')
+          useAuthStore.getState().logout().catch(() => {})
           throw refreshError
         }
       } else {
-        // Wait for current refresh to complete
-        return new Promise((resolve) => {
+        // Wait for current refresh to complete - prevent race condition
+        return new Promise((resolve, reject) => {
           this.addRefreshSubscriber((newToken) => {
-            resolve(this.request<T>(endpoint, {
+            this.request<T>(endpoint, {
               ...options,
               headers: {
                 ...headers,
                 'Authorization': `Bearer ${newToken}`
               }
-            }))
+            }).then(resolve).catch(reject)
           })
         })
       }
@@ -108,7 +124,15 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ detail: 'Request failed' }))
-      const apiError: any = new Error(error.detail || `HTTP ${response.status}`)
+      
+      interface ApiError extends Error {
+        response?: {
+          data: Record<string, unknown>
+          status: number
+        }
+      }
+      
+      const apiError = new Error(error.detail || `HTTP ${response.status}`) as ApiError
       apiError.response = { data: error, status: response.status }
       throw apiError
     }
@@ -120,6 +144,15 @@ class ApiClient {
 
     const data = await response.json()
     return { data }
+    } catch (error) {
+      if (timeoutId) clearTimeout(timeoutId)
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new Error('Request timeout - the server took too long to respond')
+      }
+      throw error
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId)
+    }
   }
 
   async get<T>(endpoint: string, config?: { params?: Record<string, any> }): Promise<{ data: T }> {
@@ -143,7 +176,7 @@ class ApiClient {
   async post<T>(endpoint: string, body?: any, config?: { headers?: Record<string, string> }): Promise<{ data: T }> {
     const options: RequestInit = {
       method: 'POST',
-      headers: config?.headers || {},
+      headers: config?.headers,
     }
     
     if (body instanceof FormData) {
@@ -155,14 +188,14 @@ class ApiClient {
     return this.request<T>(endpoint, options)
   }
 
-  async put<T>(endpoint: string, body?: any): Promise<{ data: T }> {
+  async put<T>(endpoint: string, body?: unknown): Promise<{ data: T }> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: body ? JSON.stringify(body) : undefined,
     })
   }
 
-  async patch<T>(endpoint: string, body?: any): Promise<{ data: T }> {
+  async patch<T>(endpoint: string, body?: unknown): Promise<{ data: T }> {
     return this.request<T>(endpoint, {
       method: 'PATCH',
       body: body ? JSON.stringify(body) : undefined,
@@ -187,8 +220,8 @@ export async function apiFetch<T = any>(
   try {
     const result = await api.request<T>(endpoint, options)
     return { success: true, data: result.data }
-  } catch (error: any) {
-    return { success: false, error: error.message || 'Network error' }
+  } catch (error: unknown) {
+    return { success: false, error: error instanceof Error ? error.message : 'Network error' }
   }
 }
 
@@ -196,11 +229,11 @@ export async function apiGet<T = any>(endpoint: string) {
   return api.get<T>(endpoint)
 }
 
-export async function apiPost<T = any>(endpoint: string, body?: any) {
+export async function apiPost<T = unknown>(endpoint: string, body?: unknown) {
   return api.post<T>(endpoint, body)
 }
 
-export async function apiPut<T = any>(endpoint: string, body?: any) {
+export async function apiPut<T = unknown>(endpoint: string, body?: unknown) {
   return api.put<T>(endpoint, body)
 }
 

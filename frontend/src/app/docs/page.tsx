@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Book, Code, Server, Cpu, Terminal, Zap,
@@ -8,6 +8,7 @@ import {
   Copy, Check, AlertTriangle, Info,
 } from "lucide-react";
 import { Footer } from "@/components/Footer";
+import { useTranslationStore } from "@/lib/i18n/store";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type SectionId =
@@ -22,102 +23,9 @@ type SectionId =
 interface NavItem { id: SectionId; label: string; }
 interface NavGroup { id: string; label: string; icon: React.ReactNode; items: NavItem[]; }
 
-// ─── Sidebar Data ─────────────────────────────────────────────────────────────
-const NAV_GROUPS: NavGroup[] = [
-  {
-    id: "getting-started", label: "Getting Started", icon: <Book className="w-3 h-3" />,
-    items: [
-      { id: "introduction", label: "Introduction" },
-      { id: "quickstart", label: "Quick Start" },
-      { id: "requirements", label: "System Requirements" },
-    ],
-  },
-  {
-    id: "architecture", label: "Architecture", icon: <Server className="w-3 h-3" />,
-    items: [
-      { id: "arch-overview", label: "Overview" },
-      { id: "arch-frontend", label: "Frontend" },
-      { id: "arch-backend", label: "Backend" },
-      { id: "arch-ml", label: "ML Pipeline" },
-    ],
-  },
-  {
-    id: "api-reference", label: "API Reference", icon: <Code className="w-3 h-3" />,
-    items: [
-      { id: "api-auth", label: "Authentication" },
-      { id: "api-analyses", label: "Analyses" },
-      { id: "api-simulator", label: "Simulator" },
-      { id: "api-reports", label: "Reports" },
-      { id: "api-admin", label: "Admin" },
-    ],
-  },
-  {
-    id: "ml-detection", label: "ML & Detection", icon: <Cpu className="w-3 h-3" />,
-    items: [
-      { id: "ml-model", label: "YOLOv8 Model" },
-      { id: "ml-classes", label: "5 Classes" },
-      { id: "ml-cfu", label: "CFU Calculation" },
-      { id: "ml-iso", label: "ISO-17025" },
-    ],
-  },
-  {
-    id: "deployment", label: "Deployment", icon: <Terminal className="w-3 h-3" />,
-    items: [
-      { id: "deploy-docker", label: "Docker Setup" },
-      { id: "deploy-deka", label: "Deka Notebook" },
-      { id: "deploy-gpu", label: "GPU Training" },
-      { id: "deploy-env", label: "Environment Variables" },
-    ],
-  },
-  {
-    id: "user-guide", label: "User Guide", icon: <Users className="w-3 h-3" />,
-    items: [
-      { id: "guide-roles", label: "Roles & Permissions" },
-      { id: "guide-upload", label: "Upload Analysis" },
-      { id: "guide-simulator", label: "Simulator" },
-      { id: "guide-audit", label: "Audit Ledger" },
-    ],
-  },
-  {
-    id: "changelog", label: "Changelog", icon: <Zap className="w-3 h-3" />,
-    items: [
-      { id: "changelog-v2", label: "v2.0 — Latest" },
-      { id: "changelog-v15", label: "v1.5" },
-      { id: "changelog-v1", label: "v1.0" },
-    ],
-  },
-];
+// ─── Sidebar & TOC data are now defined inside DocsPage via useMemo ──────────
 
-// ─── TOC Data per section ─────────────────────────────────────────────────────
-const SECTION_TOC: Record<string, string[]> = {
-  introduction:    ["What is ColonyAI", "Key Features", "Tech Stack", "Compliance"],
-  quickstart:      ["Prerequisites", "Clone & Run", "Default Credentials", "Verify Installation"],
-  requirements:    ["Software", "Hardware", "Optional", "Browser Support"],
-  "arch-overview": ["System Diagram", "Data Flow", "Service Map"],
-  "arch-frontend": ["App Router", "State Management", "i18n", "Pages"],
-  "arch-backend":  ["FastAPI Structure", "Auth Layer", "File Handling", "DB Schema"],
-  "arch-ml":       ["Model Loading", "Inference Pipeline", "TTA", "NMS"],
-  "api-auth":      ["Login", "Refresh", "Logout", "Headers"],
-  "api-analyses":  ["Upload", "List", "Detail", "Export"],
-  "api-simulator": ["Endpoint", "Form Fields", "Response", "Limits"],
-  "api-reports":   ["PDF Export", "Excel Export", "Batch Reports"],
-  "api-admin":     ["User Management", "Model Management", "System Health"],
-  "ml-model":      ["Architecture", "Training Dataset", "Metrics", "Inference Config"],
-  "ml-classes":    ["colony_single", "colony_merged", "bubble", "dust_debris", "media_crack"],
-  "ml-cfu":        ["Formula", "Merged Colony Estimation", "Uncertainty", "Validation"],
-  "ml-iso":        ["ISO-17025 Requirements", "Audit Trail", "Uncertainty Budget"],
-  "deploy-docker": ["Services", "Compose File", "Volumes", "Health Checks"],
-  "deploy-deka":   ["Prerequisites", "Dataset Upload", "Training", "Calibration", "Model Upload"],
-  "deploy-gpu":    ["Driver Setup", "CUDA Requirements", "Training Command", "Monitoring"],
-  "deploy-env":    ["Frontend Vars", "Backend Vars", "ML Vars", "Secrets"],
-  "guide-roles":   ["Role Matrix", "Permissions", "Role Assignment"],
-  "guide-upload":  ["Supported Formats", "Upload Flow", "Results View", "Annotations"],
-  "guide-simulator":["Open Simulator","Set Parameters","Interpret Results"],
-  "guide-audit":   ["Audit Events", "Ledger View", "Export Audit"],
-  "changelog-v2":  ["New Features", "Improvements", "Bug Fixes"],
-  "changelog-v15": ["New Features", "Improvements", "Bug Fixes"],
-  "changelog-v1":  ["Initial Release", "Known Issues"],
-};
+// ─── TOC Data per section (now defined inside DocsPage via useMemo) ──────────
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 function Badge({ method }: { method: string }) {
@@ -1449,16 +1357,11 @@ function renderSection(id: SectionId): React.ReactNode {
   }
 }
 
-function getBreadcrumb(id: SectionId): string[] {
-  for (const group of NAV_GROUPS) {
-    const item = group.items.find((i) => i.id === id);
-    if (item) return [group.label, item.label];
-  }
-  return ["Docs"];
-}
+// ─── getBreadcrumb is now defined inside DocsPage ──────────────────────────
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function DocsPage() {
+  const { t } = useTranslationStore();
   const [activeSection, setActiveSection] = useState<SectionId>("introduction");
   const [searchQuery, setSearchQuery] = useState("");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
@@ -1470,6 +1373,109 @@ export default function DocsPage() {
     "user-guide": false,
     "changelog": false,
   });
+
+  const NAV_GROUPS = useMemo<NavGroup[]>(() => [
+    {
+      id: "getting-started", label: t("docs.navGettingStarted"), icon: <Book className="w-3 h-3" />,
+      items: [
+        { id: "introduction", label: t("docs.navIntroduction") },
+        { id: "quickstart", label: t("docs.navQuickStart") },
+        { id: "requirements", label: t("docs.navSystemRequirements") },
+      ],
+    },
+    {
+      id: "architecture", label: t("docs.navArchitecture"), icon: <Server className="w-3 h-3" />,
+      items: [
+        { id: "arch-overview", label: t("docs.navOverview") },
+        { id: "arch-frontend", label: t("docs.navFrontend") },
+        { id: "arch-backend", label: t("docs.navBackend") },
+        { id: "arch-ml", label: t("docs.navMLPipeline") },
+      ],
+    },
+    {
+      id: "api-reference", label: t("docs.navApiReference"), icon: <Code className="w-3 h-3" />,
+      items: [
+        { id: "api-auth", label: t("docs.navAuthentication") },
+        { id: "api-analyses", label: t("docs.navAnalyses") },
+        { id: "api-simulator", label: t("docs.navSimulator") },
+        { id: "api-reports", label: t("docs.navReports") },
+        { id: "api-admin", label: t("docs.navAdmin") },
+      ],
+    },
+    {
+      id: "ml-detection", label: t("docs.navMLDetection"), icon: <Cpu className="w-3 h-3" />,
+      items: [
+        { id: "ml-model", label: t("docs.navYOLOv8Model") },
+        { id: "ml-classes", label: t("docs.nav5Classes") },
+        { id: "ml-cfu", label: t("docs.navCFUCalculation") },
+        { id: "ml-iso", label: t("docs.navISO17025") },
+      ],
+    },
+    {
+      id: "deployment", label: t("docs.navDeployment"), icon: <Terminal className="w-3 h-3" />,
+      items: [
+        { id: "deploy-docker", label: t("docs.navDockerSetup") },
+        { id: "deploy-deka", label: t("docs.navDekaNotebook") },
+        { id: "deploy-gpu", label: t("docs.navGPUTraining") },
+        { id: "deploy-env", label: t("docs.navEnvironmentVariables") },
+      ],
+    },
+    {
+      id: "user-guide", label: t("docs.navUserGuide"), icon: <Users className="w-3 h-3" />,
+      items: [
+        { id: "guide-roles", label: t("docs.navRolesPermissions") },
+        { id: "guide-upload", label: t("docs.navUploadAnalysis") },
+        { id: "guide-simulator", label: t("docs.navSimulator") },
+        { id: "guide-audit", label: t("docs.navAuditLedger") },
+      ],
+    },
+    {
+      id: "changelog", label: t("docs.navChangelog"), icon: <Zap className="w-3 h-3" />,
+      items: [
+        { id: "changelog-v2", label: t("docs.navV2Latest") },
+        { id: "changelog-v15", label: t("docs.navV15") },
+        { id: "changelog-v1", label: t("docs.navV10") },
+      ],
+    },
+  ], [t]);
+
+  const SECTION_TOC = useMemo<Record<string, string[]>>(() => ({
+    introduction:    [t("docs.tocWhatIsColonyAI"), t("docs.tocKeyFeatures"), t("docs.tocTechStack"), t("docs.tocCompliance")],
+    quickstart:      [t("docs.tocPrerequisites"), t("docs.tocCloneRun"), t("docs.tocDefaultCredentials"), t("docs.tocVerifyInstallation")],
+    requirements:    [t("docs.tocSoftware"), t("docs.tocHardware"), t("docs.tocOptional"), t("docs.tocBrowserSupport")],
+    "arch-overview": [t("docs.tocSystemDiagram"), t("docs.tocDataFlow"), t("docs.tocServiceMap")],
+    "arch-frontend": [t("docs.tocAppRouter"), t("docs.tocStateManagement"), t("docs.tocI18n"), t("docs.tocPages")],
+    "arch-backend":  [t("docs.tocFastAPIStructure"), t("docs.tocAuthLayer"), t("docs.tocFileHandling"), t("docs.tocDBSchema")],
+    "arch-ml":       [t("docs.tocModelLoading"), t("docs.tocInferencePipeline"), t("docs.tocTTA"), t("docs.tocNMS")],
+    "api-auth":      [t("docs.tocLogin"), t("docs.tocRefresh"), t("docs.tocLogout"), t("docs.tocHeaders")],
+    "api-analyses":  [t("docs.tocUpload"), t("docs.tocList"), t("docs.tocDetail"), t("docs.tocExport")],
+    "api-simulator": [t("docs.tocEndpoint"), t("docs.tocFormFields"), t("docs.tocResponse"), t("docs.tocLimits")],
+    "api-reports":   [t("docs.tocPDFExport"), t("docs.tocExcelExport"), t("docs.tocBatchReports")],
+    "api-admin":     [t("docs.tocUserManagement"), t("docs.tocModelManagement"), t("docs.tocSystemHealth")],
+    "ml-model":      [t("docs.tocArchitecture"), t("docs.tocTrainingDataset"), t("docs.tocMetrics"), t("docs.tocInferenceConfig")],
+    "ml-classes":    [t("docs.tocColonySingle"), t("docs.tocColonyMerged"), t("docs.tocBubble"), t("docs.tocDustDebris"), t("docs.tocMediaCrack")],
+    "ml-cfu":        [t("docs.tocFormula"), t("docs.tocMergedColonyEstimation"), t("docs.tocUncertainty"), t("docs.tocValidation")],
+    "ml-iso":        [t("docs.tocISO17025Requirements"), t("docs.tocAuditTrail"), t("docs.tocUncertaintyBudget")],
+    "deploy-docker": [t("docs.tocServices"), t("docs.tocComposeFile"), t("docs.tocVolumes"), t("docs.tocHealthChecks")],
+    "deploy-deka":   [t("docs.tocPrerequisites"), t("docs.tocDatasetUpload"), t("docs.tocTraining"), t("docs.tocCalibration"), t("docs.tocModelUpload")],
+    "deploy-gpu":    [t("docs.tocDriverSetup"), t("docs.tocCUDARequirements"), t("docs.tocTrainingCommand"), t("docs.tocMonitoring")],
+    "deploy-env":    [t("docs.tocFrontendVars"), t("docs.tocBackendVars"), t("docs.tocMLVars"), t("docs.tocSecrets")],
+    "guide-roles":   [t("docs.tocRoleMatrix"), t("docs.tocPermissions"), t("docs.tocRoleAssignment")],
+    "guide-upload":  [t("docs.tocSupportedFormats"), t("docs.tocUploadFlow"), t("docs.tocResultsView"), t("docs.tocAnnotations")],
+    "guide-simulator":[t("docs.tocOpenSimulator"), t("docs.tocSetParameters"), t("docs.tocInterpretResults")],
+    "guide-audit":   [t("docs.tocAuditEvents"), t("docs.tocLedgerView"), t("docs.tocExportAudit")],
+    "changelog-v2":  [t("docs.tocNewFeatures"), t("docs.tocImprovements"), t("docs.tocBugFixes")],
+    "changelog-v15": [t("docs.tocNewFeatures"), t("docs.tocImprovements"), t("docs.tocBugFixes")],
+    "changelog-v1":  [t("docs.tocInitialRelease"), t("docs.tocKnownIssues")],
+  }), [t]);
+
+  const getBreadcrumb = (id: SectionId): string[] => {
+    for (const group of NAV_GROUPS) {
+      const item = group.items.find((i) => i.id === id);
+      if (item) return [group.label, item.label];
+    }
+    return [t("docs.title")];
+  };
 
   const toggleGroup = (id: string) =>
     setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -1617,7 +1623,7 @@ export default function DocsPage() {
         {/* ── Right TOC ────────────────────────────────────────────────────── */}
         <aside className="hidden xl:flex w-44 shrink-0 border-l border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 sticky top-0 self-start h-screen overflow-y-auto">
           <div className="w-full p-3">
-            <p className="text-[7px] font-black uppercase tracking-widest text-slate-400 mb-2">On this page</p>
+            <p className="text-[7px] font-black uppercase tracking-widest text-slate-400 mb-2">{t("docs.onThisPage")}</p>
             <div className="space-y-0.5">
               {toc.map((heading) => (
                 <div key={heading} className="text-[8px] text-slate-500 dark:text-slate-400 hover:text-[#0055ff] transition-colors cursor-pointer py-0.5 pl-2 border-l-2 border-transparent hover:border-[#0055ff]">
@@ -1626,13 +1632,13 @@ export default function DocsPage() {
               ))}
             </div>
             <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
-              <p className="text-[7px] font-black uppercase tracking-widest text-slate-400 mb-2">Resources</p>
+              <p className="text-[7px] font-black uppercase tracking-widest text-slate-400 mb-2">{t("docs.resources")}</p>
               <div className="space-y-1">
                 <Link href="http://localhost:8000/docs" target="_blank" className="flex items-center gap-1 text-[8px] text-slate-500 hover:text-[#0055ff] transition-colors">
-                  <Code className="w-2.5 h-2.5" /> API Swagger
+                  <Code className="w-2.5 h-2.5" /> {t("docs.openApiDocs")}
                 </Link>
                 <Link href="https://github.com/colonyai/colonyai" target="_blank" className="flex items-center gap-1 text-[8px] text-slate-500 hover:text-[#0055ff] transition-colors">
-                  <Terminal className="w-2.5 h-2.5" /> GitHub
+                  <Terminal className="w-2.5 h-2.5" /> {t("docs.githubRepo")}
                 </Link>
                 <Link href="/dashboard" className="flex items-center gap-1 text-[8px] text-slate-500 hover:text-[#0055ff] transition-colors">
                   <Zap className="w-2.5 h-2.5" /> Dashboard

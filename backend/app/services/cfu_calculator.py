@@ -31,7 +31,6 @@ from app.core.thresholds import (
     TNTC_BOUNDARY,
 )
 
-
 # ============================================================
 # Data Classes
 # ============================================================
@@ -163,9 +162,7 @@ def estimate_merged_colonies(detections: list[dict[str, Any]]) -> MergedColonyEs
                 single_areas.append(float(area))
 
     # Kumpulkan semua bounding box colony_merged
-    merged_detections = [
-        d for d in detections if d.get("class_name") == "colony_merged"
-    ]
+    merged_detections = [d for d in detections if d.get("class_name") == "colony_merged"]
 
     raw_merged_count = len(merged_detections)
 
@@ -422,7 +419,7 @@ class CFUCalculator:
                 ),
                 recommendation=(
                     "Kurangi faktor pengenceran atau perpanjang waktu inkubasi. "
-                    f"Coba pengenceran: {dilution_factor / 10:.2e}"
+                    f"Coba pengenceran: {dilution_factor / 10:.4g}"
                 ),
                 confidence_score=confidence_score,
                 reliability=reliability,
@@ -434,7 +431,7 @@ class CFUCalculator:
 
         elif total_colonies > TNTC_BOUNDARY:
             # TNTC: FDA BAM — jangan laporkan nilai absolut CFU/mL
-            estimated_order = f">{int(raw_cfu / 1000) * 1000:,}"
+            estimated_order = f">{max(int(raw_cfu / 1000) * 1000, 1000):,}"
 
             # Hitung pengenceran yang direkomendasikan
             recommended_dilution = dilution_factor * 10
@@ -543,14 +540,18 @@ class CFUCalculator:
             "reliability": result.reliability,
             "is_valid_for_reporting": result.is_valid_for_reporting,
             "estimated_cfu_order": result.estimated_cfu_order,
-            "uncertainty": {
-                "u_model": unc.u_model,
-                "u_counting": unc.u_counting,
-                "u_dilution": unc.u_dilution,
-                "u_combined": unc.u_combined,
-                "U_expanded": unc.U_expanded,
-                "coverage_factor": unc.coverage_factor,
-            } if unc else None,
+            "uncertainty": (
+                {
+                    "u_model": unc.u_model,
+                    "u_counting": unc.u_counting,
+                    "u_dilution": unc.u_dilution,
+                    "u_combined": unc.u_combined,
+                    "U_expanded": unc.U_expanded,
+                    "coverage_factor": unc.coverage_factor,
+                }
+                if unc is not None
+                else None
+            ),
             "class_breakdown": result.class_breakdown,
             "warnings": result.warnings,
         }

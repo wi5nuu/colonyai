@@ -1,6 +1,11 @@
 import api from './api';
 import { LoginRequest, RegisterRequest, AuthResponse, User, MFAVerifyRequest } from './types';
 
+export interface ResetPasswordRequest {
+  token: string;
+  new_password: string;
+}
+
 export const authApi = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>('/api/v1/auth/login', data);
@@ -43,7 +48,7 @@ export const authApi = {
     return response.data;
   },
 
-  resetPassword: async (data: any): Promise<{ message: string }> => {
+  resetPassword: async (data: ResetPasswordRequest): Promise<{ message: string }> => {
     const response = await api.post<{ message: string }>('/api/v1/auth/reset-password', data);
     return response.data;
   },

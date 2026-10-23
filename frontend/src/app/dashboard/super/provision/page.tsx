@@ -403,7 +403,7 @@ export default function ProvisionNodePage() {
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">Provisioning Successful</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-md mx-auto leading-relaxed">
-              Infrastruktur untuk <span className="text-slate-900 dark:text-white font-bold">{provisionResult.organization_name || newOrgData.name}</span> telah berhasil di-deploy pada node Jakarta.
+              Infrastructure for <span className="text-slate-900 dark:text-white font-bold">{provisionResult.organization_name || newOrgData.name}</span> has been successfully deployed on the Jakarta node.
             </p>
           </div>
 
@@ -431,7 +431,7 @@ export default function ProvisionNodePage() {
                 </p>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-4 leading-relaxed font-medium">
-                Hubungkan kunci ini pada konfigurasi node primer penyewa untuk mengaktifkan lisensi.
+                Connect this key to the tenant's primary node configuration to activate the license.
               </p>
             </div>
 
@@ -458,7 +458,7 @@ export default function ProvisionNodePage() {
                 </p>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-4 leading-relaxed font-medium">
-                Kredensial sementara ini harus segera diganti oleh Administrator pada saat login pertama kali.
+                This temporary credential must be changed immediately by the Administrator upon first login.
               </p>
             </div>
           </div>

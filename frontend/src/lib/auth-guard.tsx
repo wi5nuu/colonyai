@@ -29,7 +29,18 @@ const PUBLIC_PATHS = [
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, isLoading, refreshAccessToken } = useAuthStore();
+  const { isAuthenticated, isLoading, refreshAccessToken, accessToken } = useAuthStore();
+
+  // Check if access token is expired (decode JWT exp claim)
+  const isTokenExpired = (): boolean => {
+    if (!accessToken) return true;
+    try {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      return payload.exp * 1000 < Date.now();
+    } catch {
+      return true;
+    }
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -38,7 +49,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         try {
           await refreshAccessToken();
         } catch (e) {
-          console.error('Initial AuthGuard refresh failed:', e);
+          // Token refresh failed - will redirect to login
+        }
+      } else if (state.isAuthenticated && isTokenExpired()) {
+        // Token is expired, try to refresh
+        try {
+          await refreshAccessToken();
+        } catch (e) {
+          // Refresh failed, will redirect to login
         }
       }
     };
@@ -78,7 +96,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       // Check if current path requires specific roles
       for (const [path, allowedRoles] of Object.entries(rolePermissions)) {
         if (pathname.startsWith(path) && role && !allowedRoles.includes(role)) {
-          console.warn(`Access denied to ${pathname} for role ${role}`);
           router.push('/dashboard'); // Redirect to safe zone
           break;
         }

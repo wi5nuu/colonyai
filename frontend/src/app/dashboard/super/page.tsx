@@ -625,24 +625,24 @@ export default function SuperAdminRealTimeDashboard() {
             showDocs={showDocs}
             setShowDocs={setShowDocs}
             directory="Global Command"
-            title="Protokol Nexus Master"
-            description="Panduan operasional infrastruktur multi-tenant ColonyAI Global v2.0."
-            rawText={`PROTOKOL NEXUS MASTER COLONYAI
+            title="Nexus Master Protocol"
+            description="Multi-tenant ColonyAI Global v2.0 infrastructure operational guide."
+            rawText={`COLONYAI NEXUS MASTER PROTOCOL
 ================================
 
 1. GLOBAL COMMAND CENTER
-Pusat kontrol tertinggi untuk seluruh jaringan laboratorium. Master Admin memiliki otoritas penuh atas setiap tenant.
+Highest control center for the entire laboratory network. Master Admin has full authority over every tenant.
 
 2. MASTER REGISTRY GOVERNANCE
-- Node Provisioning: Membuat cluster organisasi baru melalui tombol 'Provision'.
-- Status Enforcement: Gunakan 'Suspend' untuk mematikan akses tenant seketika (Lisensi/Keamanan) dan 'Activate' untuk pemulihan.
+- Node Provisioning: Create new organization clusters via the 'Provision' button.
+- Status Enforcement: Use 'Suspend' to instantly disable tenant access (License/Security) and 'Activate' for restoration.
 
 3. REMOTE INTERVENTION TERMINAL
-- Klik 'Remote' untuk membuka Secure Tunnel (AES-256) ke node laboratorium.
-- Gunakan 'Deep Diagnostics' untuk audit otomatis pada model AI, Database, dan Enkripsi node lokal.
+- Click 'Remote' to open a Secure Tunnel (AES-256) to the laboratory node.
+- Use 'Deep Diagnostics' for automated audit of AI models, Database, and local node Encryption.
 
 4. GLOBAL TELEMETRY SYNC
-Data disinkronkan setiap 10 detik. Jika Throughput stagnan, lakukan manual refresh.
+Data is synchronized every 10 seconds. If throughput is stagnant, perform a manual refresh.
 
 STATUS: NEXUS LINK ESTABLISHED
 AUTHORITY: MASTER COMMAND`}
@@ -653,7 +653,7 @@ AUTHORITY: MASTER COMMAND`}
                 <h2 className="text-[11px] font-bold text-slate-900 tracking-tight">Overview</h2>
               </div>
               <p className="text-[10px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-none border border-slate-100 font-medium">
-                Nexus Master Control memungkinkan pemantauan kesehatan klaster dan intervensi keamanan langsung pada seluruh penyewa (tenants).
+                Nexus Master Control enables cluster health monitoring and direct security intervention on all tenants.
               </p>
             </section>
 
@@ -667,44 +667,44 @@ AUTHORITY: MASTER COMMAND`}
                   {
                     id: '1',
                     title: 'Nexus Provisioning',
-                    desc: 'Deploy infrastruktur baru dan inisialisasi akun Administrator utama untuk tenant baru.',
+                    desc: 'Deploy new infrastructure and initialize the primary Administrator account for new tenants.',
                     details: [
-                      'Klik tombol \'Provision\' di panel utama.',
-                      'Masukkan metadata institusi (Nama, Lokasi, Tingkat Lisensi).',
-                      'Sistem meng-generate ID Cluster unik (contoh: CLNY-B2026-X).',
-                      'Kredensial Admin lokal akan di-setup ke node tenant.'
+                      'Click the \'Provision\' button on the main panel.',
+                      'Enter institution metadata (Name, Location, License Level).',
+                      'System generates a unique Cluster ID (e.g., CLNY-B2026-X).',
+                      'Local Admin credentials will be set up on the tenant node.'
                     ]
                   },
                   {
                     id: '2',
                     title: 'Remote Shell (Terminal)',
-                    desc: 'Buka terminal Remote untuk audit teknis jika terjadi anomali pada akurasi AI atau database lokal.',
+                    desc: 'Open a Remote terminal for technical audit if anomalies occur in AI accuracy or local database.',
                     details: [
-                      'Pilih organisasi target pada Registry dan klik \'Remote\'.',
-                      'Tunggu otentikasi handshake Secure Tunnel (AES-256).',
-                      'Pantau utilitas CPU dan Memory node bersangkutan.',
-                      'Jalankan \'Deep Diagnostics\' untuk verifikasi model AI.'
+                      'Select the target organization in the Registry and click \'Remote\'.',
+                      'Wait for Secure Tunnel (AES-256) handshake authentication.',
+                      'Monitor CPU and Memory utilization of the relevant node.',
+                      'Run \'Deep Diagnostics\' for AI model verification.'
                     ]
                   },
                   {
                     id: '3',
                     title: 'Status Enforcement',
-                    desc: 'Kendali penuh atas status aktif/suspend organisasi untuk penegakan kebijakan lisensi.',
+                    desc: 'Full control over organization active/suspend status for license policy enforcement.',
                     details: [
-                      'Gunakan \'Suspend\' (merah) untuk isolasi darurat.',
-                      'Akses seluruh staf pada tenant tersebut akan diblokir.',
-                      'Gunakan \'Activate\' (hijau) untuk memulihkan sesi.',
-                      'Log protokol mencatat perubahan untuk keperluan audit.'
+                      'Use \'Suspend\' (red) for emergency isolation.',
+                      'All staff access on that tenant will be blocked.',
+                      'Use \'Activate\' (green) to restore the session.',
+                      'Protocol log records changes for audit purposes.'
                     ]
                   },
                   {
                     id: '4',
                     title: 'Telemetry Sync',
-                    desc: 'Data diperbarui otomatis setiap 10 detik untuk memastikan visibilitas real-time 24/7.',
+                    desc: 'Data is automatically updated every 10 seconds to ensure 24/7 real-time visibility.',
                     details: [
-                      'Throughput analitik dipantau secara terus menerus.',
-                      'Sistem mendeteksi anomali keamanan lintas region.',
-                      'Lakukan \'Force Global Sync\' jika terlihat latensi.'
+                      'Analytical throughput is monitored continuously.',
+                      'System detects cross-region security anomalies.',
+                      'Perform \'Force Global Sync\' if latency is detected.'
                     ]
                   }
                 ].map((step) => (
@@ -760,10 +760,10 @@ AUTHORITY: MASTER COMMAND`}
               </h3>
 
               <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed mb-5 sm:mb-8">
-                Anda akan mengubah status operasional untuk <span className="text-slate-900 font-bold">{confirmModal.orgName}</span>.
+                You are about to change the operational status for <span className="text-slate-900 font-bold">{confirmModal.orgName}</span>.
                 {confirmModal.currentStatus === 'active'
-                  ? ' Seluruh akses pengguna untuk tenant ini akan diblokir segera.'
-                  : ' Seluruh layanan dan akses untuk tenant ini akan dipulihkan.'}
+                  ? ' All user access for this tenant will be blocked immediately.'
+                  : ' All services and access for this tenant will be restored.'}
               </p>
 
               <div className="flex gap-3">
@@ -781,7 +781,7 @@ AUTHORITY: MASTER COMMAND`}
                       : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200'
                   }`}
                 >
-                  Konfirmasi
+                  Confirm
                 </button>
               </div>
             </div>
@@ -937,10 +937,10 @@ AUTHORITY: MASTER COMMAND`}
                       </div>
                       <div className="grid grid-cols-2 gap-x-2 gap-y-1 px-1">
                         {[
-                          { label: "8+ Karakter", met: validatePasswordRules(passwordResetModal.newPassword).length },
-                          { label: "Huruf Besar", met: validatePasswordRules(passwordResetModal.newPassword).upper },
-                          { label: "Angka", met: validatePasswordRules(passwordResetModal.newPassword).number },
-                          { label: "Simbol", met: validatePasswordRules(passwordResetModal.newPassword).symbol },
+                          { label: "8+ Characters", met: validatePasswordRules(passwordResetModal.newPassword).length },
+                          { label: "Uppercase Letter", met: validatePasswordRules(passwordResetModal.newPassword).upper },
+                          { label: "Number", met: validatePasswordRules(passwordResetModal.newPassword).number },
+                          { label: "Symbol", met: validatePasswordRules(passwordResetModal.newPassword).symbol },
                         ].map((rule, i) => (
                           <div key={i} className="flex items-center gap-1">
                             <div className={`w-1 h-1 rounded-none ${rule.met ? 'bg-emerald-500' : 'bg-slate-300'}`} />
@@ -962,7 +962,7 @@ AUTHORITY: MASTER COMMAND`}
                     }}
                     className="flex-1 py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-widest rounded-none transition-all"
                   >
-                    Batal
+                  Cancel
                   </button>
                   <button
                     onClick={handleResetAdminPassword}

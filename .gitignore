@@ -72,15 +72,24 @@ MANIFEST
 *.onnx
 *.weights
 *.engine
-models/*.pt
-models/*.onnx
+*.torchscript
+*.tflite
+*.bin
+models/
 runs/
+weights/
 
-# Datasets
-datasets/raw/
-datasets/processed/
+# Datasets & training data (never commit raw images/labels)
+datasets/
 *.zip
 *.tar.gz
+*.tar
+*.gz
+dust_debris/
+dust_debris_*/
+*_labeled/
+*_augmented/
+*_dataset/
 
 # Jupyter
 .ipynb_checkpoints
@@ -119,15 +128,22 @@ frontend/out/
 frontend/tsconfig.tsbuildinfo
 frontend/node_modules/
 
-# ML Training (only ignore datasets, not scripts)
+# ML Training (ignore datasets, runs, weights — keep scripts)
 ml-training/datasets/
 ml-training/runs/
+ml-training/weights/
 ml-training/*.pt
+ml-training/*.pth
 ml-training/*.onnx
 hasil_training_colony/
 kaggle_init_only/
 kaggle_multi_zip/
 yolo26n.pt
+
+# Training output folders (any depth)
+**/runs/train/
+**/runs/detect/
+**/runs/val/
 
 # Misc
 .cache/
@@ -139,7 +155,13 @@ tmp/
 *.swo
 *~
 
-# Test results
+# Test results & detection output images
+test_result*/
+test_results/
+detect_test*.jpg
+detect_test*.png
+*_collage.jpg
+*_collage.png
 test_result*.jpg
 test_result*.png
 
@@ -158,3 +180,23 @@ nexus_vault_secrets/
 /uploads/
 /*_backup.md
 kaggle_upload_temp/
+
+# Large sample/test images in public (keep small UI thumbnails only)
+frontend/public/samples/sample_*.jpg
+frontend/public/samples/test_normal_*.jpg
+frontend/public/samples/test_vague_dark_sparse.jpg
+frontend/public/samples/test_bright_light.jpg
+frontend/public/samples/*_ref.png
+frontend/public/test.jpg
+frontend/public/sample_plate*.png
+
+# Root-level stray images/assets
+/*.png
+/*.jpg
+/*.jpeg
+/public/
+
+# Backend stray assets
+backend/*.png
+backend/*.jpg
+backend/*.jpeg
