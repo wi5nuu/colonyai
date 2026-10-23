@@ -217,7 +217,9 @@ export default function DashboardLayout({
       "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
     );
     audio.volume = 0.5;
-    audio.play().catch((e) => console.log("Audio play blocked by browser", e));
+    audio.play().catch(() => {
+      // Audio playback blocked by browser - ignore silently
+    });
   };
 
   useEffect(() => {
@@ -265,7 +267,7 @@ export default function DashboardLayout({
               id: `reset-${r.id}`,
               type: "approval",
               title: "PASSWORD RESET REQUEST",
-              message: `${r.user_name} (${r.user_email}) meminta reset password.`,
+              message: `${r.user_name} (${r.user_email}) requested password reset.`,
               time: new Date(r.requested_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
               read: false,
               link: "/dashboard/administration",

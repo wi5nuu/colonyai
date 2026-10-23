@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Mail,
   Eye,
@@ -18,6 +19,7 @@ import { Footer } from "@/components/Footer";
 export default function LoginPage() {
   const { t } = useTranslationStore();
   const auth = useAuthStore();
+  const router = useRouter();
   const loginStep = auth.loginStep;
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,10 +39,9 @@ export default function LoginPage() {
       setIsLoading(false);
       if (result && !result.mfa_required) {
         toast.success(t("auth.loginSuccess"));
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       }
     } catch (error) {
-      console.warn("Backend login failed:", error);
       setTimeout(() => {
         setIsLoading(false);
       }, 800);
@@ -52,7 +53,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await auth.verifyMfa(formData.mfaToken, trustDevice);
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     } catch (error) {
       setIsLoading(false);
     }

@@ -47,18 +47,18 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null })
         
         try {
-          // Get or generate Device ID
-          let deviceId = localStorage.getItem('colony_device_id')
-          if (!deviceId) {
-            deviceId = crypto.randomUUID()
-            localStorage.setItem('colony_device_id', deviceId)
+          // Get or generate Device ID (SSR-safe)
+          let deviceId = ''
+          if (typeof window !== 'undefined') {
+            deviceId = localStorage.getItem('colony_device_id') || ''
+            if (!deviceId) {
+              deviceId = crypto.randomUUID()
+              localStorage.setItem('colony_device_id', deviceId)
+            }
           }
 
           const data = await authApi.login({ email, password, device_id: deviceId })
-          console.log("Raw Backend Login Data:", data);
-
           if (data.mfa_required) {
-            console.log("MFA is required according to backend");
             set({ isLoading: false, error: null, tempEmail: email, loginStep: 'mfa' })
             return { mfa_required: true }
           }
@@ -66,14 +66,16 @@ export const useAuthStore = create<AuthState>()(
           set({
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
-            user: data.user ? { ...data.user, role: data.user.role.toLowerCase() } : null,
+            user: data.user ? { ...data.user, role: data.user.role?.toLowerCase() || 'analyst' } : null,
             isLoading: false,
             isAuthenticated: true,
             error: null,
           })
           return { mfa_required: false }
-        } catch (error: any) {
-          const errorMsg = error.response?.data?.detail || error.message || 'Access Denied'
+        } catch (error: unknown) {
+          const errorMsg = error instanceof Error && 'response' in error
+            ? ((error as any).response?.data?.detail || error.message)
+            : 'Access Denied'
           toast.error(errorMsg)
           set({
             isLoading: false,
@@ -94,7 +96,9 @@ export const useAuthStore = create<AuthState>()(
         }
 
         try {
-          const deviceId = localStorage.getItem('colony_device_id') || ""
+          const deviceId = typeof window !== 'undefined' 
+            ? localStorage.getItem('colony_device_id') || "" 
+            : "";
           const data = await authApi.verifyMfa({
             email: tempEmail,
             code,
@@ -105,7 +109,7 @@ export const useAuthStore = create<AuthState>()(
           set({
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
-            user: data.user ? { ...data.user, role: data.user.role.toLowerCase() } : null,
+            user: data.user ? { ...data.user, role: data.user.role?.toLowerCase() || 'analyst' } : null,
             isLoading: false,
             isAuthenticated: true,
             tempEmail: null,
@@ -115,8 +119,10 @@ export const useAuthStore = create<AuthState>()(
           if (trustDevice) {
             toast.success('Device registered as trusted for 30 days')
           }
-        } catch (error: any) {
-          const errorMsg = error.response?.data?.detail || error.message || 'Verification Failed'
+        } catch (error: unknown) {
+          const errorMsg = error instanceof Error && 'response' in error
+            ? ((error as any).response?.data?.detail || error.message)
+            : 'MFA verification failed'
           toast.error(errorMsg)
           set({
             isLoading: false,
@@ -140,13 +146,15 @@ export const useAuthStore = create<AuthState>()(
           set({
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
-            user: data.user || null,
+            user: data.user ? { ...data.user, role: data.user.role?.toLowerCase() || 'analyst' } : null,
             isLoading: false,
             isAuthenticated: true,
             error: null,
           })
-        } catch (error: any) {
-          const errorMsg = error.response?.data?.detail || error.message || 'Provisioning Failed'
+        } catch (error: unknown) {
+          const errorMsg = error instanceof Error && 'response' in error
+            ? ((error as any).response?.data?.detail || error.message)
+            : 'Registration failed'
           toast.error(errorMsg)
           set({
             isLoading: false,
@@ -161,7 +169,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           await authApi.logout()
         } catch (error) {
-          console.error('Logout error:', error)
+          // Logout error - continue with local cleanup
         } finally {
           toast.info('Laboratory Session Terminated')
           set({
@@ -171,6 +179,8 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
             isAuthenticated: false,
+            tempEmail: null,
+            loginStep: 'credentials',
           })
         }
       },
@@ -189,12 +199,11 @@ export const useAuthStore = create<AuthState>()(
           set({
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
-            user: data.user || get().user,
+            user: data.user ? { ...data.user, role: data.user.role?.toLowerCase() || 'analyst' } : get().user,
             isLoading: false,
             isAuthenticated: true
           })
         } catch (error) {
-          console.error('Token refresh failed:', error)
           set({
             user: null,
             accessToken: null,

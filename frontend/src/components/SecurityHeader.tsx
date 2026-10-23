@@ -15,6 +15,10 @@ export function SecurityHeader({ region = 'ID-WEST-01', ip = '10.142.0.8' }: Sec
   const language = useTranslationStore((s) => s.language)
   const setLanguage = useTranslationStore((s) => s.setLanguage)
 
+  // Sanitize display values to prevent any injection
+  const safeRegion = region.replace(/[^a-zA-Z0-9\-_. ]/g, '').slice(0, 50)
+  const safeIp = ip.replace(/[^a-zA-Z0-9\-:.]/g, '').slice(0, 45)
+
   const toggleLanguage = (lang: string) => {
     setLanguage(lang.toLowerCase() as "en" | "id")
     const body = document.body
@@ -37,8 +41,8 @@ export function SecurityHeader({ region = 'ID-WEST-01', ip = '10.142.0.8' }: Sec
       <div className="flex items-center gap-6">
         <div className="hidden sm:flex items-center gap-4 border-r border-slate-100 pr-6 mr-2">
            <div className="flex flex-col items-end">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{region}</span>
-              <span className="text-[8px] font-bold text-slate-300">Node: {ip}</span>
+               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{safeRegion}</span>
+               <span className="text-[8px] font-bold text-slate-300">Node: {safeIp}</span>
            </div>
         </div>
         

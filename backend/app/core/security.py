@@ -2,8 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
 from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import uuid
 from app.core.config import settings
@@ -15,10 +14,12 @@ security = HTTPBearer()
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against a hashed password"""
+    if not hashed_password:
+        return False
     try:
         pwd_context.verify(hashed_password, plain_password)
         return True
-    except VerifyMismatchError:
+    except Exception:
         return False
 
 
@@ -33,8 +34,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
-    
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+
     # Add JTI for blacklisting
     jti = str(uuid.uuid4())
     to_encode.update({"exp": expire, "type": "access", "jti": jti})
@@ -74,45 +77,55 @@ async def get_current_user(
     from app.core.database import AsyncSessionLocal
     from app.models import TokenBlacklist, User
     from sqlalchemy import select
-    
+
     token = credentials.credentials
-    
+
     payload = decode_token(token)
-    
+
     jti = payload.get("jti")
     user_id: str = payload.get("sub")
-    
+
     if user_id is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials"
         )
-    
-    # ── BLACKLIST CHECK ──
+
+    # ── BLACKLIST CHECK (TOCTOU-safe) ──
+    # Take a pessimistic row lock on the User FIRST, then re-check the
+    # blacklist inside the same transaction. logout() acquires the same
+    # lock on the user row before inserting into TokenBlacklist, so the
+    # two operations serialize: if logout commits first, this second
+    # blacklist query sees the revoked jti and rejects the request.
     async with AsyncSessionLocal() as db:
-        result = await db.execute(select(TokenBlacklist).where(TokenBlacklist.jti == jti))
-        blacklisted = result.scalar_one_or_none()
-        
-        if blacklisted:
+        try:
+            user_uuid = uuid.UUID(user_id)
+        except (ValueError, AttributeError):
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has been revoked (logged out)"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user ID format"
             )
-            
-        # ── Verify User exists ──
-        result = await db.execute(select(User).where(User.id == uuid.UUID(user_id)))
+        result = await db.execute(select(User).where(User.id == user_uuid).with_for_update())
         user = result.scalar_one_or_none()
         if not user:
             raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="User no longer exists"
+            )
+
+        result = await db.execute(
+            select(TokenBlacklist).where(TokenBlacklist.jti == jti).with_for_update()
+        )
+        blacklisted = result.scalar_one_or_none()
+
+        if blacklisted:
+            raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User no longer exists"
+                detail="Token has been revoked (logged out)",
             )
 
         # ── Enforce Organization Membership ──
         if user.role.value != "super_admin" and not user.organization_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Akun tidak terdaftar pada perusahaan mana pun. Hubungi Super Admin."
+                detail="Akun tidak terdaftar pada perusahaan mana pun. Hubungi Super Admin.",
             )
 
     return {
@@ -121,7 +134,7 @@ async def get_current_user(
         "role": payload.get("role"),
         "organization_id": str(user.organization_id) if user.organization_id else None,
         "jti": jti,
-        "exp": payload.get("exp")
+        "exp": payload.get("exp"),
     }
 
 
@@ -134,18 +147,19 @@ def require_role(*required_roles: str):
     'super_admin' has god-mode access to all endpoints.
     'admin' has full access to their organization's endpoints.
     """
+
     async def role_checker(current_user: dict = Depends(get_current_user)):
         user_role = current_user.get("role")
-        
+
         # 1. Super Admin bypasses all checks
         if user_role == "super_admin":
             return current_user
-            
+
         # 2. Specific role check
         if user_role not in required_roles:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
             )
         return current_user
+
     return role_checker

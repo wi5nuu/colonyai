@@ -19,15 +19,18 @@ from app.core.exceptions import ResourceNotFoundError
 
 router = APIRouter()
 
+
 class NotificationsUpdate(BaseModel):
     analysis_complete: bool
     boundary_alerts: bool
     weekly_summary: bool
 
+
 class LaboratoryUpdate(BaseModel):
     lab_name: str
     default_media: str
     default_volume: float
+
 
 class AppearanceUpdate(BaseModel):
     theme: str
@@ -36,38 +39,34 @@ class AppearanceUpdate(BaseModel):
 
 @router.get("/preferences")
 async def get_preferences(
-    current_user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     """Get all user preferences and settings"""
     user_id = uuid.UUID(current_user["user_id"])
-    
+
     result = await db.execute(select(UserPreference).where(UserPreference.user_id == user_id))
     prefs = result.scalar_one_or_none()
-    
+
     if not prefs:
         # Create default preferences if not exists
         prefs = UserPreference(user_id=user_id)
         db.add(prefs)
         await db.commit()
         await db.refresh(prefs)
-    
+
     return {
         "notifications": {
             "analysis_complete": prefs.notify_analysis_complete,
             "boundary_alerts": prefs.notify_boundary_alerts,
-            "weekly_summary": prefs.notify_weekly_summary
+            "weekly_summary": prefs.notify_weekly_summary,
         },
         "laboratory": {
             "lab_name": prefs.default_lab_name,
             "default_media": prefs.default_media_type,
-            "default_volume": prefs.default_volume_ml
+            "default_volume": prefs.default_volume_ml,
         },
-        "appearance": {
-            "theme": prefs.theme_preference,
-            "language": prefs.language_preference
-        },
-        "updated_at": prefs.updated_at.isoformat()
+        "appearance": {"theme": prefs.theme_preference, "language": prefs.language_preference},
+        "updated_at": prefs.updated_at.isoformat(),
     }
 
 
@@ -75,33 +74,33 @@ async def get_preferences(
 async def update_notification_preferences(
     data: NotificationsUpdate,
     current_user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Update notification preferences"""
     user_id = uuid.UUID(current_user["user_id"])
-    
+
     result = await db.execute(select(UserPreference).where(UserPreference.user_id == user_id))
     prefs = result.scalar_one_or_none()
-    
+
     if not prefs:
         prefs = UserPreference(user_id=user_id)
         db.add(prefs)
-    
+
     prefs.notify_analysis_complete = data.analysis_complete
     prefs.notify_boundary_alerts = data.boundary_alerts
     prefs.notify_weekly_summary = data.weekly_summary
     prefs.updated_at = datetime.now(timezone.utc)
-    
+
     await db.commit()
     await db.refresh(prefs)
-    
+
     return {
         "message": "Notification preferences updated successfully",
         "preferences": {
             "analysis_complete": prefs.notify_analysis_complete,
             "boundary_alerts": prefs.notify_boundary_alerts,
-            "weekly_summary": prefs.notify_weekly_summary
-        }
+            "weekly_summary": prefs.notify_weekly_summary,
+        },
     }
 
 
@@ -109,36 +108,57 @@ async def update_notification_preferences(
 async def update_laboratory_defaults(
     data: LaboratoryUpdate,
     current_user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Update laboratory default configuration"""
     if data.default_volume <= 0:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Volume must be positive")
-    
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Volume must be positive"
+        )
+
+    # Validate default_media against allowed types
+    allowed_media = {
+        "PCA",
+        "TSA",
+        "VRBA",
+        "MacConkey",
+        "SDA",
+        "EMB",
+        "BGBB",
+        "Blood",
+        "R2A",
+        "OTHER",
+    }
+    if data.default_media not in allowed_media:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid media type: '{data.default_media}'. Allowed: {', '.join(sorted(allowed_media))}",
+        )
+
     user_id = uuid.UUID(current_user["user_id"])
-    
+
     result = await db.execute(select(UserPreference).where(UserPreference.user_id == user_id))
     prefs = result.scalar_one_or_none()
-    
+
     if not prefs:
         prefs = UserPreference(user_id=user_id)
         db.add(prefs)
-    
+
     prefs.default_lab_name = data.lab_name
     prefs.default_media_type = data.default_media
     prefs.default_volume_ml = data.default_volume
     prefs.updated_at = datetime.now(timezone.utc)
-    
+
     await db.commit()
     await db.refresh(prefs)
-    
+
     return {
         "message": "Laboratory configuration updated successfully",
         "configuration": {
             "lab_name": prefs.default_lab_name,
             "default_media": prefs.default_media_type,
-            "default_volume": prefs.default_volume_ml
-        }
+            "default_volume": prefs.default_volume_ml,
+        },
     }
 
 
@@ -146,36 +166,40 @@ async def update_laboratory_defaults(
 async def update_appearance_preferences(
     data: AppearanceUpdate,
     current_user: dict = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Update appearance and language preferences"""
     valid_themes = ["light", "dark", "system"]
     if data.theme not in valid_themes:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid theme. Must be one of: {valid_themes}"
+            detail=f"Invalid theme. Must be one of: {valid_themes}",
         )
-    
+
+    valid_languages = ["en", "id"]
+    if data.language not in valid_languages:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid language. Must be one of: {valid_languages}",
+        )
+
     user_id = uuid.UUID(current_user["user_id"])
-    
+
     result = await db.execute(select(UserPreference).where(UserPreference.user_id == user_id))
     prefs = result.scalar_one_or_none()
-    
+
     if not prefs:
         prefs = UserPreference(user_id=user_id)
         db.add(prefs)
-    
+
     prefs.theme_preference = data.theme
     prefs.language_preference = data.language
     prefs.updated_at = datetime.now(timezone.utc)
-    
+
     await db.commit()
     await db.refresh(prefs)
-    
+
     return {
         "message": "Appearance preferences updated successfully",
-        "preferences": {
-            "theme": prefs.theme_preference,
-            "language": prefs.language_preference
-        }
+        "preferences": {"theme": prefs.theme_preference, "language": prefs.language_preference},
     }

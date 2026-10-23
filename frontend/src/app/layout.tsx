@@ -4,7 +4,6 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { ConditionalNavbar } from "@/components/ConditionalNavbar";
 import { LanguageSync } from "./language-script";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import { GlobalSearch } from "@/components/GlobalSearch";
 
 const inter = Inter({
@@ -47,16 +46,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${inter.variable} ${outfit.variable} ${jetbrainsMono.variable}`}
     >
       <body className="font-sans antialiased">
         <LanguageSync />
         <Providers>
-          <ThemeProvider>
-            <ConditionalNavbar />
-            <main id="main-content">{children}</main>
-            <GlobalSearch />
-          </ThemeProvider>
+          <ConditionalNavbar />
+          <main id="main-content">{children}</main>
+          <GlobalSearch />
         </Providers>
       </body>
     </html>

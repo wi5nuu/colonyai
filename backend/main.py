@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import sys
 from pathlib import Path
 
@@ -12,9 +12,13 @@ from app.core.rate_limiter import RateLimitMiddleware
 from app.core.middleware import SecureHeadersMiddleware
 from app.api.v1 import auth_router, image_router, analysis_router, report_router, user_router, lims_router, maintenance_router, simulator_router, settings_router, audit_router, super_router
 from app.api.v1.endpoints.models import router as models_router
-from app.core.database import engine, Base
+from app.api.v1.endpoints.search import router as search_router
 
-# ── Logging Configuration ──
+# â”€â”€ Logging Configuration â”€â”€
+# The log directory is git-ignored, so create it on first start (fresh clones, CI, containers).
+if settings.LOG_FILE:
+    Path(settings.LOG_FILE).parent.mkdir(parents=True, exist_ok=True)
+
 logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
     format="%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d | %(message)s",
@@ -52,7 +56,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS Middleware — restrict to known origins (production safety)
+# CORS Middleware â€” restrict to known origins (production safety)
 cors_origins = settings.BACKEND_CORS_ORIGINS
 logger.info(f"CORS allowed origins: {cors_origins}")
 app.add_middleware(
@@ -63,7 +67,7 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
 )
 
-# ── Cyber Security Middleware (Secure Headers) ──
+# â”€â”€ Cyber Security Middleware (Secure Headers) â”€â”€
 app.add_middleware(SecureHeadersMiddleware)
 
 # Rate Limiting Middleware (100 requests/minute per IP)
@@ -94,6 +98,7 @@ app.include_router(settings_router, prefix=f"{settings.API_V1_PREFIX}/settings",
 app.include_router(audit_router, prefix=f"{settings.API_V1_PREFIX}/audit", tags=["Audit Logs"])
 app.include_router(super_router, prefix=f"{settings.API_V1_PREFIX}/super", tags=["Super Admin"])
 app.include_router(models_router, prefix=f"{settings.API_V1_PREFIX}/admin/models", tags=["Model Management"])
+app.include_router(search_router, prefix=f"{settings.API_V1_PREFIX}/search", tags=["Global Search"])
 
 
 @app.get("/")
@@ -122,4 +127,5 @@ if __name__ == "__main__":
         port=8000, 
         reload=False
     )
+
 

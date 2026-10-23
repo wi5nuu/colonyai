@@ -88,7 +88,7 @@ export function Footer() {
             </div>
           </div>
 
-          {/* ── Column 2: Tautan Terkait (Internal) ───────────────── */}
+          {/* ── Column 2: Related Links (Internal) ───────────────── */}
           <div className="space-y-6">
             <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
               {t("footer.relatedLinks")}
@@ -114,7 +114,7 @@ export function Footer() {
             </nav>
           </div>
 
-          {/* ── Column 3: Partner Eksternal ────────────────────────── */}
+          {/* ── Column 3: External Partners ────────────────────────── */}
           <div className="space-y-6">
             <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
               {t("footer.strategicEcosystem")}
@@ -131,6 +131,7 @@ export function Footer() {
                   key={partner}
                   href="#"
                   className="text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-[#0055ff] dark:hover:text-[#00f2ff] transition-colors uppercase tracking-widest flex items-center gap-2 group"
+                  rel="noopener noreferrer"
                 >
                   <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700 group-hover:bg-[#0055ff] dark:group-hover:bg-[#00f2ff] transition-colors" />
                   {partner}
@@ -139,7 +140,7 @@ export function Footer() {
             </nav>
           </div>
 
-          {/* ── Column 4: Tetap Terhubung ────────────────────────── */}
+          {/* ── Column 4: Stay Connected ────────────────────────── */}
           <div className="space-y-6">
             <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
               {t("footer.stayConnected")}
@@ -157,7 +158,7 @@ export function Footer() {
                   className="w-4 h-4 text-[#0055ff] dark:text-[#00f2ff] flex-shrink-0"
                   aria-hidden="true"
                 />
-                <span>0813-948-290</span>
+                <span>0813-9488-2490</span>
               </li>
               <li className="flex gap-3 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
                 <Mail

@@ -23,6 +23,7 @@ from app.models import AuditLog, User, Organization
 
 router = APIRouter()
 
+
 class AuditLogResponse(BaseModel):
     id: str
     action: str
@@ -40,12 +41,15 @@ class AuditLogResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 @router.get("/", response_model=List[AuditLogResponse])
 async def list_audit_logs(
     skip: int = 0,
     limit: int = 50,
-    current_user: dict = Depends(require_role("analyst", "manager", "auditor", "admin", "super_admin")),
-    db: AsyncSession = Depends(get_db)
+    current_user: dict = Depends(
+        require_role("analyst", "manager", "auditor", "admin", "super_admin")
+    ),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     List audit logs with role-based scoping:
@@ -77,19 +81,21 @@ async def list_audit_logs(
     result = await db.execute(stmt)
     logs = []
     for log, full_name, org_name in result.all():
-        logs.append(AuditLogResponse(
-            id=str(log.id),
-            action=log.action,
-            resource_type=log.resource_type,
-            resource_id=str(log.resource_id) if log.resource_id else None,
-            user_name=full_name,
-            organization_name=org_name or "ColonyAI Global",
-            timestamp=log.timestamp,
-            status="SUCCESS",
-            previous_hash=log.previous_hash,
-            current_hash=log.current_hash,
-            ip_address=log.ip_address,
-            user_agent=log.user_agent
-        ))
+        logs.append(
+            AuditLogResponse(
+                id=str(log.id),
+                action=log.action,
+                resource_type=log.resource_type,
+                resource_id=str(log.resource_id) if log.resource_id else None,
+                user_name=full_name,
+                organization_name=org_name or "ColonyAI Global",
+                timestamp=log.timestamp,
+                status="SUCCESS",
+                previous_hash=log.previous_hash,
+                current_hash=log.current_hash,
+                ip_address=log.ip_address,
+                user_agent=log.user_agent,
+            )
+        )
 
     return logs

@@ -1,12 +1,13 @@
 """Pydantic schemas for ColonyAI API responses"""
+
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
-
 # ============================================================
 # Detection Schemas
 # ============================================================
+
 
 class BBoxResponse(BaseModel):
     x: int
@@ -32,6 +33,7 @@ class DetectionResponse(BaseModel):
 # ============================================================
 # Analysis Schemas
 # ============================================================
+
 
 class AnalysisUserBrief(BaseModel):
     full_name: str
@@ -76,6 +78,7 @@ class AnalysisResponse(BaseModel):
 
 class AnalysisBriefResponse(BaseModel):
     """Abbreviated analysis response for list views (no detections)"""
+
     id: str
     user_id: str
     sample_id: str
@@ -121,6 +124,7 @@ class AnalysisListResponse(BaseModel):
 # Dashboard Schemas
 # ============================================================
 
+
 class WeeklyTrendItem(BaseModel):
     day: str
     analyses: int
@@ -131,16 +135,16 @@ class DashboardStatsResponse(BaseModel):
     avg_time_saved_minutes: int
     success_rate: float
     pending_review: int
-    
+
     # New Real Data Fields
     neural_confidence: float
     system_latency_ms: float
     verified_count: int
     failed_count: int
-    
+
     # Matrix stats (Counts per media type)
     matrix_breakdown: Dict[str, int]
-    
+
     weekly_trend: List[WeeklyTrendItem]
     recent_analyses: List[AnalysisBriefResponse]
 
@@ -148,6 +152,7 @@ class DashboardStatsResponse(BaseModel):
 # ============================================================
 # Correction Schemas (Continuous Learning)
 # ============================================================
+
 
 class CorrectionBBoxRequest(BaseModel):
     x: int
@@ -206,6 +211,7 @@ class CorrectionReportResponse(BaseModel):
 # ============================================================
 # Report Schemas
 # ============================================================
+
 
 class ReportResponse(BaseModel):
     url: str

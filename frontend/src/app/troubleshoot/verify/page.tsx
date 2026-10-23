@@ -32,7 +32,6 @@ export default function VerifyIdentityPage() {
         description: 'Your request has been queued for administrator review.',
       })
     } catch (error: any) {
-      console.error('[ColonyAI Error] Submit failed:', error);
       toast.error(error.response?.data?.detail || 'Failed to submit request. Try again.')
     } finally {
       setIsLoading(false)
