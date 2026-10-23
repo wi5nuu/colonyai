@@ -63,10 +63,11 @@ export default function HistoryPage() {
           status: statusFilter !== "all" ? statusFilter : undefined,
         });
         setData(result);
-      } catch (error: any) {
-        toast.error(
-          error.response?.data?.detail || t("history.errorLoadHistory"),
-        );
+      } catch (error: unknown) {
+        const errorMsg = error instanceof Error && 'response' in error
+          ? ((error as any).response?.data?.detail || error.message)
+          : t("history.errorLoadHistory");
+        toast.error(errorMsg);
       } finally {
         setIsLoading(false);
       }

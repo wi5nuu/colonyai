@@ -1,15 +1,19 @@
 import html
-from typing import Any, Dict, List, TypeVar, Union
+from typing import TypeVar
 
 T = TypeVar("T")
 
-def sanitize_string(value: str) -> str:
+
+def sanitize_string(value: str | None) -> str | None:
     """
     Escape HTML characters in a string to prevent XSS.
     """
+    if value is None:
+        return None
     if not isinstance(value, str):
-        return value
+        return str(value)
     return html.escape(value)
+
 
 def sanitize_recursive(data: T) -> T:
     """

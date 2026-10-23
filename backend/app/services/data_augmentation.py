@@ -7,20 +7,22 @@ import glob
 
 logger = logging.getLogger(__name__)
 
+
 class DomainShiftAugmenter:
     """
     Offline data augmentation pipeline to mitigate Domain Shift between
     AGAR dataset (Macquarie University, Australia) and typical Lab Indonesia conditions.
-    
+
     Issues addressed (BUG-013):
     - Fluorescent vs LED vs Natural lighting
     - Entry-level smartphone camera artifacts
     - Media brand color variations
     """
+
     def __init__(self, output_dir: str):
         self.output_dir = output_dir
         Path(self.output_dir).mkdir(parents=True, exist_ok=True)
-        
+
     def _apply_clahe(self, image: np.ndarray, clip_limit: float = 2.0) -> np.ndarray:
         """Apply Contrast Limited Adaptive Histogram Equalization to simulate varying lab lighting"""
         lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
@@ -35,7 +37,7 @@ class DomainShiftAugmenter:
         row, col, ch = image.shape
         mean = 0
         var = 0.01 * 255
-        sigma = var ** 0.5
+        sigma = var**0.5
         gauss = np.random.normal(mean, sigma, (row, col, ch))
         noisy = image + gauss
         noisy = np.clip(noisy, 0, 255).astype(np.uint8)
@@ -51,46 +53,64 @@ class DomainShiftAugmenter:
 
     def augment_dataset(self, input_dir: str):
         """Process all images in input directory and apply domain-shift augmentations"""
-        extensions = ('*.jpg', '*.jpeg', '*.png')
+        extensions = ("*.jpg", "*.jpeg", "*.png")
         image_paths = []
         for ext in extensions:
             image_paths.extend(glob.glob(os.path.join(input_dir, ext)))
-            
+
         logger.info("Found %d images to augment.", len(image_paths))
-        
+
         for p in image_paths:
             filename = os.path.basename(p)
             name, ext = os.path.splitext(filename)
-            
+
             img = cv2.imread(p)
             if img is None:
                 continue
-                
+
             img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            
+
             # 1. Base CLAHE (normalization)
             norm_img = self._apply_clahe(img_rgb)
-            cv2.imwrite(os.path.join(self.output_dir, f"{name}_norm{ext}"), cv2.cvtColor(norm_img, cv2.COLOR_RGB2BGR))
-            
+            cv2.imwrite(
+                os.path.join(self.output_dir, f"{name}_norm{ext}"),
+                cv2.cvtColor(norm_img, cv2.COLOR_RGB2BGR),
+            )
+
             # 2. Add noise
             noisy_img = self._simulate_smartphone_noise(img_rgb)
-            cv2.imwrite(os.path.join(self.output_dir, f"{name}_noisy{ext}"), cv2.cvtColor(noisy_img, cv2.COLOR_RGB2BGR))
-            
+            cv2.imwrite(
+                os.path.join(self.output_dir, f"{name}_noisy{ext}"),
+                cv2.cvtColor(noisy_img, cv2.COLOR_RGB2BGR),
+            )
+
             # 3. Alter color temperature (Warm - Fluorescent)
             warm_img = self._adjust_color_temperature(img_rgb, 15)
-            cv2.imwrite(os.path.join(self.output_dir, f"{name}_warm{ext}"), cv2.cvtColor(warm_img, cv2.COLOR_RGB2BGR))
-            
+            cv2.imwrite(
+                os.path.join(self.output_dir, f"{name}_warm{ext}"),
+                cv2.cvtColor(warm_img, cv2.COLOR_RGB2BGR),
+            )
+
             # 4. Alter color temperature (Cool - LED)
             cool_img = self._adjust_color_temperature(img_rgb, -15)
-            cv2.imwrite(os.path.join(self.output_dir, f"{name}_cool{ext}"), cv2.cvtColor(cool_img, cv2.COLOR_RGB2BGR))
+            cv2.imwrite(
+                os.path.join(self.output_dir, f"{name}_cool{ext}"),
+                cv2.cvtColor(cool_img, cv2.COLOR_RGB2BGR),
+            )
+
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="Domain Shift Augmentation Pipeline")
-    parser.add_argument("--input", type=str, required=True, help="Input directory containing AGAR validation images")
-    parser.add_argument("--output", type=str, required=True, help="Output directory for augmented images")
+    parser.add_argument(
+        "--input", type=str, required=True, help="Input directory containing AGAR validation images"
+    )
+    parser.add_argument(
+        "--output", type=str, required=True, help="Output directory for augmented images"
+    )
     args = parser.parse_args()
-    
+
     augmenter = DomainShiftAugmenter(args.output)
     augmenter.augment_dataset(args.input)
     logger.info("Augmentation completed successfully.")

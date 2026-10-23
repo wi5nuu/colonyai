@@ -166,7 +166,7 @@ export default function LandingPage() {
                 <div className="flex items-center gap-1.5 md:gap-3 mt-0.5">
                   <MessageCircle className="w-5 h-5 md:w-8 md:h-8 text-green-400 fill-green-400 flex-shrink-0" />
                   <span className="text-sm md:text-3xl font-black text-white tabular-nums">
-                    0813-948-290
+                    0813-9488-2490
                   </span>
                 </div>
               </div>
@@ -508,7 +508,7 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-wrap gap-6">
               <a
-                href="tel:+6281394829"
+                href="tel:+6281394882490"
                 className="bg-white dark:bg-slate-950 p-6 shadow-xl border border-slate-100 dark:border-slate-800 min-w-[280px] flex flex-col gap-4 hover:border-emerald-300 dark:hover:border-[#00f2ff] hover:shadow-2xl transition-all cursor-pointer group"
               >
                 <div className="flex items-center gap-4">
@@ -520,7 +520,7 @@ export default function LandingPage() {
                       {t("landing.callContactCenter")}
                     </p>
                     <p className="text-sm font-black text-[#1a237e] dark:text-[#00f2ff]">
-                      0813-948-290
+                      0813-9488-2490
                     </p>
                   </div>
                   <ArrowRight className="w-4 h-4 text-emerald-500 ml-auto group-hover:translate-x-1 transition-transform" />
@@ -530,7 +530,7 @@ export default function LandingPage() {
                 </p>
               </a>
               <a
-                href="https://wa.me/6281394829?text=Hello%20ColonyAI%2C%20I%20would%20like%20to%20ask%20about%20your%20microbiology%20analysis%20platform."
+                href="https://wa.me/6281394882490?text=Hello%20ColonyAI%2C%20I%20would%20like%20to%20ask%20about%20your%20microbiology%20analysis%20platform."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white dark:bg-slate-950 p-6 shadow-xl border border-slate-100 dark:border-slate-800 min-w-[280px] flex flex-col gap-4 hover:border-green-300 dark:hover:border-[#00f2ff] hover:shadow-2xl transition-all cursor-pointer group"
@@ -544,7 +544,7 @@ export default function LandingPage() {
                       {t("landing.chatWhatsApp")}
                     </p>
                     <p className="text-sm font-black text-[#1a237e] dark:text-[#00f2ff]">
-                      0813-948-290
+                      0813-9488-2490
                     </p>
                   </div>
                   <ArrowRight className="w-4 h-4 text-emerald-500 ml-auto group-hover:translate-x-1 transition-transform" />

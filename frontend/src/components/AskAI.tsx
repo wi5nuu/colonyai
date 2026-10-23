@@ -135,8 +135,16 @@ const KB_EN = {
 };
 
 function getResponse(q: string, userName: string, language: string): { content: string; quickActions: string[] } {
-  const query = q.toLowerCase();
+  const query = q.toLowerCase().trim();
   const KB = language === 'id' ? KB_ID : KB_EN;
+
+  // Handle empty queries
+  if (!query) {
+    return {
+      content: "Please ask a question about ColonyAI, the team, models, datasets, or ISO-17025 compliance.",
+      quickActions: ["Who is the dev team?", "Detail v7 & v8?", "3 Dataset folders?", "Roadmap v10?"]
+    };
+  }
 
   // Team / who questions
   if (query.match(/tim|team|siapa|who|anggota|developer|pengembang|wisnu|faras|suci|steven/)) {

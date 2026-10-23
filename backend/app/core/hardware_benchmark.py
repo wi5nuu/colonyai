@@ -41,9 +41,7 @@ def check_gpu() -> dict:
 
     if info["available"]:
         info["device_name"] = torch.cuda.get_device_name(0)
-        info["memory_allocated_gb"] = round(
-            torch.cuda.memory_allocated(0) / 1024**3, 2
-        )
+        info["memory_allocated_gb"] = round(torch.cuda.memory_allocated(0) / 1024**3, 2)
 
     return info
 

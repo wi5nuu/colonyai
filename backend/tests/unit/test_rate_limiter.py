@@ -4,12 +4,12 @@ import time
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 import pytest
-from app.core.rate_limiter import RateLimitMiddleware, TokenBucket
+from app.core.rate_limiter import RateLimitMiddleware, RateLimitInfo
 
 
-class TestTokenBucket:
+class TestRateLimitInfo:
     def setup_method(self):
-        self.bucket = TokenBucket(max_tokens=10, refill_rate=1.0)
+        self.bucket = RateLimitInfo(max_tokens=10, refill_rate=1.0)
 
     def test_initial_tokens(self):
         assert self.bucket.tokens == 10
@@ -21,7 +21,8 @@ class TestTokenBucket:
     def test_consume_all_tokens(self):
         for _ in range(10):
             assert self.bucket.consume() is True
-        assert self.bucket.tokens == 0
+        # Time keeps flowing between calls, so a tiny refill (<1 token) is expected.
+        assert self.bucket.tokens < 1
 
     def test_consume_when_empty(self):
         self.bucket.tokens = 0
@@ -29,7 +30,7 @@ class TestTokenBucket:
 
     def test_refill_over_time(self):
         self.bucket.tokens = 0
-        self.bucket.last_refill = time.time() - 5
+        self.bucket.last_refill = time.monotonic() - 5  # the bucket uses a monotonic clock
         assert self.bucket.consume() is True
         assert self.bucket.tokens > 0
 

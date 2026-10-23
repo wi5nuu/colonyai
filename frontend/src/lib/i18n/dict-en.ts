@@ -1788,7 +1788,7 @@ MONITORING: 24/7 ACTIVE`,
     faqIsoStandards: "Does this platform support ISO standards?",
     faqIsoStandardsAnswer: "Yes, ColonyAI is designed to comply with ISO-17025 standards for laboratory data management and audit trails.",
     faqTechnicalAssistance: "What if I need technical assistance?",
-    faqTechnicalAssistanceAnswer: "Our support team is available 24/7 via hotline 0813-948-290 or via the chat widget in the lower right corner of the page.",
+    faqTechnicalAssistanceAnswer: "Our support team is available 24/7 via hotline 0813-9488-2490 or via the chat widget in the lower right corner of the page.",
   },
   docs: {
     title: "Documentation",

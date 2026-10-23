@@ -189,7 +189,9 @@ export function AIChatbot({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         }
 
         // If there are at least 2 overlapping words (or 1 if input is very short)
-        if (bestMatch && (maxOverlap >= 2 || (inputWords.length === 1 && maxOverlap >= 1))) {
+        // Require higher overlap ratio for short inputs to avoid false matches
+        const overlapRatio = inputWords.length > 0 ? maxOverlap / inputWords.length : 0;
+        if (bestMatch && (maxOverlap >= 2 || (inputWords.length === 1 && maxOverlap >= 1 && overlapRatio >= 1.0))) {
           quickMatch = bestMatch;
         }
       }

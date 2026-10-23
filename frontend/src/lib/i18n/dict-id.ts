@@ -1786,7 +1786,7 @@ MONITORING: 24/7 AKTIF`,
     faqIsoStandards: "Apakah platform ini mendukung standar ISO?",
     faqIsoStandardsAnswer: "Ya, ColonyAI dirancang untuk mematuhi standar ISO-17025 dalam pengelolaan data laboratorium dan audit trail.",
     faqTechnicalAssistance: "Bagaimana jika saya memerlukan bantuan teknis?",
-    faqTechnicalAssistanceAnswer: "Tim dukungan kami tersedia 24/7 melalui hotline 0813-948-290 atau melalui widget chat di pojok kanan bawah halaman.",
+    faqTechnicalAssistanceAnswer: "Tim dukungan kami tersedia 24/7 melalui hotline 0813-9488-2490 atau melalui widget chat di pojok kanan bawah halaman.",
   },
   docs: {
     title: "Dokumentasi",
