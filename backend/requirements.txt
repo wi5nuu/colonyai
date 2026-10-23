@@ -37,7 +37,7 @@ aiosmtplib==3.0.1
 
 # ── Testing ──
 pytest==7.4.4
-pytest-asyncio==0.23.3
+pytest-asyncio==1.4.0
 
 # ── Task Queue ──
 celery==5.3.6
