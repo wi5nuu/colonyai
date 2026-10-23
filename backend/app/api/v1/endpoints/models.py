@@ -97,13 +97,15 @@ async def list_models(
     models = []
     for filename, meta in index.items():
         filepath = MODELS_DIR / filename
-        models.append(ModelInfo(
-            filename=filename,
-            size_bytes=meta.get("size_bytes", 0),
-            uploaded_at=meta.get("uploaded_at", ""),
-            is_active=(filename == active),
-            format=meta.get("format", _get_model_format(filename)),
-        ))
+        models.append(
+            ModelInfo(
+                filename=filename,
+                size_bytes=meta.get("size_bytes", 0),
+                uploaded_at=meta.get("uploaded_at", ""),
+                is_active=(filename == active),
+                format=meta.get("format", _get_model_format(filename)),
+            )
+        )
 
     # Also list any .pt/.onnx/.engine files not in index
     existing_files = set(index.keys())
@@ -111,13 +113,17 @@ async def list_models(
         if f.suffix.lower() in ALLOWED_EXTENSIONS and f.name not in existing_files:
             if f.name in (".active", "index.json"):
                 continue
-            models.append(ModelInfo(
-                filename=f.name,
-                size_bytes=f.stat().st_size,
-                uploaded_at=datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc).isoformat(),
-                is_active=(f.name == active),
-                format=_get_model_format(f.name),
-            ))
+            models.append(
+                ModelInfo(
+                    filename=f.name,
+                    size_bytes=f.stat().st_size,
+                    uploaded_at=datetime.fromtimestamp(
+                        f.stat().st_mtime, tz=timezone.utc
+                    ).isoformat(),
+                    is_active=(f.name == active),
+                    format=_get_model_format(f.name),
+                )
+            )
 
     models.sort(key=lambda m: m.uploaded_at, reverse=True)
 
@@ -157,7 +163,12 @@ async def upload_model(
     }
     _write_index(index)
 
-    logger.info("Model uploaded: %s (%d bytes) by %s", file.filename, len(contents), current_user.get("email"))
+    logger.info(
+        "Model uploaded: %s (%d bytes) by %s",
+        file.filename,
+        len(contents),
+        current_user.get("email"),
+    )
     return {"message": f"Model '{file.filename}' uploaded successfully.", "filename": file.filename}
 
 

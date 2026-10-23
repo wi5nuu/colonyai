@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  productionBrowserSourceMaps: true,
+  // BUG-SEC-008 FIX: Disable source maps in production to prevent source code exposure
+  productionBrowserSourceMaps: false,
   output: 'standalone',
   images: {
     remotePatterns: [

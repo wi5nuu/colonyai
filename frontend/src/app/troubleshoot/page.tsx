@@ -26,70 +26,70 @@ const SOP_CONTENT: Record<
   }
 > = {
   "Account Registration": {
-    title: "SOP Pendaftaran Personel Baru",
+    title: "SOP New Personnel Registration",
     sections: [
       {
-        label: "Tanggung Jawab Personel",
+        label: "Personnel Responsibilities",
         items: [
-          "Ajukan permohonan resmi kepada Kepala Divisi dengan ID pemerintah yang valid dan Nomor Seri Personel.",
-          'Tunggu notifikasi "Otorisasi Tertunda" melalui saluran internal aman yang terdaftar.',
-          "Setelah disetujui, inisialisasi profil biometrik dan kata sandi master 12 karakter Anda.",
+          "Submit a formal request to the Division Head with a valid government ID and Personnel Serial Number.",
+          'Wait for a "Pending Authorization" notification via the registered secure internal channel.',
+          "Once approved, initialize your biometric profile and 12-character master password.",
         ],
       },
       {
-        label: "Tindakan Administrator",
+        label: "Administrator Actions",
         items: [
-          "Verifikasi permintaan terhadap Registry SDM Pusat dan matriks akses ISO-17025.",
-          "Daftarkan alamat MAC perangkat keras secara manual dan buat terowongan aman untuk pengaturan awal.",
-          "Otorisasi penerbitan Kunci Pendaftaran unik 16 digit (berlaku selama 24 jam).",
+          "Verify the request against the Central HR Registry and ISO-17025 access matrix.",
+          "Manually register the hardware MAC address and create a secure tunnel for initial setup.",
+          "Authorize issuance of a unique 16-digit Registration Key (valid for 24 hours).",
         ],
       },
     ],
-    note: "Pendaftaran adalah proses dengan izin tinggi yang tidak otomatis untuk memastikan integritas perimeter Zero-Trust.",
+    note: "Registration is a high-clearance, non-automated process to ensure Zero-Trust perimeter integrity.",
   },
   "Password Recovery": {
-    title: "SOP Verifikasi Identitas & Reset",
+    title: "SOP Identity Verification & Reset",
     sections: [
       {
-        label: "Alur Kerja Pemohon",
+        label: "Applicant Workflow",
         items: [
-          "Masukkan email terdaftar Anda di Portal Verifikasi ColonyAI.",
-          "Jelaskan alasan pemulihan (misal: lupa kredensial, akun terkunci).",
-          "Pantau saluran aman Anda untuk Token Reset terbatas 1 jam setelah persetujuan Admin.",
+          "Enter your registered email on the ColonyAI Verification Portal.",
+          "Explain the recovery reason (e.g., forgotten credentials, locked account).",
+          "Monitor your secure channel for a 1-hour limited Reset Token after Admin approval.",
         ],
       },
       {
-        label: "Alur Kerja Admin",
+        label: "Admin Workflow",
         items: [
-          "Terima peringatan real-time 24/7 di Dasbor Kontrol Global.",
-          'Lakukan verifikasi "Double-Factor" (melalui telepon atau pemeriksaan fisik).',
-          "Hasilkan dan tanda tangani Token Reset terbatas waktu (berlaku hanya 60 menit).",
+          "Receive 24/7 real-time alerts on the Global Control Dashboard.",
+          'Perform "Double-Factor" verification (via phone or physical inspection).',
+          "Generate and sign a time-limited Reset Token (valid for 60 minutes only).",
         ],
       },
     ],
-    note: "Protokol Keamanan 24/7 memastikan permintaan antre untuk segera ditinjau oleh Pusat Operasi Keamanan.",
+    note: "24/7 Security Protocol ensures queued requests are immediately reviewed by the Security Operations Center.",
   },
   "Multi-Factor Authentication": {
-    title: "SOP Reset MFA / Autentikator",
+    title: "SOP MFA / Authenticator Reset",
     sections: [
       {
-        label: "Langkah Personel",
+        label: "Personnel Steps",
         items: [
-          "Segera hubungi SOC (+62 800-COLONY-AI) jika perangkat MFA hilang atau dicuri.",
-          'Berikan "Kunci Pemulihan Darurat" yang diberikan saat pengaturan awal.',
-          "Ikuti instruksi Administrator untuk de-otorisasi perangkat jarak jauh.",
+          "Immediately contact SOC (+62 800-COLONY-AI) if your MFA device is lost or stolen.",
+          'Provide the "Emergency Recovery Key" given during initial setup.',
+          "Follow Administrator instructions for remote device de-authorization.",
         ],
       },
       {
-        label: "Langkah Spesialis SOC",
+        label: "SOC Specialist Steps",
         items: [
-          "Segera bekukan akses akun untuk mencegah penggunaan MFA yang tidak sah.",
-          "Verifikasi Kunci Pemulihan Darurat terhadap catatan brankas terenkripsi.",
-          "Paksa penghapusan semua perangkat TOTP/FIDO2 yang terdaftar.",
+          "Immediately freeze account access to prevent unauthorized MFA usage.",
+          "Verify the Emergency Recovery Key against encrypted vault records.",
+          "Force removal of all registered TOTP/FIDO2 devices.",
         ],
       },
     ],
-    note: "Reset MFA manual adalah operasi berisiko tinggi dan memerlukan verifikasi oleh dua Administrator independen.",
+    note: "Manual MFA reset is a high-risk operation requiring verification by two independent Administrators.",
   },
 };
 

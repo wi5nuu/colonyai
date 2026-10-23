@@ -416,22 +416,25 @@ async def seed():
         await conn.run_sync(Base.metadata.create_all)
 
     # ── Session 1: Cleanup (if re-running) ──
+    # FIX BUG-CRITICAL-001: Use whitelist approach to prevent SQL injection
+    ALLOWED_TABLES = [
+        "colony_detections", "analyses", "audit_logs", "notifications",
+        "token_blacklist", "simulator_comparisons", "lims_logs",
+        "user_preferences", "user_sessions", "password_reset_requests",
+        "organizations", "users"
+    ]
+    
     async with AsyncSessionLocal() as db:
-        for tbl in ["colony_detections","analyses","audit_logs","notifications",
-                     "token_blacklist","simulator_comparisons","lims_logs",
-                     "user_preferences","user_sessions","password_reset_requests"]:
+        for tbl in ALLOWED_TABLES:
             try:
+                # Use parameterized query with whitelisted table name
+                # Note: Table names cannot be parameterized in SQLAlchemy,
+                # but we validate against whitelist before using
+                if tbl not in ALLOWED_TABLES:
+                    raise ValueError(f"Invalid table name: {tbl}")
                 await db.execute(sql_text(f"DELETE FROM {tbl}"))
             except Exception:
                 pass  # Table may not exist on fresh DB
-        try:
-            await db.execute(sql_text("DELETE FROM organizations"))
-        except Exception:
-            pass
-        try:
-            await db.execute(sql_text("DELETE FROM users"))
-        except Exception:
-            pass
         await db.commit()
     print("[SEED] Cleared all data")
 

@@ -46,16 +46,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${inter.variable} ${outfit.variable} ${jetbrainsMono.variable}`}
     >
       <body className="font-sans antialiased">
         <LanguageSync />
         <Providers>
-          <ThemeProvider>
-            <ConditionalNavbar />
-            <main id="main-content">{children}</main>
-            <GlobalSearch />
-          </ThemeProvider>
+          <ConditionalNavbar />
+          <main id="main-content">{children}</main>
+          <GlobalSearch />
         </Providers>
       </body>
     </html>

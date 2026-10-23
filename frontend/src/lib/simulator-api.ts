@@ -52,8 +52,8 @@ export const simulatorApi = {
     return response.data;
   },
 
-  listComparisons: async (page = 1, pageSize = 20) => {
-    const response = await api.get('/api/v1/simulator', { params: { page, page_size: pageSize } });
+  listComparisons: async (page = 1, pageSize = 20): Promise<{ items: SimulatorComparison[]; total: number; page: number; page_size: number }> => {
+    const response = await api.get<{ items: SimulatorComparison[]; total: number; page: number; page_size: number }>('/api/v1/simulator', { params: { page, page_size: pageSize } });
     return response.data;
   },
 

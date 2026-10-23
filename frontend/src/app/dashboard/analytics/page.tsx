@@ -831,25 +831,25 @@ export default function AnalyticsPage() {
           directory={t("analytics.docsDirectory")}
           title={t("analytics.docsTitle")}
           description={t("analytics.docsDescription")}
-          rawText={`MATRIKS ANALITIK COLONYAI - SOP ISO-17025
+          rawText={`COLONYAI ANALYTICS MATRIX - SOP ISO-17025
 ==========================================
 
 1. OVERVIEW
-Modul Analytics berfungsi sebagai pusat intelijen data ColonyAI. Ini menyajikan visualisasi dinamis atas performa laboratorium, tingkat kepatuhan ISO, dan efisiensi throughput saraf (neural throughput) secara real-time.
+The Analytics module serves as the ColonyAI data intelligence center. It presents dynamic visualizations of laboratory performance, ISO compliance levels, and neural throughput efficiency in real-time.
 
-2. KOMPONEN UTAMA
-- Query Overview: Distribusi spesimen berdasarkan protokol media spesifik (PCA, VRBA, BGBB).
-- Time-Series Chart: Visualisasi interaktif Average CFU, Total Tests, dan Pass Rate harian.
-- Query Statistics: Indikator performa sistem (QPS & Processing Time).
-- Intelligence Ledger: Agregasi data bulanan (Median Densitas & Integritas Kepatuhan).
+2. MAIN COMPONENTS
+- Query Overview: Specimen distribution by specific media protocol (PCA, VRBA, BGBB).
+- Time-Series Chart: Interactive visualization of Average CFU, Total Tests, and daily Pass Rate.
+- Query Statistics: System performance indicators (QPS & Processing Time).
+- Intelligence Ledger: Monthly data aggregation (Median Density & Compliance Integrity).
 
 3. EXPORT PROTOCOL
-- Format Ekspor: CSV Matrix (Comma Separated Values).
-- Validitas Data: Diakui untuk Audit ISO-17025.
-- Keamanan: Audit Trail di-hash secara kriptografis.
+- Export Format: CSV Matrix (Comma Separated Values).
+- Data Validity: Recognized for ISO-17025 Audit.
+- Security: Audit Trail cryptographically hashed.
 
 STATUS: ANALYTICS READY
-INTEGRASI: Mendukung Business Intelligence (BI) Eksternal.`}
+INTEGRATION: Supports External Business Intelligence (BI).`}
         >
           <section className="space-y-3">
             <div className="flex items-center gap-2 mb-1">
